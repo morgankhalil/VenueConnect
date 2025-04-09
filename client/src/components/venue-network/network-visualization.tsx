@@ -1,10 +1,37 @@
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, ZoomIn, ZoomOut, Maximize } from "lucide-react";
-import * as d3 from "d3";
+import { Plus } from "lucide-react";
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
+// Fix Leaflet marker icons issue
+// This is a workaround for the Leaflet icon issue in React
+// The default icon URLs are broken when bundled by Vite
+const iconUrl = "/marker-icon.png";
+const shadowUrl = "/marker-shadow.png";
+
+// Create custom markers
+const blueMarker = new L.Icon({
+  iconUrl: iconUrl,
+  shadowUrl: shadowUrl,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+const redMarker = new L.Icon({
+  iconUrl: "/marker-icon-2x.png", // Using 2x version with red color
+  shadowUrl: shadowUrl,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+// Define interfaces for network visualization
 interface NetworkNode {
   id: number;
   name: string;
@@ -13,11 +40,13 @@ interface NetworkNode {
   isCurrentVenue: boolean;
   collaborativeBookings: number;
   trustScore: number;
+  latitude: number;
+  longitude: number;
 }
 
 interface NetworkLink {
-  source: number | NetworkNode;
-  target: number | NetworkNode;
+  source: number;
+  target: number;
   value: number;
 }
 
@@ -37,161 +66,51 @@ export function NetworkVisualization({
   onNodeClick,
   onAddVenue
 }: NetworkVisualizationProps) {
-  const svgRef = useRef<SVGSVGElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  // Find the center of the map
+  const defaultCenter: [number, number] = [39.5, -98.5]; // Default US center
   
-  // Set up resize observer
-  useEffect(() => {
-    if (!containerRef.current) return;
+  // Get center based on current venue or first node
+  const mapCenter = React.useMemo(() => {
+    if (!data.nodes.length) return defaultCenter;
     
-    const resizeObserver = new ResizeObserver(entries => {
-      if (!entries[0]) return;
-      const { width, height } = entries[0].contentRect;
-      setDimensions({ width, height });
-    });
+    const currentVenue = data.nodes.find(node => node.isCurrentVenue);
+    if (currentVenue) {
+      return [currentVenue.latitude, currentVenue.longitude] as [number, number];
+    }
     
-    resizeObserver.observe(containerRef.current);
-    return () => resizeObserver.disconnect();
-  }, []);
+    return [data.nodes[0].latitude, data.nodes[0].longitude] as [number, number];
+  }, [data.nodes]);
   
-  // Create and update network visualization
-  useEffect(() => {
-    if (!svgRef.current || !data.nodes.length || dimensions.width === 0) return;
-    
-    // Clear previous visualization
-    d3.select(svgRef.current).selectAll("*").remove();
-    
-    const svg = d3.select(svgRef.current);
-    
-    // Create a force simulation
-    const simulation = d3.forceSimulation<NetworkNode, NetworkLink>(data.nodes)
-      .force("link", d3.forceLink<NetworkNode, NetworkLink>(data.links)
-        .id(d => d.id)
-        .distance(100))
-      .force("charge", d3.forceManyBody().strength(-400))
-      .force("center", d3.forceCenter(dimensions.width / 2, dimensions.height / 2));
-    
-    // Create links
-    const link = svg.append("g")
-      .selectAll("line")
-      .data(data.links)
-      .enter()
-      .append("line")
-      .attr("stroke", d => {
-        const sourceNode = typeof d.source === 'object' ? d.source : data.nodes.find(n => n.id === d.source);
-        const targetNode = typeof d.target === 'object' ? d.target : data.nodes.find(n => n.id === d.target);
-        
-        if (sourceNode?.isCurrentVenue || targetNode?.isCurrentVenue) {
-          return "#a5b4fc"; // Primary connections
-        }
-        return "#d1d5db"; // Secondary connections
-      })
-      .attr("stroke-width", d => {
-        const sourceNode = typeof d.source === 'object' ? d.source : data.nodes.find(n => n.id === d.source);
-        const targetNode = typeof d.target === 'object' ? d.target : data.nodes.find(n => n.id === d.target);
-        
-        if (sourceNode?.isCurrentVenue || targetNode?.isCurrentVenue) {
-          return 2;
-        }
-        return 1;
-      })
-      .attr("stroke-dasharray", d => {
-        const sourceNode = typeof d.source === 'object' ? d.source : data.nodes.find(n => n.id === d.source);
-        const targetNode = typeof d.target === 'object' ? d.target : data.nodes.find(n => n.id === d.target);
-        
-        if (sourceNode?.isCurrentVenue || targetNode?.isCurrentVenue) {
-          return "5,2";
-        }
-        return "3,3";
-      });
-    
-    // Create node groups
-    const node = svg.append("g")
-      .selectAll("g")
-      .data(data.nodes)
-      .enter()
-      .append("g")
-      .call(d3.drag<SVGGElement, NetworkNode>()
-        .on("start", (event, d) => {
-          if (!event.active) simulation.alphaTarget(0.3).restart();
-          d.fx = d.x;
-          d.fy = d.y;
-        })
-        .on("drag", (event, d) => {
-          d.fx = event.x;
-          d.fy = event.y;
-        })
-        .on("end", (event, d) => {
-          if (!event.active) simulation.alphaTarget(0);
-          d.fx = null;
-          d.fy = null;
-        })
-      )
-      .on("click", (event, d) => {
-        if (onNodeClick) onNodeClick(d);
-      });
-    
-    // Add circles for nodes
-    node.append("circle")
-      .attr("r", d => d.isCurrentVenue ? 30 : 20)
-      .attr("fill", d => d.isCurrentVenue ? "#1e40af" : "#4f46e5")
-      .attr("stroke", "#ffffff")
-      .attr("stroke-width", 2);
-    
-    // Add node labels
-    node.append("text")
-      .text(d => d.name)
-      .attr("text-anchor", "middle")
-      .attr("dy", ".3em")
-      .attr("fill", "white")
-      .style("font-size", d => d.isCurrentVenue ? "10px" : "8px")
-      .style("pointer-events", "none");
-    
-    // Update force simulation on tick
-    simulation.on("tick", () => {
-      link
-        .attr("x1", d => typeof d.source === 'object' ? d.source.x || 0 : 0)
-        .attr("y1", d => typeof d.source === 'object' ? d.source.y || 0 : 0)
-        .attr("x2", d => typeof d.target === 'object' ? d.target.x || 0 : 0)
-        .attr("y2", d => typeof d.target === 'object' ? d.target.y || 0 : 0);
+  // Create network connection lines
+  const networkLines = React.useMemo(() => {
+    return data.links.map((link, index) => {
+      const sourceNode = data.nodes.find(n => n.id === link.source);
+      const targetNode = data.nodes.find(n => n.id === link.target);
       
-      node.attr("transform", d => `translate(${d.x || 0},${d.y || 0})`);
+      if (!sourceNode || !targetNode) return null;
+      
+      // Create polyline positions
+      const positions: [number, number][] = [
+        [sourceNode.latitude, sourceNode.longitude],
+        [targetNode.latitude, targetNode.longitude]
+      ];
+      
+      // Determine if this is a primary connection (to/from the current venue)
+      const isPrimaryConnection = sourceNode.isCurrentVenue || targetNode.isCurrentVenue;
+      
+      return (
+        <Polyline 
+          key={`link-${index}`}
+          positions={positions}
+          pathOptions={{
+            color: isPrimaryConnection ? '#4f46e5' : '#9ca3af',
+            weight: isPrimaryConnection ? 3 : 2,
+            dashArray: isPrimaryConnection ? '5,5' : '3,7'
+          }}
+        />
+      );
     });
-    
-    return () => {
-      simulation.stop();
-    };
-  }, [data, dimensions, onNodeClick]);
-  
-  const zoomIn = () => {
-    if (!svgRef.current) return;
-    const svg = d3.select(svgRef.current);
-    const currentTransform = d3.zoomTransform(svg.node()!);
-    svg.transition().duration(300).call(
-      d3.zoom<SVGSVGElement, unknown>().transform,
-      d3.zoomIdentity.translate(currentTransform.x, currentTransform.y).scale(currentTransform.k * 1.2)
-    );
-  };
-  
-  const zoomOut = () => {
-    if (!svgRef.current) return;
-    const svg = d3.select(svgRef.current);
-    const currentTransform = d3.zoomTransform(svg.node()!);
-    svg.transition().duration(300).call(
-      d3.zoom<SVGSVGElement, unknown>().transform,
-      d3.zoomIdentity.translate(currentTransform.x, currentTransform.y).scale(currentTransform.k / 1.2)
-    );
-  };
-  
-  const resetZoom = () => {
-    if (!svgRef.current) return;
-    const svg = d3.select(svgRef.current);
-    svg.transition().duration(300).call(
-      d3.zoom<SVGSVGElement, unknown>().transform,
-      d3.zoomIdentity
-    );
-  };
+  }, [data]);
 
   return (
     <Card>
@@ -206,38 +125,50 @@ export function NetworkVisualization({
           </div>
         </div>
         
-        <div 
-          ref={containerRef} 
-          className="bg-gray-50 h-80 rounded-lg overflow-hidden relative"
-        >
-          <svg 
-            ref={svgRef} 
-            width={dimensions.width} 
-            height={dimensions.height}
-            className="w-full h-full"
-          />
-          
-          {/* Network Controls */}
-          <div className="absolute bottom-4 right-4 flex space-x-2">
-            <button 
-              className="bg-white rounded-full p-2 shadow hover:bg-gray-100"
-              onClick={zoomIn}
-            >
-              <ZoomIn className="h-4 w-4 text-gray-600" />
-            </button>
-            <button 
-              className="bg-white rounded-full p-2 shadow hover:bg-gray-100"
-              onClick={zoomOut}
-            >
-              <ZoomOut className="h-4 w-4 text-gray-600" />
-            </button>
-            <button 
-              className="bg-white rounded-full p-2 shadow hover:bg-gray-100"
-              onClick={resetZoom}
-            >
-              <Maximize className="h-4 w-4 text-gray-600" />
-            </button>
-          </div>
+        <div className="h-80 rounded-lg overflow-hidden relative">
+          {/* Leaflet Map */}
+          <MapContainer 
+            center={mapCenter} 
+            zoom={4} 
+            style={{ height: '100%', width: '100%' }}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            
+            {/* Network Connections */}
+            {networkLines}
+            
+            {/* Venue Markers */}
+            {data.nodes.map(node => (
+              <Marker 
+                key={node.id} 
+                position={[node.latitude, node.longitude]}
+                icon={node.isCurrentVenue ? redMarker : blueMarker}
+                eventHandlers={{
+                  click: () => {
+                    if (onNodeClick) onNodeClick(node);
+                  }
+                }}
+              >
+                <Popup>
+                  <div className="text-sm">
+                    <h3 className="font-semibold">{node.name}</h3>
+                    <div>{node.city}, {node.state}</div>
+                    {node.isCurrentVenue ? (
+                      <div className="mt-1 text-xs text-green-600 font-semibold">Your Venue</div>
+                    ) : (
+                      <div className="mt-1 text-xs">
+                        <div>Trust Score: {node.trustScore}%</div>
+                        <div>Collaborations: {node.collaborativeBookings}</div>
+                      </div>
+                    )}
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
         </div>
         
         {/* Network Stats */}
@@ -266,7 +197,12 @@ export function NetworkVisualization({
             <div className="text-sm text-gray-500">Trust Score</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-semibold text-primary-700">3</div>
+            <div className="text-2xl font-semibold text-primary-700">
+              {data.links.filter(link => {
+                const targetNode = data.nodes.find(n => n.id === link.target);
+                return targetNode && !targetNode.isCurrentVenue;
+              }).length}
+            </div>
             <div className="text-sm text-gray-500">Pending Invites</div>
           </div>
         </div>

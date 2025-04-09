@@ -330,7 +330,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             collaborativeBookings: connections.reduce((sum, conn) => sum + (conn.collaborativeBookings ?? 0), 0),
             trustScore: connections.length > 0 
               ? Math.round(connections.reduce((sum, conn) => sum + (conn.trustScore ?? 0), 0) / connections.length) 
-              : 0
+              : 0,
+            latitude: venue.latitude ?? 0,
+            longitude: venue.longitude ?? 0
           },
           ...connectedVenues.map((v) => {
             const connection = connections.find(c => c.connectedVenueId === v.id);
@@ -341,7 +343,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               state: v.state,
               isCurrentVenue: false,
               collaborativeBookings: connection ? (connection.collaborativeBookings ?? 0) : 0,
-              trustScore: connection ? (connection.trustScore ?? 0) : 0
+              trustScore: connection ? (connection.trustScore ?? 0) : 0,
+              latitude: v.latitude ?? 0,
+              longitude: v.longitude ?? 0
             };
           })
         ],

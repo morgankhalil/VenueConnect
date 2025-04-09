@@ -470,7 +470,9 @@ export const getMockVenueNetworkData = (): VenueNetworkData => {
         state: "OH",
         isCurrentVenue: true,
         collaborativeBookings: 12,
-        trustScore: 86
+        trustScore: 86,
+        latitude: 39.9612,
+        longitude: -82.9988
       },
       {
         id: 2,
@@ -479,7 +481,9 @@ export const getMockVenueNetworkData = (): VenueNetworkData => {
         state: "CA",
         isCurrentVenue: false,
         collaborativeBookings: 5,
-        trustScore: 78
+        trustScore: 78,
+        latitude: 37.7749,
+        longitude: -122.4194
       },
       {
         id: 3,
@@ -488,7 +492,9 @@ export const getMockVenueNetworkData = (): VenueNetworkData => {
         state: "DC",
         isCurrentVenue: false,
         collaborativeBookings: 3,
-        trustScore: 82
+        trustScore: 82,
+        latitude: 38.9172,
+        longitude: -77.0250
       },
       {
         id: 4,
@@ -497,7 +503,9 @@ export const getMockVenueNetworkData = (): VenueNetworkData => {
         state: "CA",
         isCurrentVenue: false,
         collaborativeBookings: 7,
-        trustScore: 90
+        trustScore: 90,
+        latitude: 34.0617,
+        longitude: -118.3084
       },
       {
         id: 5,
@@ -506,7 +514,9 @@ export const getMockVenueNetworkData = (): VenueNetworkData => {
         state: "MN",
         isCurrentVenue: false,
         collaborativeBookings: 2,
-        trustScore: 75
+        trustScore: 75,
+        latitude: 44.9778,
+        longitude: -93.2650
       }
     ],
     links: [

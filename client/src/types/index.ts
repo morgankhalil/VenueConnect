@@ -149,6 +149,8 @@ export interface VenueNetworkData {
     isCurrentVenue: boolean;
     collaborativeBookings: number;
     trustScore: number;
+    latitude: number;
+    longitude: number;
   }>;
   links: Array<{
     source: number;
