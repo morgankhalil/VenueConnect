@@ -45,9 +45,42 @@ interface CalendarEvent {
   genre?: string;
 }
 
-// Mock data for demonstration
-const mockEvents: Record<string, CalendarEvent> = {
-  '1': {
+// Mock data for demonstration - Let's generate a lot more to ensure all possible IDs are covered
+const generateMockEvents = (): Record<string, CalendarEvent> => {
+  const events: Record<string, CalendarEvent> = {};
+  const artists = [
+    "Luna Eclipse", "Cosmic Drift", "Rhythm Collective", "Synthwave Pioneers", 
+    "Ember & Oak", "Fleet Foxes", "Japanese Breakfast", "Tame Impala", 
+    "The National", "Glass Animals", "Phoebe Bridgers", "The War on Drugs", 
+    "Soccer Mommy", "Big Thief", "Lucy Dacus", "Khruangbin", "Kurt Vile"
+  ];
+  
+  const venues = [
+    "The Paramount Theatre", "City Arts Center", "The Fillmore", "9:30 Club", 
+    "First Avenue", "Bowery Ballroom", "The Troubadour", "The Wiltern", 
+    "Brooklyn Steel", "The Independent"
+  ];
+  
+  const genres = [
+    "Indie Rock", "Electronic", "Jazz Fusion", "Synthwave", "Folk", 
+    "Rock", "Indie", "Pop", "Hip-Hop", "Jazz", "Alternative"
+  ];
+  
+  const descriptions = [
+    "Sold out show for album tour",
+    "Tentative date on hold for upcoming tour",
+    "Potential booking opportunity based on artist routing",
+    "Initial inquiry sent for potential booking",
+    "Partner venue event with touring artist",
+    "Special acoustic performance",
+    "Album release celebration",
+    "Festival preview show",
+    "Intimate venue performance",
+    "Tour kickoff event"
+  ];
+  
+  // Predefined events 1-5 for backwards compatibility
+  events['1'] = {
     id: 1,
     title: 'Midnight Visions Tour',
     date: new Date(2025, 3, 15),
@@ -59,8 +92,9 @@ const mockEvents: Record<string, CalendarEvent> = {
     artist: 'Luna Eclipse',
     genre: 'Indie Rock',
     ticketUrl: 'https://example.com/tickets'
-  },
-  '2': {
+  };
+  
+  events['2'] = {
     id: 2,
     title: 'Echoes of Tomorrow',
     date: new Date(2025, 3, 22),
@@ -71,8 +105,9 @@ const mockEvents: Record<string, CalendarEvent> = {
     description: 'Tentative date on hold for the Echoes of Tomorrow tour',
     artist: 'Cosmic Drift',
     genre: 'Electronic'
-  },
-  '3': {
+  };
+  
+  events['3'] = {
     id: 3,
     title: 'Harmonic Fusion Tour',
     date: new Date(2025, 4, 5),
@@ -84,8 +119,9 @@ const mockEvents: Record<string, CalendarEvent> = {
     description: 'Potential booking opportunity based on artist routing',
     artist: 'Rhythm Collective',
     genre: 'Jazz Fusion'
-  },
-  '4': {
+  };
+  
+  events['4'] = {
     id: 4,
     title: 'Neon Dreams',
     date: new Date(2025, 4, 12),
@@ -97,8 +133,9 @@ const mockEvents: Record<string, CalendarEvent> = {
     description: 'Initial inquiry sent for potential booking',
     artist: 'Synthwave Pioneers',
     genre: 'Synthwave'
-  },
-  '5': {
+  };
+  
+  events['5'] = {
     id: 5,
     title: 'Acoustic Journeys',
     date: new Date(2025, 4, 20),
@@ -109,8 +146,68 @@ const mockEvents: Record<string, CalendarEvent> = {
     description: 'Partner venue event with touring artist',
     artist: 'Ember & Oak',
     genre: 'Folk'
+  };
+  
+  // Generate 45 more random events (total 50) to cover all possible IDs
+  for (let i = 6; i <= 50; i++) {
+    const today = new Date();
+    const randomMonthOffset = -2 + Math.floor(Math.random() * 5); // -2 to +2 months
+    const randomDay = 1 + Math.floor(Math.random() * 28);
+    const date = new Date(today.getFullYear(), today.getMonth() + randomMonthOffset, randomDay);
+    
+    const hours = 18 + Math.floor(Math.random() * 4);
+    const minutes = [0, 15, 30, 45][Math.floor(Math.random() * 4)];
+    const startTime = `${hours}:${minutes.toString().padStart(2, '0')} PM`;
+    
+    const durationHours = 1 + Math.floor(Math.random() * 3);
+    const endHours = hours + durationHours > 12 ? hours + durationHours - 12 : hours + durationHours;
+    const endTime = `${endHours}:${minutes.toString().padStart(2, '0')} PM`;
+    
+    const artist = artists[Math.floor(Math.random() * artists.length)];
+    const venue = venues[Math.floor(Math.random() * venues.length)];
+    const genre = genres[Math.floor(Math.random() * genres.length)];
+    const description = descriptions[Math.floor(Math.random() * descriptions.length)] + ` featuring ${artist}`;
+    
+    // Determine event type
+    const typeRand = Math.random();
+    let type: 'confirmed' | 'opportunity' | 'network' | 'hold' | 'inquiry';
+    
+    if (typeRand < 0.2) type = 'confirmed';
+    else if (typeRand < 0.4) type = 'hold';
+    else if (typeRand < 0.6) type = 'opportunity';
+    else if (typeRand < 0.8) type = 'inquiry';
+    else type = 'network';
+    
+    const event: CalendarEvent = {
+      id: i,
+      title: `${artist} - ${venue} Show`,
+      date,
+      startTime,
+      endTime,
+      type,
+      venue,
+      description,
+      artist,
+      genre
+    };
+    
+    // Add confidence score for opportunities and inquiries
+    if (type === 'opportunity' || type === 'inquiry') {
+      event.confidence = 70 + Math.floor(Math.random() * 25); // 70-94%
+    }
+    
+    // Add ticket URL for confirmed events
+    if (type === 'confirmed') {
+      event.ticketUrl = "https://example.com/tickets";
+    }
+    
+    events[i.toString()] = event;
   }
+  
+  return events;
 };
+
+const mockEvents = generateMockEvents();
 
 export default function EventDetails() {
   const [, params] = useRoute('/event/:id');
