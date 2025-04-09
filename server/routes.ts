@@ -274,6 +274,7 @@ router.get("/api/user", async (req, res) => {
     // Get first venue with connected venues relation
     const venue = await db.query.venues.findFirst({
       with: {
+        owner: true,
         venueConnections: {
           with: {
             connectedVenue: true
@@ -291,11 +292,25 @@ router.get("/api/user", async (req, res) => {
         collaborativeBookings: connection.collaborativeBookings
       }));
 
+      // Get user role from session or fallback to database
+      let role = (req.session && req.session.user) ? req.session.user.role : 'user';
+      
+      // If no role in session but owner exists, use owner's role
+      if (role === 'user' && venue.owner && venue.owner.role) {
+        role = venue.owner.role;
+        
+        // Update session with correct role if we have a session
+        if (req.session && req.session.user) {
+          req.session.user.role = role;
+        }
+      }
+
       res.json({
         id: venue.id,
         name: venue.contactEmail?.split('@')[0] || 'Demo User',
         venueName: venue.name,
         avatar: venue.imageUrl,
+        role: role, // Add the role to the response
         connectedVenues
       });
     } else {
@@ -305,6 +320,7 @@ router.get("/api/user", async (req, res) => {
         name: "Demo User",
         venueName: "Demo Venue",
         avatar: undefined,
+        role: 'user', // Default role
         connectedVenues: []
       });
     }

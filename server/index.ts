@@ -1,10 +1,76 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import session from "express-session";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import { users, venues } from "../shared/schema";
+
+// Define session user for TypeScript
+declare module 'express-session' {
+  interface SessionData {
+    user: {
+      id: number;
+      name: string;
+      role: string;
+      venueId: number | null;
+    };
+  }
+}
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Set up session middleware
+app.use(session({
+  secret: 'venue-connect-session-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// Mock authentication middleware - in a real app, this would be handled by a proper auth system
+app.use(async (req, res, next) => {
+  // Skip for static assets and non-API routes
+  if (!req.path.startsWith('/api') || req.path.startsWith('/api/webhooks')) {
+    return next();
+  }
+  
+  try {
+    // Get the first venue and its owner
+    const venue = await db.query.venues.findFirst({
+      with: {
+        owner: true
+      }
+    });
+    
+    if (venue && venue.owner) {
+      // Set the user in session
+      req.session.user = {
+        id: venue.owner.id,
+        name: venue.owner.name || venue.owner.username,
+        role: venue.owner.role,
+        venueId: venue.id
+      };
+    } else {
+      // Fallback to a demo user if no venue/owner exists
+      req.session.user = {
+        id: 1,
+        name: "Demo User",
+        role: "user",
+        venueId: null
+      };
+    }
+    next();
+  } catch (error) {
+    console.error("Error in auth middleware:", error);
+    next();
+  }
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
