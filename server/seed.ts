@@ -1,25 +1,13 @@
 import { db } from './db';
-import { 
-  users, venues, artists, events, predictions, inquiries, 
-  venueNetwork, collaborativeOpportunities, collaborativeParticipants,
-  webhookConfigurations
-} from '../shared/schema';
-import { syncArtistFromBandsInTown, syncArtistEventsFromBandsInTown } from './data-sync/bands-in-town-sync';
+import { users, venues, venueNetwork } from '../shared/schema';
 
 async function seed() {
   try {
     // Clear all existing data
     console.log('Clearing existing data...');
-    await db.delete(collaborativeParticipants);
-    await db.delete(collaborativeOpportunities);
-    await db.delete(predictions);
-    await db.delete(inquiries);
-    await db.delete(events);
     await db.delete(venueNetwork);
     await db.delete(venues);
-    await db.delete(artists);
     await db.delete(users);
-    await db.delete(webhookConfigurations);
     console.log('Database cleared successfully');
 
     // Create demo users
@@ -31,53 +19,71 @@ async function seed() {
       role: 'venue_manager'
     }).returning();
 
-    const [adminUser] = await db.insert(users).values({
-      username: 'admin',
-      password: 'admin123',
-      name: 'Admin User',
-      email: 'admin@example.com',
-      role: 'admin'
-    }).returning();
-
-    // Create multiple venues across different cities
+    // Create multiple small/medium venues similar to Bug Jar
     const venueData = [
       {
-        name: 'Brooklyn Steel',
-        address: '319 Frost St',
-        city: 'Brooklyn',
+        name: 'Bug Jar',
+        address: '219 Monroe Ave',
+        city: 'Rochester',
         state: 'NY',
-        zipCode: '11222',
+        zipCode: '14607',
         country: 'USA',
-        capacity: 1800,
-        latitude: 40.7156,
-        longitude: -73.9384,
-        description: 'Modern venue known for indie and electronic shows',
+        capacity: 400,
+        latitude: 43.1497,
+        longitude: -77.5976,
+        description: 'Intimate venue known for indie rock and punk shows',
         ownerId: demoUser.id
       },
       {
-        name: 'Union Transfer',
-        address: '1026 Spring Garden St',
+        name: 'Middle East Upstairs',
+        address: '472 Massachusetts Ave',
+        city: 'Cambridge',
+        state: 'MA',
+        zipCode: '02139',
+        country: 'USA',
+        capacity: 194,
+        latitude: 42.3647,
+        longitude: -71.1042,
+        description: 'Intimate rock club featuring indie and local acts',
+        ownerId: demoUser.id
+      },
+      {
+        name: 'Great Scott',
+        address: '1222 Commonwealth Ave',
+        city: 'Boston',
+        state: 'MA',
+        zipCode: '02134',
+        country: 'USA',
+        capacity: 240,
+        latitude: 42.3502,
+        longitude: -71.1340,
+        description: 'Long-running rock club with indie and alternative shows',
+        ownerId: demoUser.id
+      },
+      {
+        name: 'Mercury Lounge',
+        address: '217 E Houston St',
+        city: 'New York',
+        state: 'NY',
+        zipCode: '10002',
+        country: 'USA',
+        capacity: 250,
+        latitude: 40.7222,
+        longitude: -73.9867,
+        description: 'Historic Lower East Side venue known for indie rock',
+        ownerId: demoUser.id
+      },
+      {
+        name: 'Boot & Saddle',
+        address: '1131 S Broad St',
         city: 'Philadelphia',
         state: 'PA',
-        zipCode: '19123',
+        zipCode: '19147',
         country: 'USA',
-        capacity: 1200,
-        latitude: 39.9615,
-        longitude: -75.1532,
-        description: 'Historic venue in a former railway baggage handling facility',
-        ownerId: demoUser.id
-      },
-      {
-        name: 'Black Cat',
-        address: '1811 14th St NW',
-        city: 'Washington',
-        state: 'DC',
-        zipCode: '20009',
-        country: 'USA',
-        capacity: 700,
-        latitude: 38.9147,
-        longitude: -77.0318,
-        description: 'Iconic DC venue featuring indie rock and punk shows',
+        capacity: 150,
+        latitude: 39.9336,
+        longitude: -75.1685,
+        description: 'Intimate venue featuring indie and alternative acts',
         ownerId: demoUser.id
       },
       {
@@ -105,98 +111,12 @@ async function seed() {
           connectedVenueId: venues[j].id,
           status: 'active',
           trustScore: Math.floor(Math.random() * 30) + 70, // 70-100
-          collaborativeBookings: Math.floor(Math.random() * 15) + 5 // 5-20
+          collaborativeBookings: Math.floor(Math.random() * 5) // 0-5 initial collaborations
         });
       }
     }
 
-    // Sync real artists that commonly play these types of venues
-    const artistNames = [
-      'The National',
-      'Japanese Breakfast',
-      'Big Thief',
-      'Kurt Vile',
-      'Mitski',
-      'Spoon',
-      'Angel Olsen',
-      'Beach House',
-      'Parquet Courts',
-      'Sharon Van Etten',
-      'Car Seat Headrest',
-      'Snail Mail',
-      'Lucy Dacus',
-      'Real Estate',
-      'The War on Drugs'
-    ];
-
-    const sampleArtists = [];
-    for (const name of artistNames) {
-      try {
-        const artist = await syncArtistFromBandsInTown(name);
-        if (artist) {
-          sampleArtists.push(artist);
-          console.log(`Added artist: ${artist.name}`);
-
-          // Also sync events for this artist
-          const events = await syncArtistEventsFromBandsInTown(name);
-          console.log(`Synced ${events.length} events for ${artist.name}`);
-        }
-      } catch (err) {
-        console.error(`Error syncing artist ${name}:`, err);
-      }
-    }
-
-    // Create predictions for each artist with random venues
-    for (const artist of sampleArtists) {
-      const randomVenue = venues[Math.floor(Math.random() * venues.length)];
-      const futureDates = [15, 30, 45, 60].map(days => {
-        const date = new Date();
-        date.setDate(date.getDate() + days);
-        return date;
-      });
-
-      for (const date of futureDates) {
-        await db.insert(predictions).values({
-          artistId: artist.id,
-          venueId: randomVenue.id,
-          suggestedDate: date.toISOString().split('T')[0],
-          confidenceScore: Math.floor(Math.random() * 30) + 70, // 70-100
-          status: 'pending',
-          reasoning: `${artist.name} has played similar venues in this region`
-        });
-      }
-    }
-
-    // Insert webhook configurations
-    await db.insert(webhookConfigurations).values([
-      {
-        name: 'Bandsintown Event Notifications',
-        description: 'Receive notifications when new events are created on Bandsintown',
-        type: 'bandsintown_events',
-        callbackUrl: '/api/webhooks/bandsintown/events',
-        isEnabled: false,
-        secretKey: '',
-        configOptions: JSON.stringify({
-          events: ['event.created', 'event.updated', 'event.canceled'],
-          version: '1.0'
-        })
-      },
-      {
-        name: 'Artist Updates',
-        description: 'Receive notifications about artist profile updates',
-        type: 'artist_updates',
-        callbackUrl: '/api/webhooks/artists/updates',
-        isEnabled: false,
-        secretKey: '',
-        configOptions: JSON.stringify({
-          includeImages: true,
-          includeGenres: true,
-          version: '1.0'
-        })
-      }
-    ]);
-
-    console.log('Database seeded successfully');
+    console.log('Database seeded successfully with venues');
   } catch (error) {
     console.error('Error seeding database:', error);
     process.exit(1);
