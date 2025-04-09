@@ -177,4 +177,20 @@ export const checkBandsintownApiKeyStatus = async () => {
   return res.json();
 };
 
+// Webhook operations
+export const registerWebhook = async (callbackUrl: string) => {
+  const res = await apiRequest('POST', '/api/admin/webhooks/register', { callbackUrl });
+  return res.json();
+};
+
+export const unregisterWebhook = async (callbackUrl: string) => {
+  const res = await apiRequest('POST', '/api/admin/webhooks/unregister', { callbackUrl });
+  return res.json();
+};
+
+export const testWebhook = async (callbackUrl: string) => {
+  const res = await apiRequest('POST', '/api/admin/webhooks/test', { callbackUrl });
+  return res.json();
+};
+
 // All mock data has been moved to the database

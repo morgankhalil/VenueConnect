@@ -1,5 +1,10 @@
 import { Router } from 'express';
 import { syncVenuesFromBandsInTown } from '../data-sync/bands-in-town-sync';
+import { 
+  registerBandsintownWebhook, 
+  unregisterBandsintownWebhook,
+  verifyWebhookConnection
+} from '../webhooks/webhook-setup';
 import dotenv from 'dotenv';
 
 // Load environment variables 
@@ -91,6 +96,111 @@ adminRouter.get('/api-keys/bandsintown/status', requireAdmin, (req, res) => {
   } catch (error) {
     console.error('Error checking API key status:', error);
     res.status(500).json({ error: 'Failed to check API key status' });
+  }
+});
+
+// Route to register a webhook with Bandsintown
+adminRouter.post('/webhooks/register', requireAdmin, async (req, res) => {
+  try {
+    const { callbackUrl } = req.body;
+
+    if (!callbackUrl) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Callback URL is required' 
+      });
+    }
+
+    const apiKey = process.env.BANDSINTOWN_API_KEY;
+    if (!apiKey) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Bandsintown API key is not configured' 
+      });
+    }
+
+    const result = await registerBandsintownWebhook(
+      callbackUrl, 
+      apiKey
+    );
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error registering webhook:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to register webhook' 
+    });
+  }
+});
+
+// Route to unregister a webhook with Bandsintown
+adminRouter.post('/webhooks/unregister', requireAdmin, async (req, res) => {
+  try {
+    const { callbackUrl } = req.body;
+
+    if (!callbackUrl) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Callback URL is required' 
+      });
+    }
+
+    const apiKey = process.env.BANDSINTOWN_API_KEY;
+    if (!apiKey) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Bandsintown API key is not configured' 
+      });
+    }
+
+    const result = await unregisterBandsintownWebhook(
+      callbackUrl, 
+      apiKey
+    );
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error unregistering webhook:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to unregister webhook' 
+    });
+  }
+});
+
+// Route to test a webhook connection
+adminRouter.post('/webhooks/test', requireAdmin, async (req, res) => {
+  try {
+    const { callbackUrl } = req.body;
+
+    if (!callbackUrl) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Callback URL is required' 
+      });
+    }
+
+    const apiKey = process.env.BANDSINTOWN_API_KEY;
+    if (!apiKey) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Bandsintown API key is not configured' 
+      });
+    }
+
+    const result = await verifyWebhookConnection(
+      callbackUrl, 
+      apiKey
+    );
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error testing webhook:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to test webhook' 
+    });
   }
 });
 

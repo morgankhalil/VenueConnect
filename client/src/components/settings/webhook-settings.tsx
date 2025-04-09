@@ -9,7 +9,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { AlertCircle, CheckCircle, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { registerWebhook as apiRegisterWebhook, unregisterWebhook as apiUnregisterWebhook, testWebhook as apiTestWebhook } from "@/lib/api";
 
 interface WebhookSettingsProps {
   apiKeyConfigured: boolean;
@@ -22,12 +22,9 @@ export function WebhookSettings({ apiKeyConfigured }: WebhookSettingsProps) {
   const { toast } = useToast();
 
   // Mutation for registering webhook
-  const registerWebhook = useMutation({
+  const registerWebhookMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/admin/webhooks/register', {
-        callbackUrl: webhookUrl
-      });
-      return response.json();
+      return apiRegisterWebhook(webhookUrl);
     },
     onSuccess: (data) => {
       if (data.success) {
@@ -54,12 +51,9 @@ export function WebhookSettings({ apiKeyConfigured }: WebhookSettingsProps) {
   });
 
   // Mutation for unregistering webhook
-  const unregisterWebhook = useMutation({
+  const unregisterWebhookMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/admin/webhooks/unregister', {
-        callbackUrl: webhookUrl
-      });
-      return response.json();
+      return apiUnregisterWebhook(webhookUrl);
     },
     onSuccess: (data) => {
       if (data.success) {
@@ -86,12 +80,9 @@ export function WebhookSettings({ apiKeyConfigured }: WebhookSettingsProps) {
   });
 
   // Mutation for testing webhook
-  const testWebhook = useMutation({
+  const testWebhookMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/admin/webhooks/test', {
-        callbackUrl: webhookUrl
-      });
-      return response.json();
+      return apiTestWebhook(webhookUrl);
     },
     onSuccess: (data) => {
       setTestResult(data);
@@ -134,7 +125,7 @@ export function WebhookSettings({ apiKeyConfigured }: WebhookSettingsProps) {
     try {
       // Simple URL validation
       new URL(webhookUrl);
-      registerWebhook.mutate();
+      registerWebhookMutation.mutate();
     } catch (error) {
       toast({
         title: "Invalid URL",
@@ -154,7 +145,7 @@ export function WebhookSettings({ apiKeyConfigured }: WebhookSettingsProps) {
       return;
     }
     
-    unregisterWebhook.mutate();
+    unregisterWebhookMutation.mutate();
   };
 
   const handleTestWebhook = () => {
@@ -167,10 +158,10 @@ export function WebhookSettings({ apiKeyConfigured }: WebhookSettingsProps) {
       return;
     }
     
-    testWebhook.mutate();
+    testWebhookMutation.mutate();
   };
 
-  const isLoading = registerWebhook.isPending || unregisterWebhook.isPending || testWebhook.isPending;
+  const isLoading = registerWebhookMutation.isPending || unregisterWebhookMutation.isPending || testWebhookMutation.isPending;
 
   return (
     <Card>
@@ -237,7 +228,7 @@ export function WebhookSettings({ apiKeyConfigured }: WebhookSettingsProps) {
             onClick={handleTestWebhook}
             disabled={isLoading || !apiKeyConfigured}
           >
-            {testWebhook.isPending ? <Spinner className="mr-2" /> : null}
+            {testWebhookMutation.isPending ? <Spinner className="mr-2" /> : null}
             Test Webhook
           </Button>
 
@@ -246,7 +237,7 @@ export function WebhookSettings({ apiKeyConfigured }: WebhookSettingsProps) {
             onClick={handleRegisterWebhook}
             disabled={isLoading || webhookEnabled || !apiKeyConfigured}
           >
-            {registerWebhook.isPending ? <Spinner className="mr-2" /> : null}
+            {registerWebhookMutation.isPending ? <Spinner className="mr-2" /> : null}
             Register Webhook
           </Button>
 
@@ -256,7 +247,7 @@ export function WebhookSettings({ apiKeyConfigured }: WebhookSettingsProps) {
             onClick={handleUnregisterWebhook}
             disabled={isLoading || !webhookEnabled || !apiKeyConfigured}
           >
-            {unregisterWebhook.isPending ? <Spinner className="mr-2" /> : null}
+            {unregisterWebhookMutation.isPending ? <Spinner className="mr-2" /> : null}
             Unregister Webhook
           </Button>
         </div>
