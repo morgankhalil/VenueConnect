@@ -47,8 +47,9 @@ export function Header({
     <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow">
       <button
         type="button"
-        className="md:hidden px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+        className="md:hidden px-4 text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
         onClick={onMobileMenuToggle}
+        aria-label="Open menu"
       >
         <Menu className="h-6 w-6" />
       </button>
