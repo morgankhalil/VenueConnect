@@ -306,11 +306,7 @@ export default function Calendar() {
         </div>
 
         <div className="mt-6">
-          {/* Monthly Stats - Always visible at the top */}
-          <EventSummary events={currentMonthEvents} title="Monthly Summary" />
-          
-          {/* Tabs moved to below the summary section */}
-          <Tabs defaultValue="month" value={view} onValueChange={setView} className="mt-6">
+          <Tabs defaultValue="month" value={view} onValueChange={setView}>
             <div className="flex justify-end mb-4">
               <TabsList className="rounded-full">
                 <TabsTrigger value="month">Month</TabsTrigger>
@@ -319,9 +315,13 @@ export default function Calendar() {
                 <TabsTrigger value="list">List</TabsTrigger>
               </TabsList>
             </div>
+
+            {/* No component definition directly in JSX - we'll define the component outside the render */}
             
             <TabsContent value="month">
               <div className="space-y-6">
+                {/* Monthly Stats - Moved to the top */}
+                <EventSummary events={currentMonthEvents} title="Monthly Summary" />
                 
                 <Card className="w-full">
                   <CardContent className="p-4">
@@ -411,6 +411,8 @@ export default function Calendar() {
 
             <TabsContent value="week">
               <div className="space-y-6">
+                {/* Weekly Summary at the top */}
+                <EventSummary events={currentWeekEvents} title="Weekly Summary" />
                 
                 <Card className="w-full">
                   <CardContent className="p-4">
@@ -634,6 +636,8 @@ export default function Calendar() {
 
             <TabsContent value="day">
               <div className="space-y-6">
+                {/* Day Summary at the top */}
+                <EventSummary events={currentDayEvents} title="Day Summary" />
                 
                 <Card className="w-full">
                   <CardContent className="p-4">
@@ -852,6 +856,8 @@ export default function Calendar() {
 
             <TabsContent value="list">
               <div className="space-y-6">
+                {/* Monthly Summary for list view */}
+                <EventSummary events={currentMonthEvents} title="Monthly Summary" />
                 
                 <Card className="w-full">
                 <CardContent className="p-4">
