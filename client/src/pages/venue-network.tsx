@@ -105,26 +105,66 @@ export default function VenueNetwork() {
           <TabsContent value="list">
             <Card>
               <CardContent className="p-6">
-                <div className="grid gap-4">
-                  {networkData?.nodes.filter(node => !node.isCurrentVenue).map((node) => (
-                    <div key={node.id} className="flex items-center justify-between p-4 bg-white rounded-lg border">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{node.name}</h3>
-                        <p className="text-sm text-gray-500">{node.city}, {node.state}</p>
+                {networkData?.nodes?.length > 1 ? (
+                  <div className="grid gap-4">
+                    {networkData.nodes.filter(node => !node.isCurrentVenue).map((node) => (
+                      <div key={node.id} className="flex items-center justify-between p-4 bg-white rounded-lg border hover:bg-gray-50">
+                        <div>
+                          <h3 className="font-medium text-gray-900">{node.name}</h3>
+                          <p className="text-sm text-gray-500">{node.city}, {node.state}</p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Badge variant="secondary" className="bg-primary-50 text-primary-700">
+                            Trust Score: {node.trustScore}%
+                          </Badge>
+                          <Badge variant="outline">
+                            {node.collaborativeBookings} Collaborations
+                          </Badge>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <Badge variant="secondary">
-                          Trust Score: {node.trustScore}%
-                        </Badge>
-                        <Badge variant="outline">
-                          {node.collaborativeBookings} Collaborations
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500 mb-4">No connected venues yet</p>
+                    <Button onClick={handleAddVenue}>Connect New Venue</Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="stats">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <h3 className="text-sm font-medium text-gray-500">Total Connections</h3>
+                  <p className="text-2xl font-semibold">{networkData?.nodes?.length ? networkData.nodes.length - 1 : 0}</p>
+                </CardHeader>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <h3 className="text-sm font-medium text-gray-500">Total Collaborations</h3>
+                  <p className="text-2xl font-semibold">
+                    {networkData?.links?.reduce((sum, link) => sum + link.value, 0) || 0}
+                  </p>
+                </CardHeader>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <h3 className="text-sm font-medium text-gray-500">Average Trust Score</h3>
+                  <p className="text-2xl font-semibold">
+                    {networkData?.nodes?.length > 1 
+                      ? Math.round(networkData.nodes
+                          .filter(n => !n.isCurrentVenue)
+                          .reduce((sum, n) => sum + n.trustScore, 0) / 
+                          (networkData.nodes.length - 1)
+                        )
+                      : 0}%
+                  </p>
+                </CardHeader>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="stats">
