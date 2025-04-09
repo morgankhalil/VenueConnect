@@ -9,6 +9,7 @@ import Calendar from "@/pages/calendar";
 import Discover from "@/pages/discover";
 import Messages from "@/pages/messages";
 import Settings from "@/pages/settings";
+import VenueDetails from "@/pages/venue-details";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/discover" component={Discover} />
       <Route path="/messages" component={Messages} />
       <Route path="/settings" component={Settings} />
+      <Route path="/venues/:id" component={VenueDetails} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
