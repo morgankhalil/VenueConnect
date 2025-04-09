@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { TourSelection } from "@/components/dashboard/tour-selection";
-import { TourDetailMap } from "@/components/dashboard/tour-detail-map";
+import { TourLeafletMap } from "@/components/dashboard/tour-leaflet-map";
 import { OpportunityCard } from "@/components/dashboard/opportunity-card";
 import { VenueCard } from "@/components/venue-network/venue-card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { PredictionWithDetails, TourGroup } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { Filter, ArrowUpRight, MapPin, BarChart3, List } from "lucide-react";
 
-// Tour Routing Section Component
+// Tour Routing Section Component with Leaflet map
 function TourRoutingSection() {
   const [selectedTour, setSelectedTour] = useState<TourGroup | null>(null);
   
@@ -22,20 +22,32 @@ function TourRoutingSection() {
     queryFn: getMockTourGroups
   });
   
+  const handleSelectTour = (tour: TourGroup) => {
+    setSelectedTour(tour);
+  };
+  
+  const handleCloseTour = () => {
+    setSelectedTour(null);
+  };
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-[350px_1fr] gap-4">
+      {/* Tour selection component */}
       <TourSelection 
         tours={tourGroups || []} 
-        onSelectTour={(tour) => setSelectedTour(tour)}
+        onSelectTour={handleSelectTour}
         selectedTourId={selectedTour?.id || null}
       />
       
+      {/* Map or placeholder */}
       {selectedTour ? (
-        <TourDetailMap 
+        // Leaflet map component
+        <TourLeafletMap 
           tour={selectedTour} 
-          onClose={() => setSelectedTour(null)}
+          onClose={handleCloseTour}
         />
       ) : (
+        // Placeholder when no tour is selected
         <Card>
           <CardContent className="p-6 text-center flex flex-col items-center justify-center min-h-[400px]">
             <MapPin className="h-12 w-12 text-gray-300 mb-4" />
