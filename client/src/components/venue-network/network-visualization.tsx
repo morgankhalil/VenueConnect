@@ -1,35 +1,67 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Fix Leaflet marker icons issue
-// This is a workaround for the Leaflet icon issue in React
-// The default icon URLs are broken when bundled by Vite
-const iconUrl = "/marker-icon.png";
-const shadowUrl = "/marker-shadow.png";
-
-// Create custom markers
-const blueMarker = new L.Icon({
-  iconUrl: iconUrl,
-  shadowUrl: shadowUrl,
+// Create marker icons for different venue types
+const defaultIcon = L.icon({
+  iconUrl: '/marker-icon.png',
+  shadowUrl: '/marker-shadow.png',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
   shadowSize: [41, 41]
 });
 
-const redMarker = new L.Icon({
-  iconUrl: "/marker-icon-2x.png", // Using 2x version with red color
-  shadowUrl: shadowUrl,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
+// Create a custom HTML element for the current venue marker
+// This allows us to create a distinctive red marker
+const CurrentVenueMarkerHtml = `
+<div style="
+  background-color: #e11d48; 
+  width: 25px; 
+  height: 25px; 
+  display: block;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 0 4px rgba(0,0,0,0.5);
+  text-align: center;
+  line-height: 22px;
+  font-weight: bold;
+  color: white;
+">•</div>
+`;
+
+// Icon for the current venue (using HTML for custom styling)
+const currentVenueIcon = L.divIcon({
+  html: CurrentVenueMarkerHtml,
+  className: 'current-venue-marker',
+  iconSize: [25, 25],
+  iconAnchor: [12, 12]
 });
+
+// Helper component to fit map bounds
+function MapBoundsUpdater({ nodes }: { nodes: any[] }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (!nodes.length) return;
+    
+    try {
+      // Create bounds for all markers
+      const bounds = L.latLngBounds(nodes.map(node => [node.latitude, node.longitude]));
+      
+      // Fit the map to these bounds with some padding
+      map.fitBounds(bounds, { padding: [50, 50] });
+    } catch (err) {
+      console.error("Error setting map bounds:", err);
+    }
+  }, [nodes, map]);
+  
+  return null;
+}
 
 // Define interfaces for network visualization
 interface NetworkNode {
@@ -131,11 +163,15 @@ export function NetworkVisualization({
             center={mapCenter} 
             zoom={4} 
             style={{ height: '100%', width: '100%' }}
+            scrollWheelZoom={true}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            
+            {/* Add the bounds updater component */}
+            <MapBoundsUpdater nodes={data.nodes} />
             
             {/* Network Connections */}
             {networkLines}
@@ -145,7 +181,7 @@ export function NetworkVisualization({
               <Marker 
                 key={node.id} 
                 position={[node.latitude, node.longitude]}
-                icon={node.isCurrentVenue ? redMarker : blueMarker}
+                icon={node.isCurrentVenue ? currentVenueIcon : defaultIcon}
                 eventHandlers={{
                   click: () => {
                     if (onNodeClick) onNodeClick(node);
