@@ -288,16 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Venue Network endpoints
-  app.post("/api/venue-network", validateRequest(insertVenueNetworkSchema), async (req, res) => {
-    try {
-      const connection = await storage.createVenueConnection(req.body);
-      res.status(201).json(connection);
-    } catch (error) {
-      console.error("Failed to create venue connection:", error);
-      res.status(500).json({ error: "Failed to create venue connection" });
-    }
-  });
+  
   
   // Venue Network Graph endpoint
   app.get("/api/venue-network/graph/:venueId", async (req, res) => {
