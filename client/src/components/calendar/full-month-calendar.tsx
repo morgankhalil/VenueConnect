@@ -224,14 +224,14 @@ const FullMonthCalendar: React.FC<FullMonthCalendarProps> = ({
   
   const getDayClass = (day: CalendarDay) => {
     return cn(
-      "relative h-24 sm:h-32 p-1 sm:p-2 border border-gray-200 bg-white",
+      "relative h-28 sm:h-36 p-1.5 sm:p-2.5 border border-gray-200 bg-white",
       "transition-all duration-200 ease-in-out",
       "first:rounded-tl-lg last:rounded-tr-lg",
       "[&:nth-child(n+36)]:rounded-b-lg", 
       !day.isCurrentMonth && "bg-gray-50/50 text-gray-400",
       day.isToday && "bg-blue-50/20 font-medium",
       day.isSelected && "ring-2 ring-primary ring-inset",
-      "hover:bg-gray-50 cursor-pointer"
+      "hover:bg-gray-50/80 cursor-pointer"
     );
   };
   
@@ -269,11 +269,22 @@ const FullMonthCalendar: React.FC<FullMonthCalendarProps> = ({
             className={getDayClass(day)}
             onClick={() => handleDayClick(day)}
           >
-            <div className="text-right font-medium text-xs sm:text-sm mb-1 sticky top-0 bg-white/90">
-              {day.date.getDate()}
+            <div className="flex justify-between items-center mb-2 sticky top-0 bg-white/95 pb-1 border-b">
+              <span className={cn(
+                "font-medium text-sm sm:text-base",
+                !day.isCurrentMonth && "text-gray-400",
+                day.isToday && "text-primary"
+              )}>
+                {day.date.getDate()}
+              </span>
+              {day.isToday && (
+                <span className="text-[10px] font-medium bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
+                  Today
+                </span>
+              )}
             </div>
             
-            <div className="space-y-0.5 sm:space-y-1 overflow-y-auto max-h-16 sm:max-h-24">
+            <div className="space-y-1 sm:space-y-1.5 overflow-y-auto max-h-20 sm:max-h-28">
               {day.events.slice(0, isMobile ? 2 : 3).map(event => (
                 <div
                   key={event.id}
