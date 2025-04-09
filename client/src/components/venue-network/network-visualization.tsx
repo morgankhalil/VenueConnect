@@ -45,21 +45,21 @@ const currentVenueIcon = L.divIcon({
 // Helper component to fit map bounds
 function MapBoundsUpdater({ nodes }: { nodes: any[] }) {
   const map = useMap();
-  
+
   useEffect(() => {
     if (!nodes.length) return;
-    
+
     try {
       // Create bounds for all markers
       const bounds = L.latLngBounds(nodes.map(node => [node.latitude, node.longitude]));
-      
+
       // Fit the map to these bounds with some padding
       map.fitBounds(bounds, { padding: [50, 50] });
     } catch (err) {
       console.error("Error setting map bounds:", err);
     }
   }, [nodes, map]);
-  
+
   return null;
 }
 
@@ -107,16 +107,16 @@ export function NetworkVisualization({
   });
   // Find the center of the map
   const defaultCenter: [number, number] = [39.5, -98.5]; // Default US center
-  
+
   // Get center based on current venue or first node
   const mapCenter = React.useMemo(() => {
     if (!data?.nodes?.length) return defaultCenter;
-    
+
     const currentVenue = data.nodes.find(node => node.isCurrentVenue);
     if (currentVenue && currentVenue.latitude && currentVenue.longitude) {
       return [currentVenue.latitude, currentVenue.longitude] as [number, number];
     }
-    
+
     const firstNode = data.nodes[0];
     if (firstNode && firstNode.latitude && firstNode.longitude) {
       return [firstNode.latitude, firstNode.longitude] as [number, number];
@@ -124,24 +124,24 @@ export function NetworkVisualization({
 
     return defaultCenter;
   }, [data?.nodes]);
-  
+
   // Create network connection lines
   const networkLines = React.useMemo(() => {
     return data.links.map((link, index) => {
       const sourceNode = data.nodes.find(n => n.id === link.source);
       const targetNode = data.nodes.find(n => n.id === link.target);
-      
+
       if (!sourceNode || !targetNode) return null;
-      
+
       // Create polyline positions
       const positions: [number, number][] = [
         [sourceNode.latitude, sourceNode.longitude],
         [targetNode.latitude, targetNode.longitude]
       ];
-      
+
       // Determine if this is a primary connection (to/from the current venue)
       const isPrimaryConnection = sourceNode.isCurrentVenue || targetNode.isCurrentVenue;
-      
+
       return (
         <Polyline 
           key={`link-${index}`}
@@ -168,7 +168,7 @@ export function NetworkVisualization({
             </Button>
           </div>
         </div>
-        
+
         <div className="h-80 rounded-lg overflow-hidden relative">
           {/* Leaflet Map */}
           <MapContainer 
@@ -181,15 +181,15 @@ export function NetworkVisualization({
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            
+
             {/* Add the bounds updater component */}
             <MapBoundsUpdater nodes={data.nodes} />
-            
+
             {/* Network Connections */}
-            {networkLines}
-            
+            {data?.links?.length > 0 && networkLines}
+
             {/* Venue Markers */}
-            {data.nodes.map(node => (
+            {data?.nodes?.length > 0 && data.nodes.map(node => (
               <Marker 
                 key={node.id} 
                 position={[node.latitude, node.longitude]}
@@ -218,7 +218,7 @@ export function NetworkVisualization({
             ))}
           </MapContainer>
         </div>
-        
+
         {/* Network Stats */}
         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center">

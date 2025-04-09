@@ -24,6 +24,9 @@ export default function VenueNetwork() {
     queryFn: async () => {
       const data = await getVenueNetworkGraph(currentVenueId);
       console.log('Network data from API:', data);
+      if (!data || !data.nodes || !data.nodes.length) {
+        return { nodes: [], links: [] };
+      }
       return data;
     }
   });
