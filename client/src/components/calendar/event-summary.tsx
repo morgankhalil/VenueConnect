@@ -54,12 +54,7 @@ export default function EventSummary({ events, title = "Monthly Summary" }: Even
             </div>
             <div className="text-sm text-purple-800">Inquiries</div>
           </div>
-          <div className="bg-gray-50 p-4 rounded-lg text-center border border-gray-200">
-            <div className="text-3xl font-bold text-gray-700">
-              {events.filter(e => e.type === 'network').length}
-            </div>
-            <div className="text-sm text-gray-800">Network Events</div>
-          </div>
+          
         </div>
       </CardContent>
     </Card>

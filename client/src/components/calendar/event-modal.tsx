@@ -501,13 +501,7 @@ const EventModal: React.FC<EventModalProps> = ({ event, open, onOpenChange }) =>
           </div>
         );
         
-      case 'network':
-        return (
-          <div className="mt-4 space-y-4">
-            <div className="rounded-md bg-gray-50 border border-gray-200 p-3">
-              <div className="flex items-center">
-                <Share2 className="h-5 w-5 text-gray-600 mr-2" />
-                <h4 className="font-semibold text-gray-800">Network Event</h4>
+      ent</h4>
               </div>
               <p className="mt-1 text-sm text-gray-700">
                 This event is happening at a partner venue. It may present collaboration or routing opportunities.
