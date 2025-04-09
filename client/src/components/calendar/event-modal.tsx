@@ -5,11 +5,34 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogClose
+  DialogClose,
+  DialogFooter
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Calendar, Music, MapPin, ExternalLink, X } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
+import { 
+  Clock, 
+  Calendar, 
+  Music, 
+  MapPin, 
+  ExternalLink, 
+  X, 
+  Users, 
+  DollarSign, 
+  Check, 
+  FileText, 
+  Mail, 
+  Phone, 
+  BarChart, 
+  AlertCircle,
+  Workflow,
+  Route,
+  Share2,
+  Building,
+  PieChart
+} from 'lucide-react';
 
 interface CalendarEvent {
   id: number;
@@ -43,6 +66,14 @@ const EventModal: React.FC<EventModalProps> = ({ event, open, onOpenChange }) =>
     network: 'bg-gray-100 text-gray-800 border-gray-200'
   };
 
+  const typeBgColors = {
+    confirmed: 'bg-green-500',
+    hold: 'bg-amber-500',
+    opportunity: 'bg-blue-500',
+    inquiry: 'bg-purple-500',
+    network: 'bg-gray-500'
+  };
+
   const typeLabels = {
     confirmed: 'Confirmed',
     hold: 'Hold',
@@ -51,12 +82,314 @@ const EventModal: React.FC<EventModalProps> = ({ event, open, onOpenChange }) =>
     network: 'Network Event'
   };
 
+  const typeDescriptions = {
+    confirmed: 'This event is confirmed and finalized. Contracts have been signed and the event is officially scheduled.',
+    hold: 'This date is currently on hold for this artist. A tentative booking has been made but contracts are not finalized.',
+    opportunity: 'A potential show based on artist routing and touring patterns. No contact has been made yet.',
+    inquiry: 'An active conversation about a potential booking. Initial contact has been made.',
+    network: 'An event at a partner venue that may be relevant for your booking and routing strategy.'
+  };
+
+  // Calculate a projected revenue if it's an opportunity
+  const getProjectedRevenue = () => {
+    // This would normally be calculated based on venue capacity, ticket prices, etc.
+    if (event.type === 'opportunity' || event.type === 'inquiry') {
+      return '$3,500 - $4,800'; 
+    }
+    if (event.type === 'confirmed' || event.type === 'hold') {
+      return '$4,200'; 
+    }
+    return 'N/A';
+  };
+
+  const getCapacity = () => {
+    return '350 / 400'; // This would come from venue data
+  };
+
+  const getStatusDetails = () => {
+    switch (event.type) {
+      case 'confirmed':
+        return (
+          <div className="mt-4 space-y-4">
+            <div className="rounded-md bg-green-50 border border-green-200 p-3">
+              <div className="flex items-center">
+                <Check className="h-5 w-5 text-green-600 mr-2" />
+                <h4 className="font-semibold text-green-800">Event Confirmed</h4>
+              </div>
+              <p className="mt-1 text-sm text-green-700">
+                This event is confirmed and tickets are on sale. All contracts have been signed and finalized.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 border rounded-md">
+                <div className="text-sm font-medium text-gray-500">Ticket Sales</div>
+                <div className="mt-1 flex justify-between items-end">
+                  <div className="text-2xl font-bold">275</div>
+                  <div className="text-green-600 text-sm">+28 today</div>
+                </div>
+                <Progress className="h-1.5 mt-2" value={78} />
+                <div className="mt-1 text-xs text-gray-500">78% sold (350 capacity)</div>
+              </div>
+              
+              <div className="p-3 border rounded-md">
+                <div className="text-sm font-medium text-gray-500">Revenue</div>
+                <div className="text-2xl font-bold">{getProjectedRevenue()}</div>
+                <div className="mt-1 text-xs text-gray-500">
+                  Based on current ticket sales
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex space-x-3">
+              <Button className="flex-1" variant="outline">
+                <FileText className="h-4 w-4 mr-2" />
+                View Contract
+              </Button>
+              
+              <Button className="flex-1">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Ticket Dashboard
+              </Button>
+            </div>
+          </div>
+        );
+        
+      case 'hold':
+        return (
+          <div className="mt-4 space-y-4">
+            <div className="rounded-md bg-amber-50 border border-amber-200 p-3">
+              <div className="flex items-center">
+                <AlertCircle className="h-5 w-5 text-amber-600 mr-2" />
+                <h4 className="font-semibold text-amber-800">Date On Hold</h4>
+              </div>
+              <p className="mt-1 text-sm text-amber-700">
+                This date is currently on hold for this artist. The hold expires in 5 days if not confirmed.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 border rounded-md">
+                <div className="text-sm font-medium text-gray-500">Hold Status</div>
+                <div className="mt-1 text-xl font-bold">First Hold</div>
+                <div className="mt-1 text-xs text-gray-500">
+                  Expires: {new Date(event.date.getTime() - 7*24*60*60*1000).toLocaleDateString()}
+                </div>
+              </div>
+              
+              <div className="p-3 border rounded-md">
+                <div className="text-sm font-medium text-gray-500">Projected Revenue</div>
+                <div className="text-xl font-bold">{getProjectedRevenue()}</div>
+                <div className="mt-1 text-xs text-gray-500">
+                  Based on similar events
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex space-x-3">
+              <Button className="flex-1" variant="outline">
+                <Mail className="h-4 w-4 mr-2" />
+                Send Message
+              </Button>
+              
+              <Button className="flex-1">
+                <Check className="h-4 w-4 mr-2" />
+                Confirm Hold
+              </Button>
+            </div>
+          </div>
+        );
+        
+      case 'opportunity':
+        return (
+          <div className="mt-4 space-y-4">
+            <div className="rounded-md bg-blue-50 border border-blue-200 p-3">
+              <div className="flex items-center">
+                <Route className="h-5 w-5 text-blue-600 mr-2" />
+                <h4 className="font-semibold text-blue-800">Opportunity Details</h4>
+              </div>
+              <p className="mt-1 text-sm text-blue-700">
+                This artist will be touring in your region around this date. There's a {event.confidence}% match with your venue's booking profile.
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="text-sm font-medium">Match Confidence</div>
+              <Progress className="h-2" value={event.confidence} />
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>Based on genre match, artist popularity, and routing</span>
+                <span>{event.confidence}%</span>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 border rounded-md">
+                <div className="text-sm font-medium text-gray-500">Similar Artist Performance</div>
+                <div className="mt-1 text-base">
+                  <span className="text-green-600 font-bold">+85%</span> capacity
+                </div>
+                <div className="mt-1 text-xs text-gray-500">
+                  Based on similar artists at your venue
+                </div>
+              </div>
+              
+              <div className="p-3 border rounded-md">
+                <div className="text-sm font-medium text-gray-500">Estimated Revenue</div>
+                <div className="text-base font-bold">{getProjectedRevenue()}</div>
+                <div className="mt-1 text-xs text-gray-500">
+                  Based on projected attendance
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex space-x-3">
+              <Button className="flex-1" variant="outline">
+                <PieChart className="h-4 w-4 mr-2" />
+                View Analytics
+              </Button>
+              
+              <Button className="flex-1">
+                <Mail className="h-4 w-4 mr-2" />
+                Send Inquiry
+              </Button>
+            </div>
+          </div>
+        );
+        
+      case 'inquiry':
+        return (
+          <div className="mt-4 space-y-4">
+            <div className="rounded-md bg-purple-50 border border-purple-200 p-3">
+              <div className="flex items-center">
+                <Mail className="h-5 w-5 text-purple-600 mr-2" />
+                <h4 className="font-semibold text-purple-800">Inquiry Status</h4>
+              </div>
+              <p className="mt-1 text-sm text-purple-700">
+                Initial contact has been made. Waiting for response from the artist's agent.
+              </p>
+            </div>
+            
+            <div className="border rounded-md p-3">
+              <div className="text-sm font-medium mb-2">Inquiry Timeline</div>
+              <div className="space-y-3">
+                <div className="flex items-start">
+                  <div className="bg-purple-200 h-6 w-6 rounded-full flex items-center justify-center mt-0.5 mr-3">
+                    <Mail className="h-3 w-3 text-purple-700" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium">Inquiry Sent</div>
+                    <div className="text-xs text-gray-500">3 days ago</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <div className="bg-gray-200 h-6 w-6 rounded-full flex items-center justify-center mt-0.5 mr-3">
+                    <Phone className="h-3 w-3 text-gray-700" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-gray-500">Waiting for Response</div>
+                    <div className="text-xs text-gray-500">Follow-up scheduled for tomorrow</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 border rounded-md">
+                <div className="text-sm font-medium text-gray-500">Match Confidence</div>
+                <div className="mt-1 text-xl font-bold">{event.confidence}%</div>
+                <div className="mt-1 text-xs text-gray-500">
+                  Based on venue fit and artist routing
+                </div>
+              </div>
+              
+              <div className="p-3 border rounded-md">
+                <div className="text-sm font-medium text-gray-500">Projected Revenue</div>
+                <div className="text-xl font-bold">{getProjectedRevenue()}</div>
+                <div className="mt-1 text-xs text-gray-500">
+                  Estimated range
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex space-x-3">
+              <Button className="flex-1" variant="outline">
+                <Phone className="h-4 w-4 mr-2" />
+                Log Call
+              </Button>
+              
+              <Button className="flex-1">
+                <Mail className="h-4 w-4 mr-2" />
+                Send Follow-up
+              </Button>
+            </div>
+          </div>
+        );
+        
+      case 'network':
+        return (
+          <div className="mt-4 space-y-4">
+            <div className="rounded-md bg-gray-50 border border-gray-200 p-3">
+              <div className="flex items-center">
+                <Share2 className="h-5 w-5 text-gray-600 mr-2" />
+                <h4 className="font-semibold text-gray-800">Network Event</h4>
+              </div>
+              <p className="mt-1 text-sm text-gray-700">
+                This event is happening at a partner venue. It may present collaboration or routing opportunities.
+              </p>
+            </div>
+            
+            <div className="p-3 border rounded-md">
+              <div className="flex items-center gap-3 mb-2">
+                <Building className="h-5 w-5 text-gray-500" />
+                <div className="text-sm font-medium">{event.venue}</div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Users className="h-5 w-5 text-gray-500" />
+                <div>
+                  <div className="text-sm font-medium">Capacity</div>
+                  <div className="text-xs text-gray-500">400 people</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-3 border rounded-md">
+              <div className="text-sm font-medium mb-2">Collaboration Opportunities</div>
+              <div className="text-sm">
+                <p>This artist will be in your region. Consider these options:</p>
+                <ul className="list-disc pl-5 mt-1 text-sm">
+                  <li>After-party event</li>
+                  <li>Joint ticketing promotions</li>
+                  <li>Artist accommodation sharing</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="flex space-x-3">
+              <Button className="flex-1" variant="outline">
+                <Mail className="h-4 w-4 mr-2" />
+                Contact Partner Venue
+              </Button>
+              
+              <Button className="flex-1">
+                <Calendar className="h-4 w-4 mr-2" />
+                View Routing Options
+              </Button>
+            </div>
+          </div>
+        );
+        
+      default:
+        return null;
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
-        <div className={`h-2 w-full ${typeColors[event.type].split(' ')[0].replace('100', '500')}`} />
+        <div className={`h-2 w-full ${typeBgColors[event.type]}`} />
         
-        <DialogHeader className="px-6 pt-6 pb-0">
+        <DialogHeader className="px-6 pt-6 pb-2">
           <div className="flex justify-between items-start">
             <DialogTitle className="text-xl font-bold">{event.title}</DialogTitle>
             <Badge className={`${typeColors[event.type]} border`}>
@@ -71,6 +404,10 @@ const EventModal: React.FC<EventModalProps> = ({ event, open, onOpenChange }) =>
         </DialogHeader>
         
         <div className="px-6 py-4">
+          <div className="text-sm text-muted-foreground mb-4">
+            {typeDescriptions[event.type]}
+          </div>
+          
           <div className="space-y-3">
             <div className="flex items-center">
               <Calendar className="h-5 w-5 mr-3 text-muted-foreground" />
@@ -102,23 +439,21 @@ const EventModal: React.FC<EventModalProps> = ({ event, open, onOpenChange }) =>
                 <span>{event.genre}</span>
               </div>
             )}
+            
+            <div className="flex items-center">
+              <Users className="h-5 w-5 mr-3 text-muted-foreground" />
+              <span>Capacity: {getCapacity()}</span>
+            </div>
+            
+            <div className="flex items-center">
+              <DollarSign className="h-5 w-5 mr-3 text-muted-foreground" />
+              <span>Projected Revenue: {getProjectedRevenue()}</span>
+            </div>
           </div>
           
-          {event.ticketUrl && (
-            <div className="mt-6">
-              <Button className="w-full" onClick={() => window.open(event.ticketUrl, '_blank')}>
-                Get Tickets
-                <ExternalLink className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          )}
+          <Separator className="my-4" />
           
-          {(event.type === 'opportunity' || event.type === 'inquiry') && (
-            <div className="mt-6 flex space-x-3">
-              <Button className="flex-1" variant="outline">Send Message</Button>
-              <Button className="flex-1">Take Action</Button>
-            </div>
-          )}
+          {getStatusDetails()}
         </div>
       </DialogContent>
     </Dialog>
