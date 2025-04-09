@@ -288,6 +288,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Venue Network endpoints
+  app.post("/api/venue-network", validateRequest(insertVenueNetworkSchema), async (req, res) => {
+    try {
+      const connection = await storage.createVenueConnection(req.body);
+      res.status(201).json(connection);
+    } catch (error) {
+      console.error("Failed to create venue connection:", error);
+      res.status(500).json({ error: "Failed to create venue connection" });
+    }
+  });
+  
+  // Venue Network Graph endpoint
+  app.get("/api/venue-network/graph/:venueId", async (req, res) => {
+    try {
+      const venueId = Number(req.params.venueId);
+      const venue = await storage.getVenue(venueId);
+      
+      if (!venue) {
+        return res.status(404).json({ error: "Venue not found" });
+      }
+      
+      // Get all connections for this venue
+      const connections = await storage.getVenueConnections(venueId);
+      
+      // Get details of all connected venues
+      const connectedVenueIds = connections.map(c => c.connectedVenueId);
+      const venuesPromises = connectedVenueIds.map(id => storage.getVenue(id));
+      const connectedVenuesResults = await Promise.all(venuesPromises);
+      const connectedVenues = connectedVenuesResults.filter((v): v is typeof v & { id: number } => v !== undefined);
+      
+      // Format data for network visualization
+      const networkData = {
+        nodes: [
+          {
+            id: venue.id,
+            name: venue.name,
+            city: venue.city,
+            state: venue.state,
+            isCurrentVenue: true,
+            collaborativeBookings: connections.reduce((sum, conn) => sum + (conn.collaborativeBookings ?? 0), 0),
+            trustScore: connections.length > 0 
+              ? Math.round(connections.reduce((sum, conn) => sum + (conn.trustScore ?? 0), 0) / connections.length) 
+              : 0
+          },
+          ...connectedVenues.map((v) => {
+            const connection = connections.find(c => c.connectedVenueId === v.id);
+            return {
+              id: v.id,
+              name: v.name,
+              city: v.city,
+              state: v.state,
+              isCurrentVenue: false,
+              collaborativeBookings: connection ? (connection.collaborativeBookings ?? 0) : 0,
+              trustScore: connection ? (connection.trustScore ?? 0) : 0
+            };
+          })
+        ],
+        links: connections.map(connection => ({
+          source: venueId,
+          target: connection.connectedVenueId,
+          value: connection.collaborativeBookings ?? 1
+        }))
+      };
+      
+      res.json(networkData);
+    } catch (error) {
+      console.error("Failed to get venue network graph:", error);
+      res.status(500).json({ error: "Failed to get venue network graph" });
+    }
+  });
+  
   // Map config endpoint - now supporting Leaflet configs
   app.get("/api/map-config", (_, res) => {
     // We've migrated to Leaflet for more reliability

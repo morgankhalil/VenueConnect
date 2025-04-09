@@ -85,6 +85,11 @@ export const createVenueConnection = async (connection: Omit<VenueNetwork, 'id'>
   return res.json();
 };
 
+export const getVenueNetworkGraph = async (venueId: number): Promise<VenueNetworkData> => {
+  const res = await apiRequest('GET', `/api/venue-network/graph/${venueId}`, undefined);
+  return res.json();
+};
+
 // Predictions
 export const getPrediction = async (id: number): Promise<Prediction> => {
   const res = await apiRequest('GET', `/api/predictions/${id}`, undefined);
