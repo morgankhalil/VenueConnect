@@ -53,7 +53,7 @@ export function Header({
       >
         <Menu className="h-6 w-6" />
       </button>
-      
+
       <div className="flex-1 px-4 flex justify-between">
         <div className="flex-1 flex items-center">
           <form 
@@ -76,8 +76,28 @@ export function Header({
             </div>
           </form>
         </div>
-        
+
         <div className="ml-4 flex items-center md:ml-6">
+          <div className="md:hidden flex-1 px-2">
+      <nav className="space-y-1">
+        {[
+          { name: "Dashboard", href: "/" },
+          { name: "Calendar", href: "/calendar" },
+          { name: "Discover", href: "/discover" },
+          { name: "Venue Network", href: "/venue-network" },
+          { name: "Messages", href: "/messages" },
+          { name: "Settings", href: "/settings" },
+        ].map((item) => (
+          <a
+            key={item.name}
+            href={item.href}
+            className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+          >
+            {item.name}
+          </a>
+        ))}
+      </nav>
+    </div>
           <Button 
             variant="ghost" 
             size="icon"
