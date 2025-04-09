@@ -28,9 +28,9 @@ export default function EventSummary({ events, title = "Monthly Summary" }: Even
       <CardHeader className="pb-3">
         <h3 className="text-lg font-medium">{title}</h3>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="bg-green-50 p-4 rounded-lg text-center border border-green-200">
+      <CardContent className="px-2 sm:px-6">
+        <div className="flex overflow-x-auto pb-2 sm:pb-0 sm:grid sm:grid-cols-2 lg:grid-cols-5 gap-4 snap-x">
+          <div className="bg-green-50 p-3 sm:p-4 rounded-lg text-center border border-green-200 min-w-[160px] flex-shrink-0 sm:min-w-0 sm:flex-shrink snap-center">
             <div className="text-3xl font-bold text-green-700">
               {events.filter(e => e.type === 'confirmed').length}
             </div>
