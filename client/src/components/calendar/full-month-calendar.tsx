@@ -224,8 +224,8 @@ const FullMonthCalendar: React.FC<FullMonthCalendarProps> = ({
   
   const getDayClass = (day: CalendarDay) => {
     return cn(
-      "relative h-32 sm:h-40 p-1.5 sm:p-2.5 border border-gray-200 bg-white",
-      "transition-all duration-200 ease-in-out group",
+      "relative h-24 sm:h-40 p-1 sm:p-2.5 border border-gray-200 bg-white",
+      "transition-all duration-200 ease-in-out group touch-manipulation",
       "first:rounded-tl-lg last:rounded-tr-lg",
       "[&:nth-child(n+36)]:rounded-b-lg", 
       !day.isCurrentMonth && "bg-gray-50/50 text-gray-400",
@@ -238,11 +238,11 @@ const FullMonthCalendar: React.FC<FullMonthCalendarProps> = ({
   
   return (
     <div className="w-full">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-        <h2 className="text-2xl font-semibold order-1 sm:order-2">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl font-semibold order-1">
           {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
         </h2>
-        <div className="flex items-center gap-2 order-2 sm:order-1">
+        <div className="flex items-center gap-1.5 sm:gap-2 order-2">
           <Button variant="outline" size="sm" onClick={previousMonth} className="rounded-full w-9 h-9 p-0">
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -288,8 +288,8 @@ const FullMonthCalendar: React.FC<FullMonthCalendarProps> = ({
               )}
             </div>
             
-            <div className="space-y-1 sm:space-y-1.5 overflow-y-auto max-h-20 sm:max-h-28">
-              {day.events.slice(0, isMobile ? 2 : 3).map(event => (
+            <div className="space-y-0.5 sm:space-y-1.5 overflow-y-auto max-h-16 sm:max-h-28">
+              {day.events.slice(0, isMobile ? 1 : 3).map(event => (
                 <div
                   key={event.id}
                   className={cn(
