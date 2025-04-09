@@ -24,174 +24,192 @@ export const getCollaborativeOpportunitiesWithDetails = async (): Promise<Collab
 
 // Venues
 export const getVenues = async (): Promise<Venue[]> => {
-  const res = await apiRequest('GET', '/api/venues', undefined);
-  return res.json();
+  return apiRequest('/api/venues');
 };
 
 export const getVenue = async (id: number): Promise<Venue> => {
-  const res = await apiRequest('GET', `/api/venues/${id}`, undefined);
-  return res.json();
+  return apiRequest(`/api/venues/${id}`);
 };
 
 export const createVenue = async (venue: Omit<Venue, 'id'>): Promise<Venue> => {
-  const res = await apiRequest('POST', '/api/venues', venue);
-  return res.json();
+  return apiRequest('/api/venues', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(venue)
+  });
 };
 
 export const updateVenue = async (id: number, venue: Partial<Venue>): Promise<Venue> => {
-  const res = await apiRequest('PATCH', `/api/venues/${id}`, venue);
-  return res.json();
+  return apiRequest(`/api/venues/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(venue)
+  });
 };
 
 export const getVenuesByUser = async (userId: number): Promise<Venue[]> => {
-  const res = await apiRequest('GET', `/api/users/${userId}/venues`, undefined);
-  return res.json();
+  return apiRequest(`/api/users/${userId}/venues`);
 };
 
 // Artists
 export const getArtists = async (filter?: string): Promise<Artist[]> => {
   const queryParam = filter ? `?filter=${encodeURIComponent(filter)}` : '';
-  const res = await apiRequest('GET', `/api/artists${queryParam}`, undefined);
-  return res.json();
+  return apiRequest(`/api/artists${queryParam}`);
 };
 
 export const getArtist = async (id: number): Promise<Artist> => {
-  const res = await apiRequest('GET', `/api/artists/${id}`, undefined);
-  return res.json();
+  return apiRequest(`/api/artists/${id}`);
 };
 
 export const createArtist = async (artist: Omit<Artist, 'id'>): Promise<Artist> => {
-  const res = await apiRequest('POST', '/api/artists', artist);
-  return res.json();
+  return apiRequest('/api/artists', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(artist)
+  });
 };
 
 // Events
 export const getEvents = async (): Promise<Event[]> => {
-  const res = await apiRequest('GET', '/api/events', undefined);
-  return res.json();
+  return apiRequest('/api/events');
 };
 
 export const getEvent = async (id: number): Promise<Event> => {
-  const res = await apiRequest('GET', `/api/events/${id}`, undefined);
-  return res.json();
+  return apiRequest(`/api/events/${id}`);
 };
 
 export const createEvent = async (event: Omit<Event, 'id'>): Promise<Event> => {
-  const res = await apiRequest('POST', '/api/events', event);
-  return res.json();
+  return apiRequest('/api/events', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(event)
+  });
 };
 
 export const getMessages = async () => {
-  const res = await apiRequest('GET', '/api/messages', undefined);
-  return res.json();
+  return apiRequest('/api/messages');
 };
 
 export const getEventsByVenue = async (venueId: number): Promise<Event[]> => {
-  const res = await apiRequest('GET', `/api/venues/${venueId}/events`, undefined);
-  return res.json();
+  return apiRequest(`/api/venues/${venueId}/events`);
 };
 
 export const getEventsByArtist = async (artistId: number): Promise<Event[]> => {
-  const res = await apiRequest('GET', `/api/artists/${artistId}/events`, undefined);
-  return res.json();
+  return apiRequest(`/api/artists/${artistId}/events`);
 };
 
 // Venue Network
 export const getVenueConnections = async (venueId: number): Promise<VenueNetwork[]> => {
-  const res = await apiRequest('GET', `/api/venues/${venueId}/connections`, undefined);
-  return res.json();
+  return apiRequest(`/api/venues/${venueId}/connections`);
 };
 
 export const createVenueConnection = async (connection: Omit<VenueNetwork, 'id'>): Promise<VenueNetwork> => {
-  const res = await apiRequest('POST', '/api/venue-network', connection);
-  return res.json();
+  return apiRequest('/api/venue-network', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(connection)
+  });
 };
 
 export const getVenueNetworkGraph = async (venueId: number): Promise<VenueNetworkData> => {
-  const res = await apiRequest('GET', `/api/venue-network/graph/${venueId}`, undefined);
-  return res.json();
+  return apiRequest(`/api/venue-network/graph/${venueId}`);
 };
 
 // Predictions
 export const getPrediction = async (id: number): Promise<Prediction> => {
-  const res = await apiRequest('GET', `/api/predictions/${id}`, undefined);
-  return res.json();
+  return apiRequest(`/api/predictions/${id}`);
 };
 
 export const getPredictionsByVenue = async (venueId: number): Promise<Prediction[]> => {
-  const res = await apiRequest('GET', `/api/venues/${venueId}/predictions`, undefined);
-  return res.json();
+  return apiRequest(`/api/venues/${venueId}/predictions`);
 };
 
 export const createPrediction = async (prediction: Omit<Prediction, 'id'>): Promise<Prediction> => {
-  const res = await apiRequest('POST', '/api/predictions', prediction);
-  return res.json();
+  return apiRequest('/api/predictions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(prediction)
+  });
 };
 
 // Inquiries
 export const createInquiry = async (inquiry: Omit<Inquiry, 'id'>): Promise<Inquiry> => {
-  const res = await apiRequest('POST', '/api/inquiries', inquiry);
-  return res.json();
+  return apiRequest('/api/inquiries', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(inquiry)
+  });
 };
 
 export const getInquiriesByVenue = async (venueId: number): Promise<Inquiry[]> => {
-  const res = await apiRequest('GET', `/api/venues/${venueId}/inquiries`, undefined);
-  return res.json();
+  return apiRequest(`/api/venues/${venueId}/inquiries`);
 };
 
 // Collaborative Opportunities
 export const createCollaborativeOpportunity = async (
   opportunity: Omit<CollaborativeOpportunity, 'id'>
 ): Promise<CollaborativeOpportunity> => {
-  const res = await apiRequest('POST', '/api/collaborative-opportunities', opportunity);
-  return res.json();
+  return apiRequest('/api/collaborative-opportunities', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(opportunity)
+  });
 };
 
 export const getCollaborativeOpportunitiesByVenue = async (
   venueId: number
 ): Promise<CollaborativeOpportunity[]> => {
-  const res = await apiRequest(
-    'GET',
-    `/api/venues/${venueId}/collaborative-opportunities`,
-    undefined
-  );
-  return res.json();
+  return apiRequest(`/api/venues/${venueId}/collaborative-opportunities`);
 };
 
 // Admin operations
 export const triggerVenueSync = async (venueId: number, radius?: number, limit?: number) => {
-  const res = await apiRequest('POST', '/api/admin/sync-venues', {
-    venueId,
-    radius,
-    limit
+  return apiRequest('/api/admin/sync-venues', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      venueId,
+      radius,
+      limit
+    })
   });
-  return res.json();
 };
 
 export const checkBandsintownApiKeyStatus = async () => {
-  const res = await apiRequest('GET', '/api/admin/api-keys/bandsintown/status');
-  return res.json();
+  return apiRequest('/api/admin/api-keys/bandsintown/status');
 };
 
 export const setBandsintownApiKey = async (apiKey: string) => {
-  const res = await apiRequest('POST', '/api/admin/api-keys/bandsintown', { apiKey });
-  return res.json();
+  return apiRequest('/api/admin/api-keys/bandsintown', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ apiKey })
+  });
 };
 
 // Webhook operations
 export const registerWebhook = async (callbackUrl: string) => {
-  const res = await apiRequest('POST', '/api/admin/webhooks/register', { callbackUrl });
-  return res.json();
+  return apiRequest('/api/admin/webhooks/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ callbackUrl })
+  });
 };
 
 export const unregisterWebhook = async (callbackUrl: string) => {
-  const res = await apiRequest('POST', '/api/admin/webhooks/unregister', { callbackUrl });
-  return res.json();
+  return apiRequest('/api/admin/webhooks/unregister', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ callbackUrl })
+  });
 };
 
 export const testWebhook = async (callbackUrl: string) => {
-  const res = await apiRequest('POST', '/api/admin/webhooks/test', { callbackUrl });
-  return res.json();
+  return apiRequest('/api/admin/webhooks/test', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ callbackUrl })
+  });
 };
 
 // All mock data has been moved to the database

@@ -150,6 +150,47 @@ router.get('/api/predictions', async (req, res) => {
   }
 });
 
+// Detailed predictions endpoint with complete artist and venue data
+router.get('/api/predictions/details', async (req, res) => {
+  try {
+    const result = await db
+      .select({
+        id: predictions.id,
+        artistId: predictions.artistId,
+        venueId: predictions.venueId,
+        suggestedDate: predictions.suggestedDate,
+        confidenceScore: predictions.confidenceScore,
+        status: predictions.status,
+        reasoning: predictions.reasoning,
+        createdAt: predictions.createdAt,
+        artist: artists,
+        venue: venues
+      })
+      .from(predictions)
+      .leftJoin(artists, eq(predictions.artistId, artists.id))
+      .leftJoin(venues, eq(predictions.venueId, venues.id));
+    
+    // Transform the data to make it easier to work with in the frontend
+    const transformedResult = result.map(item => ({
+      id: item.id,
+      artistId: item.artistId,
+      venueId: item.venueId,
+      suggestedDate: item.suggestedDate,
+      confidenceScore: item.confidenceScore,
+      status: item.status,
+      reasoning: item.reasoning,
+      createdAt: item.createdAt,
+      artist: item.artist,
+      venue: item.venue
+    }));
+    
+    res.json(transformedResult);
+  } catch (error) {
+    console.error("Error fetching prediction details:", error);
+    res.status(500).json({ error: "Failed to fetch prediction details" });
+  }
+});
+
 router.get('/venues/:id/predictions', async (req, res) => {
   const result = await db
     .select()
@@ -513,6 +554,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+  // Tour data endpoint
+  app.get("/api/tours", (_, res) => {
+    // For now we're returning mock tour data
+    // In a production app this would come from external APIs or our database
+    const tourGroups = [
+      {
+        id: "t1",
+        name: "Summer East Coast Tour 2025",
+        artistName: "The Midnight Hour",
+        artistId: "ar1",
+        genre: "indie",
+        region: "East Coast",
+        startDate: "2025-06-01",
+        endDate: "2025-07-15",
+        totalShows: 12,
+        confirmedShows: 8,
+        events: [
+          {
+            id: "e1",
+            date: "2025-06-01",
+            venue: "Paradise Rock Club",
+            city: "Boston, MA",
+            isConfirmed: true,
+            isRoutingOpportunity: false,
+            latitude: 42.3486,
+            longitude: -71.1029
+          },
+          {
+            id: "e2",
+            date: "2025-06-04",
+            venue: "Brooklyn Steel",
+            city: "Brooklyn, NY",
+            isConfirmed: true,
+            isRoutingOpportunity: false,
+            latitude: 40.7128,
+            longitude: -73.9352
+          },
+          {
+            id: "e3",
+            date: "2025-06-08",
+            venue: "",
+            city: "Philadelphia, PA",
+            isConfirmed: false,
+            isRoutingOpportunity: true,
+            latitude: 39.9526,
+            longitude: -75.1652
+          },
+          {
+            id: "e4",
+            date: "2025-06-12",
+            venue: "9:30 Club",
+            city: "Washington, DC",
+            isConfirmed: true,
+            isRoutingOpportunity: false,
+            latitude: 38.9072,
+            longitude: -77.0369
+          }
+        ]
+      },
+      {
+        id: "t2",
+        name: "Midwest Tour 2025",
+        artistName: "Lunar Eclipse",
+        artistId: "ar2",
+        genre: "rock",
+        region: "Midwest",
+        startDate: "2025-07-10",
+        endDate: "2025-08-05",
+        totalShows: 10,
+        confirmedShows: 5,
+        events: [
+          {
+            id: "e5",
+            date: "2025-07-10",
+            venue: "Metro",
+            city: "Chicago, IL",
+            isConfirmed: true,
+            isRoutingOpportunity: false,
+            latitude: 41.8781,
+            longitude: -87.6298
+          },
+          {
+            id: "e6",
+            date: "2025-07-13",
+            venue: "",
+            city: "Milwaukee, WI",
+            isConfirmed: false,
+            isRoutingOpportunity: true,
+            latitude: 43.0389,
+            longitude: -87.9065
+          },
+          {
+            id: "e7",
+            date: "2025-07-18",
+            venue: "First Avenue",
+            city: "Minneapolis, MN",
+            isConfirmed: true,
+            isRoutingOpportunity: false,
+            latitude: 44.9778,
+            longitude: -93.2650
+          }
+        ]
+      }
+    ];
+    
+    res.json(tourGroups);
+  });
 
   // Map config endpoint - now supporting Leaflet configs
   app.get("/api/map-config", (_, res) => {

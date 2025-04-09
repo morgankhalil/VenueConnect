@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { getPredictionsWithDetails, getTourGroups } from "@/lib/api";
+import { apiRequest } from "@/lib/queryClient";
 import { Search, Filter, SlidersHorizontal, Music, Clock, MapPin, ArrowUpRight, Calendar, Route } from "lucide-react";
 import { PredictionWithDetails, TourGroup } from "@/types";
 
@@ -21,51 +22,59 @@ export default function Discover() {
   const { toast } = useToast();
 
   // Fetch predictions data (individual opportunities)
-  const { data: predictions, isLoading: predictionsLoading } = useQuery({
+  const { data: predictions = [], isLoading: predictionsLoading } = useQuery({
     queryKey: ['/api/predictions'],
-    queryFn: getPredictionsWithDetails
+    queryFn: () => apiRequest('/api/predictions').then(data => {
+      // Ensure we always return an array even if the endpoint returns null/undefined
+      return Array.isArray(data) ? data : [];
+    })
   });
   
   // Fetch tour groups
-  const { data: tourGroups, isLoading: toursLoading } = useQuery({
+  const { data: tourGroups = [], isLoading: toursLoading } = useQuery({
     queryKey: ['/api/tours'],
-    queryFn: getTourGroups
+    queryFn: () => apiRequest('/api/tours').then(data => {
+      // Ensure we always return an array even if the endpoint returns null/undefined 
+      return Array.isArray(data) ? data : [];
+    })
   });
   
   // Combine individual opportunities with tour data for unified view
   const [combinedOpportunities, setCombinedOpportunities] = useState<any[]>([]);
   
   useEffect(() => {
-    if (predictions && tourGroups) {
-      // Create a combined dataset
-      const combined = [...(predictions || [])];
-      
-      // Add tour opportunities with source information to help with filtering
-      const tourOpportunities = tourGroups?.flatMap(tour => {
-        return tour.events
-          .filter(event => event.isRoutingOpportunity)
-          .map(event => ({
-            id: `tour-${tour.id}-${event.id}`,
-            artist: { 
-              name: tour.artistName,
-              genres: [tour.genre]
-            },
-            suggestedDate: event.date,
-            confidenceScore: 90, // Tours tend to be higher confidence
-            venue: {
-              name: event.venue
-            },
-            reasoning: `Part of ${tour.name} tour`,
-            latitude: event.latitude,
-            longitude: event.longitude,
-            isTourOpportunity: true,
-            tourId: tour.id,
-            tourName: tour.name
-          }));
-      }) || [];
-      
-      setCombinedOpportunities([...combined, ...tourOpportunities]);
-    }
+    // Create a combined dataset - ensure predictions is treated as an array
+    const predictionArray = Array.isArray(predictions) ? predictions : [];
+    
+    // Add tour opportunities with source information to help with filtering
+    const tourOpportunities = Array.isArray(tourGroups) 
+      ? tourGroups.flatMap(tour => {
+          if (!tour || !Array.isArray(tour.events)) return [];
+          
+          return tour.events
+            .filter(event => event && event.isRoutingOpportunity)
+            .map(event => ({
+              id: `tour-${tour.id || 'unknown'}-${event.id || 'unknown'}`,
+              artist: { 
+                name: tour.artistName || 'Unknown Artist',
+                genres: tour.genre ? [tour.genre] : []
+              },
+              suggestedDate: event.date || new Date().toISOString(),
+              confidenceScore: 90, // Tours tend to be higher confidence
+              venue: {
+                name: event.venue || 'Unknown Venue'
+              },
+              reasoning: `Part of ${tour.name || 'tour'} tour`,
+              latitude: event.latitude || 0,
+              longitude: event.longitude || 0,
+              isTourOpportunity: true,
+              tourId: tour.id || 'unknown',
+              tourName: tour.name || 'Tour'
+            }));
+        }) 
+      : [];
+    
+    setCombinedOpportunities([...predictionArray, ...tourOpportunities]);
   }, [predictions, tourGroups]);
   
   const handleSelectTour = (tour: TourGroup) => {
