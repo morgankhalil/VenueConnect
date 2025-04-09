@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import FullMonthCalendar from "@/components/calendar/full-month-calendar";
+import CalendarLegend from "@/components/calendar/calendar-legend";
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -351,78 +353,16 @@ export default function Calendar() {
             <TabsContent value="month">
               <div className="space-y-6">
                 <Card className="w-full">
-                  <CardContent className="p-0 sm:p-0 md:p-0">
-                    <CalendarComponent
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        className="rounded-md border w-full max-w-full" 
-                        style={{ width: '100%' }}
-                        modifiers={{
-                        event: filteredEvents.map(event => event.date),
-                        confirmed: filteredEvents.filter(e => e.type === 'confirmed').map(e => e.date),
-                        hold: filteredEvents.filter(e => e.type === 'hold').map(e => e.date),
-                        opportunity: filteredEvents.filter(e => e.type === 'opportunity').map(e => e.date),
-                        inquiry: filteredEvents.filter(e => e.type === 'inquiry').map(e => e.date),
-                        network: filteredEvents.filter(e => e.type === 'network').map(e => e.date)
-                      }}
-                      modifiersStyles={{
-                        confirmed: {
-                          fontWeight: 'bold',
-                          backgroundColor: '#d1fae5', // green-100
-                          color: '#065f46', // green-800
-                          border: '1px solid #6ee7b7' // green-300
-                        },
-                        hold: {
-                          fontWeight: 'bold',
-                          backgroundColor: '#fef3c7', // amber-100
-                          color: '#92400e', // amber-800
-                          border: '1px solid #fcd34d' // amber-300
-                        },
-                        opportunity: {
-                          fontWeight: 'bold',
-                          backgroundColor: '#dbeafe', // blue-100
-                          color: '#1e40af', // blue-800
-                          border: '1px solid #93c5fd' // blue-300
-                        },
-                        inquiry: {
-                          fontWeight: 'bold',
-                          backgroundColor: '#f3e8ff', // purple-100
-                          color: '#6b21a8', // purple-800
-                          border: '1px solid #d8b4fe' // purple-300
-                        },
-                        network: {
-                          fontWeight: 'bold',
-                          backgroundColor: '#f3f4f6', // gray-100
-                          color: '#1f2937', // gray-800
-                          border: '1px solid #d1d5db' // gray-300
-                        }
-                      }}
+                  <CardContent className="p-4">
+                    <FullMonthCalendar 
+                      events={filteredEvents}
+                      selectedDate={date || new Date()}
+                      onDateChange={setDate}
+                      onEventClick={handleEventClick}
                     />
                     
                     {/* Calendar Legend */}
-                    <div className="mt-4 flex flex-wrap gap-3 justify-center">
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded bg-green-500"></div>
-                        <span className="text-xs">Confirmed</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded bg-amber-500"></div>
-                        <span className="text-xs">Hold</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded bg-blue-500"></div>
-                        <span className="text-xs">Opportunity</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded bg-purple-500"></div>
-                        <span className="text-xs">Inquiry</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded bg-gray-500"></div>
-                        <span className="text-xs">Network</span>
-                      </div>
-                    </div>
+                    <CalendarLegend />
                   </CardContent>
                 </Card>
 
