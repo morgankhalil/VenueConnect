@@ -224,31 +224,35 @@ const FullMonthCalendar: React.FC<FullMonthCalendarProps> = ({
   
   const getDayClass = (day: CalendarDay) => {
     return cn(
-      "relative h-28 sm:h-36 p-1.5 sm:p-2.5 border border-gray-200 bg-white",
-      "transition-all duration-200 ease-in-out",
+      "relative h-32 sm:h-40 p-1.5 sm:p-2.5 border border-gray-200 bg-white",
+      "transition-all duration-200 ease-in-out group",
       "first:rounded-tl-lg last:rounded-tr-lg",
       "[&:nth-child(n+36)]:rounded-b-lg", 
       !day.isCurrentMonth && "bg-gray-50/50 text-gray-400",
-      day.isToday && "bg-blue-50/20 font-medium",
+      day.isToday && "bg-blue-50/10 font-medium",
       day.isSelected && "ring-2 ring-primary ring-inset",
-      "hover:bg-gray-50/80 cursor-pointer"
+      "hover:bg-gray-50/80 cursor-pointer",
+      "sm:hover:shadow-sm"
     );
   };
   
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-6">
-        <Button variant="outline" size="sm" onClick={previousMonth} className="rounded-full px-4">
-          <ChevronLeft className="h-4 w-4 mr-1" />
-          Previous
-        </Button>
-        <h2 className="text-xl font-semibold">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+        <h2 className="text-2xl font-semibold order-1 sm:order-2">
           {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
         </h2>
-        <Button variant="outline" size="sm" onClick={nextMonth} className="rounded-full px-4">
-          Next
-          <ChevronRight className="h-4 w-4 ml-1" />
-        </Button>
+        <div className="flex items-center gap-2 order-2 sm:order-1">
+          <Button variant="outline" size="sm" onClick={previousMonth} className="rounded-full w-9 h-9 p-0">
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" onClick={() => setCurrentMonth(new Date())} className="rounded-full text-xs">
+            Today
+          </Button>
+          <Button variant="outline" size="sm" onClick={nextMonth} className="rounded-full w-9 h-9 p-0">
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
       
       <div className="mb-2 grid grid-cols-7 text-center rounded-t-lg overflow-hidden">
@@ -289,8 +293,9 @@ const FullMonthCalendar: React.FC<FullMonthCalendarProps> = ({
                 <div
                   key={event.id}
                   className={cn(
-                    "text-xs px-2 py-1 rounded-md truncate cursor-pointer transition-all",
-                    "hover:shadow-sm",
+                    "text-xs px-2 py-1.5 rounded-md truncate cursor-pointer transition-all",
+                    "hover:shadow-md hover:scale-[1.02] hover:-translate-y-[1px]",
+                    "group-hover:shadow-sm",
                     getEventStyles(event.type)
                   )}
                   onClick={(e) => {
@@ -298,9 +303,14 @@ const FullMonthCalendar: React.FC<FullMonthCalendarProps> = ({
                     onEventClick && onEventClick(event);
                   }}
                 >
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getDotColor(event.type)}`}></div>
-                    <span className="truncate">{event.title}</span>
+                    <span className="truncate font-medium">{event.title}</span>
+                    {event.startTime && (
+                      <span className="text-[10px] opacity-75 ml-auto whitespace-nowrap">
+                        {event.startTime}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
