@@ -7,7 +7,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { getMockPredictions, getMockTourGroups } from "@/lib/api";
+import { getPredictionsWithDetails, getTourGroups } from "@/lib/api";
 import { Search, Filter, SlidersHorizontal, Music, Clock, MapPin, ArrowUpRight, Calendar, Route } from "lucide-react";
 import { PredictionWithDetails, TourGroup } from "@/types";
 
@@ -29,7 +29,7 @@ export default function Discover() {
   // Fetch tour groups
   const { data: tourGroups, isLoading: toursLoading } = useQuery({
     queryKey: ['/api/tours'],
-    queryFn: getMockTourGroups
+    queryFn: getTourGroups
   });
   
   // Combine individual opportunities with tour data for unified view
