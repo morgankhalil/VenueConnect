@@ -63,23 +63,30 @@ async function seed() {
 
   console.log("Seeded venues:", demoVenues);
 
-  // Create network connections
-  await db.insert(venueNetwork).values([
-    {
-      venueId: demoVenues[0].id,
-      connectedVenueId: demoVenues[1].id,
-      status: 'active',
-      trustScore: 85,
-      collaborativeBookings: 12
-    },
-    {
-      venueId: demoVenues[0].id,
-      connectedVenueId: demoVenues[2].id,
-      status: 'active',
-      trustScore: 90,
-      collaborativeBookings: 8
+  // Create bidirectional network connections
+  const networkConnections = [];
+  for (let i = 0; i < demoVenues.length; i++) {
+    for (let j = i + 1; j < demoVenues.length; j++) {
+      networkConnections.push(
+        {
+          venueId: demoVenues[i].id,
+          connectedVenueId: demoVenues[j].id,
+          status: 'active',
+          trustScore: 85,
+          collaborativeBookings: Math.floor(Math.random() * 20)
+        },
+        {
+          venueId: demoVenues[j].id,
+          connectedVenueId: demoVenues[i].id,
+          status: 'active',
+          trustScore: 85,
+          collaborativeBookings: Math.floor(Math.random() * 20)
+        }
+      );
     }
-  ]);
+  }
+  
+  await db.insert(venueNetwork).values(networkConnections);
 
   console.log("Network connections created");
 }
