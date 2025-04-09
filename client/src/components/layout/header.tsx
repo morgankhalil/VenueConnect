@@ -56,7 +56,7 @@ export function Header({
       <div className="flex-1 px-4 flex justify-between">
         <div className="flex-1 flex items-center">
           <form 
-            className="max-w-lg w-full lg:max-w-xs"
+            className="max-w-lg w-full md:max-w-xs hidden md:block"
             onSubmit={handleSearchSubmit}
           >
             <label htmlFor="search" className="sr-only">Search</label>

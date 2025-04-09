@@ -54,18 +54,18 @@ const generateMockEvents = (): Record<string, CalendarEvent> => {
     "The National", "Glass Animals", "Phoebe Bridgers", "The War on Drugs", 
     "Soccer Mommy", "Big Thief", "Lucy Dacus", "Khruangbin", "Kurt Vile"
   ];
-  
+
   const venues = [
     "The Paramount Theatre", "City Arts Center", "The Fillmore", "9:30 Club", 
     "First Avenue", "Bowery Ballroom", "The Troubadour", "The Wiltern", 
     "Brooklyn Steel", "The Independent"
   ];
-  
+
   const genres = [
     "Indie Rock", "Electronic", "Jazz Fusion", "Synthwave", "Folk", 
     "Rock", "Indie", "Pop", "Hip-Hop", "Jazz", "Alternative"
   ];
-  
+
   const descriptions = [
     "Sold out show for album tour",
     "Tentative date on hold for upcoming tour",
@@ -78,7 +78,7 @@ const generateMockEvents = (): Record<string, CalendarEvent> => {
     "Intimate venue performance",
     "Tour kickoff event"
   ];
-  
+
   // Predefined events 1-5 for backwards compatibility
   events['1'] = {
     id: 1,
@@ -93,7 +93,7 @@ const generateMockEvents = (): Record<string, CalendarEvent> => {
     genre: 'Indie Rock',
     ticketUrl: 'https://example.com/tickets'
   };
-  
+
   events['2'] = {
     id: 2,
     title: 'Echoes of Tomorrow',
@@ -106,7 +106,7 @@ const generateMockEvents = (): Record<string, CalendarEvent> => {
     artist: 'Cosmic Drift',
     genre: 'Electronic'
   };
-  
+
   events['3'] = {
     id: 3,
     title: 'Harmonic Fusion Tour',
@@ -120,7 +120,7 @@ const generateMockEvents = (): Record<string, CalendarEvent> => {
     artist: 'Rhythm Collective',
     genre: 'Jazz Fusion'
   };
-  
+
   events['4'] = {
     id: 4,
     title: 'Neon Dreams',
@@ -134,7 +134,7 @@ const generateMockEvents = (): Record<string, CalendarEvent> => {
     artist: 'Synthwave Pioneers',
     genre: 'Synthwave'
   };
-  
+
   events['5'] = {
     id: 5,
     title: 'Acoustic Journeys',
@@ -147,37 +147,37 @@ const generateMockEvents = (): Record<string, CalendarEvent> => {
     artist: 'Ember & Oak',
     genre: 'Folk'
   };
-  
+
   // Generate 45 more random events (total 50) to cover all possible IDs
   for (let i = 6; i <= 50; i++) {
     const today = new Date();
     const randomMonthOffset = -2 + Math.floor(Math.random() * 5); // -2 to +2 months
     const randomDay = 1 + Math.floor(Math.random() * 28);
     const date = new Date(today.getFullYear(), today.getMonth() + randomMonthOffset, randomDay);
-    
+
     const hours = 18 + Math.floor(Math.random() * 4);
     const minutes = [0, 15, 30, 45][Math.floor(Math.random() * 4)];
     const startTime = `${hours}:${minutes.toString().padStart(2, '0')} PM`;
-    
+
     const durationHours = 1 + Math.floor(Math.random() * 3);
     const endHours = hours + durationHours > 12 ? hours + durationHours - 12 : hours + durationHours;
     const endTime = `${endHours}:${minutes.toString().padStart(2, '0')} PM`;
-    
+
     const artist = artists[Math.floor(Math.random() * artists.length)];
     const venue = venues[Math.floor(Math.random() * venues.length)];
     const genre = genres[Math.floor(Math.random() * genres.length)];
     const description = descriptions[Math.floor(Math.random() * descriptions.length)] + ` featuring ${artist}`;
-    
+
     // Determine event type
     const typeRand = Math.random();
     let type: 'confirmed' | 'opportunity' | 'network' | 'hold' | 'inquiry';
-    
+
     if (typeRand < 0.2) type = 'confirmed';
     else if (typeRand < 0.4) type = 'hold';
     else if (typeRand < 0.6) type = 'opportunity';
     else if (typeRand < 0.8) type = 'inquiry';
     else type = 'network';
-    
+
     const event: CalendarEvent = {
       id: i,
       title: `${artist} - ${venue} Show`,
@@ -190,20 +190,20 @@ const generateMockEvents = (): Record<string, CalendarEvent> => {
       artist,
       genre
     };
-    
+
     // Add confidence score for opportunities and inquiries
     if (type === 'opportunity' || type === 'inquiry') {
       event.confidence = 70 + Math.floor(Math.random() * 25); // 70-94%
     }
-    
+
     // Add ticket URL for confirmed events
     if (type === 'confirmed') {
       event.ticketUrl = "https://example.com/tickets";
     }
-    
+
     events[i.toString()] = event;
   }
-  
+
   return events;
 };
 
@@ -213,7 +213,7 @@ export default function EventDetails() {
   const [, params] = useRoute('/event/:id');
   const [, setLocation] = useLocation();
   const [event, setEvent] = useState<CalendarEvent | null>(null);
-  
+
   useEffect(() => {
     // In a real app, you would fetch this data from an API
     if (params && params.id) {
@@ -223,7 +223,7 @@ export default function EventDetails() {
       }
     }
   }, [params]);
-  
+
   if (!event) {
     return (
       <div className="container mx-auto py-8 px-4">
@@ -240,7 +240,7 @@ export default function EventDetails() {
       </div>
     );
   }
-  
+
   const typeColors = {
     confirmed: 'bg-green-100 text-green-800 border-green-200',
     hold: 'bg-amber-100 text-amber-800 border-amber-200',
@@ -317,7 +317,7 @@ export default function EventDetails() {
 
   const renderConfirmedDetails = () => {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <Card className="lg:col-span-3">
           <CardHeader className="bg-green-50 border-b border-green-200">
             <div className="flex items-center">
@@ -329,7 +329,7 @@ export default function EventDetails() {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               <div className="p-4 border rounded-lg shadow-sm">
                 <div className="text-sm font-medium text-gray-500 mb-1">Ticket Sales</div>
                 <div className="mt-1 flex justify-between items-end">
@@ -339,7 +339,7 @@ export default function EventDetails() {
                 <Progress className="h-2 mt-3" value={78} />
                 <div className="mt-1 text-xs text-gray-500">78% sold (350 capacity)</div>
               </div>
-              
+
               <div className="p-4 border rounded-lg shadow-sm">
                 <div className="text-sm font-medium text-gray-500 mb-1">Revenue</div>
                 <div className="text-3xl font-bold">{getProjectedRevenue()}</div>
@@ -348,7 +348,7 @@ export default function EventDetails() {
                 </div>
                 <div className="mt-3 text-sm text-green-600">On track to exceed projections</div>
               </div>
-              
+
               <div className="p-4 border rounded-lg shadow-sm">
                 <div className="text-sm font-medium text-gray-500 mb-1">Event Status</div>
                 <div className="flex items-center space-x-2">
@@ -536,7 +536,7 @@ export default function EventDetails() {
 
   const renderHoldDetails = () => {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <Card className="lg:col-span-3">
           <CardHeader className="bg-amber-50 border-b border-amber-200">
             <div className="flex items-center">
@@ -548,7 +548,7 @@ export default function EventDetails() {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               <div className="p-4 border rounded-lg shadow-sm">
                 <div className="text-sm font-medium text-gray-500 mb-1">Hold Status</div>
                 <div className="text-3xl font-bold">First Hold</div>
@@ -560,7 +560,7 @@ export default function EventDetails() {
                   Expires: {new Date(event.date.getTime() - 7*24*60*60*1000).toLocaleDateString()}
                 </div>
               </div>
-              
+
               <div className="p-4 border rounded-lg shadow-sm">
                 <div className="text-sm font-medium text-gray-500 mb-1">Contract Status</div>
                 <div className="flex items-center mt-1">
@@ -582,7 +582,7 @@ export default function EventDetails() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="p-4 border rounded-lg shadow-sm">
                 <div className="text-sm font-medium text-gray-500 mb-1">Projected Revenue</div>
                 <div className="text-3xl font-bold">{getProjectedRevenue()}</div>
@@ -721,7 +721,7 @@ export default function EventDetails() {
                   <div>
                     <div className="font-medium">Contract Sent</div>
                     <div className="text-xs text-gray-500">{new Date(event.date.getTime() - 3*24*60*60*1000).toLocaleDateString()}</div>
-                    <div className="text-sm mt-1">Draft contract sent to agent</div>
+                    <div className="text-sm mt-1">Sent contract draft to agent</div>
                   </div>
                 </div>
                 <div className="relative">
@@ -754,7 +754,7 @@ export default function EventDetails() {
 
   const renderOpportunityDetails = () => {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <Card className="lg:col-span-3">
           <CardHeader className="bg-blue-50 border-b border-blue-200">
             <div className="flex items-center">
@@ -766,7 +766,7 @@ export default function EventDetails() {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6">
               <div className="lg:col-span-2 p-5 border rounded-lg shadow-sm">
                 <div className="text-base font-medium mb-4">Match Confidence Analysis</div>
                 <Progress className="h-3" value={event.confidence || 0} />
@@ -774,7 +774,7 @@ export default function EventDetails() {
                   <span className="text-sm text-gray-500">Based on genre, popularity, and routing</span>
                   <span className="text-blue-600 font-semibold">{event.confidence}%</span>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4 mt-6">
                   <div className="flex items-center">
                     <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
@@ -794,8 +794,8 @@ export default function EventDetails() {
                   </div>
                 </div>
               </div>
-              
-              <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+
+              <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                 <div className="p-4 border rounded-lg shadow-sm">
                   <div className="text-sm font-medium text-gray-500 mb-1">Similar Artist Performance</div>
                   <div className="text-3xl font-bold text-green-600">85%</div>
@@ -806,7 +806,7 @@ export default function EventDetails() {
                     Based on 12 similar artists at your venue
                   </div>
                 </div>
-                
+
                 <div className="p-4 border rounded-lg shadow-sm">
                   <div className="text-sm font-medium text-gray-500 mb-1">Routing Fit</div>
                   <div className="text-3xl font-bold text-blue-600">High</div>
@@ -817,7 +817,7 @@ export default function EventDetails() {
                     Portland (2 days before), Seattle (2 days after)
                   </div>
                 </div>
-                
+
                 <div className="p-4 border rounded-lg shadow-sm">
                   <div className="text-sm font-medium text-gray-500 mb-1">Estimated Revenue</div>
                   <div className="text-3xl font-bold">{getProjectedRevenue()}</div>
@@ -854,7 +854,7 @@ export default function EventDetails() {
             <CardDescription>Popularity metrics and trends</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 text-center mb-6">
               <div className="p-4 border rounded-lg">
                 <div className="text-xs text-gray-500 mb-2">Spotify Monthly</div>
                 <div className="text-2xl font-semibold">1.2M</div>
@@ -876,7 +876,7 @@ export default function EventDetails() {
                 <div className="text-sm mt-1">15 upcoming shows</div>
               </div>
             </div>
-              
+
             <div className="p-4 border rounded-lg mb-6">
               <div className="text-sm font-medium mb-3">Growth Trend (6 months)</div>
               <div className="h-24 bg-gray-50 rounded-md relative mb-2">
@@ -898,7 +898,7 @@ export default function EventDetails() {
                 <span>March</span>
               </div>
             </div>
-            
+
             <div className="p-4 border rounded-lg">
               <div className="text-sm font-medium mb-3">Similar Artists Performance</div>
               <div className="space-y-4">
@@ -984,7 +984,7 @@ export default function EventDetails() {
             <CardDescription>Local demand and demographic fit</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div className="p-4 border rounded-lg">
                 <div className="text-sm font-medium mb-3">Local Audience Size</div>
                 <div className="text-3xl font-bold text-blue-600">5,200+</div>
@@ -1049,7 +1049,7 @@ export default function EventDetails() {
 
   const renderInquiryDetails = () => {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <Card className="lg:col-span-3">
           <CardHeader className="bg-purple-50 border-b border-purple-200">
             <div className="flex items-center">
@@ -1061,7 +1061,7 @@ export default function EventDetails() {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               <div className="lg:col-span-2 p-4 border rounded-lg shadow-sm">
                 <div className="text-base font-medium mb-4">Inquiry Timeline</div>
                 <div className="relative pl-8 pb-3">
@@ -1100,7 +1100,7 @@ export default function EventDetails() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="p-4 border rounded-lg shadow-sm">
                 <div className="text-sm font-medium text-gray-500 mb-3">Match Confidence</div>
                 <div className="text-3xl font-bold text-purple-600">{event.confidence}%</div>
@@ -1123,7 +1123,7 @@ export default function EventDetails() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="p-4 border rounded-lg shadow-sm">
                 <div className="text-sm font-medium text-gray-500 mb-3">Projected Revenue</div>
                 <div className="text-3xl font-bold">{getProjectedRevenue()}</div>
@@ -1212,7 +1212,7 @@ export default function EventDetails() {
                   <Badge className="bg-purple-100 text-purple-800 border-purple-200">Sent by You</Badge>
                 </div>
               </div>
-              
+
               <div className="p-4 border rounded-lg">
                 <div className="flex justify-between mb-2">
                   <div className="font-medium">Automated Response</div>
@@ -1225,7 +1225,7 @@ export default function EventDetails() {
                   <Badge className="bg-gray-100 text-gray-800 border-gray-200">Automated</Badge>
                 </div>
               </div>
-              
+
               <div className="p-4 border rounded-lg border-dashed border-gray-300 bg-gray-50">
                 <div className="flex justify-between mb-2">
                   <div className="font-medium text-gray-500">Follow-up Call (Scheduled)</div>
@@ -1248,7 +1248,7 @@ export default function EventDetails() {
             <CardDescription>Preliminary offer terms to prepare</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               <div className="p-4 border rounded-lg">
                 <div className="text-sm font-medium mb-2">Financial Terms</div>
                 <div className="space-y-2">
@@ -1270,7 +1270,7 @@ export default function EventDetails() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="p-4 border rounded-lg">
                 <div className="text-sm font-medium mb-2">Production Details</div>
                 <div className="space-y-2">
@@ -1292,7 +1292,7 @@ export default function EventDetails() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="p-4 border rounded-lg">
                 <div className="text-sm font-medium mb-2">Other Terms</div>
                 <div className="space-y-2">
@@ -1323,7 +1323,7 @@ export default function EventDetails() {
 
   const renderNetworkDetails = () => {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <Card className="lg:col-span-3">
           <CardHeader className="bg-gray-50 border-b border-gray-200">
             <div className="flex items-center">
@@ -1335,7 +1335,7 @@ export default function EventDetails() {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               <div className="p-4 border rounded-lg shadow-sm">
                 <div className="flex items-center gap-3 mb-3">
                   <Building className="h-6 w-6 text-gray-500" />
@@ -1356,10 +1356,10 @@ export default function EventDetails() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="p-4 border rounded-lg shadow-sm md:col-span-2">
                 <div className="text-base font-medium mb-3">Collaboration Opportunities</div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                   <div className="p-3 bg-gray-50 rounded-md">
                     <div className="text-sm font-medium mb-1">After-party Event</div>
                     <div className="text-xs text-gray-600">
@@ -1511,7 +1511,7 @@ export default function EventDetails() {
             <CardDescription>Past and ongoing partnerships with this venue</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               <div className="p-4 border rounded-lg">
                 <div className="text-sm font-medium mb-3">Collaboration Stats</div>
                 <div className="space-y-3">
@@ -1538,7 +1538,7 @@ export default function EventDetails() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="p-4 border rounded-lg md:col-span-2">
                 <div className="text-sm font-medium mb-3">Recent Collaborations</div>
                 <div className="space-y-3">
@@ -1589,7 +1589,7 @@ export default function EventDetails() {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Calendar
         </Button>
-        
+
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <div className="flex items-center gap-3">
@@ -1604,7 +1604,7 @@ export default function EventDetails() {
               {event.description || `${event.type === 'confirmed' ? 'Performance' : 'Potential performance'} at ${event.venue || 'venue'}`}
             </p>
           </div>
-          
+
           <div className="flex gap-4">
             <Button variant="outline">
               <Calendar className="h-4 w-4 mr-2" />
@@ -1623,7 +1623,7 @@ export default function EventDetails() {
           </div>
         </div>
       </div>
-      
+
       <div className="bg-slate-50 rounded-lg p-6 mb-8">
         <div className="flex flex-col md:flex-row gap-y-4 gap-x-12">
           <div className="flex items-center">
@@ -1635,7 +1635,7 @@ export default function EventDetails() {
               <div className="font-medium">{typeLabels[event.type]}</div>
             </div>
           </div>
-          
+
           <div className="flex items-center">
             <Calendar className="h-6 w-6 mr-3 text-gray-500" />
             <div>
@@ -1648,7 +1648,7 @@ export default function EventDetails() {
               })}</div>
             </div>
           </div>
-          
+
           {event.startTime && (
             <div className="flex items-center">
               <Clock className="h-6 w-6 mr-3 text-gray-500" />
@@ -1658,7 +1658,7 @@ export default function EventDetails() {
               </div>
             </div>
           )}
-          
+
           <div className="flex items-center">
             <MapPin className="h-6 w-6 mr-3 text-gray-500" />
             <div>
@@ -1666,7 +1666,7 @@ export default function EventDetails() {
               <div className="font-medium">{event.venue}</div>
             </div>
           </div>
-          
+
           {event.genre && (
             <div className="flex items-center">
               <Music className="h-6 w-6 mr-3 text-gray-500" />
@@ -1678,13 +1678,13 @@ export default function EventDetails() {
           )}
         </div>
       </div>
-      
+
       <div className="bg-white p-3 rounded-lg border">
         <p className="text-sm text-gray-600 mb-2 bg-gray-50 p-4 rounded">
           {typeDescriptions[event.type]}
         </p>
       </div>
-      
+
       <div className="mt-8">
         {renderDetailsSection()}
       </div>
