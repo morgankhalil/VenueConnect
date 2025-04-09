@@ -5,7 +5,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getVenueNetworkGraph, getCollaborativeOpportunitiesByVenue, createVenueConnection, getMockCollaborativeOpportunities } from "@/lib/api";
+import { getVenueNetworkGraph, getCollaborativeOpportunitiesByVenue, createVenueConnection, getCollaborativeOpportunitiesWithDetails } from "@/lib/api";
 import { CollaborativeOpportunityWithDetails, Venue } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -15,7 +15,7 @@ export default function VenueNetwork() {
   const { toast } = useToast();
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const queryClient = useQueryClient();
-  
+
   // For now, let's hardcode a current venue ID until we have authentication
   const currentVenueId = 1; // The Echo Lounge venue ID
 
@@ -26,14 +26,11 @@ export default function VenueNetwork() {
   });
 
   // Fetch collaborative opportunities
-  // TODO: Replace with real API once it's fully implemented with proper joined data
   const { data: collaborativeOpportunities, isLoading: isLoadingOpportunities } = useQuery({
     queryKey: ['/api/venues', currentVenueId, 'collaborative-opportunities'],
-    queryFn: getMockCollaborativeOpportunities
-    // Real API would be:
-    // queryFn: () => getCollaborativeOpportunitiesByVenue(currentVenueId)
+    queryFn: () => getCollaborativeOpportunitiesByVenue(currentVenueId)
   });
-  
+
   // Mutation for creating a venue connection
   const createConnectionMutation = useMutation({
     mutationFn: (connection: { 
@@ -49,7 +46,7 @@ export default function VenueNetwork() {
         description: "Your invitation has been sent to the venue."
       });
       setShowInviteDialog(false);
-      
+
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/venue-network/graph', currentVenueId] });
     },
@@ -102,9 +99,9 @@ export default function VenueNetwork() {
           "rejected": { color: "bg-red-100 text-red-800", label: "Rejected" },
           "confirmed": { color: "bg-blue-100 text-blue-800", label: "Confirmed" }
         };
-        
+
         const statusInfo = statusMap[row.status] || statusMap.pending;
-        
+
         return (
           <Badge className={statusInfo.color}>
             {statusInfo.label}
@@ -136,7 +133,7 @@ export default function VenueNetwork() {
     <div className="py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
         <h1 className="text-2xl font-heading font-semibold text-gray-900">Venue Network</h1>
-      
+
         {/* Network Visualization */}
         <div className="mt-6">
           {isLoadingNetwork ? (
@@ -153,13 +150,13 @@ export default function VenueNetwork() {
             />
           )}
         </div>
-        
+
         {/* Collaborative Opportunities */}
         <div className="mt-6">
           <Card>
             <CardContent className="p-4">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Network Collaboration Opportunities</h3>
-              
+
               {isLoadingOpportunities ? (
                 <p>Loading opportunities...</p>
               ) : (
@@ -189,10 +186,10 @@ export default function VenueNetwork() {
               <form onSubmit={(e) => {
                 e.preventDefault();
                 const formData = new FormData(e.currentTarget);
-                
+
                 // In a full implementation, we would use react-hook-form with proper validation
                 const venueId = Number(formData.get('venueId'));
-                
+
                 if (venueId && currentVenueId) {
                   // Create the venue connection
                   const connection = {
@@ -202,7 +199,7 @@ export default function VenueNetwork() {
                     trustScore: 50,
                     collaborativeBookings: 0
                   };
-                  
+
                   // Use the mutation to create the connection
                   createConnectionMutation.mutate(connection);
                 }
@@ -221,7 +218,7 @@ export default function VenueNetwork() {
                     Enter the ID of the venue you'd like to add to your network.
                   </p>
                 </div>
-                
+
                 <div className="space-y-2">
                   <label htmlFor="message" className="text-sm font-medium">Invitation Message</label>
                   <textarea 
@@ -231,7 +228,7 @@ export default function VenueNetwork() {
                     placeholder="Enter a personal message to the venue"
                   ></textarea>
                 </div>
-                
+
                 <div className="flex justify-end space-x-2">
                   <Button 
                     type="button" 
