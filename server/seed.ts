@@ -57,33 +57,28 @@ async function seed() {
       role: 'admin'
     }).returning();
 
-    // Insert some sample artists - using valid genre enum values only
-    const sampleArtists = await db.insert(artists).values([
-      {
-        name: 'The Black Keys',
-        genres: ['rock', 'blues'],
-        popularity: 85,
-        imageUrl: 'https://i.scdn.co/image/ab6761610000e5eb93a5ff1ed9fb7469bb5d0b81',
-        description: 'American rock duo formed in Akron, Ohio',
-        websiteUrl: 'https://www.theblackkeys.com'
-      },
-      {
-        name: 'Tame Impala',
-        genres: ['rock', 'indie'],
-        popularity: 88,
-        imageUrl: 'https://i.scdn.co/image/ab6761610000e5eb9e690225ad4445530612ccc9',
-        description: 'Australian music project led by Kevin Parker',
-        websiteUrl: 'https://www.tameimpala.com'
-      },
-      {
-        name: 'Khruangbin',
-        genres: ['world', 'rock'],
-        popularity: 75,
-        imageUrl: 'https://i.scdn.co/image/ab6761610000e5eb333e8b25aee5456e36ffdf67',
-        description: 'American musical trio from Houston, Texas',
-        websiteUrl: 'https://www.khruangbin.com'
+    // Import real artist data from Bandsintown
+    const { syncArtistFromBandsInTown } = require('./data-sync/bands-in-town-sync');
+    
+    // Sync some real artists that commonly play at Bug Jar
+    const artistNames = [
+      'Cloud Nothings',
+      'Big Thief', 
+      'King Gizzard & The Lizard Wizard'
+    ];
+
+    const sampleArtists = [];
+    for (const name of artistNames) {
+      try {
+        const artist = await syncArtistFromBandsInTown(name);
+        if (artist) {
+          sampleArtists.push(artist);
+          console.log(`Added artist: ${artist.name}`);
+        }
+      } catch (err) {
+        console.error(`Error syncing artist ${name}:`, err);
       }
-    ]).returning();
+    }
 
     // Create more venues for network
     const networkVenues = await db.insert(venues).values([
