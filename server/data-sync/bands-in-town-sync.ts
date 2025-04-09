@@ -450,77 +450,13 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
       }
     }
 
+    console.log(`Retrieved ${eventsData.length} events from Bandsintown`);
 
-    // Bandsintown API primarily uses app_id as the authentication method
-    const params: Record<string, any> = {
-      app_id: apiKey,
-      date: 'upcoming',
-    };
-
-    // Add location based on what we have
-    if (latitude && longitude) {
-      // The API might not actually support lat/long filtering directly
-      // But we'll include it in case their API evolves
-      console.log(`Using geo coordinates: ${latitude},${longitude}`);
-    } else {
-      console.log(`Using city/state search: ${city}, ${state}`);
-    }
-
-    // Try different API request strategies
-    let events: BandsInTownEvent[] = [];
-
-    try {
-      console.log(`Making request to ${apiEndpoint} with app_id parameter`);
-      const response = await axios.get(apiEndpoint, { 
-        params,
-        headers: {
-          'Accept': 'application/json'
-        }
-      });
-
-      if (response.data && Array.isArray(response.data)) {
-        events = response.data;
-        console.log(`Successfully retrieved ${events.length} events`);
-      } else {
-        console.error("API response was not an array:", typeof response.data);
-      }
-    } catch (error: any) {
-      console.error("Error fetching events from Bandsintown API:", 
-        error.response ? {
-          status: error.response.status,
-          statusText: error.response.statusText,
-          data: error.response.data
-        } : error.message);
-
-      // Try an alternative approach with different URL structure
-      try {
-        console.log("Trying alternative API request format...");
-        const altEndpoint = `https://rest.bandsintown.com/artists/${encodeURIComponent(artistName)}/events?app_id=${encodeURIComponent(apiKey)}`;
-        const response = await axios.get(altEndpoint);
-
-        if (response.data && Array.isArray(response.data)) {
-          events = response.data;
-          console.log(`Successfully retrieved ${events.length} events with alternative method`);
-        } else {
-          console.error("Alternative API response was not an array:", typeof response.data);
-        }
-      } catch (altError: any) {
-        console.error("Alternative request also failed:", 
-          altError.response ? {
-            status: altError.response.status,
-            statusText: altError.response.statusText,
-            data: altError.response.data
-          } : altError.message);
-      }
-    }
-
-    console.log(`Retrieved ${events.length} events from Bandsintown`);
-
-    // Process the events to extract venue data
+    // Extract unique venues from events
     const venueMap = new Map<string, BandsInTownVenue>();
 
     // Extract and normalize venues from events
-    for (const event of events) {
+    for (const event of eventsData) {
       if (event && event.venue) {
         const venue = event.venue;
         // Create a normalized venue object
