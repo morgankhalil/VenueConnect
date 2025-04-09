@@ -110,41 +110,69 @@ const EventModal: React.FC<EventModalProps> = ({ event, open, onOpenChange }) =>
     switch (event.type) {
       case 'confirmed':
         return (
-          <div className="mt-4 space-y-4">
-            <div className="rounded-md bg-green-50 border border-green-200 p-3">
+          <div className="space-y-6">
+            <div className="rounded-lg bg-green-50 border border-green-200 p-4">
               <div className="flex items-center">
-                <Check className="h-5 w-5 text-green-600 mr-2" />
-                <h4 className="font-semibold text-green-800">Event Confirmed</h4>
+                <Check className="h-6 w-6 text-green-600 mr-3" />
+                <h4 className="font-semibold text-xl text-green-800">Event Confirmed</h4>
               </div>
-              <p className="mt-1 text-sm text-green-700">
+              <p className="mt-2 text-base text-green-700">
                 This event is confirmed and tickets are on sale. All contracts have been signed and finalized.
               </p>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 border rounded-md">
-                <div className="text-sm font-medium text-gray-500">Ticket Sales</div>
-                <div className="mt-1 flex justify-between items-end">
-                  <div className="text-2xl font-bold">275</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="p-4 border rounded-lg shadow-sm">
+                <div className="text-sm font-medium text-gray-500 mb-1">Ticket Sales</div>
+                <div className="flex justify-between items-end">
+                  <div className="text-3xl font-bold">275</div>
                   <div className="text-green-600 text-sm">+28 today</div>
                 </div>
-                <Progress className="h-1.5 mt-2" value={78} />
-                <div className="mt-1 text-xs text-gray-500">78% sold (350 capacity)</div>
+                <Progress className="h-2 mt-3" value={78} />
+                <div className="mt-2 text-xs text-gray-500">78% sold (350 capacity)</div>
               </div>
               
-              <div className="p-3 border rounded-md">
-                <div className="text-sm font-medium text-gray-500">Revenue</div>
-                <div className="text-2xl font-bold">{getProjectedRevenue()}</div>
-                <div className="mt-1 text-xs text-gray-500">
+              <div className="p-4 border rounded-lg shadow-sm">
+                <div className="text-sm font-medium text-gray-500 mb-1">Revenue</div>
+                <div className="text-3xl font-bold">{getProjectedRevenue()}</div>
+                <div className="mt-2 text-xs text-gray-500">
                   Based on current ticket sales
+                </div>
+                <div className="mt-3 text-sm text-green-600">On track to exceed projections</div>
+              </div>
+              
+              <div className="p-4 border rounded-lg shadow-sm">
+                <div className="text-sm font-medium text-gray-500 mb-1">Event Status</div>
+                <div className="flex items-center space-x-2">
+                  <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                  <div className="text-sm font-semibold">All Systems Go</div>
+                </div>
+                <div className="mt-2 text-xs space-y-1">
+                  <div className="flex justify-between">
+                    <span>Contracts:</span>
+                    <span className="text-green-600">Signed ✓</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Payments:</span>
+                    <span className="text-green-600">Deposit Received ✓</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Marketing:</span>
+                    <span className="text-green-600">Active ✓</span>
+                  </div>
                 </div>
               </div>
             </div>
             
-            <div className="flex space-x-3">
+            <div className="flex space-x-4 pt-2">
               <Button className="flex-1" variant="outline">
                 <FileText className="h-4 w-4 mr-2" />
                 View Contract
+              </Button>
+              
+              <Button className="flex-1" variant="outline">
+                <Users className="h-4 w-4 mr-2" />
+                Guest List
               </Button>
               
               <Button className="flex-1">
@@ -157,36 +185,68 @@ const EventModal: React.FC<EventModalProps> = ({ event, open, onOpenChange }) =>
         
       case 'hold':
         return (
-          <div className="mt-4 space-y-4">
-            <div className="rounded-md bg-amber-50 border border-amber-200 p-3">
+          <div className="space-y-6">
+            <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
               <div className="flex items-center">
-                <AlertCircle className="h-5 w-5 text-amber-600 mr-2" />
-                <h4 className="font-semibold text-amber-800">Date On Hold</h4>
+                <AlertCircle className="h-6 w-6 text-amber-600 mr-3" />
+                <h4 className="font-semibold text-xl text-amber-800">Date On Hold</h4>
               </div>
-              <p className="mt-1 text-sm text-amber-700">
+              <p className="mt-2 text-base text-amber-700">
                 This date is currently on hold for this artist. The hold expires in 5 days if not confirmed.
               </p>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 border rounded-md">
-                <div className="text-sm font-medium text-gray-500">Hold Status</div>
-                <div className="mt-1 text-xl font-bold">First Hold</div>
-                <div className="mt-1 text-xs text-gray-500">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="p-4 border rounded-lg shadow-sm">
+                <div className="text-sm font-medium text-gray-500 mb-1">Hold Status</div>
+                <div className="text-3xl font-bold">First Hold</div>
+                <div className="mt-2 text-sm text-amber-600 font-medium flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-1 inline" />
+                  5 days remaining
+                </div>
+                <div className="mt-2 text-xs text-gray-500">
                   Expires: {new Date(event.date.getTime() - 7*24*60*60*1000).toLocaleDateString()}
                 </div>
               </div>
               
-              <div className="p-3 border rounded-md">
-                <div className="text-sm font-medium text-gray-500">Projected Revenue</div>
-                <div className="text-xl font-bold">{getProjectedRevenue()}</div>
-                <div className="mt-1 text-xs text-gray-500">
+              <div className="p-4 border rounded-lg shadow-sm">
+                <div className="text-sm font-medium text-gray-500 mb-1">Contract Status</div>
+                <div className="flex items-center mt-1">
+                  <div className="h-3 w-3 rounded-full bg-amber-500 mr-2"></div>
+                  <div className="text-base font-medium">Draft Sent</div>
+                </div>
+                <div className="mt-3 space-y-1 text-xs text-gray-600">
+                  <div className="flex justify-between">
+                    <span>Initial Terms:</span>
+                    <span className="text-green-600">Agreed ✓</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Contract:</span>
+                    <span className="text-amber-600">Pending Signature</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Deposit:</span>
+                    <span className="text-amber-600">Not Received</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-4 border rounded-lg shadow-sm">
+                <div className="text-sm font-medium text-gray-500 mb-1">Projected Revenue</div>
+                <div className="text-3xl font-bold">{getProjectedRevenue()}</div>
+                <div className="mt-2 text-xs text-gray-500">
                   Based on similar events
                 </div>
+                <div className="mt-3 text-sm text-amber-600">Pre-sale options available</div>
               </div>
             </div>
             
-            <div className="flex space-x-3">
+            <div className="flex space-x-4 pt-2">
+              <Button className="flex-1" variant="outline">
+                <FileText className="h-4 w-4 mr-2" />
+                Edit Contract
+              </Button>
+              
               <Button className="flex-1" variant="outline">
                 <Mail className="h-4 w-4 mr-2" />
                 Send Message
@@ -202,50 +262,85 @@ const EventModal: React.FC<EventModalProps> = ({ event, open, onOpenChange }) =>
         
       case 'opportunity':
         return (
-          <div className="mt-4 space-y-4">
-            <div className="rounded-md bg-blue-50 border border-blue-200 p-3">
+          <div className="space-y-6">
+            <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
               <div className="flex items-center">
-                <Route className="h-5 w-5 text-blue-600 mr-2" />
-                <h4 className="font-semibold text-blue-800">Opportunity Details</h4>
+                <Route className="h-6 w-6 text-blue-600 mr-3" />
+                <h4 className="font-semibold text-xl text-blue-800">Opportunity Details</h4>
               </div>
-              <p className="mt-1 text-sm text-blue-700">
+              <p className="mt-2 text-base text-blue-700">
                 This artist will be touring in your region around this date. There's a {event.confidence}% match with your venue's booking profile.
               </p>
             </div>
             
-            <div className="space-y-2">
-              <div className="text-sm font-medium">Match Confidence</div>
-              <Progress className="h-2" value={event.confidence} />
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>Based on genre match, artist popularity, and routing</span>
-                <span>{event.confidence}%</span>
+            <div className="p-4 border rounded-lg shadow-sm">
+              <div className="text-sm font-medium mb-2">Match Confidence</div>
+              <Progress className="h-2.5" value={event.confidence} />
+              <div className="flex justify-between mt-2">
+                <span className="text-xs text-gray-500">Based on genre, popularity, and routing</span>
+                <span className="text-blue-600 font-semibold">{event.confidence}%</span>
               </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 border rounded-md">
-                <div className="text-sm font-medium text-gray-500">Similar Artist Performance</div>
-                <div className="mt-1 text-base">
-                  <span className="text-green-600 font-bold">+85%</span> capacity
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="p-4 border rounded-lg shadow-sm">
+                <div className="text-sm font-medium text-gray-500 mb-1">Similar Artist Performance</div>
+                <div className="text-3xl font-bold text-green-600">85%</div>
+                <div className="mt-2 text-sm">
+                  Average capacity for similar artists
                 </div>
-                <div className="mt-1 text-xs text-gray-500">
-                  Based on similar artists at your venue
+                <div className="mt-2 text-xs text-gray-500">
+                  Based on 12 similar artists at your venue
                 </div>
               </div>
               
-              <div className="p-3 border rounded-md">
-                <div className="text-sm font-medium text-gray-500">Estimated Revenue</div>
-                <div className="text-base font-bold">{getProjectedRevenue()}</div>
-                <div className="mt-1 text-xs text-gray-500">
-                  Based on projected attendance
+              <div className="p-4 border rounded-lg shadow-sm">
+                <div className="text-sm font-medium text-gray-500 mb-1">Routing Fit</div>
+                <div className="text-3xl font-bold text-blue-600">High</div>
+                <div className="mt-2 text-sm">
+                  Artist has shows in nearby cities
+                </div>
+                <div className="mt-2 text-xs text-gray-500">
+                  Portland (2 days before), Seattle (2 days after)
+                </div>
+              </div>
+              
+              <div className="p-4 border rounded-lg shadow-sm">
+                <div className="text-sm font-medium text-gray-500 mb-1">Estimated Revenue</div>
+                <div className="text-3xl font-bold">{getProjectedRevenue()}</div>
+                <div className="mt-2 text-xs text-gray-500">
+                  Based on projected attendance and ticket prices
                 </div>
               </div>
             </div>
             
-            <div className="flex space-x-3">
+            <div className="p-4 border rounded-lg shadow-sm">
+              <div className="text-sm font-medium mb-3">Artist Momentum</div>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-xs text-gray-500 mb-1">Spotify Monthly</div>
+                  <div className="text-lg font-semibold">1.2M</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500 mb-1">Social Growth</div>
+                  <div className="text-lg font-semibold text-green-600">+12%</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500 mb-1">Last Release</div>
+                  <div className="text-lg font-semibold">2 weeks ago</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex space-x-4 pt-2">
               <Button className="flex-1" variant="outline">
                 <PieChart className="h-4 w-4 mr-2" />
                 View Analytics
+              </Button>
+              
+              <Button className="flex-1" variant="outline">
+                <Route className="h-4 w-4 mr-2" />
+                View Tour Dates
               </Button>
               
               <Button className="flex-1">
@@ -386,29 +481,29 @@ const EventModal: React.FC<EventModalProps> = ({ event, open, onOpenChange }) =>
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
-        <div className={`h-2 w-full ${typeBgColors[event.type]}`} />
+      <DialogContent className="sm:max-w-[650px] md:max-w-[700px] lg:max-w-[800px] p-0 overflow-hidden">
+        <div className={`h-3 w-full ${typeBgColors[event.type]}`} />
         
-        <DialogHeader className="px-6 pt-6 pb-2">
+        <DialogHeader className="px-8 pt-8 pb-2">
           <div className="flex justify-between items-start">
-            <DialogTitle className="text-xl font-bold">{event.title}</DialogTitle>
-            <Badge className={`${typeColors[event.type]} border`}>
+            <DialogTitle className="text-2xl font-bold">{event.title}</DialogTitle>
+            <Badge className={`${typeColors[event.type]} border text-sm px-3 py-1`}>
               {typeLabels[event.type]}
               {event.confidence && (event.type === 'opportunity' || event.type === 'inquiry') && 
                 ` (${event.confidence}%)`}
             </Badge>
           </div>
-          <DialogDescription className="text-base pt-2">
+          <DialogDescription className="text-lg pt-2">
             {event.description || `${event.type === 'confirmed' ? 'Performance' : 'Potential performance'} at ${event.venue || 'venue'}`}
           </DialogDescription>
         </DialogHeader>
         
-        <div className="px-6 py-4">
-          <div className="text-sm text-muted-foreground mb-4">
+        <div className="px-8 py-6">
+          <div className="text-sm text-muted-foreground mb-6 bg-gray-50 p-3 rounded-lg border border-gray-100">
             {typeDescriptions[event.type]}
           </div>
           
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 mb-6">
             <div className="flex items-center">
               <Calendar className="h-5 w-5 mr-3 text-muted-foreground" />
               <span>{event.date.toLocaleDateString('en-US', { 
@@ -451,7 +546,7 @@ const EventModal: React.FC<EventModalProps> = ({ event, open, onOpenChange }) =>
             </div>
           </div>
           
-          <Separator className="my-4" />
+          <Separator className="my-6" />
           
           {getStatusDetails()}
         </div>
