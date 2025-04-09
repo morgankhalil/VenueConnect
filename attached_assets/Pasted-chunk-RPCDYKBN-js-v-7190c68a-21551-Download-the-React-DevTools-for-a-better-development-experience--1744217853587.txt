@@ -1,0 +1,19 @@
+chunk-RPCDYKBN.js?v=7190c68a:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+8Mixed Content: The page at '<URL>' was loaded over HTTPS, but requested an insecure resource '<URL>'. This request has been blocked; the content must be served over HTTPS.
+queryClient.ts:23 Mixed Content: The page at 'https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/' was loaded over HTTPS, but requested an insecure resource 'http://0.0.0.0:5000/api/stats'. This request has been blocked; the content must be served over HTTPS.
+apiRequest @ queryClient.ts:23
+queryClient.ts:23 Mixed Content: The page at 'https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/' was loaded over HTTPS, but requested an insecure resource 'http://0.0.0.0:5000/api/venues/recent'. This request has been blocked; the content must be served over HTTPS.
+apiRequest @ queryClient.ts:23
+queryClient.ts:23 Mixed Content: The page at 'https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/' was loaded over HTTPS, but requested an insecure resource 'http://0.0.0.0:5000/api/stats'. This request has been blocked; the content must be served over HTTPS.
+apiRequest @ queryClient.ts:23
+queryClient.ts:23 Mixed Content: The page at 'https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/' was loaded over HTTPS, but requested an insecure resource 'http://0.0.0.0:5000/api/venues/recent'. This request has been blocked; the content must be served over HTTPS.
+apiRequest @ queryClient.ts:23
+queryClient.ts:23 Mixed Content: The page at 'https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/venue-network' was loaded over HTTPS, but requested an insecure resource 'http://0.0.0.0:5000/api/venue-network/graph/1'. This request has been blocked; the content must be served over HTTPS.
+apiRequest @ queryClient.ts:23
+queryClient.ts:23 Mixed Content: The page at 'https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/venue-network' was loaded over HTTPS, but requested an insecure resource 'http://0.0.0.0:5000/api/venues/1/collaborative-opportunities'. This request has been blocked; the content must be served over HTTPS.
+apiRequest @ queryClient.ts:23
+queryClient.ts:23 Mixed Content: The page at 'https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/venue-network' was loaded over HTTPS, but requested an insecure resource 'http://0.0.0.0:5000/api/venue-network/graph/1'. This request has been blocked; the content must be served over HTTPS.
+apiRequest @ queryClient.ts:23
+queryClient.ts:23 Mixed Content: The page at 'https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/venue-network' was loaded over HTTPS, but requested an insecure resource 'http://0.0.0.0:5000/api/venues/1/collaborative-opportunities'. This request has been blocked; the content must be served over HTTPS.
+apiRequest @ queryClient.ts:23
+venue-network:1 A soft navigation has been detected: https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/venue-network
