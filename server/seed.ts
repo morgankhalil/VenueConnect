@@ -106,14 +106,9 @@ async function seed() {
 
     await db.insert(predictions).values(predictionData);
 
-    // Insert demo venue network connections
-    const networkData = {
-      venueId: insertedVenues[0].id,
-      connectedVenueId: insertedVenues[1].id,
-      status: 'active',
-      trustScore: 85,
-      collaborativeBookings: 12
-    };
+    // For now, we'll leave the venue network empty since we only have one venue
+    // You can add connections later through the UI
+    const networkData = [];
 
     await db.insert(venueNetwork).values(networkData);
 
