@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -14,6 +14,8 @@ import VenueDetails from "@/pages/venue-details";
 import EventDetails from "@/pages/event-details";
 import MapTest from "@/pages/map-test";
 import NotFound from "@/pages/not-found";
+import Login from "@/pages/auth/login";
+import Register from "@/pages/auth/register";
 
 function Router() {
   return (
@@ -28,6 +30,8 @@ function Router() {
       <Route path="/event/:id" component={EventDetails} />
       <Route path="/map-test" component={MapTest} />
       <Route path="/admin/settings" component={AdminSettings} />
+      <Route path="/auth/login" component={Login} />
+      <Route path="/auth/register" component={Register} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
@@ -35,18 +39,27 @@ function Router() {
 }
 
 function App() {
-  // Very simple map test directly in browser at /map-test path
-  const path = window.location.pathname;
+  const [location] = useLocation();
   
-  if (path === '/map-test') {
+  // Check if we're on an authentication page
+  const isAuthPage = location.startsWith('/auth/');
+  
+  // Special case for map test page
+  if (location === '/map-test') {
     return <MapTest />;
   }
   
   return (
     <QueryClientProvider client={queryClient}>
-      <MainLayout>
+      {isAuthPage ? (
+        // Render auth pages without the MainLayout
         <Router />
-      </MainLayout>
+      ) : (
+        // Render app pages with the MainLayout
+        <MainLayout>
+          <Router />
+        </MainLayout>
+      )}
       <Toaster />
     </QueryClientProvider>
   );

@@ -68,17 +68,19 @@ export function MainLayout({ children }: MainLayoutProps) {
   
   const handleLogout = async () => {
     try {
-      const response = await apiRequest('/api/auth/logout', { 
-        method: 'POST' 
+      // Call the logout endpoint
+      await fetch('/api/auth/logout', { 
+        method: 'POST',
+        credentials: 'include'
       });
       
-      if (response.success) {
-        // Clear any cached data in React Query
-        queryClient.clear();
-        
-        // Redirect to home page or login page
-        window.location.href = '/';
-      }
+      // Clear any cached data in React Query
+      queryClient.clear();
+      
+      // Force a page reload to reset the app state
+      window.location.reload();
+      
+      console.log("Logout completed");
     } catch (error) {
       console.error("Error logging out:", error);
     }
