@@ -130,6 +130,18 @@ async function seed() {
 
     await db.insert(events).values(events);
 
+    // Insert predictions
+    const predictionData = insertedArtists.map((artist, index) => ({
+      artistId: artist.id,
+      venueId: insertedVenues[index % insertedVenues.length].id,
+      suggestedDate: new Date(Date.now() + (1000 * 60 * 60 * 24 * (30 + index))).toISOString(),
+      confidence: 0.7 + (Math.random() * 0.2),
+      status: 'pending',
+      matchScore: 85 + (Math.random() * 10)
+    }));
+
+    await db.insert(predictions).values(predictionData);
+
     console.log('Database seeded successfully');
   } catch (error) {
     console.error('Error seeding database:', error);

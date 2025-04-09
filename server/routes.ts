@@ -94,6 +94,23 @@ router.get('/venues/:id/events', async (req, res) => {
 });
 
 // Predictions
+router.get('/api/predictions', async (req, res) => {
+  try {
+    const result = await db
+      .select({
+        predictions: predictions,
+        artist: artists,
+        venue: venues
+      })
+      .from(predictions)
+      .leftJoin(artists, eq(predictions.artistId, artists.id))
+      .leftJoin(venues, eq(predictions.venueId, venues.id));
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch predictions" });
+  }
+});
+
 router.get('/venues/:id/predictions', async (req, res) => {
   const result = await db
     .select()
