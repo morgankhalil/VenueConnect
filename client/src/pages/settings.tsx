@@ -75,7 +75,7 @@ export default function Settings() {
   
   // Check if the Bandsintown API key is configured
   const { data: bandsintownApiStatus } = useQuery({
-    queryKey: ['/api/admin/api-keys/bandsintown/status'],
+    queryKey: ['/api/bandsintown/status'],
     queryFn: async () => {
       try {
         return await api.checkBandsintownApiStatus();

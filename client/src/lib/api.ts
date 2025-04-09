@@ -38,7 +38,7 @@ export async function triggerVenueSync(venueId: number, radius = 250, limit = 10
  * @returns A promise that resolves with the status of the API key
  */
 export async function checkBandsintownApiStatus() {
-  return apiRequest('/api/admin/api-keys/bandsintown/status');
+  return apiRequest('/api/bandsintown/status');
 }
 
 /**

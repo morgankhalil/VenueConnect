@@ -806,8 +806,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(config);
   });
   
-  // Check Bandsintown API key configuration
-  app.get("/api/admin/api-keys/bandsintown/status", (req, res) => {
+  // Public Bandsintown API key configuration status - no admin needed
+  app.get("/api/bandsintown/status", (req, res) => {
     const apiKey = process.env.BANDSINTOWN_API_KEY;
     
     if (apiKey) {
