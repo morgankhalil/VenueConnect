@@ -35,12 +35,12 @@ interface CalendarDay {
 }
 
 const FullMonthCalendar: React.FC<FullMonthCalendarProps> = ({
-  const isMobile = useIsMobile();
   events,
   selectedDate,
   onDateChange,
   onEventClick
 }) => {
+  const isMobile = useIsMobile();
   const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([]);
   const [currentMonth, setCurrentMonth] = useState<Date>(
     new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
