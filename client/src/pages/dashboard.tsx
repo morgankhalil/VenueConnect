@@ -1,66 +1,15 @@
-import React, { useState } from "react";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { StatsCard } from "@/components/dashboard/stats-card";
-import { TourSelection } from "@/components/dashboard/tour-selection";
-import { TourLeafletMap } from "@/components/dashboard/tour-leaflet-map";
 import { OpportunityCard } from "@/components/dashboard/opportunity-card";
 import { VenueCard } from "@/components/venue-network/venue-card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { getMockStatsData, getMockTourGroups, getMockPredictions } from "@/lib/api";
-import { PredictionWithDetails, TourGroup } from "@/types";
+import { getMockStatsData, getMockPredictions } from "@/lib/api";
+import { PredictionWithDetails } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { Filter, ArrowUpRight, MapPin, BarChart3, List } from "lucide-react";
+import { Filter, ArrowUpRight, BarChart3, List } from "lucide-react";
 
-// Tour Routing Section Component with Leaflet map
-function TourRoutingSection() {
-  const [selectedTour, setSelectedTour] = useState<TourGroup | null>(null);
-  
-  // Fetch tour groups
-  const { data: tourGroups, isLoading } = useQuery({
-    queryKey: ['/api/tours'],
-    queryFn: getMockTourGroups
-  });
-  
-  const handleSelectTour = (tour: TourGroup) => {
-    setSelectedTour(tour);
-  };
-  
-  const handleCloseTour = () => {
-    setSelectedTour(null);
-  };
-  
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-[350px_1fr] gap-4">
-      {/* Tour selection component */}
-      <TourSelection 
-        tours={tourGroups || []} 
-        onSelectTour={handleSelectTour}
-        selectedTourId={selectedTour?.id || null}
-      />
-      
-      {/* Map or placeholder */}
-      {selectedTour ? (
-        // Leaflet map component
-        <TourLeafletMap 
-          tour={selectedTour} 
-          onClose={handleCloseTour}
-        />
-      ) : (
-        // Placeholder when no tour is selected
-        <Card>
-          <CardContent className="p-6 text-center flex flex-col items-center justify-center min-h-[400px]">
-            <MapPin className="h-12 w-12 text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900">Select a Tour</h3>
-            <p className="text-gray-500 mt-2 max-w-md">
-              Select a tour from the list to view its routing map and identify opportunities for your venue.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
-}
+
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -178,12 +127,7 @@ export default function Dashboard() {
           />
         </div>
         
-        {/* Tour Routing Section */}
-        <div className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Tour Routing</h2>
-          
-          <TourRoutingSection />
-        </div>
+        {/* Tour Routing Section - Moved to Discover page */}
         
         {/* Recent Opportunities */}
         <div className="mt-8">

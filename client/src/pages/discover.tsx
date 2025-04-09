@@ -9,9 +9,11 @@ import { VenueMap } from "@/components/maps/venue-map";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { getMockPredictions } from "@/lib/api";
-import { Search, Filter, SlidersHorizontal, Music, Clock, MapPin } from "lucide-react";
-import { PredictionWithDetails } from "@/types";
+import { getMockPredictions, getMockTourGroups } from "@/lib/api";
+import { Search, Filter, SlidersHorizontal, Music, Clock, MapPin, ArrowUpRight } from "lucide-react";
+import { PredictionWithDetails, TourGroup } from "@/types";
+import { TourSelection } from "@/components/dashboard/tour-selection";
+import { TourLeafletMap } from "@/components/dashboard/tour-leaflet-map";
 
 export default function Discover() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -19,13 +21,28 @@ export default function Discover() {
   const [dateRangeFilter, setDateRangeFilter] = useState("30");
   const [confidenceFilter, setConfidenceFilter] = useState("all");
   const [viewMode, setViewMode] = useState("grid");
+  const [selectedTour, setSelectedTour] = useState<TourGroup | null>(null);
   const { toast } = useToast();
 
   // Fetch predictions data
-  const { data: predictions, isLoading } = useQuery({
+  const { data: predictions, isLoading: predictionsLoading } = useQuery({
     queryKey: ['/api/predictions'],
     queryFn: getMockPredictions
   });
+  
+  // Fetch tour groups
+  const { data: tourGroups, isLoading: toursLoading } = useQuery({
+    queryKey: ['/api/tours'],
+    queryFn: getMockTourGroups
+  });
+  
+  const handleSelectTour = (tour: TourGroup) => {
+    setSelectedTour(tour);
+  };
+  
+  const handleCloseTour = () => {
+    setSelectedTour(null);
+  };
 
   // Apply filters
   const filteredPredictions = predictions?.filter(prediction => {
@@ -150,11 +167,12 @@ export default function Discover() {
                 <TabsTrigger value="grid">Grid</TabsTrigger>
                 <TabsTrigger value="list">List</TabsTrigger>
                 <TabsTrigger value="map">Map</TabsTrigger>
+                <TabsTrigger value="touring">Tour Routing</TabsTrigger>
               </TabsList>
             </div>
 
             <TabsContent value="grid" className="mt-6">
-              {isLoading ? (
+              {predictionsLoading ? (
                 <div className="text-center py-10">Loading opportunities...</div>
               ) : filteredPredictions?.length === 0 ? (
                 <div className="text-center py-10">
@@ -178,7 +196,7 @@ export default function Discover() {
             <TabsContent value="list" className="mt-6">
               <Card>
                 <CardContent className="p-4">
-                  {isLoading ? (
+                  {predictionsLoading ? (
                     <div className="text-center py-10">Loading opportunities...</div>
                   ) : filteredPredictions?.length === 0 ? (
                     <div className="text-center py-10">
@@ -299,6 +317,37 @@ export default function Discover() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+            
+            <TabsContent value="touring" className="mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-[350px_1fr] gap-4">
+                {/* Tour selection component */}
+                <TourSelection 
+                  tours={tourGroups || []} 
+                  onSelectTour={handleSelectTour}
+                  selectedTourId={selectedTour?.id || null}
+                />
+                
+                {/* Map or placeholder */}
+                {selectedTour ? (
+                  // Leaflet map component
+                  <TourLeafletMap 
+                    tour={selectedTour} 
+                    onClose={handleCloseTour}
+                  />
+                ) : (
+                  // Placeholder when no tour is selected
+                  <Card>
+                    <CardContent className="p-6 text-center flex flex-col items-center justify-center min-h-[400px]">
+                      <MapPin className="h-12 w-12 text-gray-300 mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900">Select a Tour</h3>
+                      <p className="text-gray-500 mt-2 max-w-md">
+                        Select a tour from the list to view its routing map and identify opportunities for your venue.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </TabsContent>
           </Tabs>
         </div>
