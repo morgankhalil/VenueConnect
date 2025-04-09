@@ -119,6 +119,14 @@ router.get('/venues/:id/predictions', async (req, res) => {
   res.json(result);
 });
 
+router.get('/messages', async (req, res) => {
+  const result = await db
+    .select()
+    .from(messages)
+    .orderBy(messages.timestamp);
+  res.json(result);
+});
+
 // Venue Network
 router.get('/venue-network/graph/:id', async (req, res) => {
   const connections = await db

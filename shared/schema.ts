@@ -192,6 +192,26 @@ export const venueNetworkRelations = relations(venueNetwork, ({ one }) => ({
   }),
 }));
 
+export const messages = pgTable('messages', {
+  id: serial('id').primaryKey(),
+  senderId: integer('sender_id').references(() => users.id),
+  receiverId: integer('receiver_id').references(() => users.id),
+  content: text('content').notNull(),
+  timestamp: timestamp('timestamp').defaultNow(),
+  senderName: text('sender_name').notNull(),
+});
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  sender: one(users, {
+    fields: [messages.senderId],
+    references: [users.id],
+  }),
+  receiver: one(users, {
+    fields: [messages.receiverId],
+    references: [users.id],
+  }),
+}));
+
 export const inquiriesRelations = relations(inquiries, ({ one }) => ({
   venue: one(venues, {
     fields: [inquiries.venueId],

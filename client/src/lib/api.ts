@@ -85,6 +85,11 @@ export const createEvent = async (event: Omit<Event, 'id'>): Promise<Event> => {
   return res.json();
 };
 
+export const getMessages = async () => {
+  const res = await apiRequest('GET', '/api/messages', undefined);
+  return res.json();
+};
+
 export const getEventsByVenue = async (venueId: number): Promise<Event[]> => {
   const res = await apiRequest('GET', `/api/venues/${venueId}/events`, undefined);
   return res.json();
