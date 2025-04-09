@@ -1,11 +1,10 @@
-
 import { db } from './db';
 import { 
   users, venues, artists, events, predictions, inquiries, 
   venueNetwork, collaborativeOpportunities, collaborativeParticipants,
   webhookConfigurations
 } from '../shared/schema';
-import { syncArtistFromBandsInTown } from './data-sync/bands-in-town-sync';
+import { syncArtistFromBandsInTown, syncArtistEventsFromBandsInTown } from './data-sync/bands-in-town-sync';
 
 async function seed() {
   try {
@@ -23,8 +22,8 @@ async function seed() {
     await db.delete(webhookConfigurations);
     console.log('Database cleared successfully');
 
-    // Create demo user
-    const [user] = await db.insert(users).values({
+    // Create demo users
+    const [demoUser] = await db.insert(users).values({
       username: 'demo',
       password: 'demo123',
       name: 'Demo User',
@@ -32,25 +31,6 @@ async function seed() {
       role: 'venue_manager'
     }).returning();
 
-    // Insert Bug Jar venue
-    const [venue] = await db.insert(venues).values({
-      name: 'Bug Jar',
-      address: '219 Monroe Ave',
-      city: 'Rochester',
-      state: 'NY',
-      zipCode: '14607',
-      country: 'USA',
-      capacity: 300,
-      latitude: 43.1517,
-      longitude: -77.5959,
-      description: 'The Bug Jar is a legendary Rochester music venue known for its indie and alternative shows',
-      contactEmail: 'info@bugjar.com',
-      contactPhone: '585-454-2966',
-      website: 'http://bugjar.com',
-      ownerId: user.id
-    }).returning();
-
-    // Create admin user
     const [adminUser] = await db.insert(users).values({
       username: 'admin',
       password: 'admin123',
@@ -58,19 +38,95 @@ async function seed() {
       email: 'admin@example.com',
       role: 'admin'
     }).returning();
-    
-    // Sync some real artists that commonly play at Bug Jar
+
+    // Create multiple venues across different cities
+    const venueData = [
+      {
+        name: 'Brooklyn Steel',
+        address: '319 Frost St',
+        city: 'Brooklyn',
+        state: 'NY',
+        zipCode: '11222',
+        country: 'USA',
+        capacity: 1800,
+        latitude: 40.7156,
+        longitude: -73.9384,
+        description: 'Modern venue known for indie and electronic shows',
+        ownerId: demoUser.id
+      },
+      {
+        name: 'Union Transfer',
+        address: '1026 Spring Garden St',
+        city: 'Philadelphia',
+        state: 'PA',
+        zipCode: '19123',
+        country: 'USA',
+        capacity: 1200,
+        latitude: 39.9615,
+        longitude: -75.1532,
+        description: 'Historic venue in a former railway baggage handling facility',
+        ownerId: demoUser.id
+      },
+      {
+        name: 'Black Cat',
+        address: '1811 14th St NW',
+        city: 'Washington',
+        state: 'DC',
+        zipCode: '20009',
+        country: 'USA',
+        capacity: 700,
+        latitude: 38.9147,
+        longitude: -77.0318,
+        description: 'Iconic DC venue featuring indie rock and punk shows',
+        ownerId: demoUser.id
+      },
+      {
+        name: 'Empty Bottle',
+        address: '1035 N Western Ave',
+        city: 'Chicago',
+        state: 'IL',
+        zipCode: '60622',
+        country: 'USA',
+        capacity: 400,
+        latitude: 41.9002,
+        longitude: -87.6872,
+        description: 'Longtime indie rock club with an intimate setting',
+        ownerId: demoUser.id
+      }
+    ];
+
+    const venues = await db.insert(venues).values(venueData).returning();
+
+    // Create venue network connections
+    for (let i = 0; i < venues.length; i++) {
+      for (let j = i + 1; j < venues.length; j++) {
+        await db.insert(venueNetwork).values({
+          venueId: venues[i].id,
+          connectedVenueId: venues[j].id,
+          status: 'active',
+          trustScore: Math.floor(Math.random() * 30) + 70, // 70-100
+          collaborativeBookings: Math.floor(Math.random() * 15) + 5 // 5-20
+        });
+      }
+    }
+
+    // Sync real artists that commonly play these types of venues
     const artistNames = [
-      'Cloud Nothings',
-      'Big Thief',
-      'King Gizzard & The Lizard Wizard',
-      'Thee Oh Sees',
-      'Ty Segall',
-      'Mac DeMarco',
-      'Kurt Vile',
+      'The National',
       'Japanese Breakfast',
+      'Big Thief',
+      'Kurt Vile',
+      'Mitski',
+      'Spoon',
       'Angel Olsen',
-      'Parquet Courts'
+      'Beach House',
+      'Parquet Courts',
+      'Sharon Van Etten',
+      'Car Seat Headrest',
+      'Snail Mail',
+      'Lucy Dacus',
+      'Real Estate',
+      'The War on Drugs'
     ];
 
     const sampleArtists = [];
@@ -80,7 +136,7 @@ async function seed() {
         if (artist) {
           sampleArtists.push(artist);
           console.log(`Added artist: ${artist.name}`);
-          
+
           // Also sync events for this artist
           const events = await syncArtistEventsFromBandsInTown(name);
           console.log(`Synced ${events.length} events for ${artist.name}`);
@@ -90,117 +146,7 @@ async function seed() {
       }
     }
 
-    // Create more venues for network
-    const networkVenues = await db.insert(venues).values([
-      {
-        name: 'Water Street Music Hall',
-        address: '204 N Water St',
-        city: 'Rochester',
-        state: 'NY',
-        zipCode: '14604',
-        country: 'USA',
-        capacity: 800,
-        latitude: 43.1594,
-        longitude: -77.6039,
-        description: 'Historic Rochester venue with multiple performance spaces',
-        contactEmail: 'info@waterstreetmusic.com',
-        ownerId: user.id
-      },
-      {
-        name: 'Town Ballroom',
-        address: '681 Main St',
-        city: 'Buffalo',
-        state: 'NY',
-        zipCode: '14203',
-        country: 'USA',
-        capacity: 1000,
-        latitude: 42.8925,
-        longitude: -78.8725,
-        description: 'Premier music venue in downtown Buffalo',
-        contactEmail: 'info@townballroom.com',
-        ownerId: user.id
-      }
-    ]).returning();
-
-    // Create venue connections
-    await db.insert(venueNetwork).values([
-      {
-        venueId: venue.id,
-        connectedVenueId: networkVenues[0].id,
-        status: 'active',
-        trustScore: 85,
-        collaborativeBookings: 12
-      },
-      {
-        venueId: venue.id,
-        connectedVenueId: networkVenues[1].id,
-        status: 'active',
-        trustScore: 78,
-        collaborativeBookings: 8
-      }
-    ]);
-
-    // Add sample events - both past and upcoming
-    const currentDate = new Date();
-    const nextMonth = new Date(currentDate);
-    nextMonth.setMonth(currentDate.getMonth() + 1);
-    
-    await db.insert(events).values([
-      {
-        artistId: sampleArtists[0].id,
-        venueId: venue.id,
-        date: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15).toISOString().split('T')[0],
-        startTime: '20:00',
-        status: 'confirmed',
-        ticketUrl: 'https://tickets.example.com/event1'
-      },
-      {
-        artistId: sampleArtists[1].id,
-        venueId: venue.id,
-        date: new Date(currentDate.getFullYear(), currentDate.getMonth(), 22).toISOString().split('T')[0],
-        startTime: '19:30',
-        status: 'confirmed',
-        ticketUrl: 'https://tickets.example.com/event2'
-      },
-      {
-        artistId: sampleArtists[2].id,
-        venueId: venue.id,
-        date: new Date(nextMonth.getFullYear(), nextMonth.getMonth(), 5).toISOString().split('T')[0],
-        startTime: '21:00',
-        status: 'hold',
-        ticketUrl: null
-      },
-      {
-        artistId: sampleArtists[0].id,
-        venueId: networkVenues[0].id,
-        date: new Date(nextMonth.getFullYear(), nextMonth.getMonth(), 7).toISOString().split('T')[0],
-        startTime: '20:00',
-        status: 'opportunity',
-        ticketUrl: null
-      }
-    ]);
-
-    // Add predictions for booking recommendations
-    await db.insert(predictions).values([
-      {
-        artistId: sampleArtists[2].id,
-        venueId: venue.id,
-        suggestedDate: new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 10).toISOString().split('T')[0],
-        confidenceScore: 87,
-        status: 'pending',
-        reasoning: 'Based on similar artists performing well at this venue and regional touring patterns'
-      },
-      {
-        artistId: sampleArtists[1].id,
-        venueId: networkVenues[1].id,
-        suggestedDate: new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 15).toISOString().split('T')[0],
-        confidenceScore: 92,
-        status: 'pending',
-        reasoning: 'High match based on venue capacity, genre alignment, and previous ticket sales in the region'
-      }
-    ]);
-
-    // Insert predefined webhook configurations
+    // Insert webhook configurations
     await db.insert(webhookConfigurations).values([
       {
         name: 'Bandsintown Event Notifications',
@@ -224,20 +170,6 @@ async function seed() {
         configOptions: JSON.stringify({
           includeImages: true,
           includeGenres: true,
-          version: '1.0'
-        })
-      },
-      {
-        name: 'Venue Capacity Changes',
-        description: 'Get notified when venue capacity information changes',
-        type: 'venue_capacity',
-        callbackUrl: '/api/webhooks/venues/capacity',
-        isEnabled: false,
-        secretKey: '',
-        configOptions: JSON.stringify({
-          thresholdPercentage: 10,
-          notifyOnIncrease: true,
-          notifyOnDecrease: true,
           version: '1.0'
         })
       }
