@@ -293,8 +293,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Send the Mapbox token from environment variables
     // This keeps the token secure by not exposing it directly in client code
     const token = process.env.MAPBOX_TOKEN;
-    console.log("Providing Mapbox token:", token ? `${token.substring(0, 5)}...` : "not found");
-    res.json({ token: token || "" });
+    
+    // For development purposes, use a fallback token if no environment variable is set
+    // In production, always use environment variables
+    const fallbackDevToken = "pk.eyJ1IjoibWlzc21hbmFnZW1lbnQiLCJhIjoiY2xtYmc5NncwMDRqZzNxbzZzanRwZ3NmcyJ9.CnHxH-dNsLw9SoQelTxJFA";
+    
+    const tokenToUse = token || fallbackDevToken;
+    console.log("Providing Mapbox token:", tokenToUse ? `${tokenToUse.substring(0, 5)}...` : "not found");
+    res.json({ token: tokenToUse });
   });
 
   // Create HTTP server
