@@ -1,95 +1,64 @@
-import React, { useEffect } from "react";
+import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Create marker icons for different venue types
-const defaultIcon = L.icon({
-  iconUrl: '/marker-icon.png',
-  shadowUrl: '/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
+// Create custom marker icon
+const venueIcon = new L.DivIcon({
+  className: '',
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+  html: `
+    <div style="
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: #4f46e5;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    "></div>
+  `
 });
 
-// Create a custom HTML element for the current venue marker
-// This allows us to create a distinctive red marker
-const CurrentVenueMarkerHtml = `
-<div style="
-  background-color: #e11d48; 
-  width: 25px; 
-  height: 25px; 
-  display: block;
-  border-radius: 50%;
-  border: 3px solid white;
-  box-shadow: 0 0 4px rgba(0,0,0,0.5);
-  text-align: center;
-  line-height: 22px;
-  font-weight: bold;
-  color: white;
-">•</div>
-`;
-
-// Icon for the current venue (using HTML for custom styling)
-const currentVenueIcon = L.divIcon({
-  html: CurrentVenueMarkerHtml,
-  className: 'current-venue-marker',
-  iconSize: [25, 25],
-  iconAnchor: [12, 12]
+const currentVenueIcon = new L.DivIcon({
+  className: '',
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
+  html: `
+    <div style="
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: #e11d48;
+      border: 3px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    "></div>
+  `
 });
-
-// Helper component to fit map bounds
-function MapBoundsUpdater({ nodes }: { nodes: any[] }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (!nodes.length) return;
-
-    try {
-      // Create bounds for all markers
-      const bounds = L.latLngBounds(nodes.map(node => [node.latitude, node.longitude]));
-
-      // Fit the map to these bounds with some padding
-      map.fitBounds(bounds, { padding: [50, 50] });
-    } catch (err) {
-      console.error("Error setting map bounds:", err);
-    }
-  }, [nodes, map]);
-
-  return null;
-}
-
-// Define interfaces for network visualization
-interface NetworkNode {
-  id: number;
-  name: string;
-  city: string;
-  state: string;
-  isCurrentVenue: boolean;
-  collaborativeBookings: number;
-  trustScore: number;
-  latitude: number;
-  longitude: number;
-}
-
-interface NetworkLink {
-  source: number;
-  target: number;
-  value: number;
-}
-
-interface VenueNetworkData {
-  nodes: NetworkNode[];
-  links: NetworkLink[];
-}
 
 interface NetworkVisualizationProps {
-  data: VenueNetworkData;
-  onNodeClick?: (node: NetworkNode) => void;
+  data: {
+    nodes: Array<{
+      id: number;
+      name: string;
+      city: string;
+      state: string;
+      isCurrentVenue: boolean;
+      collaborativeBookings: number;
+      trustScore: number;
+      latitude: number;
+      longitude: number;
+    }>;
+    links: Array<{
+      source: number;
+      target: number;
+      value: number;
+    }>;
+  };
+  onNodeClick?: (node: any) => void;
   onAddVenue?: () => void;
 }
 
@@ -98,58 +67,34 @@ export function NetworkVisualization({
   onNodeClick,
   onAddVenue
 }: NetworkVisualizationProps) {
-  console.log('Network Data Structure:', {
-    hasData: !!data,
-    nodes: data?.nodes,
-    links: data?.links,
-    nodesLength: data?.nodes?.length,
-    linksLength: data?.links?.length
-  });
-  // Find the center of the map
-  const defaultCenter: [number, number] = [39.5, -98.5]; // Default US center
-
-  // Get center based on current venue or first node
+  // Find map center based on current venue
   const mapCenter = React.useMemo(() => {
-    if (!data?.nodes?.length) return defaultCenter;
+    const currentVenue = data.nodes.find(n => n.isCurrentVenue);
+    return currentVenue 
+      ? [currentVenue.latitude, currentVenue.longitude] 
+      : [39.5, -98.5]; // US center
+  }, [data.nodes]);
 
-    const currentVenue = data.nodes.find(node => node.isCurrentVenue);
-    if (currentVenue && currentVenue.latitude && currentVenue.longitude) {
-      return [currentVenue.latitude, currentVenue.longitude] as [number, number];
-    }
-
-    const firstNode = data.nodes[0];
-    if (firstNode && firstNode.latitude && firstNode.longitude) {
-      return [firstNode.latitude, firstNode.longitude] as [number, number];
-    }
-
-    return defaultCenter;
-  }, [data?.nodes]);
-
-  // Create network connection lines
+  // Create connection lines between venues
   const networkLines = React.useMemo(() => {
-    return data.links.map((link, index) => {
-      const sourceNode = data.nodes.find(n => n.id === link.source);
-      const targetNode = data.nodes.find(n => n.id === link.target);
+    return data.links.map((link, idx) => {
+      const source = data.nodes.find(n => n.id === link.source);
+      const target = data.nodes.find(n => n.id === link.target);
 
-      if (!sourceNode || !targetNode) return null;
-
-      // Create polyline positions
-      const positions: [number, number][] = [
-        [sourceNode.latitude, sourceNode.longitude],
-        [targetNode.latitude, targetNode.longitude]
-      ];
-
-      // Determine if this is a primary connection (to/from the current venue)
-      const isPrimaryConnection = sourceNode.isCurrentVenue || targetNode.isCurrentVenue;
+      if (!source || !target) return null;
 
       return (
-        <Polyline 
-          key={`link-${index}`}
-          positions={positions}
+        <Polyline
+          key={`link-${idx}`}
+          positions={[
+            [source.latitude, source.longitude],
+            [target.latitude, target.longitude]
+          ]}
           pathOptions={{
-            color: isPrimaryConnection ? '#4f46e5' : '#9ca3af',
-            weight: isPrimaryConnection ? 3 : 2,
-            dashArray: isPrimaryConnection ? '5,5' : '3,7'
+            color: '#4f46e5',
+            weight: 2,
+            opacity: 0.6,
+            dashArray: '5,5'
           }}
         />
       );
@@ -169,45 +114,34 @@ export function NetworkVisualization({
           </div>
         </div>
 
-        <div className="h-80 rounded-lg overflow-hidden relative">
-          {/* Leaflet Map */}
-          <MapContainer 
-            center={mapCenter} 
-            zoom={4} 
+        <div className="h-[400px] rounded-lg overflow-hidden">
+          <MapContainer
+            center={mapCenter as [number, number]}
+            zoom={4}
             style={{ height: '100%', width: '100%' }}
-            scrollWheelZoom={true}
           >
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            {/* Add the bounds updater component */}
-            <MapBoundsUpdater nodes={data.nodes} />
+            {networkLines}
 
-            {/* Network Connections */}
-            {data?.links?.length > 0 && networkLines}
-
-            {/* Venue Markers */}
-            {data?.nodes?.length > 0 && data.nodes.map(node => (
-              <Marker 
-                key={node.id} 
+            {data.nodes.map((node) => (
+              <Marker
+                key={node.id}
                 position={[node.latitude, node.longitude]}
-                icon={node.isCurrentVenue ? currentVenueIcon : defaultIcon}
+                icon={node.isCurrentVenue ? currentVenueIcon : venueIcon}
                 eventHandlers={{
-                  click: () => {
-                    if (onNodeClick) onNodeClick(node);
-                  }
+                  click: () => onNodeClick?.(node)
                 }}
               >
                 <Popup>
                   <div className="text-sm">
                     <h3 className="font-semibold">{node.name}</h3>
                     <div>{node.city}, {node.state}</div>
-                    {node.isCurrentVenue ? (
-                      <div className="mt-1 text-xs text-green-600 font-semibold">Your Venue</div>
-                    ) : (
-                      <div className="mt-1 text-xs">
+                    {!node.isCurrentVenue && (
+                      <div className="mt-1">
                         <div>Trust Score: {node.trustScore}%</div>
                         <div>Collaborations: {node.collaborativeBookings}</div>
                       </div>
@@ -219,39 +153,36 @@ export function NetworkVisualization({
           </MapContainer>
         </div>
 
-        {/* Network Stats */}
         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center">
             <div className="text-2xl font-semibold text-primary-700">
-              {Math.max(0, data.nodes.filter(node => !node.isCurrentVenue).length)}
+              {data.nodes.filter(n => !n.isCurrentVenue).length}
             </div>
             <div className="text-sm text-gray-500">Connected Venues</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-semibold text-primary-700">
-              {data.links.reduce((sum, link) => sum + (link.value || 0), 0)}
+              {data.links.reduce((sum, link) => sum + link.value, 0)}
             </div>
             <div className="text-sm text-gray-500">Collaborative Bookings</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-semibold text-primary-700">
-              {data.nodes.length > 1 ? Math.round(
-                data.nodes
-                  .filter(node => !node.isCurrentVenue)
-                  .reduce((sum, node) => sum + (node.trustScore || 0), 0) / 
-                data.nodes.filter(node => !node.isCurrentVenue).length
-              ) : 0}%
+              {data.nodes.length > 1 
+                ? Math.round(data.nodes
+                    .filter(n => !n.isCurrentVenue)
+                    .reduce((sum, n) => sum + n.trustScore, 0) / 
+                    (data.nodes.length - 1)
+                  )
+                : 0}%
             </div>
-            <div className="text-sm text-gray-500">Trust Score</div>
+            <div className="text-sm text-gray-500">Avg Trust Score</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-semibold text-primary-700">
-              {data.links.filter(link => {
-                const targetNode = data.nodes.find(n => n.id === link.target);
-                return targetNode && !targetNode.isCurrentVenue;
-              }).length}
+              {data.links.length}
             </div>
-            <div className="text-sm text-gray-500">Pending Invites</div>
+            <div className="text-sm text-gray-500">Active Connections</div>
           </div>
         </div>
       </CardContent>
