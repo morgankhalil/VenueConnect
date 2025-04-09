@@ -63,6 +63,25 @@ export function MainLayout({ children }: MainLayoutProps) {
               <X className="h-5 w-5" />
             </Button>
           </div>
+          <nav className="space-y-1 p-4">
+            {[
+              { name: "Dashboard", href: "/" },
+              { name: "Calendar", href: "/calendar" },
+              { name: "Discover", href: "/discover" },
+              { name: "Venue Network", href: "/venue-network" },
+              { name: "Messages", href: "/messages" },
+              { name: "Settings", href: "/settings" },
+            ].map((item) => (
+              <a
+                key={item.name}
+                href={item.href}
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item.name}
+              </a>
+            ))}
+          </nav>
           <Sidebar
             userName={user.name}
             venueName={user.venueName}
