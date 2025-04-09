@@ -31,8 +31,8 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
     // First, check if the API key is configured
     const apiKey = process.env.BANDSINTOWN_API_KEY;
     if (!apiKey) {
-      console.error('BANDSINTOWN_API_KEY environment variable is not set');
-      throw new Error('Bandsintown API key is not configured. Please add it in your environment variables.');
+      console.error('BANDSINTOWN_API_KEY secret is not set');
+      throw new Error('Bandsintown API key is not configured. Please add it to your Replit Secrets.');
     }
 
     // Get the source venue's details to determine search area

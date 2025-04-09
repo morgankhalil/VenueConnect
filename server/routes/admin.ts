@@ -42,25 +42,26 @@ adminRouter.post('/sync-venues', async (req, res) => {
   }
 });
 
-// Route to handle saving the Bandsintown API key
-// Note: In a production app, this would be securely handled with proper encryption
-adminRouter.post('/api-keys/bandsintown', (req, res) => {
+// Route to check if the Bandsintown API key is configured
+// Does not expose the actual key value to the client
+adminRouter.get('/api-keys/bandsintown/status', (req, res) => {
   try {
-    const { apiKey } = req.body;
-    
-    if (!apiKey) {
-      return res.status(400).json({ error: 'API key is required' });
+    // Check if the Bandsintown API key is set in secrets
+    // We don't expose the actual key value, just whether it exists
+    if (process.env.BANDSINTOWN_API_KEY) {
+      res.json({ 
+        configured: true, 
+        message: 'Bandsintown API key is configured'
+      });
+    } else {
+      res.json({ 
+        configured: false, 
+        message: 'Bandsintown API key is not configured'
+      });
     }
-    
-    // In a real app, you would securely store this key 
-    // For this demo, we're just setting it in the environment
-    process.env.BANDSINTOWN_API_KEY = apiKey;
-    
-    console.log('Bandsintown API key has been updated');
-    res.json({ success: true, message: 'API key saved successfully' });
   } catch (error) {
-    console.error('Error saving API key:', error);
-    res.status(500).json({ error: 'Failed to save API key' });
+    console.error('Error checking API key status:', error);
+    res.status(500).json({ error: 'Failed to check API key status' });
   }
 });
 

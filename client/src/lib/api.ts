@@ -172,8 +172,8 @@ export const triggerVenueSync = async (venueId: number, radius?: number, limit?:
   return res.json();
 };
 
-export const saveBandsintownApiKey = async (apiKey: string) => {
-  const res = await apiRequest('POST', '/api/admin/api-keys/bandsintown', { apiKey });
+export const checkBandsintownApiKeyStatus = async () => {
+  const res = await apiRequest('GET', '/api/admin/api-keys/bandsintown/status');
   return res.json();
 };
 

@@ -486,44 +486,17 @@ export default function Settings() {
                           <Switch defaultChecked id="bandsintown-enabled" />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="bandsintown-api-key">API Key</Label>
-                          <div className="flex">
-                            <Input 
-                              id="bandsintown-api-key" 
-                              type="password" 
-                              placeholder="Enter your Bandsintown API key here"
-                              value={apiKeys.bandsintown}
-                              onChange={(e) => setApiKeys({...apiKeys, bandsintown: e.target.value})}
-                              className="rounded-r-none" 
-                            />
-                            <Button variant="outline" className="rounded-l-none" onClick={() => {
-                              if (apiKeys.bandsintown) {
-                                // Save the API key
-                                import('@/lib/api').then(api => {
-                                  api.saveBandsintownApiKey(apiKeys.bandsintown)
-                                    .then(() => {
-                                      toast({
-                                        title: "API Key Saved",
-                                        description: "Your Bandsintown API key has been saved successfully."
-                                      });
-                                    })
-                                    .catch(error => {
-                                      toast({
-                                        title: "Error Saving API Key",
-                                        description: error.message || "Could not save the API key",
-                                        variant: "destructive"
-                                      });
-                                    });
-                                });
-                              } else {
-                                toast({
-                                  title: "API Key Required",
-                                  description: "Please enter an API key",
-                                  variant: "destructive"
-                                });
-                              }
-                            }}>Save</Button>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="bandsintown-api-key">API Key Status</Label>
+                            <div className="flex items-center gap-2">
+                              <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+                              <span className="text-sm text-muted-foreground">Configured via Replit Secrets</span>
+                            </div>
                           </div>
+                          <p className="text-sm text-muted-foreground mt-2">
+                            Your Bandsintown API key is securely configured through Replit Secrets. 
+                            For security reasons, API keys are no longer managed through the frontend.
+                          </p>
                           <div className="mt-4">
                             <Button 
                               variant="secondary"
@@ -551,21 +524,12 @@ export default function Settings() {
                                       });
                                     })
                                     .catch(error => {
-                                      // Check if the error is related to missing API key
-                                      if (error.message?.includes('Bandsintown API key')) {
-                                        // Ask the user to check their API key
-                                        toast({
-                                          title: "API Key Required",
-                                          description: "Please set your Bandsintown API key first",
-                                          variant: "destructive"
-                                        });
-                                      } else {
-                                        toast({
-                                          title: "Sync Failed",
-                                          description: error.message || "Could not start venue sync",
-                                          variant: "destructive"
-                                        });
-                                      }
+                                      // Handle any errors that occur during the sync process
+                                      toast({
+                                        title: "Sync Failed",
+                                        description: error.message || "Could not start venue sync",
+                                        variant: "destructive"
+                                      });
                                     });
                                 });
                               }}

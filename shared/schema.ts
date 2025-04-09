@@ -319,3 +319,5 @@ export type InsertCollaborativeOpportunity = z.infer<typeof insertCollaborativeO
 
 export type CollaborativeParticipant = typeof collaborativeParticipants.$inferSelect;
 export type InsertCollaborativeParticipant = z.infer<typeof insertCollaborativeParticipantSchema>;
+
+
