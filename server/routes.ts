@@ -10,7 +10,7 @@ import { fromZodError } from "zod-validation-error";
 import { Router } from 'express';
 import { db } from './db';
 import { eq, and, sql } from 'drizzle-orm';
-import { venues, artists, events, predictions, collaborativeOpportunities, collaborativeParticipants, venueNetwork } from '../shared/schema';
+import { venues, artists, events, predictions, collaborativeOpportunities, collaborativeParticipants, venueNetwork, messages } from '../shared/schema';
 
 const router = Router();
 
@@ -53,6 +53,41 @@ router.get('/venues', async (req, res) => {
 router.get('/venues/:id', async (req, res) => {
   const result = await db.select().from(venues).where(eq(venues.id, parseInt(req.params.id)));
   res.json(result[0]);
+});
+
+// Connected venues
+router.get('/api/venues/connected', async (req, res) => {
+  try {
+    // Get all connected venues through venue network
+    const connections = await db.select({
+      connection: venueNetwork,
+      venue: venues
+    })
+    .from(venueNetwork)
+    .leftJoin(venues, eq(venueNetwork.connectedVenueId, venues.id))
+    .where(eq(venueNetwork.status, 'active'));
+    
+    // Transform into expected format
+    const connectedVenues = connections
+      .filter(item => item.venue !== null && item.venue !== undefined)
+      .map(item => {
+        // We'll cast venue as non-null since we've filtered
+        const venue = item.venue as typeof venues.$inferSelect;
+        return {
+          id: venue.id,
+          name: venue.name,
+          trustScore: item.connection.trustScore,
+          collaborativeBookings: item.connection.collaborativeBookings,
+          city: venue.city,
+          state: venue.state
+        };
+      });
+    
+    res.json(connectedVenues);
+  } catch (error) {
+    console.error("Error fetching connected venues:", error);
+    res.status(500).json({ error: "Failed to get connected venues" });
+  }
 });
 
 // Events
@@ -120,11 +155,16 @@ router.get('/venues/:id/predictions', async (req, res) => {
 });
 
 router.get('/messages', async (req, res) => {
-  const result = await db
-    .select()
-    .from(messages)
-    .orderBy(messages.timestamp);
-  res.json(result);
+  try {
+    const result = await db
+      .select()
+      .from(messages)
+      .orderBy(messages.timestamp);
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    res.status(500).json({ error: "Failed to get messages" });
+  }
 });
 
 // Venue Network
@@ -241,6 +281,7 @@ router.get("/api/user", async (req, res) => {
         connectedVenues: []
       });
     }
+  
   } catch (error) {
     console.error("Error fetching user:", error);
     res.status(500).json({ error: "Failed to get user data" });
