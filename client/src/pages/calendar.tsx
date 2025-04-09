@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { getEvents } from '@/lib/api';
+import * as api from '@/lib/api';
 import type { Event } from '@/types';
 
 export default function CalendarPage() {
@@ -11,7 +11,7 @@ export default function CalendarPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['events'],
-    queryFn: getEvents
+    queryFn: api.getEvents
   });
 
   // Ensure events is always an array, even if the API returns null or undefined

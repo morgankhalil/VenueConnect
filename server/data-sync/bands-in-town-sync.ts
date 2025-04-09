@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { db } from '../db';
-import { venues, venueNetwork } from '../../shared/schema';
+import { venues, venueNetwork, artists, events } from '../../shared/schema';
 import { eq, and } from 'drizzle-orm';
 
 // Define types for Bandsintown API responses
@@ -14,12 +14,305 @@ interface BandsInTownVenue {
   longitude?: number;
 }
 
+interface BandsInTownArtist {
+  id: string;
+  name: string;
+  url: string;
+  image_url?: string;
+  thumb_url?: string;
+  facebook_page_url?: string;
+  mbid?: string;
+  tracker_count?: number;
+  upcoming_event_count?: number;
+}
+
 interface BandsInTownEvent {
-  id?: string;
+  id: string;
+  artist_id: string;
+  url: string;
+  on_sale_datetime?: string;
+  datetime: string;
+  description?: string;
   venue: BandsInTownVenue;
-  datetime?: string;
+  offers: Array<{
+    type: string;
+    url: string;
+    status: string;
+  }>;
+  lineup: string[];
   title?: string;
-  lineup?: string[];
+  artist?: BandsInTownArtist;
+  status?: 'confirmed' | 'cancelled';
+}
+
+/**
+ * Fetches artist info from Bandsintown API and saves to database
+ * @param artistName Name of the artist to fetch
+ * @returns The artist details, including database ID
+ */
+export async function syncArtistFromBandsInTown(artistName: string) {
+  try {
+    // Validate input
+    if (!artistName || typeof artistName !== 'string') {
+      throw new Error('Invalid artist name');
+    }
+
+    // Check if API key is configured
+    const apiKey = process.env.BANDSINTOWN_API_KEY;
+    if (!apiKey) {
+      console.error('BANDSINTOWN_API_KEY secret is not set');
+      throw new Error('Bandsintown API key is not configured. Please add it to your Replit Secrets.');
+    }
+
+    // Sanitize artist name for URL
+    const encodedArtistName = encodeURIComponent(artistName.trim());
+    const apiEndpoint = `https://rest.bandsintown.com/artists/${encodedArtistName}`;
+    
+    // Headers with API key in Authorization header
+    const headers = {
+      'Authorization': `Bearer ${apiKey}`,
+      'Accept': 'application/json'
+    };
+
+    // Try different authentication methods
+    let artistData: BandsInTownArtist | null = null;
+
+    try {
+      // First try with Bearer token
+      console.log(`Attempting to fetch artist '${artistName}' with Bearer token...`);
+      const response = await axios.get(apiEndpoint, { 
+        headers,
+      });
+      artistData = response.data;
+    } catch (error) {
+      console.log(`Bearer token authentication failed, trying app_id parameter for artist '${artistName}'...`);
+      // If that fails, try with app_id as a query parameter
+      const response = await axios.get(apiEndpoint, { 
+        params: {
+          app_id: apiKey
+        }
+      });
+      artistData = response.data;
+    }
+
+    if (!artistData || !artistData.name) {
+      console.log(`Artist '${artistName}' not found on Bandsintown`);
+      return null;
+    }
+
+    console.log(`Found artist '${artistData.name}' on Bandsintown`);
+
+    // Check if artist already exists in our database
+    const existingArtists = await db.select()
+      .from(artists)
+      .where(eq(artists.name, artistData.name))
+      .limit(1);
+
+    if (existingArtists.length > 0) {
+      console.log(`Artist '${artistData.name}' already exists in database`);
+      
+      // Update artist info
+      await db.update(artists)
+        .set({
+          bandsintownId: artistData.id,
+          imageUrl: artistData.image_url,
+          genres: ['rock'] // Default to rock since Bandsintown doesn't provide genres
+        })
+        .where(eq(artists.id, existingArtists[0].id));
+      
+      return existingArtists[0];
+    }
+
+    // Insert new artist
+    const newArtists = await db.insert(artists).values({
+      name: artistData.name,
+      bandsintownId: artistData.id,
+      imageUrl: artistData.image_url,
+      websiteUrl: artistData.url,
+      genres: ['rock'], // Default to rock since Bandsintown doesn't provide genres
+      popularity: artistData.tracker_count ? Math.min(100, Math.floor(artistData.tracker_count / 1000)) : 50
+    }).returning();
+
+    if (newArtists.length > 0) {
+      console.log(`Added new artist: ${newArtists[0].name}`);
+      return newArtists[0];
+    }
+
+    return null;
+  } catch (error) {
+    console.error(`Error syncing artist from BandsInTown:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Synchronizes artist events from Bandsintown API
+ * @param artistName Name of the artist to fetch events for
+ * @returns Array of events added/updated
+ */
+export async function syncArtistEventsFromBandsInTown(artistName: string) {
+  try {
+    // Validate input
+    if (!artistName || typeof artistName !== 'string') {
+      throw new Error('Invalid artist name');
+    }
+
+    // Check if API key is configured
+    const apiKey = process.env.BANDSINTOWN_API_KEY;
+    if (!apiKey) {
+      console.error('BANDSINTOWN_API_KEY secret is not set');
+      throw new Error('Bandsintown API key is not configured. Please add it to your Replit Secrets.');
+    }
+
+    // First, make sure we have the artist in our database
+    const artist = await syncArtistFromBandsInTown(artistName);
+    if (!artist) {
+      throw new Error(`Failed to find or create artist '${artistName}'`);
+    }
+
+    // Sanitize artist name for URL
+    const encodedArtistName = encodeURIComponent(artistName.trim());
+    const apiEndpoint = `https://rest.bandsintown.com/artists/${encodedArtistName}/events`;
+    
+    // Headers with API key in Authorization header
+    const headers = {
+      'Authorization': `Bearer ${apiKey}`,
+      'Accept': 'application/json'
+    };
+
+    // Params for the request
+    const params: Record<string, any> = {
+      date: 'upcoming' // Get upcoming events
+    };
+
+    // Try different authentication methods
+    let eventsData: BandsInTownEvent[] = [];
+
+    try {
+      // First try with Bearer token
+      console.log(`Attempting to fetch events for '${artistName}' with Bearer token...`);
+      const response = await axios.get(apiEndpoint, { 
+        headers,
+        params
+      });
+      eventsData = response.data || [];
+    } catch (error) {
+      console.log(`Bearer token authentication failed, trying app_id parameter for '${artistName}' events...`);
+      // If that fails, try with app_id as a query parameter
+      const response = await axios.get(apiEndpoint, { 
+        params: {
+          ...params,
+          app_id: apiKey
+        }
+      });
+      eventsData = response.data || [];
+    }
+
+    console.log(`Retrieved ${eventsData.length} events for artist '${artistName}'`);
+    
+    // Process events
+    const addedEvents: any[] = [];
+    
+    for (const eventData of eventsData) {
+      if (!eventData.venue || !eventData.datetime) {
+        console.log('Skipping event with missing venue or datetime');
+        continue;
+      }
+      
+      // Check if venue exists, or create it
+      let venueId;
+      const existingVenues = await db.select()
+        .from(venues)
+        .where(
+          and(
+            eq(venues.name, eventData.venue.name),
+            eq(venues.city, eventData.venue.city)
+          )
+        )
+        .limit(1);
+      
+      if (existingVenues.length > 0) {
+        venueId = existingVenues[0].id;
+      } else {
+        // Need to create the venue
+        const newVenues = await db.insert(venues).values({
+          name: eventData.venue.name,
+          city: eventData.venue.city,
+          state: eventData.venue.region || '',
+          country: (eventData.venue.country || 'US').substring(0, 2),
+          latitude: eventData.venue.latitude || null,
+          longitude: eventData.venue.longitude || null,
+          capacity: 500, // Default capacity
+          address: `${eventData.venue.name}`, // Default address
+          zipCode: '00000', // Default zip
+          description: `Music venue in ${eventData.venue.city}`,
+        }).returning();
+        
+        if (newVenues.length > 0) {
+          venueId = newVenues[0].id;
+          console.log(`Created new venue: ${newVenues[0].name} in ${newVenues[0].city}`);
+        } else {
+          console.log(`Failed to create venue for event`);
+          continue;
+        }
+      }
+      
+      // Process datetime
+      const eventDate = new Date(eventData.datetime);
+      const dateString = eventDate.toISOString().split('T')[0];
+      const timeString = eventDate.toTimeString().split(' ')[0].substring(0, 5);
+      
+      // Check if event already exists
+      const existingEvents = await db.select()
+        .from(events)
+        .where(
+          and(
+            eq(events.artistId, artist.id),
+            eq(events.venueId, venueId),
+            eq(events.date, dateString)
+          )
+        )
+        .limit(1);
+      
+      if (existingEvents.length > 0) {
+        // Update existing event
+        await db.update(events)
+          .set({
+            status: eventData.status || 'confirmed',
+            ticketUrl: eventData.offers && eventData.offers.length > 0 ? eventData.offers[0].url : null,
+            sourceId: eventData.id,
+            sourceName: 'bandsintown'
+          })
+          .where(eq(events.id, existingEvents[0].id));
+        
+        console.log(`Updated existing event: ${artist.name} at ${eventData.venue.name} on ${dateString}`);
+        addedEvents.push({...existingEvents[0]});
+      } else {
+        // Create new event
+        const newEvents = await db.insert(events).values({
+          artistId: artist.id,
+          venueId: venueId,
+          date: dateString,
+          startTime: timeString,
+          status: eventData.status || 'confirmed',
+          ticketUrl: eventData.offers && eventData.offers.length > 0 ? eventData.offers[0].url : null,
+          sourceId: eventData.id,
+          sourceName: 'bandsintown'
+        }).returning();
+        
+        if (newEvents.length > 0) {
+          console.log(`Added new event: ${artist.name} at ${eventData.venue.name} on ${dateString}`);
+          addedEvents.push({...newEvents[0]});
+        }
+      }
+    }
+    
+    console.log(`Sync completed: processed ${eventsData.length} events, added/updated ${addedEvents.length}`);
+    return addedEvents;
+  } catch (error) {
+    console.error(`Error syncing events from BandsInTown:`, error);
+    throw error;
+  }
 }
 
 /**

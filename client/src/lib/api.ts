@@ -1,215 +1,156 @@
 import { apiRequest } from './queryClient';
-export { apiRequest };
-import { 
-  Venue, Artist, Event, VenueNetwork, Prediction, 
-  Inquiry, CollaborativeOpportunity, CollaborativeOpportunityWithDetails, 
-  PredictionWithDetails, StatsData, MapEvent, VenueNetworkData, TourGroup
-} from '@/types';
 
-export const getStatsData = async (): Promise<StatsData> => {
-  return apiRequest('/api/stats');
-};
+/**
+ * API client functions for interacting with the server
+ */
 
-export const getPredictionsWithDetails = async (): Promise<PredictionWithDetails[]> => {
-  return apiRequest('/api/predictions/details');
-};
-
-export const getTourGroups = async (): Promise<TourGroup[]> => {
-  return apiRequest('/api/tours');
-};
-
-export const getCollaborativeOpportunitiesWithDetails = async (): Promise<CollaborativeOpportunityWithDetails[]> => {
-  return apiRequest('/api/collaborative-opportunities/details');
-};
-
-// Venues
-export const getVenues = async (): Promise<Venue[]> => {
-  return apiRequest('/api/venues');
-};
-
-export const getVenue = async (id: number): Promise<Venue> => {
-  return apiRequest(`/api/venues/${id}`);
-};
-
-export const createVenue = async (venue: Omit<Venue, 'id'>): Promise<Venue> => {
-  return apiRequest('/api/venues', {
+/**
+ * Trigger a sync of artist events from Bandsintown
+ * @param artistName The name of the artist to sync
+ * @returns A promise that resolves when the sync has started
+ */
+export async function syncArtistEvents(artistName: string) {
+  return apiRequest('/api/bandsintown/sync-artist', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(venue)
+    body: JSON.stringify({ artistName }),
+    headers: { 'Content-Type': 'application/json' }
   });
-};
+}
 
-export const updateVenue = async (id: number, venue: Partial<Venue>): Promise<Venue> => {
-  return apiRequest(`/api/venues/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(venue)
-  });
-};
-
-export const getVenuesByUser = async (userId: number): Promise<Venue[]> => {
-  return apiRequest(`/api/users/${userId}/venues`);
-};
-
-// Artists
-export const getArtists = async (filter?: string): Promise<Artist[]> => {
-  const queryParam = filter ? `?filter=${encodeURIComponent(filter)}` : '';
-  return apiRequest(`/api/artists${queryParam}`);
-};
-
-export const getArtist = async (id: number): Promise<Artist> => {
-  return apiRequest(`/api/artists/${id}`);
-};
-
-export const createArtist = async (artist: Omit<Artist, 'id'>): Promise<Artist> => {
-  return apiRequest('/api/artists', {
+/**
+ * Trigger a sync of venues from Bandsintown
+ * @param venueId The ID of the venue to use as the source
+ * @param radius The radius around the venue to search for other venues (in miles)
+ * @param limit The maximum number of venues to return
+ * @returns A promise that resolves when the sync has started
+ */
+export async function triggerVenueSync(venueId: number, radius = 250, limit = 10) {
+  return apiRequest('/api/bandsintown/sync-venues', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(artist)
+    body: JSON.stringify({ venueId, radius, limit }),
+    headers: { 'Content-Type': 'application/json' }
   });
-};
+}
 
-// Events
-export const getEvents = async (): Promise<Event[]> => {
-  return apiRequest('/api/events');
-};
-
-export const getEvent = async (id: number): Promise<Event> => {
-  return apiRequest(`/api/events/${id}`);
-};
-
-export const createEvent = async (event: Omit<Event, 'id'>): Promise<Event> => {
-  return apiRequest('/api/events', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(event)
-  });
-};
-
-export const getMessages = async () => {
-  return apiRequest('/api/messages');
-};
-
-export const getEventsByVenue = async (venueId: number): Promise<Event[]> => {
-  return apiRequest(`/api/venues/${venueId}/events`);
-};
-
-export const getEventsByArtist = async (artistId: number): Promise<Event[]> => {
-  return apiRequest(`/api/artists/${artistId}/events`);
-};
-
-// Venue Network
-export const getVenueConnections = async (venueId: number): Promise<VenueNetwork[]> => {
-  return apiRequest(`/api/venues/${venueId}/connections`);
-};
-
-export const createVenueConnection = async (connection: Omit<VenueNetwork, 'id'>): Promise<VenueNetwork> => {
-  return apiRequest('/api/venue-network', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(connection)
-  });
-};
-
-export const getVenueNetworkGraph = async (venueId: number): Promise<VenueNetworkData> => {
-  return apiRequest(`/api/venue-network/graph/${venueId}`);
-};
-
-// Predictions
-export const getPrediction = async (id: number): Promise<Prediction> => {
-  return apiRequest(`/api/predictions/${id}`);
-};
-
-export const getPredictionsByVenue = async (venueId: number): Promise<Prediction[]> => {
-  return apiRequest(`/api/venues/${venueId}/predictions`);
-};
-
-export const createPrediction = async (prediction: Omit<Prediction, 'id'>): Promise<Prediction> => {
-  return apiRequest('/api/predictions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(prediction)
-  });
-};
-
-// Inquiries
-export const createInquiry = async (inquiry: Omit<Inquiry, 'id'>): Promise<Inquiry> => {
-  return apiRequest('/api/inquiries', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(inquiry)
-  });
-};
-
-export const getInquiriesByVenue = async (venueId: number): Promise<Inquiry[]> => {
-  return apiRequest(`/api/venues/${venueId}/inquiries`);
-};
-
-// Collaborative Opportunities
-export const createCollaborativeOpportunity = async (
-  opportunity: Omit<CollaborativeOpportunity, 'id'>
-): Promise<CollaborativeOpportunity> => {
-  return apiRequest('/api/collaborative-opportunities', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(opportunity)
-  });
-};
-
-export const getCollaborativeOpportunitiesByVenue = async (
-  venueId: number
-): Promise<CollaborativeOpportunity[]> => {
-  return apiRequest(`/api/venues/${venueId}/collaborative-opportunities`);
-};
-
-// Admin operations
-export const triggerVenueSync = async (venueId: number, radius?: number, limit?: number) => {
-  return apiRequest('/api/admin/sync-venues', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      venueId,
-      radius,
-      limit
-    })
-  });
-};
-
-export const checkBandsintownApiKeyStatus = async () => {
+/**
+ * Check if the Bandsintown API key is configured
+ * @returns A promise that resolves with the status of the API key
+ */
+export async function checkBandsintownApiStatus() {
   return apiRequest('/api/admin/api-keys/bandsintown/status');
-};
+}
 
-export const setBandsintownApiKey = async (apiKey: string) => {
+/**
+ * Alias for checkBandsintownApiStatus to maintain compatibility with admin pages
+ * @returns A promise that resolves with the status of the API key
+ */
+export async function checkBandsintownApiKeyStatus() {
+  return checkBandsintownApiStatus();
+}
+
+/**
+ * Set the Bandsintown API key
+ * @param apiKey The API key to set
+ * @returns A promise that resolves when the API key is set
+ */
+export async function setBandsintownApiKey(apiKey: string) {
   return apiRequest('/api/admin/api-keys/bandsintown', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ apiKey })
+    body: JSON.stringify({ apiKey }),
+    headers: { 'Content-Type': 'application/json' }
   });
-};
+}
 
-// Webhook operations
-export const registerWebhook = async (callbackUrl: string) => {
-  return apiRequest('/api/admin/webhooks/register', {
+/**
+ * Get events, either for a specific venue or all events
+ * @param venueId Optional venue ID to filter by 
+ * @returns A promise that resolves to the events
+ */
+export async function getEvents() {
+  return apiRequest('/api/events');
+}
+
+/**
+ * Get predictions with details, including artist and venue information
+ * @returns A promise that resolves to predictions with artist and venue details
+ */
+export async function getPredictionsWithDetails() {
+  return apiRequest('/api/predictions/details');
+}
+
+/**
+ * Get tour groups for visualizing artist tours on a map
+ * @returns A promise that resolves to tour groups data
+ */
+export async function getTourGroups() {
+  return apiRequest('/api/tour-groups');
+}
+
+/**
+ * Get dashboard statistics
+ * @returns A promise that resolves to dashboard statistics data
+ */
+export async function getStatsData() {
+  return apiRequest('/api/dashboard/stats');
+}
+
+/**
+ * Get venue network graph data
+ * @param venueId The ID of the venue to get the network for
+ * @returns A promise that resolves to venue network graph data
+ */
+export async function getVenueNetworkGraph(venueId: number) {
+  return apiRequest(`/api/venue-network/graph/${venueId}`);
+}
+
+/**
+ * Create a connection between two venues
+ * @param connection The venue connection details
+ * @returns A promise that resolves when the connection is created
+ */
+export async function createVenueConnection(connection: {
+  venueId: number;
+  connectedVenueId: number;
+  status?: string;
+  trustScore?: number;
+}) {
+  return apiRequest('/api/venue-network/connections', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ callbackUrl })
+    body: JSON.stringify(connection),
+    headers: { 'Content-Type': 'application/json' }
   });
-};
+}
 
-export const unregisterWebhook = async (callbackUrl: string) => {
-  return apiRequest('/api/admin/webhooks/unregister', {
+/**
+ * Get collaborative opportunities for a venue
+ * @param venueId The ID of the venue to get opportunities for
+ * @returns A promise that resolves to collaborative opportunities data
+ */
+export async function getCollaborativeOpportunitiesByVenue(venueId: number) {
+  return apiRequest(`/api/venues/${venueId}/collaborative-opportunities`);
+}
+
+/**
+ * Get messages for the current user
+ * @returns A promise that resolves to the user's messages
+ */
+export async function getMessages() {
+  return apiRequest('/api/messages');
+}
+
+/**
+ * Send a new message
+ * @param message The message details
+ * @returns A promise that resolves when the message is sent
+ */
+export async function sendMessage(message: {
+  recipientId: number;
+  subject: string;
+  content: string;
+}) {
+  return apiRequest('/api/messages', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ callbackUrl })
+    body: JSON.stringify(message),
+    headers: { 'Content-Type': 'application/json' }
   });
-};
-
-export const testWebhook = async (callbackUrl: string) => {
-  return apiRequest('/api/admin/webhooks/test', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ callbackUrl })
-  });
-};
-
-// All mock data has been moved to the database
+}

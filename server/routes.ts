@@ -712,6 +712,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(tourGroups);
   });
 
+  // Bandsintown API sync endpoints
+  app.post("/api/bandsintown/sync-venues", async (req, res) => {
+    try {
+      const { venueId, radius, limit } = req.body;
+      
+      if (!venueId || typeof venueId !== 'number') {
+        return res.status(400).json({ error: "Venue ID is required" });
+      }
+      
+      // Import sync function
+      const { syncVenuesFromBandsInTown } = await import('./data-sync/bands-in-town-sync');
+      
+      // Run sync in background to avoid blocking the response
+      const syncPromise = syncVenuesFromBandsInTown(venueId, radius || 250, limit || 10);
+      
+      // Immediately respond that the sync has started
+      res.json({ 
+        message: `Started venue sync for venue ID: ${venueId}`,
+        status: 'processing'
+      });
+      
+      // Continue with the sync
+      syncPromise
+        .then(venues => {
+          console.log(`Completed venue sync for venue ID ${venueId}, processed ${venues.length} venues`);
+        })
+        .catch(error => {
+          console.error(`Error during venue sync for venue ID ${venueId}:`, error);
+        });
+        
+    } catch (error) {
+      console.error("Error starting Bandsintown venue sync:", error);
+      res.status(500).json({ 
+        error: "Failed to start Bandsintown venue sync",
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Bandsintown artist sync endpoint
+  app.post("/api/bandsintown/sync-artist", async (req, res) => {
+    try {
+      const { artistName } = req.body;
+      
+      if (!artistName || typeof artistName !== 'string') {
+        return res.status(400).json({ error: "Artist name is required" });
+      }
+      
+      // Import sync function
+      const { syncArtistEventsFromBandsInTown } = await import('./data-sync/bands-in-town-sync');
+      
+      // Run sync in background to avoid blocking the response
+      const syncPromise = syncArtistEventsFromBandsInTown(artistName);
+      
+      // Immediately respond that the sync has started
+      res.json({ 
+        message: `Started sync for artist: ${artistName}`,
+        status: 'processing'
+      });
+      
+      // Continue with the sync
+      syncPromise
+        .then(events => {
+          console.log(`Completed sync for artist ${artistName}, processed ${events.length} events`);
+        })
+        .catch(error => {
+          console.error(`Error during artist sync for ${artistName}:`, error);
+        });
+        
+    } catch (error) {
+      console.error("Error starting Bandsintown sync:", error);
+      res.status(500).json({ 
+        error: "Failed to start Bandsintown sync",
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   // Map config endpoint - now supporting Leaflet configs
   app.get("/api/map-config", (_, res) => {
     // We've migrated to Leaflet for more reliability
@@ -726,6 +804,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     console.log("Providing map configuration (OpenStreetMap + Leaflet)");
     res.json(config);
+  });
+  
+  // Check Bandsintown API key configuration
+  app.get("/api/admin/api-keys/bandsintown/status", (req, res) => {
+    const apiKey = process.env.BANDSINTOWN_API_KEY;
+    
+    if (apiKey) {
+      res.json({
+        configured: true,
+        message: "Bandsintown API key is properly configured"
+      });
+    } else {
+      res.json({
+        configured: false,
+        message: "Bandsintown API key is not configured. Please add it to your Replit Secrets."
+      });
+    }
   });
 
   // Create HTTP server

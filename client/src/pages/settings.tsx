@@ -1,18 +1,23 @@
 import React, { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-
+import * as api from "@/lib/api";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -74,7 +79,7 @@ export default function Settings() {
     queryKey: ['/api/admin/api-keys/bandsintown/status'],
     queryFn: async () => {
       try {
-        return await apiRequest('/api/admin/api-keys/bandsintown/status');
+        return await api.checkBandsintownApiStatus();
       } catch (err) {
         console.error("Error checking Bandsintown API key status:", err);
         return { configured: false, message: "Failed to check API key status" };
@@ -380,24 +385,17 @@ export default function Settings() {
                       </div>
                       <div className="flex items-center justify-between">
                         <div>
+                          <Label htmlFor="share-artist-data" className="mb-1 block">Artist Performance Data</Label>
+                          <p className="text-sm text-muted-foreground">Share artist performance analytics and insights</p>
+                        </div>
+                        <Switch id="share-artist-data" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
                           <Label htmlFor="share-opportunities" className="mb-1 block">Booking Opportunities</Label>
-                          <p className="text-sm text-muted-foreground">Share potential booking opportunities with your network</p>
+                          <p className="text-sm text-muted-foreground">Allow opportunities to be visible to trusted partners</p>
                         </div>
                         <Switch id="share-opportunities" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label htmlFor="share-artist-info" className="mb-1 block">Artist Information</Label>
-                          <p className="text-sm text-muted-foreground">Share details about artists who have performed at your venue</p>
-                        </div>
-                        <Switch id="share-artist-info" />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label htmlFor="share-financial" className="mb-1 block">Financial Information</Label>
-                          <p className="text-sm text-muted-foreground">Share ticket sales and revenue data with trusted venues</p>
-                        </div>
-                        <Switch id="share-financial" />
                       </div>
                     </div>
                   </div>
@@ -405,70 +403,69 @@ export default function Settings() {
                   <Separator />
                   
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Network Trust Levels</h3>
-                    <p className="text-sm text-muted-foreground">Configure trust levels for different venues in your network</p>
-                    
-                    <div className="border rounded-md">
-                      <div className="p-4 border-b bg-gray-50 grid grid-cols-5 font-medium">
-                        <div className="col-span-2">Venue</div>
-                        <div>Trust Level</div>
-                        <div>Data Sharing</div>
-                        <div>Actions</div>
+                    <h3 className="text-lg font-medium">Network Visibility</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label htmlFor="discovery-enabled" className="mb-1 block">Discovery Mode</Label>
+                          <p className="text-sm text-muted-foreground">Allow other venues to discover and connect with you</p>
+                        </div>
+                        <Switch id="discovery-enabled" defaultChecked />
                       </div>
-                      
-                      {/* This would ideally be populated from the API with venue connections */}
-                      {/* Display a loading state while fetching network connections */}
-                      {isLoadingNetwork ? (
-                        <div className="p-4 text-center text-muted-foreground">
-                          Loading network connections...
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label htmlFor="auto-accept" className="mb-1 block">Auto-Accept Connections</Label>
+                          <p className="text-sm text-muted-foreground">Automatically accept connection requests from verified venues</p>
                         </div>
-                      ) : networkData && networkData.nodes && networkData.nodes.length > 1 ? (
-                        // If there are connections, map through them (exclude the current venue)
-                        networkData.nodes
-                          .filter(node => !node.isCurrentVenue)
-                          .map((node, index) => {
-                            const connection = networkData.links.find(link => 
-                              link.target === node.id || link.source === node.id
-                            ) || { value: 0 };
-                            
-                            return (
-                              <div key={index} className="p-4 border-b grid grid-cols-5 items-center">
-                                <div className="col-span-2">{node.name || "Unnamed Venue"}</div>
-                                <div>
-                                  <Select defaultValue={node.trustScore >= 70 ? "high" : (node.trustScore >= 40 ? "medium" : "low")}>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Trust Level" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="high">High</SelectItem>
-                                      <SelectItem value="medium">Medium</SelectItem>
-                                      <SelectItem value="low">Low</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div>{connection.value > 5 ? "Full Access" : (connection.value > 2 ? "Standard Access" : "Limited Access")}</div>
-                                <div>
-                                  <Button variant="outline" size="sm">Edit</Button>
-                                </div>
-                              </div>
-                            );
-                          })
-                      ) : (
-                        // If no connections, show empty state
-                        <div className="p-4 text-center text-muted-foreground">
-                          No network connections yet. Connect with other venues to build your network.
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="text-right mt-4">
-                      <Button variant="outline">
-                        Add New Connection
-                      </Button>
+                        <Switch id="auto-accept" />
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="flex justify-end pt-4">
+                  <Separator />
+                  
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Connection Trust Rules</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Configure the rules that determine trust scores for your network connections
+                    </p>
+                    
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="min-trust-score">Minimum Trust Score</Label>
+                          <Input 
+                            id="min-trust-score" 
+                            type="number" 
+                            min="0" 
+                            max="100" 
+                            defaultValue="60" 
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Minimum score (0-100) required for automatic data sharing
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="weight-collaborative-bookings">Collaborative Bookings Weight</Label>
+                          <Input 
+                            id="weight-collaborative-bookings" 
+                            type="number" 
+                            min="0" 
+                            max="100" 
+                            defaultValue="70" 
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            How much weight to give to successful collaborative bookings
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between pt-4">
+                    <Button variant="outline">
+                      Reset to Defaults
+                    </Button>
                     <Button onClick={handleSave}>
                       Save Changes
                     </Button>
@@ -481,156 +478,210 @@ export default function Settings() {
             <TabsContent value="api" className="mt-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>API Integrations</CardTitle>
+                  <CardTitle>External APIs & Data Integration</CardTitle>
                   <CardDescription>
-                    Manage your API keys and external service integrations
+                    Manage connections to external services and data providers
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Tour Data Sources</h3>
-                    
-                    <div className="space-y-4">
-                      <div className="border rounded-md p-4">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <h4 className="font-medium">Bandsintown API</h4>
-                            <p className="text-sm text-muted-foreground">Connect to Bandsintown for artist tour data</p>
-                          </div>
-                          <Switch defaultChecked id="bandsintown-enabled" />
+                  <div className="space-y-6">
+                    <div className="border rounded-md p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h4 className="font-medium">Bandsintown API</h4>
+                          <p className="text-sm text-muted-foreground">Connect to Bandsintown for artist and event data</p>
                         </div>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label htmlFor="bandsintown-api-key">API Key Status</Label>
-                            <div className="flex items-center gap-2">
-                              <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
-                              <span className="text-sm text-muted-foreground">Configured via Replit Secrets</span>
+                        <div className="flex items-center gap-2">
+                          {bandsintownApiStatus?.configured ? (
+                            <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                              Configured
                             </div>
-                          </div>
-                          <p className="text-sm text-muted-foreground mt-2">
-                            Your Bandsintown API key is securely configured through Replit Secrets. 
-                            For security reasons, API keys are no longer managed through the frontend.
-                          </p>
-                          <div className="mt-4">
+                          ) : (
+                            <div className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded">
+                              Not Configured
+                            </div>
+                          )}
+                          <Switch 
+                            id="bandsintown-enabled" 
+                            defaultChecked={bandsintownApiStatus?.configured}
+                            disabled={!bandsintownApiStatus?.configured}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="artist-name">Sync Artist Events</Label>
+                          <div className="flex space-x-2">
+                            <Input 
+                              id="artist-name" 
+                              value={apiKeys.bandsintown}
+                              onChange={(e) => setApiKeys({...apiKeys, bandsintown: e.target.value})}
+                              placeholder="Enter artist name (e.g. 'Metallica')"
+                              disabled={!bandsintownApiStatus?.configured}
+                            />
                             <Button 
                               variant="secondary"
-                              onClick={() => {
-                                if (!user?.id) {
+                              disabled={!bandsintownApiStatus?.configured || !apiKeys.bandsintown}
+                              onClick={async () => {
+                                if (!apiKeys.bandsintown) {
                                   toast({
-                                    title: "Error",
-                                    description: "No venue ID available",
+                                    title: "Missing artist name",
+                                    description: "Please enter an artist name to sync",
                                     variant: "destructive"
                                   });
                                   return;
                                 }
                                 
                                 toast({
-                                  title: "Sync Started",
-                                  description: "Venue sync with Bandsintown has been initiated."
+                                  title: "Starting sync",
+                                  description: `Fetching events for ${apiKeys.bandsintown}...`
                                 });
                                 
-                                import('@/lib/api').then(api => {
-                                  api.triggerVenueSync(user.id, 250, 10)
-                                    .then(() => {
-                                      toast({
-                                        title: "Sync Requested",
-                                        description: "The sync process is running in the background."
-                                      });
-                                    })
-                                    .catch(error => {
-                                      // Handle any errors that occur during the sync process
-                                      toast({
-                                        title: "Sync Failed",
-                                        description: error.message || "Could not start venue sync",
-                                        variant: "destructive"
-                                      });
-                                    });
-                                });
+                                try {
+                                  const response = await api.syncArtistEvents(apiKeys.bandsintown);
+                                  
+                                  toast({
+                                    title: "Sync initiated",
+                                    description: response.message || `Started sync for ${apiKeys.bandsintown}`
+                                  });
+                                  
+                                  // Clear the input
+                                  setApiKeys({...apiKeys, bandsintown: ""});
+                                } catch (error) {
+                                  console.error("Error syncing artist:", error);
+                                  toast({
+                                    title: "Sync failed",
+                                    description: "There was an error syncing artist events. Please try again.",
+                                    variant: "destructive"
+                                  });
+                                }
                               }}
                             >
-                              Sync Venue Network Data
-                            </Button>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Discovers nearby venues and adds them to your network
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Admin Link - Only visible to admin users */}
-                      {user?.role === 'admin' && (
-                        <div className="mt-6 border rounded-md p-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h4 className="font-medium">Admin Settings</h4>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Configure API keys, webhooks, and other system settings
-                              </p>
-                            </div>
-                            <Button variant="outline" asChild>
-                              <a href="/admin/settings">
-                                Open Admin Panel
-                              </a>
+                              Sync Events
                             </Button>
                           </div>
+                          <p className="text-xs text-muted-foreground">
+                            This will fetch and store all upcoming events for this artist from Bandsintown.
+                            Depending on the artist's popularity, this might take a few moments.
+                          </p>
                         </div>
-                      )}
                       
-                      <div className="border rounded-md p-4">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <h4 className="font-medium">Songkick API</h4>
-                            <p className="text-sm text-muted-foreground">Connect to Songkick for artist tour data</p>
-                          </div>
-                          <Switch defaultChecked id="songkick-enabled" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="songkick-api-key">API Key</Label>
-                          <div className="flex">
-                            <Input id="songkick-api-key" type="password" defaultValue="•••••••••••••••••••" className="rounded-r-none" />
-                            <Button variant="outline" className="rounded-l-none">Show</Button>
-                          </div>
-                        </div>
+                        <Button 
+                          variant="secondary"
+                          disabled={!bandsintownApiStatus?.configured || !user?.id}
+                          onClick={() => {
+                            if (!user?.id) {
+                              toast({
+                                title: "Error",
+                                description: "No venue ID available",
+                                variant: "destructive"
+                              });
+                              return;
+                            }
+                            
+                            toast({
+                              title: "Sync Started",
+                              description: "Venue sync with Bandsintown has been initiated."
+                            });
+                            
+                            api.triggerVenueSync(user.id, 250, 10)
+                              .then(() => {
+                                toast({
+                                  title: "Sync Requested",
+                                  description: "The sync process is running in the background."
+                                });
+                              })
+                              .catch(error => {
+                                toast({
+                                  title: "Sync Failed",
+                                  description: error.message || "Could not start venue sync",
+                                  variant: "destructive"
+                                });
+                              });
+                          }}
+                        >
+                          Sync Venue Network Data
+                        </Button>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Discovers nearby venues and adds them to your network
+                        </p>
                       </div>
-                      
-                      <div className="border rounded-md p-4">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <h4 className="font-medium">Mapbox API</h4>
-                            <p className="text-sm text-muted-foreground">Connect to Mapbox for geographic visualization</p>
-                          </div>
-                          <Switch defaultChecked id="mapbox-enabled" />
+                    </div>
+                  </div>
+                  
+                  {/* Admin Link - Only visible to admin users */}
+                  {user?.role === 'admin' && (
+                    <div className="mt-6 border rounded-md p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">Admin Settings</h4>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Configure API keys, webhooks, and other system settings
+                          </p>
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="mapbox-api-key">API Key</Label>
-                          <div className="flex">
-                            <Input id="mapbox-api-key" type="password" defaultValue="•••••••••••••••••••" className="rounded-r-none" />
-                            <Button variant="outline" className="rounded-l-none">Show</Button>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="border rounded-md p-4">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <h4 className="font-medium">Spotify API</h4>
-                            <p className="text-sm text-muted-foreground">Connect to Spotify for artist popularity metrics</p>
-                          </div>
-                          <Switch id="spotify-enabled" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="spotify-client-id">Client ID</Label>
-                          <Input id="spotify-client-id" />
-                        </div>
-                        <div className="space-y-2 mt-2">
-                          <Label htmlFor="spotify-client-secret">Client Secret</Label>
-                          <Input id="spotify-client-secret" type="password" />
-                        </div>
-                        <Button variant="outline" size="sm" className="mt-2">
-                          Connect Spotify
+                        <Button variant="outline" asChild>
+                          <a href="/admin/settings">
+                            Open Admin Panel
+                          </a>
                         </Button>
                       </div>
                     </div>
+                  )}
+                  
+                  <div className="border rounded-md p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h4 className="font-medium">Songkick API</h4>
+                        <p className="text-sm text-muted-foreground">Connect to Songkick for artist tour data</p>
+                      </div>
+                      <Switch defaultChecked id="songkick-enabled" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="songkick-api-key">API Key</Label>
+                      <div className="flex">
+                        <Input id="songkick-api-key" type="password" defaultValue="•••••••••••••••••••" className="rounded-r-none" />
+                        <Button variant="outline" className="rounded-l-none">Show</Button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="border rounded-md p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h4 className="font-medium">Mapbox API</h4>
+                        <p className="text-sm text-muted-foreground">Connect to Mapbox for geographic visualization</p>
+                      </div>
+                      <Switch defaultChecked id="mapbox-enabled" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="mapbox-api-key">API Key</Label>
+                      <div className="flex">
+                        <Input id="mapbox-api-key" type="password" defaultValue="•••••••••••••••••••" className="rounded-r-none" />
+                        <Button variant="outline" className="rounded-l-none">Show</Button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="border rounded-md p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h4 className="font-medium">Spotify API</h4>
+                        <p className="text-sm text-muted-foreground">Connect to Spotify for artist popularity metrics</p>
+                      </div>
+                      <Switch id="spotify-enabled" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="spotify-client-id">Client ID</Label>
+                      <Input id="spotify-client-id" />
+                    </div>
+                    <div className="space-y-2 mt-2">
+                      <Label htmlFor="spotify-client-secret">Client Secret</Label>
+                      <Input id="spotify-client-secret" type="password" />
+                    </div>
+                    <Button variant="outline" size="sm" className="mt-2">
+                      Connect Spotify
+                    </Button>
                   </div>
                   
                   <div className="flex justify-end pt-4">
