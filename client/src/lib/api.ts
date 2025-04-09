@@ -1,4 +1,5 @@
 import { apiRequest } from './queryClient';
+export { apiRequest };
 import { 
   Venue, Artist, Event, VenueNetwork, Prediction, 
   Inquiry, CollaborativeOpportunity, CollaborativeOpportunityWithDetails, 
