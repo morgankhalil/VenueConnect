@@ -157,16 +157,19 @@ router.get('/venue-network/graph/:id', async (req, res) => {
     .from(venues)
     .where(sql`id = ANY(${connectedVenueIds})`);
 
-  const networkVenues = [mainVenue[0], ...connectedVenues];
+  const networkVenues = [
+    { ...mainVenue[0], isCurrentVenue: true },
+    ...connectedVenues.map(venue => ({ ...venue, isCurrentVenue: false }))
+  ];
 
   const nodes = networkVenues.map(venue => ({
     id: venue.id,
     name: venue.name,
     city: venue.city,
     state: venue.state,
-    isCurrentVenue: venue.id === parseInt(req.params.id),
-    collaborativeBookings: connections.find(c => c.venueId === venue.id)?.collaborativeBookings || 0,
-    trustScore: connections.find(c => c.venueId === venue.id)?.trustScore || 0,
+    isCurrentVenue: venue.isCurrentVenue,
+    collaborativeBookings: connections.find(c => c.connectedVenueId === venue.id)?.collaborativeBookings || 0,
+    trustScore: connections.find(c => c.connectedVenueId === venue.id)?.trustScore || 0,
     latitude: venue.latitude,
     longitude: venue.longitude
   }));
@@ -174,7 +177,7 @@ router.get('/venue-network/graph/:id', async (req, res) => {
   const links = connections.map(conn => ({
     source: conn.venueId,
     target: conn.connectedVenueId,
-    value: conn.collaborativeBookings
+    value: conn.collaborativeBookings || 1
   }));
 
   res.json({ nodes, links });

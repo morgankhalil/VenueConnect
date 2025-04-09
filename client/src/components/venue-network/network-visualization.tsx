@@ -103,15 +103,20 @@ export function NetworkVisualization({
   
   // Get center based on current venue or first node
   const mapCenter = React.useMemo(() => {
-    if (!data.nodes.length) return defaultCenter;
+    if (!data?.nodes?.length) return defaultCenter;
     
     const currentVenue = data.nodes.find(node => node.isCurrentVenue);
-    if (currentVenue) {
+    if (currentVenue && currentVenue.latitude && currentVenue.longitude) {
       return [currentVenue.latitude, currentVenue.longitude] as [number, number];
     }
     
-    return [data.nodes[0].latitude, data.nodes[0].longitude] as [number, number];
-  }, [data.nodes]);
+    const firstNode = data.nodes[0];
+    if (firstNode && firstNode.latitude && firstNode.longitude) {
+      return [firstNode.latitude, firstNode.longitude] as [number, number];
+    }
+
+    return defaultCenter;
+  }, [data?.nodes]);
   
   // Create network connection lines
   const networkLines = React.useMemo(() => {
