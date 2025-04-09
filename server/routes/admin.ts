@@ -11,15 +11,44 @@ const adminRouter = Router();
  * Admin-only route to trigger venue network sync
  * This shouldn't be exposed to regular users
  */
-adminRouter.post('/sync-venues', async (req, res) => {
+// Middleware to check if the user has admin rights
+const requireAdmin = (req, res, next) => {
+  // In a real app, you would check the user's role from their session/token
+  // and only allow admins to proceed
+  if (req.session && req.session.user && req.session.user.role === 'admin') {
+    next();
+  } else {
+    // Only the venue owner should be able to sync their own venue
+    const requestedVenueId = parseInt(req.body.venueId || '0');
+    if (req.session && req.session.user && req.session.user.id && 
+        requestedVenueId && req.session.user.id === req.body.ownerId) {
+      next();
+    } else {
+      res.status(403).json({ error: 'Unauthorized: Admin access required' });
+    }
+  }
+};
+
+adminRouter.post('/sync-venues', requireAdmin, async (req, res) => {
   try {
-    // In a real app, you would check if the user is an admin here
-    // For demo purposes, we're allowing this to be called without authentication
+    // Extract and validate parameters
+    const venueId = parseInt(req.body.venueId);
+    const radius = req.body.radius ? parseInt(req.body.radius) : 250;
+    const limit = req.body.limit ? parseInt(req.body.limit) : 10;
     
-    const { venueId, radius = 250, limit = 10 } = req.body;
+    // Validate venueId
+    if (!venueId || isNaN(venueId) || venueId <= 0) {
+      return res.status(400).json({ error: 'Valid venueId is required (must be a positive number)' });
+    }
     
-    if (!venueId) {
-      return res.status(400).json({ error: 'venueId is required' });
+    // Validate radius
+    if (isNaN(radius) || radius < 0 || radius > 500) {
+      return res.status(400).json({ error: 'Radius must be between 0 and 500' });
+    }
+    
+    // Validate limit
+    if (isNaN(limit) || limit < 1 || limit > 100) {
+      return res.status(400).json({ error: 'Limit must be between 1 and 100' });
     }
     
     // Run the sync asynchronously - we don't want to block the response
@@ -44,7 +73,7 @@ adminRouter.post('/sync-venues', async (req, res) => {
 
 // Route to check if the Bandsintown API key is configured
 // Does not expose the actual key value to the client
-adminRouter.get('/api-keys/bandsintown/status', (req, res) => {
+adminRouter.get('/api-keys/bandsintown/status', requireAdmin, (req, res) => {
   try {
     // Check if the Bandsintown API key is set in secrets
     // We don't expose the actual key value, just whether it exists

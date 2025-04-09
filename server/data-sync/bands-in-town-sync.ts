@@ -27,6 +27,18 @@ interface BandsInTownEvent {
  * This is designed to be run as a scheduled task, not user-initiated
  */
 export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 250, limit = 10) {
+  // Input validation
+  if (!sourceVenueId || isNaN(sourceVenueId) || sourceVenueId <= 0) {
+    throw new Error('Invalid sourceVenueId: Must be a positive number');
+  }
+  
+  if (radius && (isNaN(radius) || radius < 0 || radius > 500)) {
+    throw new Error('Invalid radius: Must be between 0 and 500');
+  }
+  
+  if (limit && (isNaN(limit) || limit < 1 || limit > 100)) {
+    throw new Error('Invalid limit: Must be between 1 and 100');
+  }
   try {
     // First, check if the API key is configured
     const apiKey = process.env.BANDSINTOWN_API_KEY;
@@ -175,18 +187,29 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
         continue;
       }
       
-      // Add this new venue to our database with required fields
+      // Sanitize and validate venue data before insertion
+      const sanitizedName = (venueData.name || '').trim().substring(0, 100); // Limit name length
+      const sanitizedCity = (venueData.city || '').trim().substring(0, 50); // Limit city length
+      const sanitizedRegion = (venueData.region || '').trim().substring(0, 50); // Limit state/region length
+      
+      // Skip venues with missing required data
+      if (!sanitizedName || !sanitizedCity) {
+        console.log(`Skipping venue with missing required data: ${venueData.name || 'Unknown'}`);
+        continue;
+      }
+      
+      // Add this new venue to our database with sanitized data
       const insertData = {
-        name: venueData.name,
-        city: venueData.city,
-        state: venueData.region || '',
-        country: venueData.country || 'US',
+        name: sanitizedName,
+        city: sanitizedCity,
+        state: sanitizedRegion,
+        country: (venueData.country || 'US').trim().substring(0, 2), // Limit to 2 characters for country code
         latitude: venueData.latitude || null,
         longitude: venueData.longitude || null,
         capacity: Math.floor(Math.random() * 1000) + 100, // Random capacity between 100-1100
-        address: `${venueData.name} address`, // Use name as placeholder since API doesn't provide address
+        address: `${sanitizedName} address`, // Use name as placeholder since API doesn't provide address
         zipCode: `${Math.floor(Math.random() * 90000) + 10000}`, // Random 5-digit ZIP code
-        description: `Music venue located in ${venueData.city}, ${venueData.region || ''}`,
+        description: `Music venue located in ${sanitizedCity}, ${sanitizedRegion}`.trim().substring(0, 500), // Limit description length
         ownerId: sourceVenue[0].ownerId
       };
 
