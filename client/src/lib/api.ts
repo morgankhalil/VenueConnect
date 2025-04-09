@@ -177,6 +177,11 @@ export const checkBandsintownApiKeyStatus = async () => {
   return res.json();
 };
 
+export const setBandsintownApiKey = async (apiKey: string) => {
+  const res = await apiRequest('POST', '/api/admin/api-keys/bandsintown', { apiKey });
+  return res.json();
+};
+
 // Webhook operations
 export const registerWebhook = async (callbackUrl: string) => {
   const res = await apiRequest('POST', '/api/admin/webhooks/register', { callbackUrl });

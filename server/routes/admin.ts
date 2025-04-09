@@ -23,14 +23,7 @@ const requireAdmin = (req, res, next) => {
   if (req.session && req.session.user && req.session.user.role === 'admin') {
     next();
   } else {
-    // Only the venue owner should be able to sync their own venue
-    const requestedVenueId = parseInt(req.body.venueId || '0');
-    if (req.session && req.session.user && req.session.user.id && 
-        requestedVenueId && req.session.user.id === req.body.ownerId) {
-      next();
-    } else {
-      res.status(403).json({ error: 'Unauthorized: Admin access required' });
-    }
+    res.status(403).json({ error: 'Unauthorized: Admin access required' });
   }
 };
 
@@ -78,6 +71,7 @@ adminRouter.post('/sync-venues', requireAdmin, async (req, res) => {
 
 // Route to check if the Bandsintown API key is configured
 // Does not expose the actual key value to the client
+// Admin-only route
 adminRouter.get('/api-keys/bandsintown/status', requireAdmin, (req, res) => {
   try {
     // Check if the Bandsintown API key is set in secrets
@@ -96,6 +90,37 @@ adminRouter.get('/api-keys/bandsintown/status', requireAdmin, (req, res) => {
   } catch (error) {
     console.error('Error checking API key status:', error);
     res.status(500).json({ error: 'Failed to check API key status' });
+  }
+});
+
+// Route to set the Bandsintown API key
+// Only accessible to admin users
+adminRouter.post('/api-keys/bandsintown', requireAdmin, (req, res) => {
+  try {
+    const { apiKey } = req.body;
+    
+    if (!apiKey) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'API key is required' 
+      });
+    }
+    
+    // In a real application, you would securely store this API key
+    // For now, we'll just set it as an environment variable
+    // NOTE: This is for demonstration only, in production you would use a secure storage solution
+    process.env.BANDSINTOWN_API_KEY = apiKey;
+    
+    res.json({ 
+      success: true, 
+      message: 'Bandsintown API key has been configured' 
+    });
+  } catch (error) {
+    console.error('Error setting API key:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to set API key' 
+    });
   }
 });
 

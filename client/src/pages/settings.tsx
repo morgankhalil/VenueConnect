@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { WebhookSettings } from "@/components/settings/webhook-settings";
+
 
 export default function Settings() {
   const { toast } = useToast();
@@ -557,12 +557,24 @@ export default function Settings() {
                         </div>
                       </div>
                       
-                      {/* Webhook Settings */}
-                      <div className="mt-6">
-                        <WebhookSettings 
-                          apiKeyConfigured={!!bandsintownApiStatus?.configured} 
-                        />
-                      </div>
+                      {/* Admin Link - Only visible to admin users */}
+                      {user?.role === 'admin' && (
+                        <div className="mt-6 border rounded-md p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="font-medium">Admin Settings</h4>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Configure API keys, webhooks, and other system settings
+                              </p>
+                            </div>
+                            <Button variant="outline" asChild>
+                              <a href="/admin/settings">
+                                Open Admin Panel
+                              </a>
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                       
                       <div className="border rounded-md p-4">
                         <div className="flex items-center justify-between mb-4">

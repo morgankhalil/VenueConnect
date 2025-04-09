@@ -9,6 +9,7 @@ import Calendar from "@/pages/calendar";
 import Discover from "@/pages/discover";
 import Messages from "@/pages/messages";
 import Settings from "@/pages/settings";
+import AdminSettings from "@/pages/admin/settings";
 import VenueDetails from "@/pages/venue-details";
 import EventDetails from "@/pages/event-details";
 import MapTest from "@/pages/map-test";
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/venues/:id" component={VenueDetails} />
       <Route path="/event/:id" component={EventDetails} />
       <Route path="/map-test" component={MapTest} />
+      <Route path="/admin/settings" component={AdminSettings} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
