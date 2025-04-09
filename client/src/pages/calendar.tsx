@@ -313,20 +313,7 @@ export default function Calendar() {
 
         <div className="mt-6">
           <Tabs defaultValue="month" value={view} onValueChange={setView}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-4">
-                <Button variant="outline" size="sm" onClick={goToPreviousMonth} className="rounded-full px-4">
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Previous
-                </Button>
-                <div className="text-xl font-semibold">
-                  {date?.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                </div>
-                <Button variant="outline" size="sm" onClick={goToNextMonth} className="rounded-full px-4">
-                  Next
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
+            <div className="flex justify-end mb-4">
               <TabsList className="rounded-full">
                 <TabsTrigger value="month">Month</TabsTrigger>
                 <TabsTrigger value="week">Week</TabsTrigger>

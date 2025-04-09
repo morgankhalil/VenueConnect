@@ -144,6 +144,20 @@ const FullMonthCalendar: React.FC<FullMonthCalendarProps> = ({
       newDate.setMonth(newDate.getMonth() - 1);
       return newDate;
     });
+    
+    // Also update the selectedDate to the 1st of the previous month
+    const newSelectedDate = new Date(selectedDate);
+    newSelectedDate.setMonth(newSelectedDate.getMonth() - 1);
+    // Keep the same day if possible, unless it exceeds days in month
+    const daysInNewMonth = new Date(
+      newSelectedDate.getFullYear(), 
+      newSelectedDate.getMonth() + 1, 
+      0
+    ).getDate();
+    if (newSelectedDate.getDate() > daysInNewMonth) {
+      newSelectedDate.setDate(daysInNewMonth);
+    }
+    onDateChange(newSelectedDate);
   }
   
   function nextMonth() {
@@ -152,6 +166,20 @@ const FullMonthCalendar: React.FC<FullMonthCalendarProps> = ({
       newDate.setMonth(newDate.getMonth() + 1);
       return newDate;
     });
+    
+    // Also update the selectedDate to the 1st of the next month
+    const newSelectedDate = new Date(selectedDate);
+    newSelectedDate.setMonth(newSelectedDate.getMonth() + 1);
+    // Keep the same day if possible, unless it exceeds days in month
+    const daysInNewMonth = new Date(
+      newSelectedDate.getFullYear(), 
+      newSelectedDate.getMonth() + 1, 
+      0
+    ).getDate();
+    if (newSelectedDate.getDate() > daysInNewMonth) {
+      newSelectedDate.setDate(daysInNewMonth);
+    }
+    onDateChange(newSelectedDate);
   }
   
   function handleDayClick(day: CalendarDay) {
