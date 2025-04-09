@@ -1,20 +1,4 @@
-// Map utilities for MapBox integration
-// Get Mapbox token from server-side fetch instead of direct env variable reference
-export let mapboxToken = "";
-
-// Initialize token
-async function initMapboxToken() {
-  try {
-    const response = await fetch('/api/mapbox-token');
-    const data = await response.json();
-    mapboxToken = data.token || "";
-  } catch (err) {
-    console.error("Error fetching Mapbox token:", err);
-  }
-}
-
-// Call init function
-initMapboxToken();
+// Map utilities for Leaflet integration
 
 // Default map settings for the tour routing visualization
 export const defaultMapCenter: [number, number] = [-96.0, 39.5]; // US center

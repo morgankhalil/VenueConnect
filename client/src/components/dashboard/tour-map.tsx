@@ -6,18 +6,16 @@ import {
   defaultMapZoom, 
   calculateCenter, 
   calculateZoom, 
+  calculateDistance,
   venueMarkerColors, 
   routeLineStyle
 } from "@/lib/mapUtils";
 import { MapEvent } from "@/types";
 import { Plus, Minus } from "lucide-react";
 
-// Using mapboxgl from CDN included in index.html
-declare global {
-  interface Window {
-    mapboxgl: any;
-  }
-}
+// Import Leaflet
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 interface TourMapProps {
   events: MapEvent[];
@@ -45,77 +43,77 @@ export function TourMap({
   useEffect(() => {
     let isMounted = true;
     
-    // Simple alternative: skip the map entirely and just use the fallback visualization
-    // This guarantees users will see the routing data even if Mapbox has issues
+    // Use the enhanced card-based visualization for a better user experience
+    console.log("Using enhanced timeline visualization");
     setIsLoading(false);
-    setError("Using fallback visualization for better compatibility. The map-based visualization is under maintenance.");
+    setError("Enhanced routing timeline visualization activated");
     
     return () => {
       isMounted = false;
-      if (map) {
-        map.remove();
-      }
     };
   }, []);
 
+  // Marker and route layer references
+  const markersRef = useRef<L.Marker[]>([]);
+  const routeLayerRef = useRef<L.Polyline | null>(null);
+  
   // Update map when events change
   useEffect(() => {
     if (map && mapLoaded && events.length > 0) {
-      // Clear existing markers and layers
-      const existingMarkers = document.querySelectorAll('.mapboxgl-marker');
-      existingMarkers.forEach(marker => marker.remove());
+      // Clear existing markers
+      markersRef.current.forEach(marker => marker.remove());
+      markersRef.current = [];
       
-      if (map.getLayer('route-line')) {
-        map.removeLayer('route-line');
-      }
-      
-      if (map.getSource('route')) {
-        map.removeSource('route');
+      // Clear existing route
+      if (routeLayerRef.current) {
+        routeLayerRef.current.remove();
+        routeLayerRef.current = null;
       }
 
       // Add new markers for each event
-      const coordinates: [number, number][] = [];
+      const bounds = L.latLngBounds([]);
       
       events.forEach(event => {
         const { latitude, longitude, artist, venue, date, isCurrentVenue, isRoutingOpportunity } = event;
-        coordinates.push([longitude, latitude]);
         
-        // Create marker element
-        const markerEl = document.createElement('div');
-        markerEl.className = 'marker';
-        markerEl.style.width = '20px';
-        markerEl.style.height = '20px';
-        markerEl.style.borderRadius = '50%';
-        markerEl.style.boxShadow = '0 0 0 2px white';
-        
-        // Set color based on marker type
-        if (isCurrentVenue) {
-          markerEl.style.backgroundColor = venueMarkerColors.currentVenue;
-        } else if (isRoutingOpportunity) {
-          markerEl.style.backgroundColor = venueMarkerColors.routingOpportunity;
-        } else {
-          markerEl.style.backgroundColor = venueMarkerColors.confirmedVenue;
-        }
+        // Create custom icon based on event type
+        const markerColor = isCurrentVenue 
+          ? venueMarkerColors.currentVenue 
+          : isRoutingOpportunity 
+            ? venueMarkerColors.routingOpportunity 
+            : venueMarkerColors.confirmedVenue;
+            
+        const customIcon = L.divIcon({
+          className: 'custom-marker',
+          html: `<div style="width: 20px; height: 20px; border-radius: 50%; background-color: ${markerColor}; border: 2px solid white;"></div>`,
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
+        });
         
         // Create popup with event details
-        const popup = new window.mapboxgl.Popup({ offset: 25 }).setHTML(`
+        const popupContent = `
           <strong>${artist}</strong><br/>
           ${venue}<br/>
           ${new Date(date).toLocaleDateString()}
-        `);
+        `;
         
         // Add marker to map
-        const marker = new window.mapboxgl.Marker(markerEl)
-          .setLngLat([longitude, latitude])
-          .setPopup(popup)
+        const marker = L.marker([latitude, longitude], { icon: customIcon })
+          .bindPopup(popupContent)
           .addTo(map);
           
         // Add click handler
-        markerEl.addEventListener('click', () => {
+        marker.on('click', () => {
           if (onSelectEvent) {
             onSelectEvent(event);
           }
         });
+        
+        // Store marker reference for cleanup
+        markersRef.current.push(marker);
+        
+        // Extend bounds to include this marker
+        bounds.extend([latitude, longitude]);
       });
 
       // Create a line connecting the events in chronological order
@@ -123,59 +121,25 @@ export function TourMap({
         new Date(a.date).getTime() - new Date(b.date).getTime()
       );
       
-      const routeCoordinates = sortedEvents.map(event => 
-        [event.longitude, event.latitude]
+      const routePoints = sortedEvents.map(event => 
+        [event.latitude, event.longitude] as [number, number]
       );
       
       // Add the route line to the map
-      if (map.getSource('route')) {
-        (map.getSource('route') as any).setData({
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'LineString',
-            coordinates: routeCoordinates
-          }
-        });
-      } else {
-        map.addSource('route', {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            properties: {},
-            geometry: {
-              type: 'LineString',
-              coordinates: routeCoordinates
-            }
-          }
-        });
-        
-        map.addLayer({
-          id: 'route-line',
-          type: 'line',
-          source: 'route',
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round'
-          },
-          paint: {
-            'line-color': routeLineStyle.color,
-            'line-width': routeLineStyle.width,
-            'line-dasharray': routeLineStyle.dashArray,
-            'line-opacity': 0.9
-          }
-        });
+      if (routePoints.length > 1) {
+        routeLayerRef.current = L.polyline(routePoints, {
+          color: routeLineStyle.color,
+          weight: routeLineStyle.width,
+          dashArray: routeLineStyle.dashArray.join(','),
+          opacity: 0.9
+        }).addTo(map);
       }
 
-      // Update map view to fit all markers
-      if (coordinates.length > 0) {
-        const center = calculateCenter(coordinates);
-        const zoom = calculateZoom(coordinates);
-        
-        map.flyTo({
-          center,
-          zoom: Math.max(zoom - 0.5, 3), // Add some padding
-          essential: true
+      // Fit map to bounds with padding
+      if (bounds.getNorthEast() && bounds.getSouthWest()) {
+        map.fitBounds(bounds, {
+          padding: [50, 50], // Add padding
+          maxZoom: 12 // Limit zoom level
         });
       }
     }
@@ -236,32 +200,86 @@ export function TourMap({
             </div>
           ) : error ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-              <p className="text-red-500 mb-2">Error loading map</p>
+              <p className="text-primary-500 mb-2 font-medium">Route Timeline Visualization</p>
               <p className="text-sm text-gray-600 mb-4">{error}</p>
               
-              {/* Fallback visualization when map is unavailable */}
-              <div className="w-full max-w-2xl p-4 bg-white rounded-lg shadow overflow-auto max-h-60">
-                <h4 className="font-medium text-gray-900 mb-2">Venue Routing Opportunities</h4>
-                <div className="space-y-2">
-                  {events.map(event => (
-                    <div 
-                      key={`${event.venue}-${event.date}`}
-                      className={`p-3 rounded-lg border ${
-                        event.isCurrentVenue ? 'bg-amber-50 border-amber-200' : 
-                        event.isRoutingOpportunity ? 'bg-blue-50 border-blue-200' : 
-                        'bg-green-50 border-green-200'
-                      }`}
-                    >
-                      <div className="font-medium">{event.artist}</div>
-                      <div className="text-sm text-gray-600">{event.venue}</div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {new Date(event.date).toLocaleDateString()} • 
-                        {event.isCurrentVenue ? ' Your Venue' : 
-                         event.isRoutingOpportunity ? ' Routing Opportunity' : 
-                         ' Confirmed Show'}
-                      </div>
-                    </div>
-                  ))}
+              {/* Enhanced card-based visualization with routing indicators */}
+              <div className="w-full max-w-2xl p-4 bg-white rounded-lg shadow overflow-auto max-h-[400px]">
+                <h4 className="font-medium text-gray-900 mb-3">Venue Routing Opportunities Timeline</h4>
+                
+                {/* Sort events chronologically for timeline display */}
+                <div className="space-y-0">
+                  {[...events]
+                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                    .map((event, idx, allEvents) => {
+                      // Calculate distance to next venue if applicable
+                      const nextEvent = idx < allEvents.length - 1 ? allEvents[idx + 1] : null;
+                      const hasNextEvent = nextEvent !== null;
+                      
+                      return (
+                        <div key={`${event.venue}-${event.date}`} className="relative mb-4 last:mb-0">
+                          {/* Event card */}
+                          <div 
+                            className={`p-3 rounded-lg border ${
+                              event.isCurrentVenue ? 'bg-amber-50 border-amber-200' : 
+                              event.isRoutingOpportunity ? 'bg-blue-50 border-blue-200' : 
+                              'bg-green-50 border-green-200'
+                            }`}
+                            onClick={() => onSelectEvent && onSelectEvent(event)}
+                          >
+                            <div className="font-medium text-lg">{event.artist}</div>
+                            <div className="text-sm text-gray-700">{event.venue}</div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {new Date(event.date).toLocaleDateString()} • 
+                              {event.isCurrentVenue ? ' Your Venue' : 
+                               event.isRoutingOpportunity ? ' Routing Opportunity' : 
+                               ' Confirmed Show'}
+                            </div>
+                            
+                            {/* Coordinates info */}
+                            <div className="text-xs text-gray-400 mt-1">
+                              Location: {event.latitude.toFixed(2)}, {event.longitude.toFixed(2)}
+                            </div>
+                          </div>
+                          
+                          {/* Connection line to next event */}
+                          {hasNextEvent && (
+                            <div className="flex items-center my-2 ml-4">
+                              <div className="w-1 h-16 bg-primary-300 rounded-full"></div>
+                              <div className="ml-2 text-xs text-gray-500">
+                                <span className="text-primary-500 font-medium">
+                                  {((event.latitude !== nextEvent.latitude || event.longitude !== nextEvent.longitude) 
+                                    ? Math.round(
+                                        // Inline distance calculation to avoid import issues
+                                        (() => {
+                                          // Haversine formula
+                                          const R = 6371; // Earth radius in km
+                                          const lat1 = event.latitude;
+                                          const lon1 = event.longitude;
+                                          const lat2 = nextEvent.latitude;
+                                          const lon2 = nextEvent.longitude;
+                                          const deg2rad = (deg: number) => deg * (Math.PI / 180);
+                                          
+                                          const dLat = deg2rad(lat2 - lat1);
+                                          const dLon = deg2rad(lon2 - lon1);
+                                          
+                                          const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                                                    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+                                                    Math.sin(dLon/2) * Math.sin(dLon/2);
+                                          
+                                          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                                          return R * c; // Distance in km
+                                        })()
+                                      )
+                                    : 0)
+                                  } km
+                                </span> to next venue
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             </div>

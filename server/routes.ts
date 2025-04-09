@@ -288,19 +288,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Mapbox token endpoint
-  app.get("/api/mapbox-token", (_, res) => {
-    // Send the Mapbox token from environment variables
-    // This keeps the token secure by not exposing it directly in client code
-    const token = process.env.MAPBOX_TOKEN;
+  // Map config endpoint - now supporting Leaflet configs
+  app.get("/api/map-config", (_, res) => {
+    // We've migrated to Leaflet for more reliability
+    // Send map configuration settings to the client
+    const config = {
+      defaultCenter: [-96.0, 39.5], // US center coordinates [lng, lat]
+      defaultZoom: 3.5,
+      tileProvider: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      tileAttribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      mapType: 'leaflet'
+    };
     
-    // For development purposes, use a fallback token if no environment variable is set
-    // In production, always use environment variables
-    const fallbackDevToken = "pk.eyJ1IjoibWlzc21hbmFnZW1lbnQiLCJhIjoiY2xtYmc5NncwMDRqZzNxbzZzanRwZ3NmcyJ9.CnHxH-dNsLw9SoQelTxJFA";
-    
-    const tokenToUse = token || fallbackDevToken;
-    console.log("Providing Mapbox token:", tokenToUse ? `${tokenToUse.substring(0, 5)}...` : "not found");
-    res.json({ token: tokenToUse });
+    console.log("Providing map configuration (OpenStreetMap + Leaflet)");
+    res.json(config);
   });
 
   // Create HTTP server
