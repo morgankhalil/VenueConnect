@@ -4,8 +4,7 @@ import { storage } from "./storage";
 import { z } from "zod";
 import { insertUserSchema, insertVenueSchema, insertArtistSchema, insertEventSchema, 
          insertVenueNetworkSchema, insertPredictionSchema, insertInquirySchema, 
-         insertCollaborativeOpportunitySchema, insertCollaborativeParticipantSchema,
-         insertNetworkAgentSchema } from "@shared/schema";
+         insertCollaborativeOpportunitySchema, insertCollaborativeParticipantSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 
@@ -286,90 +285,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(participants);
     } catch (error) {
       res.status(500).json({ error: "Failed to get participants for opportunity" });
-    }
-  });
-
-  // Network Agent routes
-  app.get("/api/venues/:venueId/agents", async (req, res) => {
-    try {
-      const agents = await storage.getNetworkAgentsByVenue(Number(req.params.venueId));
-      res.json(agents);
-    } catch (error) {
-      console.error("Error getting agents:", error);
-      res.status(500).json({ error: "Failed to get agents" });
-    }
-  });
-
-  app.get("/api/agents/:id", async (req, res) => {
-    try {
-      const agent = await storage.getNetworkAgent(Number(req.params.id));
-      if (!agent) {
-        return res.status(404).json({ error: "Agent not found" });
-      }
-      res.json(agent);
-    } catch (error) {
-      console.error("Error getting agent:", error);
-      res.status(500).json({ error: "Failed to get agent" });
-    }
-  });
-
-  app.post("/api/agents", validateRequest(insertNetworkAgentSchema), async (req, res) => {
-    try {
-      const agent = await storage.createNetworkAgent(req.body);
-      res.status(201).json(agent);
-    } catch (error) {
-      console.error("Error creating agent:", error);
-      res.status(500).json({ error: "Failed to create agent" });
-    }
-  });
-
-  app.patch("/api/agents/:id", async (req, res) => {
-    try {
-      const agent = await storage.updateNetworkAgent(Number(req.params.id), req.body);
-      if (!agent) {
-        return res.status(404).json({ error: "Agent not found" });
-      }
-      res.json(agent);
-    } catch (error) {
-      console.error("Error updating agent:", error);
-      res.status(500).json({ error: "Failed to update agent" });
-    }
-  });
-
-  app.delete("/api/agents/:id", async (req, res) => {
-    try {
-      const agent = await storage.getNetworkAgent(Number(req.params.id));
-      if (!agent) {
-        return res.status(404).json({ error: "Agent not found" });
-      }
-      await storage.deleteNetworkAgent(Number(req.params.id));
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting agent:", error);
-      res.status(500).json({ error: "Failed to delete agent" });
-    }
-  });
-
-  app.post("/api/agents/:id/run", async (req, res) => {
-    try {
-      const agent = await storage.getNetworkAgent(Number(req.params.id));
-      if (!agent) {
-        return res.status(404).json({ error: "Agent not found" });
-      }
-      
-      const updatedAgent = await storage.updateAgentLastRun(Number(req.params.id));
-      
-      // In a real implementation, we'd run the agent logic based on its type
-      // This is a simple placeholder that indicates the agent ran successfully
-      
-      res.json({ 
-        success: true, 
-        message: `Agent "${agent.name}" of type "${agent.type}" executed successfully.`,
-        lastRun: updatedAgent?.lastRun
-      });
-    } catch (error) {
-      console.error("Error running agent:", error);
-      res.status(500).json({ error: "Failed to run agent" });
     }
   });
   

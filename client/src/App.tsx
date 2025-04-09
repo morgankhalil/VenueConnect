@@ -12,7 +12,6 @@ import Settings from "@/pages/settings";
 import VenueDetails from "@/pages/venue-details";
 import EventDetails from "@/pages/event-details";
 import MapTest from "@/pages/map-test";
-import AgentManagement from "@/pages/agent-management";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -26,7 +25,6 @@ function Router() {
       <Route path="/settings" component={Settings} />
       <Route path="/venues/:id" component={VenueDetails} />
       <Route path="/event/:id" component={EventDetails} />
-      <Route path="/agents" component={AgentManagement} />
       <Route path="/map-test" component={MapTest} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
