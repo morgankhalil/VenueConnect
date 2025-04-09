@@ -10,6 +10,7 @@ import Discover from "@/pages/discover";
 import Messages from "@/pages/messages";
 import Settings from "@/pages/settings";
 import VenueDetails from "@/pages/venue-details";
+import MapTest from "@/pages/map-test";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/messages" component={Messages} />
       <Route path="/settings" component={Settings} />
       <Route path="/venues/:id" component={VenueDetails} />
+      <Route path="/map-test" component={MapTest} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
@@ -29,6 +31,13 @@ function Router() {
 }
 
 function App() {
+  // Very simple map test directly in browser at /map-test path
+  const path = window.location.pathname;
+  
+  if (path === '/map-test') {
+    return <MapTest />;
+  }
+  
   return (
     <QueryClientProvider client={queryClient}>
       <MainLayout>

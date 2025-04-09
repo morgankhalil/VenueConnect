@@ -1,18 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  defaultMapCenter, 
-  defaultMapZoom, 
-  venueMarkerColors, 
-  routeLineStyle
-} from "@/lib/mapUtils";
 import { MapEvent } from "@/types";
 import { Plus, Minus } from "lucide-react";
 
-// Import Leaflet
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+// DO NOT import Leaflet here - it's already loaded in index.html
+// Just declare the L variable to make TypeScript happy
+declare const L: any;
 
 interface TourMapProps {
   events: MapEvent[];
@@ -23,7 +17,7 @@ interface TourMapProps {
   onDateRangeFilterChange?: (range: string) => void;
 }
 
-// Haversine distance calculation function
+// Simple distance calculation 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371; // Radius of the Earth in km
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -45,114 +39,100 @@ export function TourMap({
   onDateRangeFilterChange
 }: TourMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const [map, setMap] = useState<L.Map | null>(null);
+  const mapRef = useRef<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize map once when component mounts
+  // Initialize map once
   useEffect(() => {
-    if (!mapContainerRef.current) return;
+    // Only run this once
+    if (mapRef.current) return;
     
     try {
-      console.log("Initializing map");
+      console.log("Starting map initialization");
       
-      // Fix Leaflet icon path issues
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      if (!mapContainerRef.current) {
+        throw new Error("Map container not found");
+      }
+      
+      // US center as default
+      const center = [39.5, -96.0]; // [lat, lng]
+      const zoom = 3.5;
+      
+      // Initialize map with center and zoom
+      const map = L.map(mapContainerRef.current, {
+        center: center,
+        zoom: zoom,
+        zoomControl: false // We'll add custom zoom controls
       });
-
-      // Create map instance
-      const leafletMap = L.map(mapContainerRef.current).setView(
-        [defaultMapCenter[1], defaultMapCenter[0]], // Convert to [lat, lng]
-        defaultMapZoom
-      );
       
-      // Add tile layer (OpenStreetMap)
+      // Add base tile layer
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      }).addTo(leafletMap);
+      }).addTo(map);
       
-      setMap(leafletMap);
+      // Store map reference
+      mapRef.current = map;
       setIsLoading(false);
       console.log("Map initialized successfully");
       
+      // Add event markers
+      if (events.length > 0) {
+        addMarkersToMap(map, events);
+      }
+      
       return () => {
-        if (leafletMap) {
-          console.log("Cleaning up map");
-          leafletMap.remove();
+        if (mapRef.current) {
+          console.log("Removing map");
+          mapRef.current.remove();
+          mapRef.current = null;
         }
       };
     } catch (err: any) {
-      console.error("Map initialization error:", err.message);
-      setError(`Map error: ${err.message}`);
+      console.error("Map initialization error:", err);
+      setError(`Map failed to load: ${err.message || "Unknown error"}`);
       setIsLoading(false);
     }
   }, []);
-
-  // Update markers and routes when events or map changes
-  useEffect(() => {
-    if (!map || !events.length) return;
+  
+  // Add markers function
+  const addMarkersToMap = (map: any, mapEvents: MapEvent[]) => {
+    if (!map) return;
     
     try {
-      // Clear any existing layers
-      map.eachLayer(layer => {
+      console.log("Adding markers to map", mapEvents.length);
+      
+      // Clear existing markers if any
+      map.eachLayer((layer: any) => {
         if (layer instanceof L.Marker || layer instanceof L.Polyline) {
-          layer.remove();
+          map.removeLayer(layer);
         }
       });
       
-      // Check if there's a base tile layer
-      let hasBaseTileLayer = false;
-      map.eachLayer(layer => {
-        if (layer instanceof L.TileLayer) {
-          hasBaseTileLayer = true;
-        }
-      });
-      
-      if (!hasBaseTileLayer) {
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-      }
-      
-      // Create bounds to fit all markers
+      // Create markers and get bounds
       const bounds = L.latLngBounds([]);
       
-      // Add markers for each event
-      events.forEach(event => {
-        const { latitude, longitude, artist, venue, date, isCurrentVenue, isRoutingOpportunity } = event;
+      mapEvents.forEach(event => {
+        const { latitude, longitude, artist, venue, isCurrentVenue, isRoutingOpportunity } = event;
         
-        // Select marker color based on event type
+        // Choose marker color
         const markerColor = isCurrentVenue 
-          ? venueMarkerColors.currentVenue 
+          ? '#F97316' // orange for current venue 
           : isRoutingOpportunity 
-            ? venueMarkerColors.routingOpportunity 
-            : venueMarkerColors.confirmedVenue;
+            ? '#3B82F6' // blue for routing opportunity
+            : '#22C55E'; // green for confirmed
         
-        // Create custom marker with color
-        const customIcon = L.divIcon({
-          className: 'custom-marker',
-          html: `<div style="width: 24px; height: 24px; border-radius: 50%; background-color: ${markerColor}; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-          iconSize: [24, 24],
-          iconAnchor: [12, 12]
+        // Create marker with custom icon
+        const icon = L.divIcon({
+          className: 'custom-venue-marker',
+          html: `<div style="width: 16px; height: 16px; background-color: ${markerColor}; border-radius: 50%; border: 2px solid white;"></div>`,
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
         });
         
-        // Create popup content
-        const popupContent = `
-          <div style="font-family: system-ui, sans-serif; padding: 4px;">
-            <strong style="font-size: 14px;">${artist}</strong><br/>
-            <span style="font-size: 13px;">${venue}</span><br/>
-            <span style="font-size: 12px; color: #666;">${new Date(date).toLocaleDateString()}</span>
-          </div>
-        `;
-        
-        // Add marker to map
-        const marker = L.marker([latitude, longitude], { icon: customIcon })
-          .bindPopup(popupContent)
-          .addTo(map);
+        const marker = L.marker([latitude, longitude], { icon })
+          .addTo(map)
+          .bindPopup(`<b>${artist}</b><br>${venue}`);
         
         // Add click handler
         marker.on('click', () => {
@@ -161,43 +141,55 @@ export function TourMap({
           }
         });
         
-        // Extend bounds to include this marker
+        // Extend bounds
         bounds.extend([latitude, longitude]);
       });
       
-      // Create route line connecting venues chronologically
-      if (events.length > 1) {
-        const sortedEvents = [...events].sort((a, b) => 
-          new Date(a.date).getTime() - new Date(b.date).getTime()
+      // Add route line
+      if (mapEvents.length > 1) {
+        // Sort events by date
+        const sortedEvents = [...mapEvents].sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
         );
         
-        const routePoints = sortedEvents.map(event => 
-          [event.latitude, event.longitude] as [number, number]
-        );
-        
+        // Create route line
+        const routePoints = sortedEvents.map(e => [e.latitude, e.longitude]);
         L.polyline(routePoints, {
-          color: routeLineStyle.color,
-          weight: routeLineStyle.width,
-          dashArray: routeLineStyle.dashArray.join(','),
+          color: '#3B82F6',
+          weight: 4,
+          dashArray: '4,8',
           opacity: 0.9
         }).addTo(map);
       }
       
-      // Fit map to bounds if we have any markers
-      if (bounds.getNorthEast() && bounds.getSouthWest()) {
-        map.fitBounds(bounds, {
-          padding: [40, 40],
+      // Fit map to markers if we have any
+      if (bounds.isValid?.() || (bounds.getNorthEast && bounds.getSouthWest())) {
+        map.fitBounds(bounds, { 
+          padding: [50, 50],
           maxZoom: 11
         });
       }
     } catch (err: any) {
-      console.error("Error updating map markers:", err);
+      console.error("Error adding markers:", err);
     }
-  }, [map, events, onSelectEvent]);
-
-  // Zoom controls
-  const zoomIn = () => map?.zoomIn();
-  const zoomOut = () => map?.zoomOut();
+  };
+  
+  // Update markers when events change
+  useEffect(() => {
+    if (mapRef.current && events.length > 0) {
+      console.log("Events changed, updating markers");
+      addMarkersToMap(mapRef.current, events);
+    }
+  }, [events]);
+  
+  // Handle zoom controls
+  const zoomIn = () => {
+    if (mapRef.current) mapRef.current.zoomIn();
+  };
+  
+  const zoomOut = () => {
+    if (mapRef.current) mapRef.current.zoomOut();
+  };
 
   return (
     <Card>
@@ -305,9 +297,15 @@ export function TourMap({
             </div>
           ) : (
             <>
-              <div ref={mapContainerRef} className="absolute inset-0" />
+              {/* Map container */}
+              <div 
+                ref={mapContainerRef} 
+                id="tourMap"
+                style={{ width: '100%', height: '100%', position: 'absolute', left: 0, top: 0 }}
+              />
+              
               {/* Map Controls */}
-              <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
+              <div className="absolute bottom-4 right-4 flex flex-col space-y-2 z-[1000]">
                 <button 
                   className="bg-white rounded-full p-2 shadow hover:bg-gray-100"
                   onClick={zoomIn}

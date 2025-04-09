@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Leaflet map styles */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+}
+
+.custom-venue-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 @layer base {
   * {
     @apply border-border;
