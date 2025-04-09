@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLocation } from "wouter";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,8 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [, navigate] = useLocation();
+  const queryClient = useQueryClient();
 
   // Get user data from API
   const { data: user, isLoading: isLoadingUser, error: userError } = useQuery({
@@ -63,8 +66,6 @@ export function MainLayout({ children }: MainLayoutProps) {
     console.log("Searching for:", query);
     // Implement search functionality
   };
-
-  const queryClient = useQueryClient();
   
   const handleLogout = async () => {
     try {
@@ -77,8 +78,8 @@ export function MainLayout({ children }: MainLayoutProps) {
       // Clear any cached data in React Query
       queryClient.clear();
       
-      // Force a page reload to reset the app state
-      window.location.reload();
+      // Navigate to the login page instead of reloading
+      navigate('/auth/login');
       
       console.log("Logout completed");
     } catch (error) {

@@ -268,6 +268,35 @@ router.get('/api/venues/:id', async (req, res) => {
   }
 });
 
+// Login route
+router.post("/api/auth/login", (req, res) => {
+  const { username, password } = req.body;
+  
+  // For demo purposes, accept admin/admin123 as valid credentials
+  if (username === "admin" && password === "admin123") {
+    // Set user session data
+    if (req.session) {
+      req.session.user = {
+        id: 6, // ID of an admin user
+        name: "Admin User",
+        role: "admin",
+        venueId: null
+      };
+    }
+    
+    return res.json({ 
+      success: true, 
+      message: "Logged in successfully" 
+    });
+  }
+  
+  // Authentication failed
+  res.status(401).json({ 
+    success: false, 
+    message: "Invalid username or password" 
+  });
+});
+
 // Logout route
 router.post("/api/auth/logout", (req, res) => {
   if (req.session) {
