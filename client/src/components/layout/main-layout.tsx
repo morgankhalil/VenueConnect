@@ -17,7 +17,8 @@ export function MainLayout({ children }: MainLayoutProps) {
   // Get user data from API
   const { data: user, isLoading: isLoadingUser, error: userError } = useQuery({
     queryKey: ['/api/user'],
-    queryFn: () => apiRequest('GET', '/api/user').then(res => res.json())
+    queryFn: () => apiRequest('GET', '/api/user').then(res => res.json()),
+    retry: 3
   });
 
   // Get connected venues from API
@@ -27,9 +28,31 @@ export function MainLayout({ children }: MainLayoutProps) {
     initialData: []
   });
 
-  if (isLoadingUser) return <div>Loading...</div>;
-  if (userError) return <div>Error loading user data</div>;
-  if (!user) return <div>No user data available</div>;
+  if (isLoadingUser) {
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
+
+  if (userError) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-lg font-semibold text-red-600">Error loading user data</h2>
+          <p className="text-gray-600">Please try refreshing the page</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-lg font-semibold">No user data available</h2>
+          <p className="text-gray-600">Please check your connection</p>
+        </div>
+      </div>
+    );
+  }
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -54,7 +77,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         userAvatar={user.avatar}
         connectedVenues={connectedVenues}
       />
-      
+
       {/* Mobile Sidebar */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetContent side="left" className="p-0 w-72 sm:w-64 border-r shadow-lg">

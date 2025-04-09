@@ -201,6 +201,21 @@ router.get('/venue-network/graph/:id', async (req, res) => {
 });
 
 
+// Get current user
+router.get("/api/user", async (req, res) => {
+  try {
+    // For now, return a default user until auth is implemented
+    res.json({
+      id: 1,
+      name: "Bug Jar Admin",
+      venueName: "Bug Jar",
+      avatar: undefined
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to get user data" });
+  }
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Error handling middleware
   const validateRequest = (schema: z.ZodType<any, any>) => {
