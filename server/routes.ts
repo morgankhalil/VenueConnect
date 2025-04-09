@@ -150,7 +150,14 @@ router.get('/venue-network/graph/:id', async (req, res) => {
 
   // Get connected venues
   const connectedVenueIds = connections.map(c => c.connectedVenueId);
-  const networkVenues = [mainVenue[0]];
+  
+  // Fetch connected venues
+  const connectedVenues = await db
+    .select()
+    .from(venues)
+    .where(sql`id = ANY(${connectedVenueIds})`);
+
+  const networkVenues = [mainVenue[0], ...connectedVenues];
 
   const nodes = networkVenues.map(venue => ({
     id: venue.id,
