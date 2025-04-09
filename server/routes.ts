@@ -7,6 +7,78 @@ import { insertUserSchema, insertVenueSchema, insertArtistSchema, insertEventSch
          insertCollaborativeOpportunitySchema, insertCollaborativeParticipantSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
+import { Router } from 'express';
+import { db } from './db';
+import { eq } from 'drizzle-orm';
+import { venues, artists, events, predictions, venueNetwork } from '../shared/schema';
+
+const router = Router();
+
+// Venues
+router.get('/venues', async (req, res) => {
+  const result = await db.select().from(venues);
+  res.json(result);
+});
+
+router.get('/venues/:id', async (req, res) => {
+  const result = await db.select().from(venues).where(eq(venues.id, parseInt(req.params.id)));
+  res.json(result[0]);
+});
+
+// Events
+router.get('/events', async (req, res) => {
+  const result = await db.select().from(events);
+  res.json(result);
+});
+
+router.get('/venues/:id/events', async (req, res) => {
+  const result = await db.select().from(events).where(eq(events.venueId, parseInt(req.params.id)));
+  res.json(result);
+});
+
+// Predictions
+router.get('/venues/:id/predictions', async (req, res) => {
+  const result = await db
+    .select()
+    .from(predictions)
+    .where(eq(predictions.venueId, parseInt(req.params.id)));
+  res.json(result);
+});
+
+// Venue Network
+router.get('/venue-network/graph/:id', async (req, res) => {
+  const connections = await db
+    .select()
+    .from(venueNetwork)
+    .where(eq(venueNetwork.venueId, parseInt(req.params.id)));
+
+  const connectedVenueIds = connections.map(c => c.connectedVenueId);
+  const networkVenues = await db
+    .select()
+    .from(venues)
+    .where(eq(venues.id, parseInt(req.params.id)));
+
+  const nodes = networkVenues.map(venue => ({
+    id: venue.id,
+    name: venue.name,
+    city: venue.city,
+    state: venue.state,
+    isCurrentVenue: venue.id === parseInt(req.params.id),
+    collaborativeBookings: connections.find(c => c.venueId === venue.id)?.collaborativeBookings || 0,
+    trustScore: connections.find(c => c.venueId === venue.id)?.trustScore || 0,
+    latitude: venue.latitude,
+    longitude: venue.longitude
+  }));
+
+  const links = connections.map(conn => ({
+    source: conn.venueId,
+    target: conn.connectedVenueId,
+    value: conn.collaborativeBookings
+  }));
+
+  res.json({ nodes, links });
+});
+
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Error handling middleware
@@ -48,57 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Venues routes
-  app.get("/api/venues", async (req, res) => {
-    try {
-      const venues = await storage.getVenues();
-      res.json(venues);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to get venues" });
-    }
-  });
-
-  app.get("/api/venues/:id", async (req, res) => {
-    try {
-      const venue = await storage.getVenue(Number(req.params.id));
-      if (!venue) {
-        return res.status(404).json({ error: "Venue not found" });
-      }
-      res.json(venue);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to get venue" });
-    }
-  });
-
-  app.post("/api/venues", validateRequest(insertVenueSchema), async (req, res) => {
-    try {
-      const venue = await storage.createVenue(req.body);
-      res.status(201).json(venue);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to create venue" });
-    }
-  });
-
-  app.patch("/api/venues/:id", async (req, res) => {
-    try {
-      const venue = await storage.updateVenue(Number(req.params.id), req.body);
-      if (!venue) {
-        return res.status(404).json({ error: "Venue not found" });
-      }
-      res.json(venue);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to update venue" });
-    }
-  });
-
-  app.get("/api/users/:userId/venues", async (req, res) => {
-    try {
-      const venues = await storage.getVenuesByUser(Number(req.params.userId));
-      res.json(venues);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to get venues for user" });
-    }
-  });
+  app.use(router);
 
   // Artists routes
   app.get("/api/artists", async (req, res) => {
@@ -132,104 +154,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Events routes
-  app.get("/api/events", async (req, res) => {
-    try {
-      const events = await storage.getEvents();
-      res.json(events);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to get events" });
-    }
-  });
-
-  app.get("/api/events/:id", async (req, res) => {
-    try {
-      const event = await storage.getEvent(Number(req.params.id));
-      if (!event) {
-        return res.status(404).json({ error: "Event not found" });
-      }
-      res.json(event);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to get event" });
-    }
-  });
-
-  app.post("/api/events", validateRequest(insertEventSchema), async (req, res) => {
-    try {
-      const event = await storage.createEvent(req.body);
-      res.status(201).json(event);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to create event" });
-    }
-  });
-
-  app.get("/api/venues/:venueId/events", async (req, res) => {
-    try {
-      const events = await storage.getEventsByVenue(Number(req.params.venueId));
-      res.json(events);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to get events for venue" });
-    }
-  });
-
-  app.get("/api/artists/:artistId/events", async (req, res) => {
-    try {
-      const events = await storage.getEventsByArtist(Number(req.params.artistId));
-      res.json(events);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to get events for artist" });
-    }
-  });
-
-  // Venue Network routes
-  app.get("/api/venues/:venueId/connections", async (req, res) => {
-    try {
-      const connections = await storage.getVenueConnections(Number(req.params.venueId));
-      res.json(connections);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to get venue connections" });
-    }
-  });
-
-  app.post("/api/venue-network", validateRequest(insertVenueNetworkSchema), async (req, res) => {
-    try {
-      const connection = await storage.createVenueConnection(req.body);
-      res.status(201).json(connection);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to create venue connection" });
-    }
-  });
-
-  // Predictions routes
-  app.get("/api/predictions/:id", async (req, res) => {
-    try {
-      const prediction = await storage.getPrediction(Number(req.params.id));
-      if (!prediction) {
-        return res.status(404).json({ error: "Prediction not found" });
-      }
-      res.json(prediction);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to get prediction" });
-    }
-  });
-
-  app.get("/api/venues/:venueId/predictions", async (req, res) => {
-    try {
-      const predictions = await storage.getPredictionsByVenue(Number(req.params.venueId));
-      res.json(predictions);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to get predictions for venue" });
-    }
-  });
-
-  app.post("/api/predictions", validateRequest(insertPredictionSchema), async (req, res) => {
-    try {
-      const prediction = await storage.createPrediction(req.body);
-      res.status(201).json(prediction);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to create prediction" });
-    }
-  });
 
   // Inquiries routes
   app.post("/api/inquiries", validateRequest(insertInquirySchema), async (req, res) => {
@@ -287,73 +211,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to get participants for opportunity" });
     }
   });
-  
-  
-  
-  // Venue Network Graph endpoint
-  app.get("/api/venue-network/graph/:venueId", async (req, res) => {
-    try {
-      const venueId = Number(req.params.venueId);
-      const venue = await storage.getVenue(venueId);
-      
-      if (!venue) {
-        return res.status(404).json({ error: "Venue not found" });
-      }
-      
-      // Get all connections for this venue
-      const connections = await storage.getVenueConnections(venueId);
-      
-      // Get details of all connected venues
-      const connectedVenueIds = connections.map(c => c.connectedVenueId);
-      const venuesPromises = connectedVenueIds.map(id => storage.getVenue(id));
-      const connectedVenuesResults = await Promise.all(venuesPromises);
-      const connectedVenues = connectedVenuesResults.filter((v): v is typeof v & { id: number } => v !== undefined);
-      
-      // Format data for network visualization
-      const networkData = {
-        nodes: [
-          {
-            id: venue.id,
-            name: venue.name,
-            city: venue.city,
-            state: venue.state,
-            isCurrentVenue: true,
-            collaborativeBookings: connections.reduce((sum, conn) => sum + (conn.collaborativeBookings ?? 0), 0),
-            trustScore: connections.length > 0 
-              ? Math.round(connections.reduce((sum, conn) => sum + (conn.trustScore ?? 0), 0) / connections.length) 
-              : 0,
-            latitude: venue.latitude ?? 0,
-            longitude: venue.longitude ?? 0
-          },
-          ...connectedVenues.map((v) => {
-            const connection = connections.find(c => c.connectedVenueId === v.id);
-            return {
-              id: v.id,
-              name: v.name,
-              city: v.city,
-              state: v.state,
-              isCurrentVenue: false,
-              collaborativeBookings: connection ? (connection.collaborativeBookings ?? 0) : 0,
-              trustScore: connection ? (connection.trustScore ?? 0) : 0,
-              latitude: v.latitude ?? 0,
-              longitude: v.longitude ?? 0
-            };
-          })
-        ],
-        links: connections.map(connection => ({
-          source: venueId,
-          target: connection.connectedVenueId,
-          value: connection.collaborativeBookings ?? 1
-        }))
-      };
-      
-      res.json(networkData);
-    } catch (error) {
-      console.error("Failed to get venue network graph:", error);
-      res.status(500).json({ error: "Failed to get venue network graph" });
-    }
-  });
-  
+
+
   // Map config endpoint - now supporting Leaflet configs
   app.get("/api/map-config", (_, res) => {
     // We've migrated to Leaflet for more reliability
@@ -365,7 +224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       tileAttribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       mapType: 'leaflet'
     };
-    
+
     console.log("Providing map configuration (OpenStreetMap + Leaflet)");
     res.json(config);
   });
@@ -375,3 +234,5 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   return httpServer;
 }
+
+export default router;
