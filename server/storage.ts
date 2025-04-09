@@ -7,7 +7,8 @@ import {
   predictions, type Prediction, type InsertPrediction,
   inquiries, type Inquiry, type InsertInquiry,
   collaborativeOpportunities, type CollaborativeOpportunity, type InsertCollaborativeOpportunity,
-  collaborativeParticipants, type CollaborativeParticipant, type InsertCollaborativeParticipant
+  collaborativeParticipants, type CollaborativeParticipant, type InsertCollaborativeParticipant,
+  webhookConfigurations, type WebhookConfiguration, type InsertWebhookConfiguration
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, like, desc, SQL } from "drizzle-orm";
@@ -58,6 +59,14 @@ export interface IStorage {
   // Collaborative Participant methods
   addCollaborativeParticipant(participant: InsertCollaborativeParticipant): Promise<CollaborativeParticipant>;
   getCollaborativeParticipantsByOpportunity(opportunityId: number): Promise<CollaborativeParticipant[]>;
+  
+  // Webhook Configuration methods
+  getWebhookConfigurations(): Promise<WebhookConfiguration[]>;
+  getWebhookConfiguration(id: number): Promise<WebhookConfiguration | undefined>;
+  getWebhookConfigurationByType(type: string): Promise<WebhookConfiguration | undefined>;
+  createWebhookConfiguration(config: InsertWebhookConfiguration): Promise<WebhookConfiguration>;
+  updateWebhookConfiguration(id: number, config: Partial<InsertWebhookConfiguration>): Promise<WebhookConfiguration | undefined>;
+  toggleWebhookConfiguration(id: number, enabled: boolean): Promise<WebhookConfiguration | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -228,6 +237,44 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(collaborativeParticipants)
       .where(eq(collaborativeParticipants.opportunityId, opportunityId));
+  }
+  
+  // Webhook Configuration methods
+  async getWebhookConfigurations(): Promise<WebhookConfiguration[]> {
+    return await db.select().from(webhookConfigurations);
+  }
+  
+  async getWebhookConfiguration(id: number): Promise<WebhookConfiguration | undefined> {
+    const [config] = await db.select().from(webhookConfigurations).where(eq(webhookConfigurations.id, id));
+    return config;
+  }
+  
+  async getWebhookConfigurationByType(type: string): Promise<WebhookConfiguration | undefined> {
+    const [config] = await db.select().from(webhookConfigurations).where(eq(webhookConfigurations.type, type));
+    return config;
+  }
+  
+  async createWebhookConfiguration(config: InsertWebhookConfiguration): Promise<WebhookConfiguration> {
+    const [newConfig] = await db.insert(webhookConfigurations).values(config).returning();
+    return newConfig;
+  }
+  
+  async updateWebhookConfiguration(id: number, config: Partial<InsertWebhookConfiguration>): Promise<WebhookConfiguration | undefined> {
+    const [updatedConfig] = await db
+      .update(webhookConfigurations)
+      .set(config)
+      .where(eq(webhookConfigurations.id, id))
+      .returning();
+    return updatedConfig;
+  }
+  
+  async toggleWebhookConfiguration(id: number, enabled: boolean): Promise<WebhookConfiguration | undefined> {
+    const [updatedConfig] = await db
+      .update(webhookConfigurations)
+      .set({ isEnabled: enabled })
+      .where(eq(webhookConfigurations.id, id))
+      .returning();
+    return updatedConfig;
   }
 }
 

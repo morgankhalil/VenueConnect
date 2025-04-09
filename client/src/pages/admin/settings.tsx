@@ -167,9 +167,27 @@ export default function AdminSettings() {
         </Card>
 
         {/* Webhook Settings */}
-        <WebhookSettings 
-          apiKeyConfigured={!!bandsintownApiStatus?.configured} 
-        />
+        <Card>
+          <CardHeader>
+            <CardTitle>Webhook Settings</CardTitle>
+            <CardDescription>
+              Configure and manage webhook integrations for the application.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {bandsintownApiStatus?.configured ? (
+              <WebhookSettings />
+            ) : (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>API Key Required</AlertTitle>
+                <AlertDescription>
+                  You need to configure the Bandsintown API key above before you can manage webhooks.
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

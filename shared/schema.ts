@@ -201,6 +201,20 @@ export const messages = pgTable('messages', {
   senderName: text('sender_name').notNull(),
 });
 
+// Define webhook configurations table
+export const webhookConfigurations = pgTable('webhook_configurations', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  type: text('type').notNull(), // e.g., 'bandsintown_events', 'artist_updates', etc.
+  description: text('description'),
+  callbackUrl: text('callback_url').notNull(),
+  isEnabled: boolean('is_enabled').default(false),
+  secretKey: text('secret_key'),
+  configOptions: text('config_options'),
+  lastExecuted: timestamp('last_executed'),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
 export const messagesRelations = relations(messages, ({ one }) => ({
   sender: one(users, {
     fields: [messages.senderId],
@@ -320,4 +334,12 @@ export type InsertCollaborativeOpportunity = z.infer<typeof insertCollaborativeO
 export type CollaborativeParticipant = typeof collaborativeParticipants.$inferSelect;
 export type InsertCollaborativeParticipant = z.infer<typeof insertCollaborativeParticipantSchema>;
 
+// Add schema and type for webhook configurations
+export const insertWebhookConfigurationSchema = createInsertSchema(webhookConfigurations).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type WebhookConfiguration = typeof webhookConfigurations.$inferSelect;
+export type InsertWebhookConfiguration = z.infer<typeof insertWebhookConfigurationSchema>;
 

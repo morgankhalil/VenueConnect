@@ -7,23 +7,19 @@ import {
 } from '@/types';
 
 export const getStatsData = async (): Promise<StatsData> => {
-  const res = await apiRequest('GET', '/api/stats', undefined);
-  return res.json();
+  return apiRequest('/api/stats');
 };
 
 export const getPredictionsWithDetails = async (): Promise<PredictionWithDetails[]> => {
-  const res = await apiRequest('GET', '/api/predictions/details', undefined);
-  return res.json();
+  return apiRequest('/api/predictions/details');
 };
 
 export const getTourGroups = async (): Promise<TourGroup[]> => {
-  const res = await apiRequest('GET', '/api/tours', undefined);
-  return res.json();
+  return apiRequest('/api/tours');
 };
 
 export const getCollaborativeOpportunitiesWithDetails = async (): Promise<CollaborativeOpportunityWithDetails[]> => {
-  const res = await apiRequest('GET', '/api/collaborative-opportunities/details', undefined);
-  return res.json();
+  return apiRequest('/api/collaborative-opportunities/details');
 };
 
 // Venues

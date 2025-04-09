@@ -1,5 +1,9 @@
 import { db } from './db';
-import { users, venues, artists, events, predictions, inquiries, venueNetwork, collaborativeOpportunities, collaborativeParticipants } from '../shared/schema';
+import { 
+  users, venues, artists, events, predictions, inquiries, 
+  venueNetwork, collaborativeOpportunities, collaborativeParticipants,
+  webhookConfigurations
+} from '../shared/schema';
 
 async function seed() {
   try {
@@ -14,6 +18,7 @@ async function seed() {
     await db.delete(venues);
     await db.delete(artists);
     await db.delete(users);
+    await db.delete(webhookConfigurations);
     console.log('Database cleared successfully');
 
     // Create demo user
@@ -42,6 +47,58 @@ async function seed() {
       website: 'http://bugjar.com',
       ownerId: user.id
     }).returning();
+
+    // Create admin user
+    const [adminUser] = await db.insert(users).values({
+      username: 'admin',
+      password: 'admin123',
+      name: 'Admin User',
+      email: 'admin@example.com',
+      role: 'admin'
+    }).returning();
+
+    // Insert predefined webhook configurations
+    await db.insert(webhookConfigurations).values([
+      {
+        name: 'Bandsintown Event Notifications',
+        description: 'Receive notifications when new events are created on Bandsintown',
+        type: 'bandsintown_events',
+        callbackUrl: '/api/webhooks/bandsintown/events',
+        isEnabled: false,
+        secretKey: '',
+        configOptions: JSON.stringify({
+          events: ['event.created', 'event.updated', 'event.canceled'],
+          version: '1.0'
+        })
+      },
+      {
+        name: 'Artist Updates',
+        description: 'Receive notifications about artist profile updates',
+        type: 'artist_updates',
+        callbackUrl: '/api/webhooks/artists/updates',
+        isEnabled: false,
+        secretKey: '',
+        configOptions: JSON.stringify({
+          includeImages: true,
+          includeGenres: true,
+          version: '1.0'
+        })
+      },
+      {
+        name: 'Venue Capacity Changes',
+        description: 'Get notified when venue capacity information changes',
+        type: 'venue_capacity',
+        callbackUrl: '/api/webhooks/venues/capacity',
+        isEnabled: false,
+        secretKey: '',
+        configOptions: JSON.stringify({
+          thresholdPercentage: 10,
+          notifyOnIncrease: true,
+          notifyOnDecrease: true,
+          version: '1.0'
+        })
+      }
+    ]);
 
     console.log('Database seeded successfully');
   } catch (error) {

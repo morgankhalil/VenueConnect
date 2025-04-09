@@ -5,6 +5,7 @@ import {
   unregisterBandsintownWebhook,
   verifyWebhookConnection
 } from '../webhooks/webhook-setup';
+import { storage } from '../storage';
 import dotenv from 'dotenv';
 
 // Load environment variables 
@@ -226,6 +227,97 @@ adminRouter.post('/webhooks/test', requireAdmin, async (req, res) => {
       success: false, 
       message: 'Failed to test webhook' 
     });
+  }
+});
+
+// Route to get all webhook configurations
+adminRouter.get('/webhook-configurations', requireAdmin, async (req, res) => {
+  try {
+    const configs = await storage.getWebhookConfigurations();
+    res.json(configs);
+  } catch (error) {
+    console.error('Error fetching webhook configurations:', error);
+    res.status(500).json({ error: 'Failed to fetch webhook configurations' });
+  }
+});
+
+// Route to get a specific webhook configuration
+adminRouter.get('/webhook-configurations/:id', requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid ID' });
+    }
+
+    const config = await storage.getWebhookConfiguration(id);
+    if (!config) {
+      return res.status(404).json({ error: 'Webhook configuration not found' });
+    }
+
+    res.json(config);
+  } catch (error) {
+    console.error('Error fetching webhook configuration:', error);
+    res.status(500).json({ error: 'Failed to fetch webhook configuration' });
+  }
+});
+
+// Route to create a webhook configuration
+adminRouter.post('/webhook-configurations', requireAdmin, async (req, res) => {
+  try {
+    const config = req.body;
+    const newConfig = await storage.createWebhookConfiguration(config);
+    res.status(201).json(newConfig);
+  } catch (error) {
+    console.error('Error creating webhook configuration:', error);
+    res.status(500).json({ error: 'Failed to create webhook configuration' });
+  }
+});
+
+// Route to update a webhook configuration
+adminRouter.patch('/webhook-configurations/:id', requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid ID' });
+    }
+
+    const config = req.body;
+    const updatedConfig = await storage.updateWebhookConfiguration(id, config);
+    
+    if (!updatedConfig) {
+      return res.status(404).json({ error: 'Webhook configuration not found' });
+    }
+
+    res.json(updatedConfig);
+  } catch (error) {
+    console.error('Error updating webhook configuration:', error);
+    res.status(500).json({ error: 'Failed to update webhook configuration' });
+  }
+});
+
+// Route to toggle webhook configuration enabled state
+adminRouter.post('/webhook-configurations/:id/toggle', requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid ID' });
+    }
+
+    const { enabled } = req.body;
+    if (typeof enabled !== 'boolean') {
+      return res.status(400).json({ error: 'Enabled state must be a boolean' });
+    }
+
+    const config = await storage.toggleWebhookConfiguration(id, enabled);
+    
+    if (!config) {
+      return res.status(404).json({ error: 'Webhook configuration not found' });
+    }
+
+    res.json(config);
+  } catch (error) {
+    console.error('Error toggling webhook configuration:', error);
+    res.status(500).json({ error: 'Failed to toggle webhook configuration' });
   }
 });
 

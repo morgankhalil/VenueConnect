@@ -16,22 +16,31 @@ export const queryClient = new QueryClient({
 });
 
 export async function apiRequest(
-  method: string,
-  path: string,
-  body?: any
-): Promise<Response> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method,
+  endpoint: string,
+  options?: RequestInit
+): Promise<any> {
+  const url = `${API_BASE_URL}${endpoint}`;
+  
+  const defaultOptions: RequestInit = {
+    method: 'GET',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: body ? JSON.stringify(body) : undefined,
     credentials: 'include',
-  });
+  };
+
+  const fetchOptions = { ...defaultOptions, ...options };
+  const response = await fetch(url, fetchOptions);
 
   if (!response.ok) {
     throw new Error(`API error: ${response.status}`);
   }
 
-  return response;
+  // Parse JSON response
+  try {
+    return await response.json();
+  } catch (error) {
+    console.error('Error parsing JSON response:', error);
+    return { success: false, message: 'Invalid response format' };
+  }
 }
