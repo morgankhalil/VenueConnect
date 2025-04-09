@@ -98,7 +98,12 @@ export function NetworkVisualization({
   onNodeClick,
   onAddVenue
 }: NetworkVisualizationProps) {
-  console.log('Network Data:', data);
+  console.log('Network Data:', {
+    nodes: data?.nodes?.length || 0,
+    links: data?.links?.length || 0,
+    firstNode: data?.nodes?.[0],
+    firstLink: data?.links?.[0]
+  });
   // Find the center of the map
   const defaultCenter: [number, number] = [39.5, -98.5]; // Default US center
   
