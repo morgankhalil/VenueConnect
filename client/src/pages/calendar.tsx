@@ -350,14 +350,15 @@ export default function Calendar() {
 
             <TabsContent value="month">
               <div className="space-y-6">
-                <Card>
-                  <CardContent className="p-4">
+                <Card className="w-full">
+                  <CardContent className="p-0 sm:p-0 md:p-0">
                     <CalendarComponent
-                      mode="single"
-                      selected={date}
-                      onSelect={setDate}
-                      className="rounded-md border w-full"
-                      modifiers={{
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        className="rounded-md border w-full max-w-full" 
+                        style={{ width: '100%' }}
+                        modifiers={{
                         event: filteredEvents.map(event => event.date),
                         confirmed: filteredEvents.filter(e => e.type === 'confirmed').map(e => e.date),
                         hold: filteredEvents.filter(e => e.type === 'hold').map(e => e.date),
