@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapEvent } from "@/types";
+import { MapEvent, TourGroup } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { TourGroup } from "./tour-selection";
 import { Calendar, Clock, MapPin, Zap, X, Info } from "lucide-react";
 
 declare const mapboxgl: any;
@@ -349,86 +348,9 @@ export function TourDetailMap({ tour, userVenueId, onClose }: TourDetailMapProps
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-[350px_1fr]">
-          {/* Stop list sidebar */}
-          <div className="border-r overflow-auto max-h-[500px]">
-            {sortedEvents.map((event, idx) => {
-              const isLast = idx === sortedEvents.length - 1;
-              const nextEvent = !isLast ? sortedEvents[idx + 1] : null;
-              
-              // Status badge color
-              let statusColor = 'secondary';
-              let statusText = 'Unknown';
-              
-              if (event.isCurrentVenue) {
-                statusColor = 'secondary';
-                statusText = 'Potential';
-              } else if (event.isRoutingOpportunity) {
-                statusColor = 'warning';
-                statusText = 'On Hold';
-              } else {
-                statusColor = 'success';
-                statusText = 'Confirmed';
-              }
-              
-              return (
-                <div key={event.id} className="relative">
-                  <div 
-                    className={`p-3 border-b hover:bg-gray-50 cursor-pointer ${
-                      selectedEvent?.id === event.id ? 'bg-blue-50' : ''
-                    }`}
-                    onClick={() => setSelectedEvent(event)}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5">
-                        <div className={`
-                          w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium
-                          ${event.isCurrentVenue ? 'bg-gray-100 text-gray-700' :
-                            event.isRoutingOpportunity ? 'bg-amber-100 text-amber-700' :
-                            'bg-green-100 text-green-700'}
-                        `}>
-                          {idx + 1}
-                        </div>
-                      </div>
-                      
-                      <div className="flex-1">
-                        <div className="flex justify-between">
-                          <div className="font-medium text-sm">{event.venue}</div>
-                          <Badge variant={statusColor as any}>{statusText}</Badge>
-                        </div>
-                        
-                        <div className="text-xs text-gray-500 mt-1">
-                          {new Date(event.date).toLocaleDateString(undefined, {
-                            weekday: 'short',
-                            month: 'short', 
-                            day: 'numeric'
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Connection to next stop */}
-                  {!isLast && nextEvent && (
-                    <div className="px-3 py-2 bg-gray-50 border-b text-xs">
-                      <div className="flex items-center text-gray-500">
-                        <Clock className="h-3 w-3 mr-1" />
-                        {Math.round(
-                          calculateTravelTime(
-                            event.latitude, event.longitude,
-                            nextEvent.latitude, nextEvent.longitude
-                          )
-                        )} hrs to next stop
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          
-          {/* Map area */}
-          <div className="relative h-[500px]">
+        <div className="flex flex-col">
+          {/* Map area - Now full width */}
+          <div className="relative h-[400px] w-full mb-4">
             {isLoading ? (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
                 <div className="text-center">
@@ -441,7 +363,7 @@ export function TourDetailMap({ tour, userVenueId, onClose }: TourDetailMapProps
                   <p className="text-red-500 font-medium mb-2">Map Error</p>
                   <p className="text-sm text-gray-600">{error}</p>
                   <p className="text-sm text-gray-500 mt-4">
-                    You can still view the tour timeline on the left.
+                    You can still view the tour stops below.
                   </p>
                 </div>
               </div>
@@ -470,6 +392,94 @@ export function TourDetailMap({ tour, userVenueId, onClose }: TourDetailMapProps
                 </div>
               </>
             )}
+          </div>
+          
+          {/* Tour stops list - Now below map */}
+          <div className="border rounded-md overflow-hidden">
+            <div className="bg-gray-50 px-4 py-2 border-b">
+              <h4 className="font-medium text-sm text-gray-700">Tour Stops</h4>
+            </div>
+            <div className="divide-y max-h-[250px] overflow-auto">
+              {sortedEvents.map((event, idx) => {
+                const isLast = idx === sortedEvents.length - 1;
+                const nextEvent = !isLast ? sortedEvents[idx + 1] : null;
+                
+                // Status badge color
+                let statusColor = 'secondary';
+                let statusText = 'Unknown';
+                
+                if (event.isCurrentVenue) {
+                  statusColor = 'secondary';
+                  statusText = 'Potential';
+                } else if (event.isRoutingOpportunity) {
+                  statusColor = 'outline';
+                  statusText = 'On Hold';
+                } else {
+                  statusColor = 'default';
+                  statusText = 'Confirmed';
+                }
+                
+                return (
+                  <div key={event.id} className="relative">
+                    <div 
+                      className={`p-3 hover:bg-gray-50 cursor-pointer ${
+                        selectedEvent?.id === event.id ? 'bg-blue-50' : ''
+                      }`}
+                      onClick={() => setSelectedEvent(event)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5">
+                          <div className={`
+                            w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium
+                            ${event.isCurrentVenue ? 'bg-gray-100 text-gray-700' :
+                              event.isRoutingOpportunity ? 'bg-amber-100 text-amber-700' :
+                              'bg-green-100 text-green-700'}
+                          `}>
+                            {idx + 1}
+                          </div>
+                        </div>
+                        
+                        <div className="flex-1">
+                          <div className="flex justify-between">
+                            <div className="font-medium text-sm">{event.venue}</div>
+                            <Badge variant={statusColor as any}>{statusText}</Badge>
+                          </div>
+                          
+                          <div className="text-xs text-gray-500 mt-1">
+                            {new Date(event.date).toLocaleDateString(undefined, {
+                              weekday: 'short',
+                              month: 'short', 
+                              day: 'numeric'
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Connection to next stop */}
+                    {!isLast && nextEvent && (
+                      <div className="px-3 py-2 bg-gray-50 border-b text-xs">
+                        <div className="flex items-center text-gray-500">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {Math.round(
+                            calculateTravelTime(
+                              event.latitude, event.longitude,
+                              nextEvent.latitude, nextEvent.longitude
+                            )
+                          )} hrs to next stop
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              
+              {sortedEvents.length === 0 && (
+                <div className="p-4 text-center text-gray-500">
+                  No tour stops found
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>
