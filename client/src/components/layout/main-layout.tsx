@@ -12,19 +12,18 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Mock user data - in a real app, this would come from authentication
-  const user = {
-    name: "Alex Johnson",
-    venueName: "The Echo Lounge",
-    avatar: undefined // Add avatar URL here if available
-  };
+  // Get user data from API
+  const { data: user } = useQuery({
+    queryKey: ['/api/user'],
+    queryFn: () => apiRequest('GET', '/api/user').then(res => res.json())
+  });
 
-  // Mock connected venues - in a real app, this would come from API
-  const connectedVenues = [
-    { id: 1, name: "The Fillmore", isOnline: true },
-    { id: 2, name: "The Wiltern", isOnline: true },
-    { id: 3, name: "9:30 Club", isOnline: false }
-  ];
+  // Get connected venues from API
+  const { data: connectedVenues } = useQuery({
+    queryKey: ['/api/venues/connected'],
+    queryFn: () => apiRequest('GET', '/api/venues/connected').then(res => res.json()),
+    initialData: []
+  });
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
