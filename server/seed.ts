@@ -1,27 +1,28 @@
-
 import { db } from './db';
 import { users, venues, artists, events, predictions, venueNetwork, collaborativeOpportunities, collaborativeParticipants } from '../shared/schema';
 
 async function seed() {
   try {
-    // Get or create demo user
-    let user = (await db.select().from(users).where(eq(users.username, 'demo')))[0];
-    
-    if (!user) {
-      [user] = await db.insert(users).values({
-        username: 'demo',
-        password: 'demo123', // In production, this should be hashed
-        name: 'Demo User',
-        email: 'demo@example.com',
-        role: 'venue_manager'
-      }).returning();
-    }
-
-    // Clear existing demo data
+    // Clear existing data
+    await db.delete(collaborativeParticipants);
+    await db.delete(collaborativeOpportunities);
+    await db.delete(predictions);
+    await db.delete(inquiries);
     await db.delete(events);
+    await db.delete(venueNetwork);
     await db.delete(venues);
     await db.delete(artists);
-    
+    await db.delete(users);
+
+    // Create demo user
+    const [user] = await db.insert(users).values({
+      username: 'demo',
+      password: 'demo123', // In production, this should be hashed
+      name: 'Demo User',
+      email: 'demo@example.com',
+      role: 'venue_manager'
+    }).returning();
+
     // Insert demo venues
     const venueData = [
       {
@@ -49,7 +50,7 @@ async function seed() {
         ownerId: user.id
       }
     ];
-    
+
     const insertedVenues = await db.insert(venues).values(venueData).returning();
 
     // Insert demo artists
