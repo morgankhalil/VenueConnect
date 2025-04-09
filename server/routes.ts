@@ -257,7 +257,9 @@ router.get('/api/venue-network/graph/:id', async (req, res) => {
   const connectedVenues = await db
     .select()
     .from(venues)
-    .where(sql`id = ANY(${connectedVenueIds})`);
+    .where(
+      sql`id = ANY(${sql.array(connectedVenueIds, 'int4')})`
+    );
 
   const networkVenues = [
     { ...mainVenue[0], isCurrentVenue: true },
