@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLocation } from "wouter";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import FullMonthCalendar from "@/components/calendar/full-month-calendar";
 import CalendarLegend from "@/components/calendar/calendar-legend";
-import EventModal from "@/components/calendar/event-modal";
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -26,8 +26,6 @@ export default function Calendar() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [view, setView] = useState("month");
   const [filter, setFilter] = useState("all");
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
 
   // Event type definition
@@ -272,20 +270,15 @@ export default function Calendar() {
     });
   };
 
+  const [, setLocation] = useLocation();
+  
   const handleEventClick = (event: CalendarEvent) => {
-    setSelectedEvent(event);
-    setIsModalOpen(true);
+    // Navigate to event details page instead of showing modal
+    setLocation(`/event/${event.id}`);
   };
 
   return (
     <div className="py-6">
-      {/* Event Modal */}
-      <EventModal 
-        event={selectedEvent}
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-      />
-      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-heading font-semibold text-gray-900">Calendar</h1>

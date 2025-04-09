@@ -10,6 +10,7 @@ import Discover from "@/pages/discover";
 import Messages from "@/pages/messages";
 import Settings from "@/pages/settings";
 import VenueDetails from "@/pages/venue-details";
+import EventDetails from "@/pages/event-details";
 import MapTest from "@/pages/map-test";
 import NotFound from "@/pages/not-found";
 
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/messages" component={Messages} />
       <Route path="/settings" component={Settings} />
       <Route path="/venues/:id" component={VenueDetails} />
+      <Route path="/event/:id" component={EventDetails} />
       <Route path="/map-test" component={MapTest} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
