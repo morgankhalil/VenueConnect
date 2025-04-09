@@ -28,12 +28,11 @@ export default function Settings() {
     role: "manager"
   });
   
-  const [apiKeys, setApiKeys] = useState({
-    bandsintown: "",
-    songkick: "",
-    mapbox: "",
-    spotifyClientId: "",
-    spotifyClientSecret: ""
+  const [syncFormData, setSyncFormData] = useState({
+    artistName: "",
+    venueId: 18, // Default to Bug Jar venue ID if no user venue
+    radius: 250,
+    limit: 10
   });
   
   // Get user data from API
@@ -96,6 +95,14 @@ export default function Settings() {
         phone: user.contactPhone || "",
         role: user.role || "manager"
       });
+      
+      // Update venue ID for sync operations
+      if (user.venueId) {
+        setSyncFormData(prev => ({
+          ...prev,
+          venueId: user.venueId
+        }));
+      }
     }
   }, [user]);
   
@@ -515,16 +522,16 @@ export default function Settings() {
                           <div className="flex space-x-2">
                             <Input 
                               id="artist-name" 
-                              value={apiKeys.bandsintown}
-                              onChange={(e) => setApiKeys({...apiKeys, bandsintown: e.target.value})}
+                              value={syncFormData.artistName}
+                              onChange={(e) => setSyncFormData({...syncFormData, artistName: e.target.value})}
                               placeholder="Enter artist name (e.g. 'Metallica')"
                               disabled={!bandsintownApiStatus?.configured}
                             />
                             <Button 
                               variant="secondary"
-                              disabled={!bandsintownApiStatus?.configured || !apiKeys.bandsintown}
+                              disabled={!bandsintownApiStatus?.configured || !syncFormData.artistName}
                               onClick={async () => {
-                                if (!apiKeys.bandsintown) {
+                                if (!syncFormData.artistName) {
                                   toast({
                                     title: "Missing artist name",
                                     description: "Please enter an artist name to sync",
@@ -535,19 +542,19 @@ export default function Settings() {
                                 
                                 toast({
                                   title: "Starting sync",
-                                  description: `Fetching events for ${apiKeys.bandsintown}...`
+                                  description: `Fetching events for ${syncFormData.artistName}...`
                                 });
                                 
                                 try {
-                                  const response = await api.syncArtistEvents(apiKeys.bandsintown);
+                                  const response = await api.syncArtistEvents(syncFormData.artistName);
                                   
                                   toast({
                                     title: "Sync initiated",
-                                    description: response.message || `Started sync for ${apiKeys.bandsintown}`
+                                    description: response.message || `Started sync for ${syncFormData.artistName}`
                                   });
                                   
                                   // Clear the input
-                                  setApiKeys({...apiKeys, bandsintown: ""});
+                                  setSyncFormData({...syncFormData, artistName: ""});
                                 } catch (error) {
                                   console.error("Error syncing artist:", error);
                                   toast({
