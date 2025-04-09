@@ -1,3 +1,4 @@
+
 import { db } from './db';
 import { users, venues, venueNetwork } from '../shared/schema';
 
@@ -20,7 +21,7 @@ async function seed() {
     }).returning();
 
     // Create multiple small/medium venues similar to Bug Jar
-    const venueData = [
+    const venueDataList = [
       {
         name: 'Bug Jar',
         address: '219 Monroe Ave',
@@ -101,14 +102,14 @@ async function seed() {
       }
     ];
 
-    const venues = await db.insert(venues).values(venueData).returning();
+    const insertedVenues = await db.insert(venues).values(venueDataList).returning();
 
     // Create venue network connections
-    for (let i = 0; i < venues.length; i++) {
-      for (let j = i + 1; j < venues.length; j++) {
+    for (let i = 0; i < insertedVenues.length; i++) {
+      for (let j = i + 1; j < insertedVenues.length; j++) {
         await db.insert(venueNetwork).values({
-          venueId: venues[i].id,
-          connectedVenueId: venues[j].id,
+          venueId: insertedVenues[i].id,
+          connectedVenueId: insertedVenues[j].id,
           status: 'active',
           trustScore: Math.floor(Math.random() * 30) + 70, // 70-100
           collaborativeBookings: Math.floor(Math.random() * 5) // 0-5 initial collaborations
