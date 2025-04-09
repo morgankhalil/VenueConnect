@@ -34,19 +34,19 @@ export default function Settings() {
   // Get user data from API
   const { data: user, isLoading: isLoadingUser, error: userError } = useQuery({
     queryKey: ['/api/user'],
-    queryFn: () => apiRequest('GET', '/api/user').then(res => res.json())
+    queryFn: () => apiRequest('/api/user')
   });
 
   // Get venue data from API
   const { data: venue, isLoading: isLoadingVenue, error: venueError } = useQuery({
     queryKey: ['/api/venues', user?.id], 
-    queryFn: () => {
+    queryFn: async () => {
       // Make sure we have a valid user ID
       if (!user?.id || isNaN(Number(user.id))) {
         console.error("Invalid user ID:", user?.id);
         return Promise.reject(new Error("Invalid user ID"));
       }
-      return apiRequest('GET', `/api/venues/${user.id}`).then(res => res.json());
+      return apiRequest(`/api/venues/${user.id}`);
     },
     enabled: !!user && !!user.id && !isNaN(Number(user.id)), // Only run if user exists with valid ID
     retry: 1 // Only retry once if there's an error
@@ -59,12 +59,12 @@ export default function Settings() {
       if (!user?.id || isNaN(Number(user.id))) {
         return { nodes: [], links: [] };
       }
-      return apiRequest('GET', `/api/venue-network/graph/${user.id}`)
-        .then(res => res.json())
-        .catch(err => {
-          console.error("Error fetching venue network:", err);
-          return { nodes: [], links: [] };
-        });
+      try {
+        return await apiRequest(`/api/venue-network/graph/${user.id}`);
+      } catch (err) {
+        console.error("Error fetching venue network:", err);
+        return { nodes: [], links: [] };
+      }
     },
     enabled: !!user && !!user.id && !isNaN(Number(user.id))
   });
@@ -73,12 +73,12 @@ export default function Settings() {
   const { data: bandsintownApiStatus } = useQuery({
     queryKey: ['/api/admin/api-keys/bandsintown/status'],
     queryFn: async () => {
-      return apiRequest('GET', '/api/admin/api-keys/bandsintown/status')
-        .then(res => res.json())
-        .catch(err => {
-          console.error("Error checking Bandsintown API key status:", err);
-          return { configured: false, message: "Failed to check API key status" };
-        });
+      try {
+        return await apiRequest('/api/admin/api-keys/bandsintown/status');
+      } catch (err) {
+        console.error("Error checking Bandsintown API key status:", err);
+        return { configured: false, message: "Failed to check API key status" };
+      }
     }
   });
   

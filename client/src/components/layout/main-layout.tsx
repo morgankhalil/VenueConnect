@@ -18,14 +18,14 @@ export function MainLayout({ children }: MainLayoutProps) {
   // Get user data from API
   const { data: user, isLoading: isLoadingUser, error: userError } = useQuery({
     queryKey: ['/api/user'],
-    queryFn: () => apiRequest('GET', '/api/user').then(res => res.json()),
+    queryFn: () => apiRequest('/api/user'),
     retry: 3
   });
 
   // Get connected venues from API
   const { data: connectedVenues = [] } = useQuery({
     queryKey: ['/api/venues/connected'],
-    queryFn: () => apiRequest('GET', '/api/venues/connected').then(res => res.json()),
+    queryFn: () => apiRequest('/api/venues/connected'),
     initialData: []
   });
 

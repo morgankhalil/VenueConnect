@@ -18,7 +18,7 @@ export default function VenueNetwork() {
   // Get the current user to determine venue ID
   const { data: user } = useQuery({
     queryKey: ['/api/user'],
-    queryFn: () => apiRequest('GET', '/api/user').then(res => res.json())
+    queryFn: () => apiRequest('/api/user')
   });
   
   // Use the user's venue ID if available, otherwise fallback to a default

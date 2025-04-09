@@ -154,7 +154,7 @@ export function WebhookSettings() {
       </div>
       
       <div className="grid gap-6 md:grid-cols-2">
-        {webhooks?.length > 0 ? (
+        {webhooks && webhooks.length > 0 ? (
           webhooks.map((webhook: WebhookConfiguration) => (
             <Card key={webhook.id} className={webhook.isEnabled ? 'border-primary/50' : ''}>
               <CardHeader className="pb-2">
