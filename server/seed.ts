@@ -1,6 +1,6 @@
 
 import { db } from './db';
-import { users, venues, artists, events, predictions, venueNetwork } from '../shared/schema';
+import { users, venues, artists, events, predictions, venueNetwork, collaborativeOpportunities, collaborativeParticipants } from '../shared/schema';
 
 async function seed() {
   try {
@@ -51,8 +51,8 @@ async function seed() {
         popularity: 85
       },
       {
-        name: 'Tame Impala',
-        genres: ['indie', 'psychedelic'],
+        name: 'Japanese Breakfast',
+        genres: ['indie', 'pop'],
         popularity: 88
       },
       {
@@ -77,14 +77,24 @@ async function seed() {
     await db.insert(events).values(eventData);
 
     // Insert demo predictions
-    const predictionData = insertedArtists.map((artist, index) => ({
-      artistId: artist.id,
-      venueId: insertedVenues[0].id,
-      suggestedDate: new Date(today.getFullYear(), today.getMonth() + 2 + index, 1).toISOString(),
-      confidenceScore: 75 + index * 5,
-      status: 'pending',
-      reasoning: 'Routing opportunity based on tour schedule'
-    }));
+    const predictionData = [
+      {
+        artistId: insertedArtists[0].id,
+        venueId: insertedVenues[0].id,
+        suggestedDate: new Date(2025, 1, 18).toISOString(),
+        confidenceScore: 92,
+        status: 'pending',
+        reasoning: 'Strong match based on venue capacity and artist routing'
+      },
+      {
+        artistId: insertedArtists[1].id,
+        venueId: insertedVenues[0].id,
+        suggestedDate: new Date(2025, 2, 15).toISOString(),
+        confidenceScore: 88,
+        status: 'pending',
+        reasoning: 'Artist has performed at similar venues in the region'
+      }
+    ];
 
     await db.insert(predictions).values(predictionData);
 
@@ -98,6 +108,29 @@ async function seed() {
     };
 
     await db.insert(venueNetwork).values(networkData);
+
+    // Insert collaborative opportunities
+    const [opportunity] = await db.insert(collaborativeOpportunities).values({
+      artistId: insertedArtists[1].id,
+      creatorVenueId: insertedVenues[0].id,
+      dateRangeStart: new Date(2025, 2, 15).toISOString(),
+      dateRangeEnd: new Date(2025, 2, 30).toISOString(),
+      status: 'pending'
+    }).returning();
+
+    // Insert collaborative participants
+    await db.insert(collaborativeParticipants).values([
+      {
+        opportunityId: opportunity.id,
+        venueId: insertedVenues[0].id,
+        status: 'pending'
+      },
+      {
+        opportunityId: opportunity.id,
+        venueId: insertedVenues[1].id,
+        status: 'pending'
+      }
+    ]);
 
     console.log('Database seeded successfully');
   } catch (error) {

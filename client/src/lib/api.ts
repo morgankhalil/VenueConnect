@@ -5,85 +5,24 @@ import {
   PredictionWithDetails, StatsData, MapEvent, VenueNetworkData, TourGroup
 } from '@/types';
 
-// Mock data functions
-export const getMockStatsData = async (): Promise<StatsData> => {
-  return {
-    upcomingOpportunities: 24,
-    confirmedBookings: 12,
-    venueNetworkCount: 8,
-    recentInquiries: 15
-  };
+export const getStatsData = async (): Promise<StatsData> => {
+  const res = await apiRequest('GET', '/api/stats', undefined);
+  return res.json();
 };
 
-export const getMockPredictions = async (): Promise<PredictionWithDetails[]> => {
-  return [
-    {
-      id: 1,
-      artist: { id: 1, name: "The Black Keys", genres: ["Rock", "Blues"] },
-      suggestedDate: "2025-02-18",
-      confidenceScore: 92,
-      venue: { id: 1, name: "The Echo Lounge" },
-      reasoning: "Strong match based on venue capacity and artist routing"
-    },
-    {
-      id: 2,
-      artist: { id: 2, name: "Japanese Breakfast", genres: ["Indie", "Pop"] },
-      suggestedDate: "2025-03-15",
-      confidenceScore: 88,
-      venue: { id: 1, name: "The Echo Lounge" },
-      reasoning: "Artist has performed at similar venues in the region"
-    }
-  ];
+export const getPredictionsWithDetails = async (): Promise<PredictionWithDetails[]> => {
+  const res = await apiRequest('GET', '/api/predictions/details', undefined);
+  return res.json();
 };
 
-export const getMockTourGroups = async (): Promise<TourGroup[]> => {
-  return [
-    {
-      id: 1,
-      name: "West Coast Tour 2025",
-      artistName: "The Black Keys",
-      genre: "Rock",
-      region: "West Coast",
-      startDate: "2025-02-01",
-      endDate: "2025-03-15",
-      totalShows: 12,
-      confirmedShows: 8,
-      events: [
-        {
-          id: 1,
-          venue: "The Fillmore",
-          date: "2025-02-15",
-          isRoutingOpportunity: false,
-          latitude: 37.7749,
-          longitude: -122.4194
-        },
-        {
-          id: 2,
-          venue: "Your Venue",
-          date: "2025-02-18",
-          isRoutingOpportunity: true,
-          latitude: 38.5816,
-          longitude: -121.4944
-        }
-      ]
-    }
-  ];
+export const getTourGroups = async (): Promise<TourGroup[]> => {
+  const res = await apiRequest('GET', '/api/tours', undefined);
+  return res.json();
 };
 
-export const getMockCollaborativeOpportunities = async (): Promise<CollaborativeOpportunityWithDetails[]> => {
-  return [
-    {
-      id: 1,
-      artist: { id: 1, name: "Japanese Breakfast" },
-      dateRangeStart: "2025-03-15",
-      dateRangeEnd: "2025-03-30",
-      status: "pending",
-      participants: [
-        { venue: { id: 1, name: "The Echo Lounge" } },
-        { venue: { id: 2, name: "The Fillmore" } }
-      ]
-    }
-  ];
+export const getCollaborativeOpportunitiesWithDetails = async (): Promise<CollaborativeOpportunityWithDetails[]> => {
+  const res = await apiRequest('GET', '/api/collaborative-opportunities/details', undefined);
+  return res.json();
 };
 
 // Venues

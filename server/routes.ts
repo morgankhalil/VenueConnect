@@ -9,10 +9,40 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { Router } from 'express';
 import { db } from './db';
-import { eq } from 'drizzle-orm';
-import { venues, artists, events, predictions, venueNetwork } from '../shared/schema';
+import { eq, and, sql } from 'drizzle-orm';
+import { venues, artists, events, predictions, collaborativeOpportunities, collaborativeParticipants, venueNetwork } from '../shared/schema';
 
 const router = Router();
+
+// Stats endpoint
+router.get('/api/stats', async (req, res) => {
+  try {
+    const upcomingOpportunities = await db.select({ count: sql<number>`count(*)` })
+      .from(predictions)
+      .where(eq(predictions.status, 'pending'));
+
+    const confirmedBookings = await db.select({ count: sql<number>`count(*)` })
+      .from(events)
+      .where(eq(events.status, 'confirmed'));
+
+    const venueNetworkCount = await db.select({ count: sql<number>`count(*)` })
+      .from(venueNetwork)
+      .where(eq(venueNetwork.status, 'active'));
+
+    const recentInquiries = await db.select({ count: sql<number>`count(*)` })
+      .from(collaborativeOpportunities)
+      .where(eq(collaborativeOpportunities.status, 'pending'));
+
+    res.json({
+      upcomingOpportunities: upcomingOpportunities[0].count,
+      confirmedBookings: confirmedBookings[0].count,
+      venueNetworkCount: venueNetworkCount[0].count,
+      recentInquiries: recentInquiries[0].count
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
 
 // Venues
 router.get('/venues', async (req, res) => {
