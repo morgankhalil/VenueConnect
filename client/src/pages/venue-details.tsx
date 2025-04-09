@@ -339,11 +339,27 @@ export default function VenueDetails() {
                   </span>
                 </div>
                 
-                <div className="h-[300px] bg-gray-100 rounded-md flex items-center justify-center mt-4">
-                  <div className="text-center p-4">
-                    <MapPin className="mx-auto h-10 w-10 text-gray-400 mb-2" />
-                    <p className="text-gray-500">Map feature is being updated. <br/> Please check back soon.</p>
-                  </div>
+                {/* Venue location map */}
+                <div className="h-[300px] relative overflow-hidden mt-4 rounded-md border">
+                  {venue.latitude && venue.longitude ? (
+                    <iframe 
+                      width="100%"
+                      height="100%"
+                      frameBorder="0" 
+                      scrolling="no" 
+                      marginHeight={0} 
+                      marginWidth={0} 
+                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${venue.longitude-0.01},${venue.latitude-0.01},${venue.longitude+0.01},${venue.latitude+0.01}&layer=mapnik&marker=${venue.latitude},${venue.longitude}`}
+                      style={{ border: 0 }}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full bg-gray-100">
+                      <div className="text-center p-4">
+                        <MapPin className="mx-auto h-10 w-10 text-gray-400 mb-2" />
+                        <p className="text-gray-500">Location Not Available</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="border-t pt-4 mt-4">
