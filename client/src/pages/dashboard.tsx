@@ -2,13 +2,15 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { TourMap } from "@/components/dashboard/tour-map";
+import { TourTimeline } from "@/components/dashboard/tour-timeline";
 import { OpportunityCard } from "@/components/dashboard/opportunity-card";
 import { VenueCard } from "@/components/venue-network/venue-card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getMockStatsData, getMockEventMapData, getMockPredictions } from "@/lib/api";
 import { PredictionWithDetails, MapEvent } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { Filter, ArrowUpRight } from "lucide-react";
+import { Filter, ArrowUpRight, MapPin, List } from "lucide-react";
 
 export default function Dashboard() {
   const [genreFilter, setGenreFilter] = useState("all");
@@ -133,16 +135,41 @@ export default function Dashboard() {
           />
         </div>
         
-        {/* Tour Routing Map */}
+        {/* Tour Routing View with Tabs */}
         <div className="mt-8">
-          <TourMap
-            events={eventMapData || []}
-            onSelectEvent={setSelectedEvent}
-            genreFilter={genreFilter}
-            onGenreFilterChange={setGenreFilter}
-            dateRangeFilter={dateRangeFilter}
-            onDateRangeFilterChange={setDateRangeFilter}
-          />
+          <Tabs defaultValue="timeline" className="w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-medium text-gray-900">Tour Routing</h2>
+              <TabsList>
+                <TabsTrigger value="timeline" className="flex items-center gap-1">
+                  <List className="h-4 w-4" />
+                  <span>Timeline</span>
+                </TabsTrigger>
+                <TabsTrigger value="map" className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
+                  <span>Map</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
+            
+            <TabsContent value="map" className="mt-0">
+              <TourMap
+                events={eventMapData || []}
+                onSelectEvent={setSelectedEvent}
+                genreFilter={genreFilter}
+                onGenreFilterChange={setGenreFilter}
+                dateRangeFilter={dateRangeFilter}
+                onDateRangeFilterChange={setDateRangeFilter}
+              />
+            </TabsContent>
+            
+            <TabsContent value="timeline" className="mt-0">
+              <TourTimeline
+                events={eventMapData || []}
+                onSelectEvent={setSelectedEvent}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
         
         {/* Recent Opportunities */}
