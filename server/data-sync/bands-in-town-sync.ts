@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { db } from '../db';
 import { venues, venueNetwork, artists, events } from '../../shared/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, in_ } from 'drizzle-orm';
 
 // Define types for Bandsintown API responses
 interface BandsInTownVenue {
@@ -67,17 +67,17 @@ export async function syncArtistFromBandsInTown(artistName: string) {
     // Sanitize artist name for URL
     const encodedArtistName = encodeURIComponent(artistName.trim());
     const apiEndpoint = `https://rest.bandsintown.com/artists/${encodedArtistName}`;
-    
+
     console.log(`Fetching artist data for '${artistName}'...`);
-    
+
     // Bandsintown API uses app_id parameter for authentication
     const params = {
       app_id: apiKey
     };
-    
+
     // Try different API request strategies
     let artistData: BandsInTownArtist | null = null;
-    
+
     try {
       console.log(`Making request to ${apiEndpoint} with app_id parameter`);
       const response = await axios.get(apiEndpoint, { 
@@ -86,7 +86,7 @@ export async function syncArtistFromBandsInTown(artistName: string) {
           'Accept': 'application/json'
         }
       });
-      
+
       if (response.data) {
         artistData = response.data;
         console.log(`Successfully retrieved data for artist ${artistName}`);
@@ -100,13 +100,13 @@ export async function syncArtistFromBandsInTown(artistName: string) {
           statusText: error.response.statusText,
           data: error.response.data
         } : error.message);
-      
+
       // Try an alternative approach with different URL structure
       try {
         console.log("Trying alternative API request format...");
         const altEndpoint = `https://rest.bandsintown.com/artists/${encodedArtistName}?app_id=${encodeURIComponent(apiKey)}`;
         const response = await axios.get(altEndpoint);
-        
+
         if (response.data) {
           artistData = response.data;
           console.log(`Successfully retrieved artist data with alternative method`);
@@ -138,7 +138,7 @@ export async function syncArtistFromBandsInTown(artistName: string) {
 
     if (existingArtists.length > 0) {
       console.log(`Artist '${artistData.name}' already exists in database`);
-      
+
       // Update artist info
       await db.update(artists)
         .set({
@@ -147,7 +147,7 @@ export async function syncArtistFromBandsInTown(artistName: string) {
           genres: ['rock'] // Default to rock since Bandsintown doesn't provide genres
         })
         .where(eq(artists.id, existingArtists[0].id));
-      
+
       return existingArtists[0];
     }
 
@@ -201,7 +201,7 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
     // Sanitize artist name for URL
     const encodedArtistName = encodeURIComponent(artistName.trim());
     const apiEndpoint = `https://rest.bandsintown.com/artists/${encodedArtistName}/events`;
-    
+
     // Params for the request - Bandsintown primarily uses app_id for authentication
     const params: Record<string, any> = {
       app_id: apiKey,
@@ -209,10 +209,10 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
     };
 
     console.log(`Fetching events for artist '${artistName}'...`);
-    
+
     // Try different API request strategies
     let eventsData: BandsInTownEvent[] = [];
-    
+
     try {
       console.log(`Making request to ${apiEndpoint} with app_id parameter`);
       const response = await axios.get(apiEndpoint, { 
@@ -221,7 +221,7 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
           'Accept': 'application/json'
         }
       });
-      
+
       if (response.data && Array.isArray(response.data)) {
         eventsData = response.data;
         console.log(`Successfully retrieved ${eventsData.length} events for ${artistName}`);
@@ -235,13 +235,13 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
           statusText: error.response.statusText,
           data: error.response.data
         } : error.message);
-      
+
       // Try an alternative approach with different URL structure
       try {
         console.log("Trying alternative API request format...");
         const altEndpoint = `https://rest.bandsintown.com/artists/${encodedArtistName}/events?app_id=${encodeURIComponent(apiKey)}`;
         const response = await axios.get(altEndpoint);
-        
+
         if (response.data && Array.isArray(response.data)) {
           eventsData = response.data;
           console.log(`Successfully retrieved ${eventsData.length} events with alternative method`);
@@ -259,16 +259,16 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
     }
 
     console.log(`Retrieved ${eventsData.length} events for artist '${artistName}'`);
-    
+
     // Process events
     const addedEvents: any[] = [];
-    
+
     for (const eventData of eventsData) {
       if (!eventData.venue || !eventData.datetime) {
         console.log('Skipping event with missing venue or datetime');
         continue;
       }
-      
+
       // Check if venue exists, or create it
       let venueId;
       const existingVenues = await db.select()
@@ -280,7 +280,7 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
           )
         )
         .limit(1);
-      
+
       if (existingVenues.length > 0) {
         venueId = existingVenues[0].id;
       } else {
@@ -297,7 +297,7 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
           zipCode: '00000', // Default zip
           description: `Music venue in ${eventData.venue.city}`,
         }).returning();
-        
+
         if (newVenues.length > 0) {
           venueId = newVenues[0].id;
           console.log(`Created new venue: ${newVenues[0].name} in ${newVenues[0].city}`);
@@ -306,12 +306,12 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
           continue;
         }
       }
-      
+
       // Process datetime
       const eventDate = new Date(eventData.datetime);
       const dateString = eventDate.toISOString().split('T')[0];
       const timeString = eventDate.toTimeString().split(' ')[0].substring(0, 5);
-      
+
       // Check if event already exists
       const existingEvents = await db.select()
         .from(events)
@@ -323,7 +323,7 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
           )
         )
         .limit(1);
-      
+
       if (existingEvents.length > 0) {
         // Update existing event
         await db.update(events)
@@ -334,7 +334,7 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
             sourceName: 'bandsintown'
           })
           .where(eq(events.id, existingEvents[0].id));
-        
+
         console.log(`Updated existing event: ${artist.name} at ${eventData.venue.name} on ${dateString}`);
         addedEvents.push({...existingEvents[0]});
       } else {
@@ -349,14 +349,14 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
           sourceId: eventData.id,
           sourceName: 'bandsintown'
         }).returning();
-        
+
         if (newEvents.length > 0) {
           console.log(`Added new event: ${artist.name} at ${eventData.venue.name} on ${dateString}`);
           addedEvents.push({...newEvents[0]});
         }
       }
     }
-    
+
     console.log(`Sync completed: processed ${eventsData.length} events, added/updated ${addedEvents.length}`);
     return addedEvents;
   } catch (error) {
@@ -374,11 +374,11 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
   if (!sourceVenueId || isNaN(sourceVenueId) || sourceVenueId <= 0) {
     throw new Error('Invalid sourceVenueId: Must be a positive number');
   }
-  
+
   if (radius && (isNaN(radius) || radius < 0 || radius > 500)) {
     throw new Error('Invalid radius: Must be between 0 and 500');
   }
-  
+
   if (limit && (isNaN(limit) || limit < 1 || limit > 100)) {
     throw new Error('Invalid limit: Must be between 1 and 100');
   }
@@ -395,45 +395,53 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
       .from(venues)
       .where(eq(venues.id, sourceVenueId))
       .limit(1);
-    
+
     if (!sourceVenue.length) {
       throw new Error(`Source venue with ID ${sourceVenueId} not found`);
     }
-    
+
     const { latitude, longitude, city, state } = sourceVenue[0];
-    
+
     if (!latitude || !longitude) {
       console.log(`Source venue ${sourceVenue[0].name} is missing geo coordinates, using city/state search instead`);
     }
-    
+
     // Get recent events at the source venue to find artists
     const recentEvents = await db
       .select()
       .from(events)
       .where(eq(events.venueId, sourceVenueId))
-      .limit(5);
+      .limit(10);
 
-    const artists = await db
+    if (recentEvents.length === 0) {
+      console.log(`No recent events found for venue ${sourceVenue[0].name}`);
+    }
+
+    const artistIds = recentEvents.map(e => e.artistId);
+
+    // Get artist details for these events
+    const venueArtists = await db
       .select()
       .from(artists)
-      .where(in_(artists.id, recentEvents.map(e => e.artistId)));
+      .where(in_(artists.id, artistIds));
+
+    console.log(`Found ${venueArtists.length} artists with recent events at ${sourceVenue[0].name}`);
 
     // Use these artists to find connected venues
     const eventsData: BandsInTownEvent[] = [];
-    
-    for (const artist of artists) {
+
+    for (const artist of venueArtists) {
       if (!artist.name) continue;
-      
+
       const apiEndpoint = `https://rest.bandsintown.com/artists/${encodeURIComponent(artist.name)}/events`;
-      
       console.log(`Querying BandsInTown API for ${artist.name} events near ${sourceVenue[0].name}`);
-      
+
       try {
         const response = await axios.get(apiEndpoint, {
           params: { app_id: apiKey },
           headers: { 'Accept': 'application/json' }
         });
-        
+
         if (response.data && Array.isArray(response.data)) {
           eventsData.push(...response.data);
         }
@@ -441,13 +449,14 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
         console.error(`Error fetching events for artist ${artist.name}:`, error);
       }
     }
-    
+
+
     // Bandsintown API primarily uses app_id as the authentication method
     const params: Record<string, any> = {
       app_id: apiKey,
       date: 'upcoming',
     };
-    
+
     // Add location based on what we have
     if (latitude && longitude) {
       // The API might not actually support lat/long filtering directly
@@ -456,10 +465,10 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
     } else {
       console.log(`Using city/state search: ${city}, ${state}`);
     }
-    
+
     // Try different API request strategies
     let events: BandsInTownEvent[] = [];
-    
+
     try {
       console.log(`Making request to ${apiEndpoint} with app_id parameter`);
       const response = await axios.get(apiEndpoint, { 
@@ -468,7 +477,7 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
           'Accept': 'application/json'
         }
       });
-      
+
       if (response.data && Array.isArray(response.data)) {
         events = response.data;
         console.log(`Successfully retrieved ${events.length} events`);
@@ -482,13 +491,13 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
           statusText: error.response.statusText,
           data: error.response.data
         } : error.message);
-      
+
       // Try an alternative approach with different URL structure
       try {
         console.log("Trying alternative API request format...");
         const altEndpoint = `https://rest.bandsintown.com/artists/${encodeURIComponent(artistName)}/events?app_id=${encodeURIComponent(apiKey)}`;
         const response = await axios.get(altEndpoint);
-        
+
         if (response.data && Array.isArray(response.data)) {
           events = response.data;
           console.log(`Successfully retrieved ${events.length} events with alternative method`);
@@ -504,12 +513,12 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
           } : altError.message);
       }
     }
-    
+
     console.log(`Retrieved ${events.length} events from Bandsintown`);
-    
+
     // Process the events to extract venue data
     const venueMap = new Map<string, BandsInTownVenue>();
-    
+
     // Extract and normalize venues from events
     for (const event of events) {
       if (event && event.venue) {
@@ -524,20 +533,20 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
           latitude: venue.latitude || 0,
           longitude: venue.longitude || 0
         };
-        
+
         // Use a Map to deduplicate by venue name + city
         const key = `${normalizedVenue.name}:${normalizedVenue.city}`;
         venueMap.set(key, normalizedVenue);
       }
     }
-    
+
     // Convert map to array
     const uniqueVenues = Array.from(venueMap.values());
     console.log(`Extracted ${uniqueVenues.length} unique venues from events`);
-    
+
     // Track the venues we've added
     const addedVenues: any[] = [];
-    
+
     // Process each unique venue
     for (const venueData of uniqueVenues) {
       // Check if venue already exists in our database
@@ -550,10 +559,10 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
           )
         )
         .limit(1);
-      
+
       if (existingVenue.length) {
         console.log(`Venue ${venueData.name} already exists in database`);
-        
+
         // Check if there's a network connection
         const existingConnection = await db.select()
           .from(venueNetwork)
@@ -564,7 +573,7 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
             )
           )
           .limit(1);
-          
+
         if (!existingConnection.length) {
           // Create network connection
           await db.insert(venueNetwork).values({
@@ -576,21 +585,21 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
           });
           console.log(`Created new network connection with ${existingVenue[0].name}`);
         }
-        
+
         continue;
       }
-      
+
       // Sanitize and validate venue data before insertion
       const sanitizedName = (venueData.name || '').trim().substring(0, 100); // Limit name length
       const sanitizedCity = (venueData.city || '').trim().substring(0, 50); // Limit city length
       const sanitizedRegion = (venueData.region || '').trim().substring(0, 50); // Limit state/region length
-      
+
       // Skip venues with missing required data
       if (!sanitizedName || !sanitizedCity) {
         console.log(`Skipping venue with missing required data: ${venueData.name || 'Unknown'}`);
         continue;
       }
-      
+
       // Add this new venue to our database with sanitized data
       const insertData = {
         name: sanitizedName,
@@ -608,11 +617,11 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
 
       // Insert the new venue
       const newVenues = await db.insert(venues).values(insertData).returning();
-      
+
       if (newVenues.length > 0) {
         const newVenue = newVenues[0];
         addedVenues.push(newVenue);
-        
+
         // Create network connection with the source venue
         await db.insert(venueNetwork).values({
           venueId: sourceVenueId,
@@ -621,11 +630,11 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
           trustScore: Math.floor(Math.random() * 80) + 20, // Random score between 20-100
           collaborativeBookings: Math.floor(Math.random() * 5) // Random 0-5 collaborations
         });
-        
+
         console.log(`Added new venue: ${newVenue.name} in ${newVenue.city}`);
       }
     }
-    
+
     console.log(`Sync completed: added ${addedVenues.length} new venues to the network`);
     return addedVenues;
   } catch (error) {
