@@ -211,24 +211,24 @@ export function NetworkVisualization({
         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center">
             <div className="text-2xl font-semibold text-primary-700">
-              {data.nodes.length - 1}
+              {Math.max(0, data.nodes.filter(node => !node.isCurrentVenue).length)}
             </div>
             <div className="text-sm text-gray-500">Connected Venues</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-semibold text-primary-700">
-              {data.nodes.reduce((sum, node) => sum + (node.collaborativeBookings || 0), 0)}
+              {data.links.reduce((sum, link) => sum + (link.value || 0), 0)}
             </div>
             <div className="text-sm text-gray-500">Collaborative Bookings</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-semibold text-primary-700">
-              {Math.round(
+              {data.nodes.length > 1 ? Math.round(
                 data.nodes
                   .filter(node => !node.isCurrentVenue)
                   .reduce((sum, node) => sum + (node.trustScore || 0), 0) / 
-                (data.nodes.length - 1 || 1)
-              )}%
+                data.nodes.filter(node => !node.isCurrentVenue).length
+              ) : 0}%
             </div>
             <div className="text-sm text-gray-500">Trust Score</div>
           </div>
