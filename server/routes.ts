@@ -12,6 +12,9 @@ import { db } from './db';
 import { eq, and, sql } from 'drizzle-orm';
 import { venues, artists, events, predictions, collaborativeOpportunities, collaborativeParticipants, venueNetwork, messages } from '../shared/schema';
 
+// Import admin routes
+import adminRouter from './routes/admin';
+
 const router = Router();
 
 // Stats endpoint
@@ -352,6 +355,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.use(router);
+  
+  // Mount admin routes
+  app.use('/api/admin', adminRouter);
 
   // Artists routes
   app.get("/api/artists", async (req, res) => {

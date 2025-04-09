@@ -22,6 +22,14 @@ export default function Settings() {
     role: "manager"
   });
   
+  const [apiKeys, setApiKeys] = useState({
+    bandsintown: "",
+    songkick: "",
+    mapbox: "",
+    spotifyClientId: "",
+    spotifyClientSecret: ""
+  });
+  
   // Get user data from API
   const { data: user, isLoading: isLoadingUser, error: userError } = useQuery({
     queryKey: ['/api/user'],
@@ -480,8 +488,93 @@ export default function Settings() {
                         <div className="space-y-2">
                           <Label htmlFor="bandsintown-api-key">API Key</Label>
                           <div className="flex">
-                            <Input id="bandsintown-api-key" type="password" defaultValue="•••••••••••••••••••" className="rounded-r-none" />
-                            <Button variant="outline" className="rounded-l-none">Show</Button>
+                            <Input 
+                              id="bandsintown-api-key" 
+                              type="password" 
+                              placeholder="Enter your Bandsintown API key here"
+                              value={apiKeys.bandsintown}
+                              onChange={(e) => setApiKeys({...apiKeys, bandsintown: e.target.value})}
+                              className="rounded-r-none" 
+                            />
+                            <Button variant="outline" className="rounded-l-none" onClick={() => {
+                              if (apiKeys.bandsintown) {
+                                // Save the API key
+                                import('@/lib/api').then(api => {
+                                  api.saveBandsintownApiKey(apiKeys.bandsintown)
+                                    .then(() => {
+                                      toast({
+                                        title: "API Key Saved",
+                                        description: "Your Bandsintown API key has been saved successfully."
+                                      });
+                                    })
+                                    .catch(error => {
+                                      toast({
+                                        title: "Error Saving API Key",
+                                        description: error.message || "Could not save the API key",
+                                        variant: "destructive"
+                                      });
+                                    });
+                                });
+                              } else {
+                                toast({
+                                  title: "API Key Required",
+                                  description: "Please enter an API key",
+                                  variant: "destructive"
+                                });
+                              }
+                            }}>Save</Button>
+                          </div>
+                          <div className="mt-4">
+                            <Button 
+                              variant="secondary"
+                              onClick={() => {
+                                if (!user?.id) {
+                                  toast({
+                                    title: "Error",
+                                    description: "No venue ID available",
+                                    variant: "destructive"
+                                  });
+                                  return;
+                                }
+                                
+                                toast({
+                                  title: "Sync Started",
+                                  description: "Venue sync with Bandsintown has been initiated."
+                                });
+                                
+                                import('@/lib/api').then(api => {
+                                  api.triggerVenueSync(user.id, 250, 10)
+                                    .then(() => {
+                                      toast({
+                                        title: "Sync Requested",
+                                        description: "The sync process is running in the background."
+                                      });
+                                    })
+                                    .catch(error => {
+                                      // Check if the error is related to missing API key
+                                      if (error.message?.includes('Bandsintown API key')) {
+                                        // Ask the user to check their API key
+                                        toast({
+                                          title: "API Key Required",
+                                          description: "Please set your Bandsintown API key first",
+                                          variant: "destructive"
+                                        });
+                                      } else {
+                                        toast({
+                                          title: "Sync Failed",
+                                          description: error.message || "Could not start venue sync",
+                                          variant: "destructive"
+                                        });
+                                      }
+                                    });
+                                });
+                              }}
+                            >
+                              Sync Venue Network Data
+                            </Button>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Discovers nearby venues and adds them to your network
+                            </p>
                           </div>
                         </div>
                       </div>

@@ -162,4 +162,19 @@ export const getCollaborativeOpportunitiesByVenue = async (
   return res.json();
 };
 
+// Admin operations
+export const triggerVenueSync = async (venueId: number, radius?: number, limit?: number) => {
+  const res = await apiRequest('POST', '/api/admin/sync-venues', {
+    venueId,
+    radius,
+    limit
+  });
+  return res.json();
+};
+
+export const saveBandsintownApiKey = async (apiKey: string) => {
+  const res = await apiRequest('POST', '/api/admin/api-keys/bandsintown', { apiKey });
+  return res.json();
+};
+
 // All mock data has been moved to the database
