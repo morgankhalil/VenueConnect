@@ -2,16 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Leaflet map styles */
-.leaflet-container {
+/* Map container styles */
+.mapboxgl-map {
   height: 100%;
   width: 100%;
 }
 
-.custom-venue-marker {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Custom marker styles */
+.mapboxgl-popup {
+  max-width: 200px;
+  font-family: 'Inter', sans-serif;
+}
+
+.mapboxgl-popup-content {
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.mapboxgl-popup-content h3 {
+  font-weight: 600;
+  margin: 0 0 5px 0;
 }
 
 @layer base {
