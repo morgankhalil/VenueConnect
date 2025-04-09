@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { X } from "lucide-react";
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 
 interface MainLayoutProps {
@@ -64,9 +64,24 @@ export function MainLayout({ children }: MainLayoutProps) {
     // Implement search functionality
   };
 
-  const handleLogout = () => {
-    console.log("Logging out");
-    // Implement logout functionality
+  const queryClient = useQueryClient();
+  
+  const handleLogout = async () => {
+    try {
+      const response = await apiRequest('/api/auth/logout', { 
+        method: 'POST' 
+      });
+      
+      if (response.success) {
+        // Clear any cached data in React Query
+        queryClient.clear();
+        
+        // Redirect to home page or login page
+        window.location.href = '/';
+      }
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
   };
 
   return (

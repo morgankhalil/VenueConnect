@@ -268,6 +268,21 @@ router.get('/api/venues/:id', async (req, res) => {
   }
 });
 
+// Logout route
+router.post("/api/auth/logout", (req, res) => {
+  if (req.session) {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Error destroying session:", err);
+        return res.status(500).json({ success: false, message: "Could not log out" });
+      }
+      res.json({ success: true, message: "Logged out successfully" });
+    });
+  } else {
+    res.json({ success: true, message: "No session to destroy" });
+  }
+});
+
 // Get current user
 router.get("/api/user", async (req, res) => {
   try {
