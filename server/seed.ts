@@ -25,6 +25,21 @@ async function seed() {
       role: 'venue_manager'
     }).returning();
 
+    const artistData = [
+      { name: 'Luna Eclipse', genres: ['indie', 'rock'], popularity: 89 },
+      { name: 'Cosmic Drift', genres: ['electronic'], popularity: 85 },
+      { name: 'Rhythm Collective', genres: ['jazz'], popularity: 92 },
+      { name: 'Synthwave Pioneers', genres: ['electronic'], popularity: 88 },
+      { name: 'Ember & Oak', genres: ['folk'], popularity: 83 },
+      { name: 'Fleet Foxes', genres: ['indie', 'folk'], popularity: 91 },
+      { name: 'Japanese Breakfast', genres: ['indie', 'pop'], popularity: 87 },
+      { name: 'Khruangbin', genres: ['rock', 'world'], popularity: 86 },
+      { name: 'The National', genres: ['indie', 'rock'], popularity: 90 },
+      { name: 'Big Thief', genres: ['indie', 'folk'], popularity: 88 }
+    ];
+
+    const insertedArtists = await db.insert(artists).values(artistData).returning();
+
     // Insert demo venues
     const venueData = [
       {
