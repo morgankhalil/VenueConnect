@@ -320,35 +320,173 @@ export default function Discover() {
                 </div>
               )}
               
-              {/* Timeline View */}
+              {/* Enhanced Timeline View */}
               <div className="p-4 border-b">
-                <h3 className="text-base font-medium mb-2">Opportunity Timeline</h3>
-                <div className="h-20 bg-gray-50 rounded-md relative overflow-hidden">
-                  {/* Timeline display would go here */}
-                  <div className="flex items-end h-full p-2">
-                    {/* Timeline markers for each opportunity */}
-                    {filteredOpportunities?.map((opp, index) => (
-                      <div 
-                        key={opp.id}
-                        className={`mx-1 rounded-t-sm w-4 cursor-pointer ${
-                          opp.isTourOpportunity ? 'bg-blue-500' : 'bg-green-500'
-                        }`}
-                        style={{ 
-                          height: `${((opp.confidenceScore || 70) / 100) * 80}%`, 
-                          minHeight: '20%'
-                        }}
-                        title={`${opp.artist.name} - ${new Date(opp.suggestedDate).toLocaleDateString()}`}
-                        onClick={() => handleViewDetails(opp)}
-                      />
-                    ))}
-                    
-                    {filteredOpportunities?.length === 0 && (
-                      <div className="text-sm text-gray-400 w-full h-full flex items-center justify-center">
-                        No opportunities in selected time period
-                      </div>
-                    )}
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-base font-medium">Opportunity Timeline</h3>
+                  <div className="flex items-center space-x-4 text-xs">
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-green-500 rounded-sm mr-1"></div>
+                      <span>Individual</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-blue-500 rounded-sm mr-1"></div>
+                      <span>Tour</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-red-500 rounded-sm mr-1"></div>
+                      <span>Gaps</span>
+                    </div>
                   </div>
                 </div>
+                
+                <div className="h-32 bg-gray-50 rounded-md relative overflow-hidden border">
+                  {/* Month labels */}
+                  <div className="absolute top-0 left-0 right-0 flex justify-between px-4 py-1 bg-gray-100 text-xs text-gray-500 border-b">
+                    <span>Apr</span>
+                    <span>May</span>
+                    <span>Jun</span>
+                    <span>Jul</span>
+                    <span>Aug</span>
+                  </div>
+                  
+                  {/* Timeline grid */}
+                  <div className="absolute top-6 bottom-0 left-0 right-0">
+                    <div className="relative w-full h-full">
+                      {/* Grid lines */}
+                      <div className="grid grid-cols-5 h-full">
+                        {[0, 1, 2, 3, 4].map(i => (
+                          <div key={i} className="border-r border-gray-200 h-full"></div>
+                        ))}
+                      </div>
+                      
+                      {/* Timeline content */}
+                      <div className="absolute inset-0 p-2">
+                        {selectedTour && (
+                          <>
+                            {/* Tour date range indicator */}
+                            <div 
+                              className="absolute h-6 bg-blue-100 opacity-30 rounded-sm"
+                              style={{ 
+                                left: '5%', 
+                                width: '35%', 
+                                top: '0%' 
+                              }}
+                            ></div>
+                            
+                            {/* Tour stops */}
+                            {selectedTour.events.filter(e => !e.isRoutingOpportunity).map((event, i) => (
+                              <div 
+                                key={`tour-stop-${i}`}
+                                className="absolute w-3 h-3 bg-blue-600 rounded-full border-2 border-white z-10"
+                                style={{ 
+                                  left: `${5 + i * 8}%`, 
+                                  top: '3%',
+                                  transform: 'translate(-50%, -50%)'
+                                }}
+                                title={`${event.venue} - ${new Date(event.date).toLocaleDateString()}`}
+                              ></div>
+                            ))}
+                            
+                            {/* Routing gaps */}
+                            {selectedTour.events.filter(e => e.isRoutingOpportunity).map((gap, i) => (
+                              <div 
+                                key={`tour-gap-${i}`}
+                                className="absolute flex flex-col items-center"
+                                style={{ 
+                                  left: `${15 + i * 10}%`, 
+                                  top: '6%',
+                                }}
+                              >
+                                <div 
+                                  className="w-3 h-5 bg-red-500 rounded-sm cursor-pointer"
+                                  title={`Routing gap: ${gap.venue} - ${new Date(gap.date).toLocaleDateString()}`}
+                                  onClick={() => {
+                                    // Find corresponding opportunity
+                                    const oppTour = combinedOpportunities.find(o => 
+                                      o.isTourOpportunity && 
+                                      o.tourId === selectedTour.id && 
+                                      o.suggestedDate === gap.date
+                                    );
+                                    if (oppTour) handleViewDetails(oppTour);
+                                  }}
+                                ></div>
+                                <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-red-500"></div>
+                              </div>
+                            ))}
+                          </>
+                        )}
+                        
+                        {/* Individual opportunities */}
+                        {filteredOpportunities
+                          ?.filter(opp => !opp.isTourOpportunity)
+                          .map((opp, index) => {
+                            // Position based on date - this would need real date math in production
+                            // For demo, we'll just space them out
+                            const leftPos = `${10 + (index * 15) % 80}%`;
+                            const topPos = `${40 + (index * 15) % 40}%`;
+                          
+                            return (
+                              <div 
+                                key={opp.id}
+                                className="absolute"
+                                style={{ 
+                                  left: leftPos,
+                                  top: topPos
+                                }}
+                              >
+                                <div 
+                                  className="w-4 h-4 bg-green-500 rounded-full shadow-sm cursor-pointer transform hover:scale-110 transition-transform"
+                                  title={`${opp.artist.name} - ${new Date(opp.suggestedDate).toLocaleDateString()}`}
+                                  onClick={() => handleViewDetails(opp)}
+                                ></div>
+                              </div>
+                            );
+                          })
+                        }
+                        
+                        {/* Tour opportunities */}
+                        {filteredOpportunities
+                          ?.filter(opp => opp.isTourOpportunity)
+                          .map((opp, index) => {
+                            // Position based on date - this would need real date math in production
+                            // For demo, we'll just space them out
+                            const leftPos = `${20 + (index * 12) % 70}%`;
+                            
+                            return (
+                              <div 
+                                key={opp.id}
+                                className="absolute"
+                                style={{ 
+                                  left: leftPos,
+                                  top: '25%' 
+                                }}
+                              >
+                                <div 
+                                  className="w-4 h-4 bg-blue-500 rounded-full shadow-sm cursor-pointer transform hover:scale-110 transition-transform"
+                                  title={`${opp.artist.name} - ${opp.tourName} - ${new Date(opp.suggestedDate).toLocaleDateString()}`}
+                                  onClick={() => handleViewDetails(opp)}
+                                ></div>
+                              </div>
+                            );
+                          })
+                        }
+                        
+                        {filteredOpportunities?.length === 0 && !selectedTour && (
+                          <div className="flex items-center justify-center h-full text-sm text-gray-400">
+                            No opportunities in selected time period
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {selectedTour && (
+                  <div className="mt-2 text-xs text-gray-500 italic">
+                    <span className="text-blue-600 font-medium">Pro tip:</span> Blue dots are confirmed tour dates, red markers show routing gaps where your venue could fit into the tour schedule.
+                  </div>
+                )}
               </div>
               
               {/* Opportunity Cards */}
