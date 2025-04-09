@@ -128,6 +128,23 @@ router.get('/messages', async (req, res) => {
 });
 
 // Venue Network
+router.post('/venue-network', async (req, res) => {
+  const { venueId, connectedVenueId, status, trustScore, collaborativeBookings } = req.body;
+  
+  try {
+    const result = await db.insert(venueNetwork).values({
+      venueId,
+      connectedVenueId,
+      status,
+      trustScore,
+      collaborativeBookings
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: "Failed to create connection" });
+  }
+});
+
 router.get('/venue-network/graph/:id', async (req, res) => {
   const venueId = parseInt(req.params.id);
   
