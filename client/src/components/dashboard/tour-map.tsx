@@ -7,32 +7,17 @@ import {
   calculateCenter, 
   calculateZoom, 
   venueMarkerColors, 
-  routeLineStyle,
-  mapboxToken
+  routeLineStyle
 } from "@/lib/mapUtils";
 import { MapEvent } from "@/types";
 import { Plus, Minus } from "lucide-react";
 
-// Type declaration for mapboxgl
+// Using mapboxgl from CDN included in index.html
 declare global {
   interface Window {
     mapboxgl: any;
   }
 }
-
-type MapboxMap = {
-  remove: () => void;
-  on: (event: string, handler: () => void) => void;
-  getLayer: (id: string) => any;
-  removeLayer: (id: string) => void;
-  getSource: (id: string) => any;
-  removeSource: (id: string) => void;
-  addSource: (id: string, config: any) => void;
-  addLayer: (layer: any) => void;
-  flyTo: (options: any) => void;
-  zoomIn: () => void;
-  zoomOut: () => void;
-};
 
 interface TourMapProps {
   events: MapEvent[];
@@ -52,123 +37,72 @@ export function TourMap({
   onDateRangeFilterChange
 }: TourMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const [map, setMap] = useState<MapboxMap | null>(null);
+  const [map, setMap] = useState<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [tokenLoading, setTokenLoading] = useState(true);
-  const [tokenFetched, setTokenFetched] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load MapBox script dynamically
-    const script = document.createElement('script');
-    script.src = 'https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js';
-    script.async = true;
-    document.head.appendChild(script);
-
-    const link = document.createElement('link');
-    link.href = 'https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-
-    // Fetch token from API
     let isMounted = true;
-    let localMapboxToken = "";
     
-    // Helper function to initialize map once token is available
-    const initializeMap = () => {
-      if (!mapContainerRef.current || map || !isMounted) return;
-      
-      // Initialize MapBox
-      // @ts-ignore - mapboxgl will be available after script load
-      window.mapboxgl.accessToken = localMapboxToken;
-      
+    const loadMapbox = async () => {
       try {
-        // @ts-ignore - mapboxgl will be available after script load
-        const mapInstance = new window.mapboxgl.Map({
-          container: mapContainerRef.current,
-          style: 'mapbox://styles/mapbox/light-v10',
-          center: defaultMapCenter,
-          zoom: defaultMapZoom
-        });
-
-        mapInstance.on('load', () => {
-          if (isMounted) {
-            setMapLoaded(true);
-          }
-        });
-
-        if (isMounted) {
-          setMap(mapInstance);
-          setTokenFetched(true);
-          setTokenLoading(false);
-        }
-      } catch (err) {
-        console.error("Error initializing map:", err);
-        setTokenLoading(false);
-      }
-    };
-    
-    // Wait for both script to load and token to be fetched
-    const fetchToken = async () => {
-      try {
+        // Fetch token from API
         console.log("Fetching Mapbox token...");
         const response = await fetch('/api/mapbox-token');
         const data = await response.json();
-        console.log("Token response:", data);
+        const token = data.token;
         
-        if (isMounted) {
-          localMapboxToken = data.token || "";
+        if (!token) {
+          throw new Error("No Mapbox token received from API");
+        }
+        
+        console.log("Token received, initializing map...");
+        
+        // Initialize map with token
+        if (mapContainerRef.current && isMounted) {
+          const mapInstance = new window.mapboxgl.Map({
+            container: mapContainerRef.current,
+            style: 'mapbox://styles/mapbox/light-v10',
+            center: defaultMapCenter,
+            zoom: defaultMapZoom,
+            accessToken: token  // Pass token directly to the Map constructor
+          });
           
-          if (localMapboxToken) {
-            console.log("Token received, length:", localMapboxToken.length);
-            // Wait for a short time to ensure script has time to load
-            setTimeout(() => {
-              if (window.mapboxgl) {
-                console.log("mapboxgl is available, initializing map...");
-                initializeMap();
-              } else {
-                console.log("mapboxgl is not available yet, waiting for script load...");
-                // Set a listener for when mapboxgl becomes available
-                const checkMapboxInterval = setInterval(() => {
-                  if (window.mapboxgl) {
-                    console.log("mapboxgl became available, initializing map...");
-                    clearInterval(checkMapboxInterval);
-                    initializeMap();
-                  }
-                }, 100);
-                
-                // Clear interval after 10 seconds to prevent infinite checking
-                setTimeout(() => clearInterval(checkMapboxInterval), 10000);
-              }
-            }, 500);
-          } else {
-            console.log("Empty token received");
-            setTokenLoading(false);
-          }
+          mapInstance.on('load', () => {
+            if (isMounted) {
+              console.log("Map loaded successfully");
+              setMapLoaded(true);
+              setIsLoading(false);
+            }
+          });
+          
+          mapInstance.on('error', (e: any) => {
+            console.error("Mapbox error:", e);
+            if (isMounted) {
+              setError(`Map error: ${e.error?.message || 'Unknown error'}`);
+              setIsLoading(false);
+            }
+          });
+          
+          setMap(mapInstance);
         }
       } catch (err) {
-        console.error("Error fetching Mapbox token:", err);
-        setTokenLoading(false);
+        console.error("Error loading map:", err);
+        if (isMounted) {
+          setError(`Failed to load map: ${err instanceof Error ? err.message : 'Unknown error'}`);
+          setIsLoading(false);
+        }
       }
     };
     
-    fetchToken();
+    // Start loading
+    loadMapbox();
     
-    script.onload = () => {
-      if (localMapboxToken) {
-        initializeMap();
-      }
-    };
-
     return () => {
       isMounted = false;
       if (map) {
         map.remove();
-      }
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
-      }
-      if (document.head.contains(link)) {
-        document.head.removeChild(link);
       }
     };
   }, []);
@@ -213,7 +147,6 @@ export function TourMap({
         }
         
         // Create popup with event details
-        // @ts-ignore - mapboxgl will be available
         const popup = new window.mapboxgl.Popup({ offset: 25 }).setHTML(`
           <strong>${artist}</strong><br/>
           ${venue}<br/>
@@ -221,7 +154,6 @@ export function TourMap({
         `);
         
         // Add marker to map
-        // @ts-ignore - mapboxgl will be available
         const marker = new window.mapboxgl.Marker(markerEl)
           .setLngLat([longitude, latitude])
           .setPopup(popup)
@@ -246,8 +178,7 @@ export function TourMap({
       
       // Add the route line to the map
       if (map.getSource('route')) {
-        // @ts-ignore - source type is valid
-        map.getSource('route').setData({
+        (map.getSource('route') as any).setData({
           type: 'Feature',
           properties: {},
           geometry: {
@@ -346,10 +277,15 @@ export function TourMap({
         </div>
         
         <div className="relative h-96 rounded-lg overflow-hidden bg-gray-50">
-          {tokenLoading || !tokenFetched ? (
+          {isLoading ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
-              <p className="text-gray-500 mb-2">Waiting for Mapbox token...</p>
-              <p className="text-sm text-gray-400">The map will display routing opportunities between venues once configured.</p>
+              <p className="text-gray-500 mb-2">Loading map...</p>
+              <p className="text-sm text-gray-400">The map will display routing opportunities between venues once loaded.</p>
+            </div>
+          ) : error ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
+              <p className="text-red-500 mb-2">Error loading map</p>
+              <p className="text-sm text-gray-600">{error}</p>
             </div>
           ) : (
             <>

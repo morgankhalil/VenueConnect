@@ -292,7 +292,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/mapbox-token", (_, res) => {
     // Send the Mapbox token from environment variables
     // This keeps the token secure by not exposing it directly in client code
-    res.json({ token: process.env.MAPBOX_TOKEN || "" });
+    const token = process.env.MAPBOX_TOKEN;
+    console.log("Providing Mapbox token:", token ? `${token.substring(0, 5)}...` : "not found");
+    res.json({ token: token || "" });
   });
 
   // Create HTTP server
