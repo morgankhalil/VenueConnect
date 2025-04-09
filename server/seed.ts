@@ -1,9 +1,11 @@
+
 import { db } from './db';
 import { 
   users, venues, artists, events, predictions, inquiries, 
   venueNetwork, collaborativeOpportunities, collaborativeParticipants,
   webhookConfigurations
 } from '../shared/schema';
+import { syncArtistFromBandsInTown } from './data-sync/bands-in-town-sync';
 
 async function seed() {
   try {
@@ -56,9 +58,6 @@ async function seed() {
       email: 'admin@example.com',
       role: 'admin'
     }).returning();
-
-    // Import real artist data from Bandsintown
-    import { syncArtistFromBandsInTown } from './data-sync/bands-in-town-sync';
     
     // Sync some real artists that commonly play at Bug Jar
     const artistNames = [
@@ -146,7 +145,7 @@ async function seed() {
       {
         artistId: sampleArtists[0].id,
         venueId: venue.id,
-        date: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15).toISOString().split('T')[0], // 15th of current month
+        date: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15).toISOString().split('T')[0],
         startTime: '20:00',
         status: 'confirmed',
         ticketUrl: 'https://tickets.example.com/event1'
@@ -154,7 +153,7 @@ async function seed() {
       {
         artistId: sampleArtists[1].id,
         venueId: venue.id,
-        date: new Date(currentDate.getFullYear(), currentDate.getMonth(), 22).toISOString().split('T')[0], // 22nd of current month
+        date: new Date(currentDate.getFullYear(), currentDate.getMonth(), 22).toISOString().split('T')[0],
         startTime: '19:30',
         status: 'confirmed',
         ticketUrl: 'https://tickets.example.com/event2'
@@ -162,7 +161,7 @@ async function seed() {
       {
         artistId: sampleArtists[2].id,
         venueId: venue.id,
-        date: new Date(nextMonth.getFullYear(), nextMonth.getMonth(), 5).toISOString().split('T')[0], // 5th of next month
+        date: new Date(nextMonth.getFullYear(), nextMonth.getMonth(), 5).toISOString().split('T')[0],
         startTime: '21:00',
         status: 'hold',
         ticketUrl: null
@@ -170,7 +169,7 @@ async function seed() {
       {
         artistId: sampleArtists[0].id,
         venueId: networkVenues[0].id,
-        date: new Date(nextMonth.getFullYear(), nextMonth.getMonth(), 7).toISOString().split('T')[0], // 7th of next month
+        date: new Date(nextMonth.getFullYear(), nextMonth.getMonth(), 7).toISOString().split('T')[0],
         startTime: '20:00',
         status: 'opportunity',
         ticketUrl: null
@@ -182,7 +181,7 @@ async function seed() {
       {
         artistId: sampleArtists[2].id,
         venueId: venue.id,
-        suggestedDate: new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 10).toISOString().split('T')[0], // 10th of month after next
+        suggestedDate: new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 10).toISOString().split('T')[0],
         confidenceScore: 87,
         status: 'pending',
         reasoning: 'Based on similar artists performing well at this venue and regional touring patterns'
@@ -190,7 +189,7 @@ async function seed() {
       {
         artistId: sampleArtists[1].id,
         venueId: networkVenues[1].id,
-        suggestedDate: new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 15).toISOString().split('T')[0], // 15th of month after next
+        suggestedDate: new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 15).toISOString().split('T')[0],
         confidenceScore: 92,
         status: 'pending',
         reasoning: 'High match based on venue capacity, genre alignment, and previous ticket sales in the region'
