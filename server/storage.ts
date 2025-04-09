@@ -7,7 +7,8 @@ import {
   predictions, type Prediction, type InsertPrediction,
   inquiries, type Inquiry, type InsertInquiry,
   collaborativeOpportunities, type CollaborativeOpportunity, type InsertCollaborativeOpportunity,
-  collaborativeParticipants, type CollaborativeParticipant, type InsertCollaborativeParticipant
+  collaborativeParticipants, type CollaborativeParticipant, type InsertCollaborativeParticipant,
+  networkAgents, type NetworkAgent, type InsertNetworkAgent
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, like, desc, SQL } from "drizzle-orm";
@@ -58,6 +59,14 @@ export interface IStorage {
   // Collaborative Participant methods
   addCollaborativeParticipant(participant: InsertCollaborativeParticipant): Promise<CollaborativeParticipant>;
   getCollaborativeParticipantsByOpportunity(opportunityId: number): Promise<CollaborativeParticipant[]>;
+  
+  // Network Agent methods
+  createNetworkAgent(agent: InsertNetworkAgent): Promise<NetworkAgent>;
+  getNetworkAgentsByVenue(venueId: number): Promise<NetworkAgent[]>;
+  getNetworkAgent(id: number): Promise<NetworkAgent | undefined>;
+  updateNetworkAgent(id: number, agent: Partial<InsertNetworkAgent>): Promise<NetworkAgent | undefined>;
+  deleteNetworkAgent(id: number): Promise<void>;
+  updateAgentLastRun(id: number): Promise<NetworkAgent | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -228,6 +237,47 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(collaborativeParticipants)
       .where(eq(collaborativeParticipants.opportunityId, opportunityId));
+  }
+  
+  // Network Agent methods
+  async createNetworkAgent(agent: InsertNetworkAgent): Promise<NetworkAgent> {
+    const [newAgent] = await db.insert(networkAgents).values(agent).returning();
+    return newAgent;
+  }
+  
+  async getNetworkAgentsByVenue(venueId: number): Promise<NetworkAgent[]> {
+    return await db
+      .select()
+      .from(networkAgents)
+      .where(eq(networkAgents.venueId, venueId))
+      .orderBy(desc(networkAgents.lastRun));
+  }
+  
+  async getNetworkAgent(id: number): Promise<NetworkAgent | undefined> {
+    const [agent] = await db.select().from(networkAgents).where(eq(networkAgents.id, id));
+    return agent;
+  }
+  
+  async updateNetworkAgent(id: number, agent: Partial<InsertNetworkAgent>): Promise<NetworkAgent | undefined> {
+    const [updatedAgent] = await db
+      .update(networkAgents)
+      .set(agent)
+      .where(eq(networkAgents.id, id))
+      .returning();
+    return updatedAgent;
+  }
+  
+  async deleteNetworkAgent(id: number): Promise<void> {
+    await db.delete(networkAgents).where(eq(networkAgents.id, id));
+  }
+  
+  async updateAgentLastRun(id: number): Promise<NetworkAgent | undefined> {
+    const [updatedAgent] = await db
+      .update(networkAgents)
+      .set({ lastRun: new Date() })
+      .where(eq(networkAgents.id, id))
+      .returning();
+    return updatedAgent;
   }
 }
 

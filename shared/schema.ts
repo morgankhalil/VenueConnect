@@ -128,6 +128,23 @@ export const collaborativeParticipants = pgTable("collaborative_participants", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// NetworkAgent types enum
+export const agentTypeEnum = pgEnum("agent_type", [
+  "booking", "network_growth", "opportunity"
+]);
+
+// NetworkAgents table
+export const networkAgents = pgTable("network_agents", {
+  id: serial("id").primaryKey(),
+  venueId: integer("venue_id").references(() => venues.id).notNull(),
+  name: text("name").notNull(),
+  type: agentTypeEnum("type").notNull(),
+  isActive: boolean("is_active").default(true),
+  config: jsonb("config"),
+  lastRun: timestamp("last_run"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   venues: many(venues),
@@ -142,6 +159,7 @@ export const venuesRelations = relations(venues, ({ one, many }) => ({
   predictionsAsVenue: many(predictions),
   venueConnections: many(venueNetwork, { relationName: "venueConnections" }),
   connectedByVenues: many(venueNetwork, { relationName: "connectedByVenues" }),
+  agents: many(networkAgents),
 }));
 
 export const artistsRelations = relations(artists, ({ many }) => ({
@@ -226,6 +244,13 @@ export const collaborativeParticipantsRelations = relations(collaborativePartici
   }),
 }));
 
+export const networkAgentsRelations = relations(networkAgents, ({ one }) => ({
+  venue: one(venues, {
+    fields: [networkAgents.venueId],
+    references: [venues.id],
+  }),
+}));
+
 // Insert Schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -272,6 +297,12 @@ export const insertCollaborativeParticipantSchema = createInsertSchema(collabora
   createdAt: true,
 });
 
+export const insertNetworkAgentSchema = createInsertSchema(networkAgents).omit({
+  id: true,
+  createdAt: true,
+  lastRun: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -299,3 +330,6 @@ export type InsertCollaborativeOpportunity = z.infer<typeof insertCollaborativeO
 
 export type CollaborativeParticipant = typeof collaborativeParticipants.$inferSelect;
 export type InsertCollaborativeParticipant = z.infer<typeof insertCollaborativeParticipantSchema>;
+
+export type NetworkAgent = typeof networkAgents.$inferSelect;
+export type InsertNetworkAgent = z.infer<typeof insertNetworkAgentSchema>;

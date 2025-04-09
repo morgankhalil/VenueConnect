@@ -2,7 +2,7 @@ import { apiRequest } from './queryClient';
 import { 
   Venue, Artist, Event, VenueNetwork, Prediction, 
   Inquiry, CollaborativeOpportunity, CollaborativeOpportunityWithDetails, 
-  PredictionWithDetails, StatsData, MapEvent, VenueNetworkData
+  PredictionWithDetails, StatsData, MapEvent, VenueNetworkData, NetworkAgent
 } from '@/types';
 
 // Venues
@@ -128,6 +128,36 @@ export const getCollaborativeOpportunitiesByVenue = async (
     `/api/venues/${venueId}/collaborative-opportunities`,
     undefined
   );
+  return res.json();
+};
+
+// Network Agent methods
+export const getNetworkAgents = async (venueId: number): Promise<NetworkAgent[]> => {
+  const res = await apiRequest('GET', `/api/venues/${venueId}/agents`, undefined);
+  return res.json();
+};
+
+export const getNetworkAgent = async (id: number): Promise<NetworkAgent> => {
+  const res = await apiRequest('GET', `/api/agents/${id}`, undefined);
+  return res.json();
+};
+
+export const createNetworkAgent = async (agent: Omit<NetworkAgent, 'id' | 'createdAt' | 'lastRun'>): Promise<NetworkAgent> => {
+  const res = await apiRequest('POST', '/api/agents', agent);
+  return res.json();
+};
+
+export const updateNetworkAgent = async (id: number, updates: Partial<NetworkAgent>): Promise<NetworkAgent> => {
+  const res = await apiRequest('PATCH', `/api/agents/${id}`, updates);
+  return res.json();
+};
+
+export const deleteNetworkAgent = async (id: number): Promise<void> => {
+  await apiRequest('DELETE', `/api/agents/${id}`, undefined);
+};
+
+export const runNetworkAgent = async (id: number): Promise<{ success: boolean; message: string }> => {
+  const res = await apiRequest('POST', `/api/agents/${id}/run`, undefined);
   return res.json();
 };
 

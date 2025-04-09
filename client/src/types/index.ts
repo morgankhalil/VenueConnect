@@ -156,3 +156,14 @@ export interface VenueNetworkData {
     value: number;
   }>;
 }
+
+export interface NetworkAgent {
+  id: number;
+  venueId: number;
+  name: string;
+  type: 'booking' | 'network_growth' | 'opportunity';
+  isActive: boolean;
+  config: any; // Record<string, any>;
+  lastRun: string | null;
+  createdAt: string;
+}

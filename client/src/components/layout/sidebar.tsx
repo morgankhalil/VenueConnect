@@ -8,7 +8,8 @@ import {
   Network, 
   MessageSquare, 
   Settings, 
-  MusicIcon
+  MusicIcon,
+  Bot
 } from "lucide-react";
 
 interface SidebarProps {
@@ -35,6 +36,7 @@ export function Sidebar({
     { name: "Calendar", href: "/calendar", icon: Calendar },
     { name: "Discover", href: "/discover", icon: Compass },
     { name: "Venue Network", href: "/venue-network", icon: Network },
+    { name: "Network Agents", href: "/agents", icon: Bot },
     { name: "Messages", href: "/messages", icon: MessageSquare },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
