@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -10,9 +10,42 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Settings() {
   const { toast } = useToast();
+  const [formValues, setFormValues] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    role: "manager"
+  });
+  
+  // Get user data from API
+  const { data: user, isLoading: isLoadingUser, error: userError } = useQuery({
+    queryKey: ['/api/user'],
+    queryFn: () => apiRequest('GET', '/api/user').then(res => res.json())
+  });
+
+  // Get venue data from API
+  const { data: venue, isLoading: isLoadingVenue } = useQuery({
+    queryKey: ['/api/venues/14'], // Using venue ID from user
+    queryFn: () => apiRequest('GET', `/api/venues/14`).then(res => res.json()),
+    enabled: !!user // Only run this query if user data exists
+  });
+  
+  // Update form values when user data is loaded
+  React.useEffect(() => {
+    if (user) {
+      setFormValues({
+        name: user.name || "",
+        email: user.email || user.contactEmail || "",
+        phone: user.contactPhone || "",
+        role: user.role || "manager"
+      });
+    }
+  }, [user]);
   
   const handleSave = () => {
     toast({
@@ -28,6 +61,23 @@ export default function Settings() {
       variant: "destructive"
     });
   };
+  
+  // Show loading state
+  if (isLoadingUser || isLoadingVenue) {
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
+  
+  // Show error state  
+  if (userError) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-lg font-semibold text-red-600">Error loading user data</h2>
+          <p className="text-gray-600">Please try refreshing the page</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-6">
@@ -56,8 +106,10 @@ export default function Settings() {
                   <div className="space-y-2">
                     <div className="flex items-center space-x-4">
                       <Avatar className="h-20 w-20">
-                        <AvatarImage src={undefined} />
-                        <AvatarFallback className="text-lg">AJ</AvatarFallback>
+                        <AvatarImage src={user?.avatar} />
+                        <AvatarFallback className="text-lg">
+                          {user?.name ? user.name.substring(0, 2).toUpperCase() : "U"}
+                        </AvatarFallback>
                       </Avatar>
                       <div>
                         <Button variant="outline" size="sm">
@@ -73,19 +125,36 @@ export default function Settings() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name</Label>
-                      <Input id="name" defaultValue="Alex Johnson" />
+                      <Input 
+                        id="name" 
+                        value={formValues.name} 
+                        onChange={(e) => setFormValues({...formValues, name: e.target.value})}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
-                      <Input id="email" type="email" defaultValue="alex@echo-lounge.com" />
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        value={formValues.email}
+                        onChange={(e) => setFormValues({...formValues, email: e.target.value})}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone Number</Label>
-                      <Input id="phone" type="tel" defaultValue="(555) 123-4567" />
+                      <Input 
+                        id="phone" 
+                        type="tel" 
+                        value={formValues.phone}
+                        onChange={(e) => setFormValues({...formValues, phone: e.target.value})}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="role">Role</Label>
-                      <Select defaultValue="manager">
+                      <Select 
+                        value={formValues.role}
+                        onValueChange={(value) => setFormValues({...formValues, role: value})}
+                      >
                         <SelectTrigger id="role">
                           <SelectValue placeholder="Select your role" />
                         </SelectTrigger>
@@ -174,7 +243,7 @@ export default function Settings() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="venue-name">Venue Name</Label>
-                      <Input id="venue-name" defaultValue="The Echo Lounge" />
+                      <Input id="venue-name" defaultValue={user?.venueName || ""} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="venue-address">Address</Label>
