@@ -425,8 +425,22 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
       if (!artist.name) continue;
       
       const apiEndpoint = `https://rest.bandsintown.com/artists/${encodeURIComponent(artist.name)}/events`;
-    
-    console.log(`Querying BandsInTown API for ${artistName} events near ${sourceVenue[0].name}`);
+      
+      console.log(`Querying BandsInTown API for ${artist.name} events near ${sourceVenue[0].name}`);
+      
+      try {
+        const response = await axios.get(apiEndpoint, {
+          params: { app_id: apiKey },
+          headers: { 'Accept': 'application/json' }
+        });
+        
+        if (response.data && Array.isArray(response.data)) {
+          eventsData.push(...response.data);
+        }
+      } catch (error) {
+        console.error(`Error fetching events for artist ${artist.name}:`, error);
+      }
+    }
     
     // Bandsintown API primarily uses app_id as the authentication method
     const params: Record<string, any> = {
