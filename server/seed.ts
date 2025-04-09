@@ -4,15 +4,24 @@ import { users, venues, artists, events, predictions, venueNetwork, collaborativ
 
 async function seed() {
   try {
-    // Insert demo user
-    const [user] = await db.insert(users).values({
-      username: 'demo',
-      password: 'demo123', // In production, this should be hashed
-      name: 'Demo User',
-      email: 'demo@example.com',
-      role: 'venue_manager'
-    }).returning();
+    // Get or create demo user
+    let user = (await db.select().from(users).where(eq(users.username, 'demo')))[0];
+    
+    if (!user) {
+      [user] = await db.insert(users).values({
+        username: 'demo',
+        password: 'demo123', // In production, this should be hashed
+        name: 'Demo User',
+        email: 'demo@example.com',
+        role: 'venue_manager'
+      }).returning();
+    }
 
+    // Clear existing demo data
+    await db.delete(events);
+    await db.delete(venues);
+    await db.delete(artists);
+    
     // Insert demo venues
     const venueData = [
       {
