@@ -120,9 +120,24 @@ export interface MapEvent {
   longitude: number;
   artist: string;
   venue: string;
+  city?: string;
   date: string;
+  time?: string;
   isCurrentVenue: boolean;
   isRoutingOpportunity: boolean;
+}
+
+export interface TourGroup {
+  id: number;
+  name: string;
+  artistName: string;
+  genre: string;
+  totalShows: number;
+  confirmedShows: number;
+  startDate: string;
+  endDate: string;
+  region: string;
+  events: MapEvent[];
 }
 
 export interface VenueNetworkData {

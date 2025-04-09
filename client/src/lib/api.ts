@@ -515,6 +515,206 @@ export const getMockVenueNetworkData = (): VenueNetworkData => {
   };
 };
 
+export const getMockTourGroups = () => {
+  return [
+    {
+      id: 1,
+      name: "West Coast Summer Tour",
+      artistName: "Indie Band",
+      genre: "Indie Rock",
+      totalShows: 6,
+      confirmedShows: 3,
+      startDate: "2023-08-15",
+      endDate: "2023-08-25",
+      region: "West Coast",
+      events: [
+        {
+          id: 1,
+          artist: "Indie Band",
+          venue: "The Fox Theater",
+          city: "Oakland",
+          date: "2023-08-15",
+          time: "20:00",
+          isCurrentVenue: false,
+          isRoutingOpportunity: false,
+          latitude: 37.8136,
+          longitude: -122.2686
+        },
+        {
+          id: 2,
+          artist: "Indie Band",
+          venue: "The Wiltern",
+          city: "Los Angeles",
+          date: "2023-08-18",
+          time: "19:30",
+          isCurrentVenue: false,
+          isRoutingOpportunity: true,
+          latitude: 34.0628,
+          longitude: -118.3093
+        },
+        {
+          id: 3,
+          artist: "Indie Band",
+          venue: "The Fillmore",
+          city: "San Francisco",
+          date: "2023-08-20",
+          time: "20:00",
+          isCurrentVenue: true,
+          isRoutingOpportunity: false,
+          latitude: 37.7841,
+          longitude: -122.4331
+        },
+        {
+          id: 4,
+          artist: "Indie Band",
+          venue: "The Showbox",
+          city: "Seattle",
+          date: "2023-08-25",
+          time: "21:00",
+          isCurrentVenue: false,
+          isRoutingOpportunity: false,
+          latitude: 47.6086,
+          longitude: -122.3394
+        }
+      ]
+    },
+    {
+      id: 2,
+      name: "East Coast Fall Tour",
+      artistName: "Electronic Duo",
+      genre: "Electronic",
+      totalShows: 5,
+      confirmedShows: 4,
+      startDate: "2023-09-10",
+      endDate: "2023-09-22",
+      region: "East Coast",
+      events: [
+        {
+          id: 5,
+          artist: "Electronic Duo",
+          venue: "Paradise Rock Club",
+          city: "Boston",
+          date: "2023-09-10",
+          time: "20:30",
+          isCurrentVenue: false,
+          isRoutingOpportunity: false,
+          latitude: 42.3487,
+          longitude: -71.1198
+        },
+        {
+          id: 6,
+          artist: "Electronic Duo",
+          venue: "Brooklyn Steel",
+          city: "New York",
+          date: "2023-09-12",
+          time: "21:00",
+          isCurrentVenue: false,
+          isRoutingOpportunity: false,
+          latitude: 40.7282,
+          longitude: -73.9442
+        },
+        {
+          id: 7,
+          artist: "Electronic Duo",
+          venue: "Union Transfer",
+          city: "Philadelphia",
+          date: "2023-09-15",
+          time: "19:00",
+          isCurrentVenue: true,
+          isRoutingOpportunity: false,
+          latitude: 39.9613,
+          longitude: -75.1465
+        },
+        {
+          id: 8,
+          artist: "Electronic Duo",
+          venue: "9:30 Club",
+          city: "Washington DC",
+          date: "2023-09-18",
+          time: "20:00",
+          isCurrentVenue: false,
+          isRoutingOpportunity: false,
+          latitude: 38.9181,
+          longitude: -77.0254
+        },
+        {
+          id: 9,
+          artist: "Electronic Duo",
+          venue: "The Orange Peel",
+          city: "Asheville",
+          date: "2023-09-22",
+          time: "20:00",
+          isCurrentVenue: false,
+          isRoutingOpportunity: true,
+          latitude: 35.5933,
+          longitude: -82.5548
+        }
+      ]
+    },
+    {
+      id: 3,
+      name: "Midwest Winter Tour",
+      artistName: "Folk Collective",
+      genre: "Folk",
+      totalShows: 4,
+      confirmedShows: 2,
+      startDate: "2023-11-05",
+      endDate: "2023-11-15",
+      region: "Midwest",
+      events: [
+        {
+          id: 10,
+          artist: "Folk Collective",
+          venue: "The Vic Theatre",
+          city: "Chicago",
+          date: "2023-11-05",
+          time: "19:30",
+          isCurrentVenue: false,
+          isRoutingOpportunity: false,
+          latitude: 41.9397,
+          longitude: -87.6530
+        },
+        {
+          id: 11,
+          artist: "Folk Collective",
+          venue: "First Avenue",
+          city: "Minneapolis",
+          date: "2023-11-08",
+          time: "20:00",
+          isCurrentVenue: false,
+          isRoutingOpportunity: true,
+          latitude: 44.9781,
+          longitude: -93.2763
+        },
+        {
+          id: 12,
+          artist: "Folk Collective",
+          venue: "The Pageant",
+          city: "St. Louis",
+          date: "2023-11-12",
+          time: "19:00",
+          isCurrentVenue: true,
+          isRoutingOpportunity: false,
+          latitude: 38.6557,
+          longitude: -90.3003
+        },
+        {
+          id: 13,
+          artist: "Folk Collective",
+          venue: "Newport Music Hall",
+          city: "Columbus",
+          date: "2023-11-15",
+          time: "19:30",
+          isCurrentVenue: false,
+          isRoutingOpportunity: true,
+          latitude: 39.9956,
+          longitude: -83.0079
+        }
+      ]
+    }
+  ];
+};
+
 export const getMockEventMapData = (): MapEvent[] => {
   return [
     // Current venue

@@ -1,21 +1,56 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { StatsCard } from "@/components/dashboard/stats-card";
-import { TourMap } from "@/components/dashboard/tour-map";
-import { TourTimeline } from "@/components/dashboard/tour-timeline";
+import { TourSelection } from "@/components/dashboard/tour-selection";
+import { TourDetailMap } from "@/components/dashboard/tour-detail-map";
 import { OpportunityCard } from "@/components/dashboard/opportunity-card";
 import { VenueCard } from "@/components/venue-network/venue-card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getMockStatsData, getMockEventMapData, getMockPredictions } from "@/lib/api";
-import { PredictionWithDetails, MapEvent } from "@/types";
+import { Card, CardContent } from "@/components/ui/card";
+import { getMockStatsData, getMockTourGroups, getMockPredictions } from "@/lib/api";
+import { PredictionWithDetails, TourGroup } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { Filter, ArrowUpRight, MapPin, List } from "lucide-react";
+import { Filter, ArrowUpRight, MapPin, BarChart3, List } from "lucide-react";
+
+// Tour Routing Section Component
+function TourRoutingSection() {
+  const [selectedTour, setSelectedTour] = useState<TourGroup | null>(null);
+  
+  // Fetch tour groups
+  const { data: tourGroups, isLoading } = useQuery({
+    queryKey: ['/api/tours'],
+    queryFn: getMockTourGroups
+  });
+  
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-[350px_1fr] gap-4">
+      <TourSelection 
+        tours={tourGroups || []} 
+        onSelectTour={(tour) => setSelectedTour(tour)}
+        selectedTourId={selectedTour?.id || null}
+      />
+      
+      {selectedTour ? (
+        <TourDetailMap 
+          tour={selectedTour} 
+          onClose={() => setSelectedTour(null)}
+        />
+      ) : (
+        <Card>
+          <CardContent className="p-6 text-center flex flex-col items-center justify-center min-h-[400px]">
+            <MapPin className="h-12 w-12 text-gray-300 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900">Select a Tour</h3>
+            <p className="text-gray-500 mt-2 max-w-md">
+              Select a tour from the list to view its routing map and identify opportunities for your venue.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
 
 export default function Dashboard() {
-  const [genreFilter, setGenreFilter] = useState("all");
-  const [dateRangeFilter, setDateRangeFilter] = useState("30");
-  const [selectedEvent, setSelectedEvent] = useState<MapEvent | null>(null);
   const { toast } = useToast();
 
   // Fetch dashboard data
@@ -24,11 +59,7 @@ export default function Dashboard() {
     queryFn: getMockStatsData
   });
 
-  const { data: eventMapData, isLoading: isLoadingMapData } = useQuery({
-    queryKey: ['/api/events/map'],
-    queryFn: getMockEventMapData
-  });
-
+  // Get predictions data for opportunities section
   const { data: predictions, isLoading: isLoadingPredictions } = useQuery({
     queryKey: ['/api/predictions'],
     queryFn: getMockPredictions
@@ -135,41 +166,11 @@ export default function Dashboard() {
           />
         </div>
         
-        {/* Tour Routing View with Tabs */}
+        {/* Tour Routing Section */}
         <div className="mt-8">
-          <Tabs defaultValue="timeline" className="w-full">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900">Tour Routing</h2>
-              <TabsList>
-                <TabsTrigger value="timeline" className="flex items-center gap-1">
-                  <List className="h-4 w-4" />
-                  <span>Timeline</span>
-                </TabsTrigger>
-                <TabsTrigger value="map" className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  <span>Map</span>
-                </TabsTrigger>
-              </TabsList>
-            </div>
-            
-            <TabsContent value="map" className="mt-0">
-              <TourMap
-                events={eventMapData || []}
-                onSelectEvent={setSelectedEvent}
-                genreFilter={genreFilter}
-                onGenreFilterChange={setGenreFilter}
-                dateRangeFilter={dateRangeFilter}
-                onDateRangeFilterChange={setDateRangeFilter}
-              />
-            </TabsContent>
-            
-            <TabsContent value="timeline" className="mt-0">
-              <TourTimeline
-                events={eventMapData || []}
-                onSelectEvent={setSelectedEvent}
-              />
-            </TabsContent>
-          </Tabs>
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Tour Routing</h2>
+          
+          <TourRoutingSection />
         </div>
         
         {/* Recent Opportunities */}
