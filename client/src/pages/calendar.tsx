@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import FullMonthCalendar from "@/components/calendar/full-month-calendar";
 import CalendarLegend from "@/components/calendar/calendar-legend";
+import EventModal from "@/components/calendar/event-modal";
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -24,6 +25,8 @@ export default function Calendar() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [view, setView] = useState("month");
   const [filter, setFilter] = useState("all");
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
 
   // Event type definition
@@ -269,40 +272,19 @@ export default function Calendar() {
   };
 
   const handleEventClick = (event: CalendarEvent) => {
-    // Determine the toast message based on event type
-    let description = '';
-    
-    switch(event.type) {
-      case 'confirmed':
-        description = `Confirmed show: ${event.title} at ${event.venue} on ${event.date.toLocaleDateString()}`;
-        break;
-      case 'hold':
-        description = `Hold: ${event.title} at ${event.venue} on ${event.date.toLocaleDateString()}`;
-        break;
-      case 'opportunity':
-        description = `Opportunity: ${event.title} with ${event.confidence}% confidence`;
-        break;
-      case 'inquiry':
-        description = `Inquiry: ${event.title} with ${event.confidence}% confidence`;
-        break;
-      case 'network':
-        description = `Network event at ${event.venue}: ${event.title}`;
-        break;
-    }
-    
-    toast({
-      title: "Event Details",
-      description: description,
-      // Make toast stay longer for better readability
-      duration: 5000
-    });
-    
-    // In a real app, this would navigate to the event details page
-    console.log('Event clicked:', event);
+    setSelectedEvent(event);
+    setIsModalOpen(true);
   };
 
   return (
     <div className="py-6">
+      {/* Event Modal */}
+      <EventModal 
+        event={selectedEvent}
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+      />
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-heading font-semibold text-gray-900">Calendar</h1>

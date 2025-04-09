@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface CalendarEvent {
   id: number;
@@ -9,6 +10,12 @@ interface CalendarEvent {
   type: 'confirmed' | 'opportunity' | 'network' | 'hold' | 'inquiry';
   startTime?: string;
   endTime?: string;
+  venue?: string;
+  description?: string;
+  confidence?: number;
+  genre?: string;
+  artist?: string;
+  ticketUrl?: string;
 }
 
 interface FullMonthCalendarProps {
@@ -151,7 +158,24 @@ const FullMonthCalendar: React.FC<FullMonthCalendarProps> = ({
     onDateChange(day.date);
   }
   
-  function getTypeColor(type: string): string {
+  function getEventStyles(type: string): string {
+    switch (type) {
+      case 'confirmed':
+        return 'bg-green-100 text-green-800 border border-green-300';
+      case 'hold':
+        return 'bg-amber-100 text-amber-800 border border-amber-300';
+      case 'opportunity':
+        return 'bg-blue-100 text-blue-800 border border-blue-300';
+      case 'inquiry':
+        return 'bg-purple-100 text-purple-800 border border-purple-300';
+      case 'network':
+        return 'bg-gray-100 text-gray-800 border border-gray-300';
+      default:
+        return 'bg-gray-100 text-gray-800 border border-gray-300';
+    }
+  }
+  
+  function getDotColor(type: string): string {
     switch (type) {
       case 'confirmed':
         return 'bg-green-500';
@@ -164,50 +188,58 @@ const FullMonthCalendar: React.FC<FullMonthCalendarProps> = ({
       case 'network':
         return 'bg-gray-500';
       default:
-        return 'bg-gray-300';
+        return 'bg-gray-400';
     }
   }
   
   const getDayClass = (day: CalendarDay) => {
-    return `relative h-28 sm:h-32 p-1 border ${
-      !day.isCurrentMonth ? 'bg-gray-50 text-gray-400' : ''
-    } ${day.isToday ? 'bg-primary-50' : ''} ${
-      day.isSelected ? 'ring-2 ring-primary' : ''
-    } hover:bg-gray-50 cursor-pointer`;
+    return cn(
+      "relative h-28 sm:h-32 p-2 border border-gray-200 bg-white",
+      "transition-all duration-200 ease-in-out",
+      "first:rounded-tl-lg last:rounded-tr-lg",
+      "[&:nth-child(n+36)]:rounded-b-lg", 
+      !day.isCurrentMonth && "bg-gray-50/50 text-gray-400",
+      day.isToday && "bg-blue-50/20 font-medium",
+      day.isSelected && "ring-2 ring-primary ring-inset",
+      "hover:bg-gray-50 cursor-pointer"
+    );
   };
   
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-4">
-        <Button variant="outline" size="sm" onClick={previousMonth}>
+      <div className="flex items-center justify-between mb-6">
+        <Button variant="outline" size="sm" onClick={previousMonth} className="rounded-full px-4">
           <ChevronLeft className="h-4 w-4 mr-1" />
           Previous
         </Button>
-        <h2 className="text-lg font-semibold">
+        <h2 className="text-xl font-semibold">
           {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
         </h2>
-        <Button variant="outline" size="sm" onClick={nextMonth}>
+        <Button variant="outline" size="sm" onClick={nextMonth} className="rounded-full px-4">
           Next
           <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       </div>
       
-      <div className="grid grid-cols-7 gap-px mb-1">
+      <div className="mb-2 grid grid-cols-7 text-center rounded-t-lg overflow-hidden">
         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-          <div key={day} className="text-center font-medium text-xs sm:text-sm py-2 bg-gray-100">
+          <div 
+            key={day} 
+            className="font-medium text-xs sm:text-sm py-3 bg-gray-100 border-b border-gray-200"
+          >
             {day}
           </div>
         ))}
       </div>
       
-      <div className="grid grid-cols-7 gap-px bg-gray-200">
+      <div className="grid grid-cols-7 gap-px rounded-lg overflow-hidden shadow-sm">
         {calendarDays.map((day, index) => (
           <div
             key={index}
             className={getDayClass(day)}
             onClick={() => handleDayClick(day)}
           >
-            <div className="text-right text-xs sm:text-sm mb-1 sticky top-0 bg-white/90">
+            <div className="text-right font-medium text-xs sm:text-sm mb-1 sticky top-0 bg-white/90">
               {day.date.getDate()}
             </div>
             
@@ -215,20 +247,24 @@ const FullMonthCalendar: React.FC<FullMonthCalendarProps> = ({
               {day.events.slice(0, 3).map(event => (
                 <div
                   key={event.id}
-                  className="text-xs truncate cursor-pointer py-1 px-1 rounded-sm"
+                  className={cn(
+                    "text-xs px-2 py-1 rounded-md truncate cursor-pointer transition-all",
+                    "hover:shadow-sm",
+                    getEventStyles(event.type)
+                  )}
                   onClick={(e) => {
                     e.stopPropagation();
                     onEventClick && onEventClick(event);
                   }}
                 >
                   <div className="flex items-center gap-1">
-                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getTypeColor(event.type)}`}></div>
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getDotColor(event.type)}`}></div>
                     <span className="truncate">{event.title}</span>
                   </div>
                 </div>
               ))}
               {day.events.length > 3 && (
-                <div className="text-xs text-gray-500 pl-3">
+                <div className="text-xs text-center mt-1 font-medium text-primary">
                   +{day.events.length - 3} more
                 </div>
               )}
