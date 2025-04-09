@@ -1,4 +1,5 @@
 import { apiRequest } from './queryClient';
+export { apiRequest };
 
 /**
  * API client functions for interacting with the server
@@ -71,6 +72,24 @@ export async function getEvents() {
 }
 
 /**
+ * Get a specific event by ID
+ * @param id The ID of the event to get
+ * @returns A promise that resolves to the event
+ */
+export async function getEvent(id: number) {
+  return apiRequest(`/api/events/${id}`);
+}
+
+/**
+ * Get events for a specific venue
+ * @param venueId The ID of the venue to filter by
+ * @returns A promise that resolves to the venue's events
+ */
+export async function getEventsByVenue(venueId: number) {
+  return apiRequest(`/api/venues/${venueId}/events`);
+}
+
+/**
  * Get predictions with details, including artist and venue information
  * @returns A promise that resolves to predictions with artist and venue details
  */
@@ -101,6 +120,15 @@ export async function getStatsData() {
  */
 export async function getVenueNetworkGraph(venueId: number) {
   return apiRequest(`/api/venue-network/graph/${venueId}`);
+}
+
+/**
+ * Get a venue by ID
+ * @param id The ID of the venue to get
+ * @returns A promise that resolves to the venue
+ */
+export async function getVenue(id: number) {
+  return apiRequest(`/api/venues/${id}`);
 }
 
 /**
