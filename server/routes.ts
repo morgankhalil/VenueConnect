@@ -204,15 +204,32 @@ router.get('/venue-network/graph/:id', async (req, res) => {
 // Get current user
 router.get("/api/user", async (req, res) => {
   try {
-    // Get first user from venues table as default user
-    const user = await db.select().from(venues).limit(1);
+    // Get first venue with connected venues relation
+    const venue = await db.query.venues.findFirst({
+      with: {
+        venueConnections: {
+          with: {
+            connectedVenue: true
+          }
+        }
+      }
+    });
     
-    if (user && user[0]) {
+    if (venue) {
+      // Transform connected venues into expected format
+      const connectedVenues = venue.venueConnections.map(connection => ({
+        id: connection.connectedVenue.id,
+        name: connection.connectedVenue.name,
+        trustScore: connection.trustScore,
+        collaborativeBookings: connection.collaborativeBookings
+      }));
+
       res.json({
-        id: user[0].id,
-        name: user[0].name,
-        venueName: user[0].name,
-        avatar: undefined
+        id: venue.id,
+        name: venue.contactEmail?.split('@')[0] || 'Demo User',
+        venueName: venue.name,
+        avatar: venue.imageUrl,
+        connectedVenues
       });
     } else {
       // Fallback data if no venues exist
@@ -220,7 +237,8 @@ router.get("/api/user", async (req, res) => {
         id: 1,
         name: "Demo User",
         venueName: "Demo Venue",
-        avatar: undefined
+        avatar: undefined,
+        connectedVenues: []
       });
     }
   } catch (error) {
