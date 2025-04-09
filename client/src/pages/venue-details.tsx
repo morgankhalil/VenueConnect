@@ -28,17 +28,15 @@ export default function VenueDetails() {
     createdAt: string;
   };
   
-  // Use mock data until API endpoints are fully operational
-  const [venue, setVenue] = useState<MockVenue | undefined>(undefined);
-  const [events, setEvents] = useState<MockEvent[]>([]);
-  const [venueLoading, setVenueLoading] = useState(true);
-  const [eventsLoading, setEventsLoading] = useState(true);
-  
-  useEffect(() => {
-    // Generate venue data based on venue ID
-    setTimeout(() => {
-      // Different mockups for different venue IDs
-      const mockVenues = {
+  const { data: venue, isLoading: venueLoading } = useQuery({
+    queryKey: ['/api/venues', venueId],
+    queryFn: () => apiRequest('GET', `/api/venues/${venueId}`).then(res => res.json())
+  });
+
+  const { data: events, isLoading: eventsLoading } = useQuery({
+    queryKey: ['/api/venues', venueId, 'events'],
+    queryFn: () => apiRequest('GET', `/api/venues/${venueId}/events`).then(res => res.json())
+  });
         1: {
           id: 1,
           name: "The Music Hall",
