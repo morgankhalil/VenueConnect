@@ -8,7 +8,7 @@ import { getStatsData, getPredictionsWithDetails } from "@/lib/api";
 import { PredictionWithDetails } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { Filter, ArrowUpRight, BarChart3, List } from "lucide-react";
-import { apiRequest } from "@/lib/api";
+import { apiRequest } from "@/lib/queryClient";
 
 
 export default function Dashboard() {
