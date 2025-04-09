@@ -7,10 +7,32 @@ import {
   calculateCenter, 
   calculateZoom, 
   venueMarkerColors, 
-  routeLineStyle 
+  routeLineStyle,
+  mapboxToken
 } from "@/lib/mapUtils";
 import { MapEvent } from "@/types";
 import { Plus, Minus } from "lucide-react";
+
+// Type declaration for mapboxgl
+declare global {
+  interface Window {
+    mapboxgl: any;
+  }
+}
+
+type MapboxMap = {
+  remove: () => void;
+  on: (event: string, handler: () => void) => void;
+  getLayer: (id: string) => any;
+  removeLayer: (id: string) => void;
+  getSource: (id: string) => any;
+  removeSource: (id: string) => void;
+  addSource: (id: string, config: any) => void;
+  addLayer: (layer: any) => void;
+  flyTo: (options: any) => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
+};
 
 interface TourMapProps {
   events: MapEvent[];
@@ -30,7 +52,7 @@ export function TourMap({
   onDateRangeFilterChange
 }: TourMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const [map, setMap] = useState<mapboxgl.Map | null>(null);
+  const [map, setMap] = useState<MapboxMap | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
 
   useEffect(() => {
@@ -45,14 +67,21 @@ export function TourMap({
     link.rel = 'stylesheet';
     document.head.appendChild(link);
 
-    script.onload = () => {
-      if (mapContainerRef.current && !map) {
-        // Initialize MapBox
+    // Fetch token from API
+    let isMounted = true;
+    let localMapboxToken = "";
+    
+    // Helper function to initialize map once token is available
+    const initializeMap = () => {
+      if (!mapContainerRef.current || map || !isMounted) return;
+      
+      // Initialize MapBox
+      // @ts-ignore - mapboxgl will be available after script load
+      window.mapboxgl.accessToken = localMapboxToken;
+      
+      try {
         // @ts-ignore - mapboxgl will be available after script load
-        mapboxgl.accessToken = 'pk.eyJ1IjoidmVudWVjb25uZWN0IiwiYSI6ImNrdWo4Z2t1czFhOTAyd3BnMWdiemU1OTUifQ.8YUuLGqD62-xgX6aitFLkA';
-        
-        // @ts-ignore - mapboxgl will be available after script load
-        const mapInstance = new mapboxgl.Map({
+        const mapInstance = new window.mapboxgl.Map({
           container: mapContainerRef.current,
           style: 'mapbox://styles/mapbox/light-v10',
           center: defaultMapCenter,
@@ -60,19 +89,52 @@ export function TourMap({
         });
 
         mapInstance.on('load', () => {
-          setMapLoaded(true);
+          if (isMounted) {
+            setMapLoaded(true);
+          }
         });
 
-        setMap(mapInstance);
+        if (isMounted) {
+          setMap(mapInstance);
+        }
+      } catch (err) {
+        console.error("Error initializing map:", err);
+      }
+    };
+    
+    // Wait for both script to load and token to be fetched
+    const fetchToken = async () => {
+      try {
+        const response = await fetch('/api/mapbox-token');
+        const data = await response.json();
+        if (isMounted) {
+          localMapboxToken = data.token || "";
+          if (window.mapboxgl) {
+            initializeMap();
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching Mapbox token:", err);
+      }
+    };
+    
+    fetchToken();
+    
+    script.onload = () => {
+      if (localMapboxToken) {
+        initializeMap();
       }
     };
 
     return () => {
+      isMounted = false;
       if (map) {
         map.remove();
       }
-      document.head.removeChild(script);
-      if (link.parentNode) {
+      if (document.head.contains(script)) {
+        document.head.removeChild(script);
+      }
+      if (document.head.contains(link)) {
         document.head.removeChild(link);
       }
     };
@@ -119,7 +181,7 @@ export function TourMap({
         
         // Create popup with event details
         // @ts-ignore - mapboxgl will be available
-        const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
+        const popup = new window.mapboxgl.Popup({ offset: 25 }).setHTML(`
           <strong>${artist}</strong><br/>
           ${venue}<br/>
           ${new Date(date).toLocaleDateString()}
@@ -127,7 +189,7 @@ export function TourMap({
         
         // Add marker to map
         // @ts-ignore - mapboxgl will be available
-        const marker = new mapboxgl.Marker(markerEl)
+        const marker = new window.mapboxgl.Marker(markerEl)
           .setLngLat([longitude, latitude])
           .setPopup(popup)
           .addTo(map);
@@ -215,6 +277,8 @@ export function TourMap({
     }
   };
 
+  const mapboxTokenAvailable = window.mapboxgl && window.mapboxgl.accessToken;
+
   return (
     <Card>
       <CardContent className="p-4">
@@ -250,24 +314,32 @@ export function TourMap({
           </div>
         </div>
         
-        <div className="relative h-96 rounded-lg overflow-hidden">
-          <div ref={mapContainerRef} className="absolute inset-0" />
-          
-          {/* Map Controls */}
-          <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
-            <button 
-              className="bg-white rounded-full p-2 shadow hover:bg-gray-100"
-              onClick={zoomIn}
-            >
-              <Plus className="h-4 w-4 text-gray-600" />
-            </button>
-            <button 
-              className="bg-white rounded-full p-2 shadow hover:bg-gray-100"
-              onClick={zoomOut}
-            >
-              <Minus className="h-4 w-4 text-gray-600" />
-            </button>
-          </div>
+        <div className="relative h-96 rounded-lg overflow-hidden bg-gray-50">
+          {!mapboxTokenAvailable ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
+              <p className="text-gray-500 mb-2">Waiting for Mapbox token...</p>
+              <p className="text-sm text-gray-400">The map will display routing opportunities between venues once configured.</p>
+            </div>
+          ) : (
+            <>
+              <div ref={mapContainerRef} className="absolute inset-0" />
+              {/* Map Controls */}
+              <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
+                <button 
+                  className="bg-white rounded-full p-2 shadow hover:bg-gray-100"
+                  onClick={zoomIn}
+                >
+                  <Plus className="h-4 w-4 text-gray-600" />
+                </button>
+                <button 
+                  className="bg-white rounded-full p-2 shadow hover:bg-gray-100"
+                  onClick={zoomOut}
+                >
+                  <Minus className="h-4 w-4 text-gray-600" />
+                </button>
+              </div>
+            </>
+          )}
         </div>
         
         {/* Map Legend */}

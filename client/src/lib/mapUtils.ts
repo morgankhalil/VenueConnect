@@ -1,8 +1,23 @@
 // Map utilities for MapBox integration
-export const mapboxToken = "pk.eyJ1IjoidmVudWVjb25uZWN0IiwiYSI6ImNrdWo4Z2t1czFhOTAyd3BnMWdiemU1OTUifQ.8YUuLGqD62-xgX6aitFLkA";
+// Get Mapbox token from server-side fetch instead of direct env variable reference
+export let mapboxToken = "";
+
+// Initialize token
+async function initMapboxToken() {
+  try {
+    const response = await fetch('/api/mapbox-token');
+    const data = await response.json();
+    mapboxToken = data.token || "";
+  } catch (err) {
+    console.error("Error fetching Mapbox token:", err);
+  }
+}
+
+// Call init function
+initMapboxToken();
 
 // Default map settings for the tour routing visualization
-export const defaultMapCenter = [-96.0, 39.5]; // US center
+export const defaultMapCenter: [number, number] = [-96.0, 39.5]; // US center
 export const defaultMapZoom = 3.5;
 
 // Coordinate calculations
@@ -47,7 +62,7 @@ export function calculateCenter(
     totalLng += lng;
   });
   
-  return [totalLng / coordinates.length, totalLat / coordinates.length];
+  return [totalLng / coordinates.length, totalLat / coordinates.length] as [number, number];
 }
 
 // Determine appropriate zoom level based on distance between points

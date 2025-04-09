@@ -84,29 +84,33 @@ export function Sidebar({
               );
               
               return (
-                <Link 
-                  key={item.name} 
+                <a 
+                  key={item.name}
                   href={item.href}
+                  className={cn(
+                    "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
+                    isActive
+                      ? "bg-primary-50 text-primary-800"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  )}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.history.pushState({}, "", item.href);
+                    // Trigger wouter's location detection
+                    const navEvent = new PopStateEvent('popstate');
+                    window.dispatchEvent(navEvent);
+                  }}
                 >
-                  <a
+                  <item.icon 
                     className={cn(
-                      "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
+                      "mr-3 flex-shrink-0 h-5 w-5",
                       isActive
-                        ? "bg-primary-50 text-primary-800"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                        ? "text-primary-500"
+                        : "text-gray-400"
                     )}
-                  >
-                    <item.icon 
-                      className={cn(
-                        "mr-3 flex-shrink-0 h-5 w-5",
-                        isActive
-                          ? "text-primary-500"
-                          : "text-gray-400"
-                      )}
-                    />
-                    {item.name}
-                  </a>
-                </Link>
+                  />
+                  {item.name}
+                </a>
               );
             })}
           </nav>
@@ -118,20 +122,26 @@ export function Sidebar({
             </h3>
             <div className="mt-1 space-y-1 px-3">
               {connectedVenues.map((venue) => (
-                <Link 
-                  key={venue.id} 
+                <a
+                  key={venue.id}
                   href={`/venues/${venue.id}`}
+                  className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.history.pushState({}, "", `/venues/${venue.id}`);
+                    // Trigger wouter's location detection
+                    const navEvent = new PopStateEvent('popstate');
+                    window.dispatchEvent(navEvent);
+                  }}
                 >
-                  <a className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
-                    <span 
-                      className={cn(
-                        "w-2 h-2 mr-3 rounded-full",
-                        venue.isOnline ? "bg-green-400" : "bg-gray-400"
-                      )}
-                    />
-                    {venue.name}
-                  </a>
-                </Link>
+                  <span 
+                    className={cn(
+                      "w-2 h-2 mr-3 rounded-full",
+                      venue.isOnline ? "bg-green-400" : "bg-gray-400"
+                    )}
+                  />
+                  {venue.name}
+                </a>
               ))}
             </div>
           </div>

@@ -287,6 +287,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to get participants for opportunity" });
     }
   });
+  
+  // Mapbox token endpoint
+  app.get("/api/mapbox-token", (_, res) => {
+    // Send the Mapbox token from environment variables
+    // This keeps the token secure by not exposing it directly in client code
+    res.json({ token: process.env.MAPBOX_TOKEN || "" });
+  });
 
   // Create HTTP server
   const httpServer = createServer(app);
