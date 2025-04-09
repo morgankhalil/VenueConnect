@@ -142,7 +142,7 @@ export async function createVenueConnection(connection: {
   status?: string;
   trustScore?: number;
 }) {
-  return apiRequest('/api/venue-network/connections', {
+  return apiRequest('/api/venue-network', {
     method: 'POST',
     body: JSON.stringify(connection),
     headers: { 'Content-Type': 'application/json' }

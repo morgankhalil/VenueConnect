@@ -213,7 +213,7 @@ router.get('/messages', async (req, res) => {
 });
 
 // Venue Network
-router.post('/venue-network', async (req, res) => {
+router.post('/api/venue-network', async (req, res) => {
   const { venueId, connectedVenueId, status, trustScore, collaborativeBookings } = req.body;
   
   try {
@@ -230,7 +230,7 @@ router.post('/venue-network', async (req, res) => {
   }
 });
 
-router.get('/venue-network/graph/:id', async (req, res) => {
+router.get('/api/venue-network/graph/:id', async (req, res) => {
   const venueId = parseInt(req.params.id);
   
   // First get the main venue

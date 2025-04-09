@@ -21,8 +21,8 @@ export default function VenueNetwork() {
     queryFn: () => apiRequest('/api/user')
   });
   
-  // Use the user's venue ID if available, otherwise fallback to a default
-  const currentVenueId = user?.id || 1;
+  // Use the user's ID as venue ID since the API returns venue ID as user.id
+  const currentVenueId = user?.id || 18;
 
   const { data: networkData, isLoading: isLoadingNetwork } = useQuery({
     queryKey: ['/api/venue-network/graph', currentVenueId],
