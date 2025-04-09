@@ -2,7 +2,7 @@ import { apiRequest } from './queryClient';
 import { 
   Venue, Artist, Event, VenueNetwork, Prediction, 
   Inquiry, CollaborativeOpportunity, CollaborativeOpportunityWithDetails, 
-  PredictionWithDetails, StatsData
+  PredictionWithDetails, StatsData, MapEvent, VenueNetworkData
 } from '@/types';
 
 // Venues
@@ -517,34 +517,131 @@ export const getMockVenueNetworkData = (): VenueNetworkData => {
 
 export const getMockEventMapData = (): MapEvent[] => {
   return [
+    // Current venue
     {
       id: 1,
-      latitude: 39.7392,
-      longitude: -104.9903,
+      latitude: 39.9612,
+      longitude: -82.9988,
       artist: "The Black Keys",
-      venue: "Fillmore Auditorium",
-      date: "2023-02-16",
+      venue: "The Echo Lounge (Your Venue)",
+      date: "2023-05-18",
+      isCurrentVenue: true,
+      isRoutingOpportunity: false
+    },
+    
+    // Confirmed shows on The Black Keys tour (chronological order)
+    {
+      id: 2,
+      latitude: 36.1627,
+      longitude: -86.7816,
+      artist: "The Black Keys",
+      venue: "Bridgestone Arena",
+      date: "2023-05-12",
       isCurrentVenue: false,
       isRoutingOpportunity: false
     },
     {
-      id: 2,
-      latitude: 39.9612,
-      longitude: -82.9988,
+      id: 3,
+      latitude: 39.7392,
+      longitude: -104.9903,
       artist: "The Black Keys",
-      venue: "The Echo Lounge",
-      date: "2023-02-18",
-      isCurrentVenue: true,
-      isRoutingOpportunity: true
+      venue: "Fillmore Auditorium",
+      date: "2023-05-16",
+      isCurrentVenue: false,
+      isRoutingOpportunity: false
     },
     {
-      id: 3,
+      id: 4,
       latitude: 41.8781,
       longitude: -87.6298,
       artist: "The Black Keys",
       venue: "Aragon Ballroom",
-      date: "2023-02-20",
+      date: "2023-05-20",
       isCurrentVenue: false,
+      isRoutingOpportunity: false
+    },
+    {
+      id: 5,
+      latitude: 42.3314,
+      longitude: -83.0458,
+      artist: "The Black Keys",
+      venue: "The Fillmore Detroit",
+      date: "2023-05-22",
+      isCurrentVenue: false,
+      isRoutingOpportunity: false
+    },
+    
+    // Routing opportunities (venues that could fit in the tour)
+    {
+      id: 6,
+      latitude: 40.4406,
+      longitude: -79.9959,
+      artist: "The Black Keys",
+      venue: "Stage AE",
+      date: "2023-05-23",
+      isCurrentVenue: false,
+      isRoutingOpportunity: true
+    },
+    {
+      id: 7,
+      latitude: 38.9072,
+      longitude: -77.0369,
+      artist: "The Black Keys",
+      venue: "9:30 Club",
+      date: "2023-05-25",
+      isCurrentVenue: false,
+      isRoutingOpportunity: true
+    },
+    {
+      id: 8,
+      latitude: 40.7128,
+      longitude: -74.0060,
+      artist: "The Black Keys",
+      venue: "Bowery Ballroom",
+      date: "2023-05-27",
+      isCurrentVenue: false,
+      isRoutingOpportunity: true
+    },
+    
+    // Another artist with routing opportunities
+    {
+      id: 9,
+      latitude: 34.0522,
+      longitude: -118.2437,
+      artist: "Khruangbin",
+      venue: "Hollywood Bowl",
+      date: "2023-06-10",
+      isCurrentVenue: false,
+      isRoutingOpportunity: false
+    },
+    {
+      id: 10,
+      latitude: 37.7749,
+      longitude: -122.4194,
+      artist: "Khruangbin",
+      venue: "The Fillmore SF",
+      date: "2023-06-12",
+      isCurrentVenue: false,
+      isRoutingOpportunity: false
+    },
+    {
+      id: 11,
+      latitude: 45.5051,
+      longitude: -122.6750,
+      artist: "Khruangbin",
+      venue: "Crystal Ballroom",
+      date: "2023-06-14",
+      isCurrentVenue: false,
+      isRoutingOpportunity: false
+    },
+    {
+      id: 12,
+      latitude: 39.9612,
+      longitude: -82.9988,
+      artist: "Khruangbin",
+      venue: "The Echo Lounge (Your Venue)",
+      date: "2023-06-20",
+      isCurrentVenue: true,
       isRoutingOpportunity: false
     }
   ];

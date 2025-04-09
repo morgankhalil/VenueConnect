@@ -123,7 +123,7 @@ export default function VenueDetails() {
     setTimeout(() => {
       // Create different events for each venue
       const eventCount = 2 + (venueId % 3); // Different number of events per venue
-      const events = [];
+      const events: MockEvent[] = [];
       
       for (let i = 0; i < eventCount; i++) {
         events.push({

@@ -235,7 +235,8 @@ export function TourMap({
           paint: {
             'line-color': routeLineStyle.color,
             'line-width': routeLineStyle.width,
-            'line-dasharray': [5, 5]
+            'line-dasharray': routeLineStyle.dashArray,
+            'line-opacity': 0.9
           }
         });
       }

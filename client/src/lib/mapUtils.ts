@@ -127,7 +127,7 @@ export const venueMarkerColors = {
 
 // Route line styles
 export const routeLineStyle = {
-  color: 'rgba(59, 130, 246, 0.7)',
-  width: 3,
-  dashArray: [5, 5],
+  color: 'rgba(59, 130, 246, 0.9)',
+  width: 4,
+  dashArray: [2, 4],
 };
