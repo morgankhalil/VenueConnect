@@ -120,9 +120,26 @@ export function TourMap({
           
           if (localMapboxToken) {
             console.log("Token received, length:", localMapboxToken.length);
-            if (window.mapboxgl) {
-              initializeMap();
-            }
+            // Wait for a short time to ensure script has time to load
+            setTimeout(() => {
+              if (window.mapboxgl) {
+                console.log("mapboxgl is available, initializing map...");
+                initializeMap();
+              } else {
+                console.log("mapboxgl is not available yet, waiting for script load...");
+                // Set a listener for when mapboxgl becomes available
+                const checkMapboxInterval = setInterval(() => {
+                  if (window.mapboxgl) {
+                    console.log("mapboxgl became available, initializing map...");
+                    clearInterval(checkMapboxInterval);
+                    initializeMap();
+                  }
+                }, 100);
+                
+                // Clear interval after 10 seconds to prevent infinite checking
+                setTimeout(() => clearInterval(checkMapboxInterval), 10000);
+              }
+            }, 500);
           } else {
             console.log("Empty token received");
             setTokenLoading(false);
