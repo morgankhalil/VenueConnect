@@ -1,6 +1,6 @@
 
 import { db } from './db';
-import { users, venues, artists, events, predictions, venueNetwork, collaborativeOpportunities, collaborativeParticipants } from '../shared/schema';
+import { users, venues, artists, events, predictions, inquiries, venueNetwork, collaborativeOpportunities, collaborativeParticipants } from '../shared/schema';
 
 async function seed() {
   try {
