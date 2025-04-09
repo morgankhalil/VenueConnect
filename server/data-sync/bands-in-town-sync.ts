@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { db } from '../db';
 import { venues, venueNetwork, artists, events } from '../../shared/schema';
-import { eq, and, in_ } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 
 // Define types for Bandsintown API responses
 interface BandsInTownVenue {
@@ -423,7 +423,7 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
     const venueArtists = await db
       .select()
       .from(artists)
-      .where(in_(artists.id, artistIds));
+      .where(inArray(artists.id, artistIds));
 
     console.log(`Found ${venueArtists.length} artists with recent events at ${sourceVenue[0].name}`);
 
