@@ -12,59 +12,132 @@ export default function VenueDetails() {
   const [_, params] = useRoute<{ id: string }>("/venues/:id");
   const venueId = params?.id ? parseInt(params.id, 10) : 0;
   
+  // Define custom types for our mock data to avoid schema conflicts
+  type MockVenue = Omit<Venue, 'createdAt'> & { createdAt: string };
+  type MockEvent = { 
+    id: number; 
+    artistId: number; 
+    venueId: number;
+    date: string;
+    startTime: string;
+    status: string;
+    createdAt: string;
+  };
+  
   // Use mock data until API endpoints are fully operational
-  const [venue, setVenue] = useState<Venue | undefined>(undefined);
-  const [events, setEvents] = useState<any[]>([]);
+  const [venue, setVenue] = useState<MockVenue | undefined>(undefined);
+  const [events, setEvents] = useState<MockEvent[]>([]);
   const [venueLoading, setVenueLoading] = useState(true);
   const [eventsLoading, setEventsLoading] = useState(true);
   
   useEffect(() => {
-    // Mock venue data
+    // Generate venue data based on venue ID
     setTimeout(() => {
-      setVenue({
+      // Different mockups for different venue IDs
+      const mockVenues = {
+        1: {
+          id: 1,
+          name: "The Music Hall",
+          address: "123 Main Street",
+          city: "Austin",
+          state: "TX",
+          zipCode: "78701",
+          country: "USA",
+          capacity: 500,
+          contactEmail: "booking@musichall.com",
+          contactPhone: "(512) 555-1234",
+          website: "https://musichall.example.com",
+          description: "A premier music venue featuring local and touring artists.",
+          imageUrl: null,
+          latitude: 30.2672,
+          longitude: -97.7431,
+          ownerId: 1,
+          createdAt: new Date().toISOString()
+        },
+        2: {
+          id: 2,
+          name: "Jazz Club Downtown",
+          address: "456 Jazz Avenue",
+          city: "New Orleans",
+          state: "LA",
+          zipCode: "70112",
+          country: "USA", 
+          capacity: 200,
+          contactEmail: "info@jazzclub.com",
+          contactPhone: "(504) 555-6789",
+          website: "https://jazzclub.example.com",
+          description: "An intimate jazz club with nightly performances from top jazz artists.",
+          imageUrl: null,
+          latitude: 29.9511,
+          longitude: -90.0715,
+          ownerId: 2,
+          createdAt: new Date().toISOString()
+        },
+        3: {
+          id: 3,
+          name: "Stadium Arena",
+          address: "789 Stadium Way",
+          city: "Los Angeles",
+          state: "CA",
+          zipCode: "90001",
+          country: "USA",
+          capacity: 15000,
+          contactEmail: "bookings@stadium.com",
+          contactPhone: "(213) 555-9876",
+          website: "https://stadiumentertainment.example.com",
+          description: "Large arena venue hosting major touring acts and festivals.",
+          imageUrl: null,
+          latitude: 34.0522,
+          longitude: -118.2437,
+          ownerId: 3,
+          createdAt: new Date().toISOString()
+        }
+      };
+      
+      // Set the venue based on ID, or use a default if ID doesn't match
+      const selectedVenue = mockVenues[venueId as keyof typeof mockVenues] || {
         id: venueId,
-        name: "The Music Hall",
-        address: "123 Main Street",
-        city: "Austin",
-        state: "TX",
-        zipCode: "78701",
+        name: `Venue ${venueId}`,
+        address: `${venueId}00 Music Street`,
+        city: "Musicville",
+        state: "MU",
+        zipCode: `${venueId}0000`,
         country: "USA",
-        capacity: 500,
-        contactEmail: "booking@musichall.com",
-        contactPhone: "(512) 555-1234",
-        website: "https://musichall.example.com",
-        description: "A premier music venue featuring local and touring artists.",
+        capacity: venueId * 100,
+        contactEmail: `venue${venueId}@example.com`,
+        contactPhone: `(555) 555-${venueId.toString().padStart(4, '0')}`,
+        website: `https://venue${venueId}.example.com`,
+        description: `Venue ${venueId} is a great place to see live music and performances.`,
         imageUrl: null,
-        latitude: 30.2672,
-        longitude: -97.7431,
-        ownerId: 1,
-        createdAt: new Date().toISOString(),
-      });
+        latitude: 40 + (venueId / 10),
+        longitude: -90 - (venueId / 10),
+        ownerId: venueId,
+        createdAt: new Date().toISOString()
+      };
+      
+      setVenue(selectedVenue);
       setVenueLoading(false);
     }, 500);
     
-    // Mock events data 
+    // Mock events data based on venue ID
     setTimeout(() => {
-      setEvents([
-        {
-          id: 1,
-          artistId: 1,
+      // Create different events for each venue
+      const eventCount = 2 + (venueId % 3); // Different number of events per venue
+      const events = [];
+      
+      for (let i = 0; i < eventCount; i++) {
+        events.push({
+          id: i + 1,
+          artistId: (venueId * 10) + i,
           venueId: venueId,
-          date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-          startTime: "8:00 PM",
-          status: "confirmed",
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: 2,
-          artistId: 2,
-          venueId: venueId,
-          date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-          startTime: "9:00 PM",
-          status: "confirmed",
-          createdAt: new Date().toISOString(),
-        }
-      ]);
+          date: new Date(Date.now() + ((i + 1) * 7) * 24 * 60 * 60 * 1000).toISOString(),
+          startTime: `${7 + i}:${venueId % 2 === 0 ? '00' : '30'} PM`,
+          status: i === 0 ? "confirmed" : (i === 1 ? "pending" : "confirmed"),
+          createdAt: new Date().toISOString()
+        });
+      }
+      
+      setEvents(events);
       setEventsLoading(false);
     }, 800);
   }, [venueId]);
@@ -206,12 +279,26 @@ export default function VenueDetails() {
                         </div>
                       </div>
                       <div className="ml-4 flex-1">
-                        <h4 className="text-lg font-medium text-gray-900">Concert Event</h4>
+                        <h4 className="text-lg font-medium text-gray-900">
+                          {venue.id === 1 
+                            ? "Rock Night with The Amplifiers" 
+                            : venue.id === 2 
+                              ? "Jazz Sessions" 
+                              : venue.id === 3 
+                                ? "Summer Festival" 
+                                : `Concert at ${venue.name} #${event.id}`}
+                        </h4>
                         <p className="text-gray-600">
                           {formatDate(event.date)} at {event.startTime || "TBD"}
                         </p>
                         <p className="mt-1 text-gray-500">
-                          Live music event at {venue.name}
+                          {venue.id === 1 
+                            ? "High-energy rock music with local favorites." 
+                            : venue.id === 2 
+                              ? "Smooth jazz performances from acclaimed artists." 
+                              : venue.id === 3 
+                                ? "Major touring act with special guests." 
+                                : `Live music event at ${venue.name}`}
                         </p>
                       </div>
                     </div>
