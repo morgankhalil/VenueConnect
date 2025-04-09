@@ -47,12 +47,19 @@ export function TourMap({
     
     const loadMapbox = async () => {
       try {
+        // Check if Mapbox is available
+        console.log("Checking if mapboxgl is available in window:", window.mapboxgl ? "Yes" : "No");
+        if (!window.mapboxgl) {
+          throw new Error("Mapbox GL JS is not available. Make sure the CDN script is loaded correctly.");
+        }
+        
         // Fetch token from API
         console.log("Fetching Mapbox token...");
         const response = await fetch('/api/mapbox-token');
         const data = await response.json();
         const token = data.token;
         
+        console.log("Token received:", token ? "Valid token" : "No token");
         if (!token) {
           throw new Error("No Mapbox token received from API");
         }
@@ -79,10 +86,28 @@ export function TourMap({
           
           mapInstance.on('error', (e: any) => {
             console.error("Mapbox error:", e);
+            
+            // Get a more detailed error message
+            const errorMessage = e.error ? e.error.message : 
+              (e.status ? `Error ${e.status}: ${e.statusText}` : 'Unknown error');
+            
+            // Log detailed error information
+            console.error("Mapbox detailed error:", {
+              error: e.error,
+              status: e.status,
+              statusText: e.statusText,
+              source: e.sourceId || 'unknown'
+            });
+            
             if (isMounted) {
-              setError(`Map error: ${e.error?.message || 'Unknown error'}`);
+              setError(`Map error: ${errorMessage}. This might be due to an issue with the Mapbox token or network connectivity.`);
               setIsLoading(false);
             }
+          });
+          
+          // Add success message on successful style load
+          mapInstance.on('style.load', () => {
+            console.log("Map style loaded successfully");
           });
           
           setMap(mapInstance);
@@ -283,9 +308,35 @@ export function TourMap({
               <p className="text-sm text-gray-400">The map will display routing opportunities between venues once loaded.</p>
             </div>
           ) : error ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
               <p className="text-red-500 mb-2">Error loading map</p>
-              <p className="text-sm text-gray-600">{error}</p>
+              <p className="text-sm text-gray-600 mb-4">{error}</p>
+              
+              {/* Fallback visualization when map is unavailable */}
+              <div className="w-full max-w-2xl p-4 bg-white rounded-lg shadow overflow-auto max-h-60">
+                <h4 className="font-medium text-gray-900 mb-2">Venue Routing Opportunities</h4>
+                <div className="space-y-2">
+                  {events.map(event => (
+                    <div 
+                      key={`${event.venue}-${event.date}`}
+                      className={`p-3 rounded-lg border ${
+                        event.isCurrentVenue ? 'bg-amber-50 border-amber-200' : 
+                        event.isRoutingOpportunity ? 'bg-blue-50 border-blue-200' : 
+                        'bg-green-50 border-green-200'
+                      }`}
+                    >
+                      <div className="font-medium">{event.artist}</div>
+                      <div className="text-sm text-gray-600">{event.venue}</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {new Date(event.date).toLocaleDateString()} • 
+                        {event.isCurrentVenue ? ' Your Venue' : 
+                         event.isRoutingOpportunity ? ' Routing Opportunity' : 
+                         ' Confirmed Show'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           ) : (
             <>
