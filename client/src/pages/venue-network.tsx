@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { NetworkVisualization } from "@/components/venue-network/network-visualization";
@@ -139,14 +138,14 @@ export default function VenueNetwork() {
               <Card>
                 <CardHeader className="pb-2">
                   <h3 className="text-sm font-medium text-gray-500">Total Connections</h3>
-                  <p className="text-2xl font-semibold">{networkData?.nodes?.length ? networkData.nodes.length - 1 : 0}</p>
+                  <p className="text-2xl font-semibold">{networkData?.nodes?.filter(n => !n.isCurrentVenue)?.length || 0}</p>
                 </CardHeader>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
                   <h3 className="text-sm font-medium text-gray-500">Total Collaborations</h3>
                   <p className="text-2xl font-semibold">
-                    {networkData?.links?.reduce((sum, link) => sum + link.value, 0) || 0}
+                    {networkData?.links?.reduce((sum, link) => sum + (link.value || 0), 0) || 0}
                   </p>
                 </CardHeader>
               </Card>
@@ -154,20 +153,23 @@ export default function VenueNetwork() {
                 <CardHeader className="pb-2">
                   <h3 className="text-sm font-medium text-gray-500">Average Trust Score</h3>
                   <p className="text-2xl font-semibold">
-                    {networkData?.nodes?.length > 1 
-                      ? Math.round(networkData.nodes
-                          .filter(n => !n.isCurrentVenue)
-                          .reduce((sum, n) => sum + n.trustScore, 0) / 
-                          (networkData.nodes.length - 1)
-                        )
-                      : 0}%
+                    {(() => {
+                        const connectedVenues = networkData?.nodes?.filter(n => !n.isCurrentVenue) || [];
+                        if (connectedVenues.length === 0) return '0%';
+                        const avgScore = Math.round(
+                          connectedVenues.reduce((sum, n) => sum + (n.trustScore || 0), 0) / 
+                          connectedVenues.length
+                        );
+                        return `${avgScore}%`;
+                      })()}
                   </p>
                 </CardHeader>
               </Card>
             </div>
           </TabsContent>
 
-          <TabsContent value="stats">
+          {/*The following TabsContent is redundant.  It's identical to the previous one.  Removing it.*/}
+          {/*<TabsContent value="stats">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card>
                 <CardHeader className="pb-2">
@@ -198,7 +200,7 @@ export default function VenueNetwork() {
                 </CardHeader>
               </Card>
             </div>
-          </TabsContent>
+          </TabsContent>*/}
         </Tabs>
       </div>
 
