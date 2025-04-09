@@ -273,61 +273,136 @@ const EventModal: React.FC<EventModalProps> = ({ event, open, onOpenChange }) =>
               </p>
             </div>
             
-            <div className="p-4 border rounded-lg shadow-sm">
-              <div className="text-sm font-medium mb-2">Match Confidence</div>
-              <Progress className="h-2.5" value={event.confidence} />
-              <div className="flex justify-between mt-2">
-                <span className="text-xs text-gray-500">Based on genre, popularity, and routing</span>
-                <span className="text-blue-600 font-semibold">{event.confidence}%</span>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-4 border rounded-lg shadow-sm">
-                <div className="text-sm font-medium text-gray-500 mb-1">Similar Artist Performance</div>
-                <div className="text-3xl font-bold text-green-600">85%</div>
-                <div className="mt-2 text-sm">
-                  Average capacity for similar artists
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+              <div className="lg:col-span-2 p-5 border rounded-lg shadow-sm">
+                <div className="text-base font-medium mb-4">Match Confidence Analysis</div>
+                <Progress className="h-3" value={event.confidence} />
+                <div className="flex justify-between mt-2 mb-4">
+                  <span className="text-sm text-gray-500">Based on genre, popularity, and routing</span>
+                  <span className="text-blue-600 font-semibold">{event.confidence}%</span>
                 </div>
-                <div className="mt-2 text-xs text-gray-500">
-                  Based on 12 similar artists at your venue
-                </div>
-              </div>
-              
-              <div className="p-4 border rounded-lg shadow-sm">
-                <div className="text-sm font-medium text-gray-500 mb-1">Routing Fit</div>
-                <div className="text-3xl font-bold text-blue-600">High</div>
-                <div className="mt-2 text-sm">
-                  Artist has shows in nearby cities
-                </div>
-                <div className="mt-2 text-xs text-gray-500">
-                  Portland (2 days before), Seattle (2 days after)
+                
+                <div className="grid grid-cols-2 gap-4 mt-6">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                    <span className="text-sm">Genre Match: 92%</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                    <span className="text-sm">Audience Match: 87%</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
+                    <span className="text-sm">Venue Size: 95%</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 rounded-full bg-purple-500 mr-2"></div>
+                    <span className="text-sm">Routing: High</span>
+                  </div>
                 </div>
               </div>
               
-              <div className="p-4 border rounded-lg shadow-sm">
-                <div className="text-sm font-medium text-gray-500 mb-1">Estimated Revenue</div>
-                <div className="text-3xl font-bold">{getProjectedRevenue()}</div>
-                <div className="mt-2 text-xs text-gray-500">
-                  Based on projected attendance and ticket prices
+              <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 border rounded-lg shadow-sm">
+                  <div className="text-sm font-medium text-gray-500 mb-1">Similar Artist Performance</div>
+                  <div className="text-3xl font-bold text-green-600">85%</div>
+                  <div className="mt-2 text-sm">
+                    Average capacity for similar artists
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500">
+                    Based on 12 similar artists at your venue
+                  </div>
+                </div>
+                
+                <div className="p-4 border rounded-lg shadow-sm">
+                  <div className="text-sm font-medium text-gray-500 mb-1">Routing Fit</div>
+                  <div className="text-3xl font-bold text-blue-600">High</div>
+                  <div className="mt-2 text-sm">
+                    Artist has shows in nearby cities
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500">
+                    Portland (2 days before), Seattle (2 days after)
+                  </div>
+                </div>
+                
+                <div className="p-4 border rounded-lg shadow-sm">
+                  <div className="text-sm font-medium text-gray-500 mb-1">Estimated Revenue</div>
+                  <div className="text-3xl font-bold">{getProjectedRevenue()}</div>
+                  <div className="mt-2 text-xs text-gray-500">
+                    Based on projected attendance and ticket prices
+                  </div>
                 </div>
               </div>
             </div>
             
-            <div className="p-4 border rounded-lg shadow-sm">
-              <div className="text-sm font-medium mb-3">Artist Momentum</div>
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <div className="text-xs text-gray-500 mb-1">Spotify Monthly</div>
-                  <div className="text-lg font-semibold">1.2M</div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="p-5 border rounded-lg shadow-sm">
+                <div className="text-base font-medium mb-4">Artist Momentum</div>
+                <div className="grid grid-cols-4 gap-6 text-center">
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Spotify Monthly</div>
+                    <div className="text-xl font-semibold">1.2M</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Social Growth</div>
+                    <div className="text-xl font-semibold text-green-600">+12%</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Last Release</div>
+                    <div className="text-xl font-semibold">2 weeks ago</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Tour Status</div>
+                    <div className="text-xl font-semibold text-blue-600">Active</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-xs text-gray-500 mb-1">Social Growth</div>
-                  <div className="text-lg font-semibold text-green-600">+12%</div>
+                
+                <div className="mt-6">
+                  <div className="text-sm font-medium mb-2">Growth Trend (6 months)</div>
+                  <div className="h-10 bg-gray-100 rounded-md relative">
+                    <div className="absolute inset-0 flex items-end">
+                      <div className="h-40% w-1/6 bg-blue-400 rounded-sm mx-0.5"></div>
+                      <div className="h-45% w-1/6 bg-blue-400 rounded-sm mx-0.5"></div>
+                      <div className="h-55% w-1/6 bg-blue-400 rounded-sm mx-0.5"></div>
+                      <div className="h-60% w-1/6 bg-blue-400 rounded-sm mx-0.5"></div>
+                      <div className="h-75% w-1/6 bg-blue-400 rounded-sm mx-0.5"></div>
+                      <div className="h-85% w-1/6 bg-blue-400 rounded-sm mx-0.5"></div>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-xs text-gray-500 mb-1">Last Release</div>
-                  <div className="text-lg font-semibold">2 weeks ago</div>
+              </div>
+              
+              <div className="p-5 border rounded-lg shadow-sm">
+                <div className="text-base font-medium mb-4">Similar Artists Performance</div>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Artist A</span>
+                    <div className="flex items-center">
+                      <span className="text-sm font-medium mr-2 text-green-600">98% capacity</span>
+                      <Progress className="h-2 w-24" value={98} />
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Artist B</span>
+                    <div className="flex items-center">
+                      <span className="text-sm font-medium mr-2 text-green-600">92% capacity</span>
+                      <Progress className="h-2 w-24" value={92} />
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Artist C</span>
+                    <div className="flex items-center">
+                      <span className="text-sm font-medium mr-2 text-amber-600">78% capacity</span>
+                      <Progress className="h-2 w-24" value={78} />
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Artist D</span>
+                    <div className="flex items-center">
+                      <span className="text-sm font-medium mr-2 text-amber-600">72% capacity</span>
+                      <Progress className="h-2 w-24" value={72} />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -341,6 +416,11 @@ const EventModal: React.FC<EventModalProps> = ({ event, open, onOpenChange }) =>
               <Button className="flex-1" variant="outline">
                 <Route className="h-4 w-4 mr-2" />
                 View Tour Dates
+              </Button>
+              
+              <Button className="flex-1" variant="outline">
+                <Calendar className="h-4 w-4 mr-2" />
+                Check Venue Availability
               </Button>
               
               <Button className="flex-1">
@@ -481,7 +561,7 @@ const EventModal: React.FC<EventModalProps> = ({ event, open, onOpenChange }) =>
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[650px] md:max-w-[700px] lg:max-w-[800px] p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[90%] md:max-w-[85%] lg:max-w-[80%] max-h-[90vh] p-0">
         <div className={`h-3 w-full ${typeBgColors[event.type]}`} />
         
         <DialogHeader className="px-8 pt-8 pb-2">
@@ -498,14 +578,14 @@ const EventModal: React.FC<EventModalProps> = ({ event, open, onOpenChange }) =>
           </DialogDescription>
         </DialogHeader>
         
-        <div className="px-8 py-6">
-          <div className="text-sm text-muted-foreground mb-6 bg-gray-50 p-3 rounded-lg border border-gray-100">
+        <div className="px-8 py-6 overflow-y-auto max-h-[calc(90vh-150px)]">
+          <div className="text-sm text-muted-foreground mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
             {typeDescriptions[event.type]}
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 mb-6">
-            <div className="flex items-center">
-              <Calendar className="h-5 w-5 mr-3 text-muted-foreground" />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3 mb-6">
+            <div className="flex items-center col-span-2">
+              <Calendar className="h-5 w-5 mr-3 text-muted-foreground flex-shrink-0" />
               <span>{event.date.toLocaleDateString('en-US', { 
                 weekday: 'long', 
                 month: 'long', 
@@ -516,32 +596,32 @@ const EventModal: React.FC<EventModalProps> = ({ event, open, onOpenChange }) =>
             
             {event.startTime && (
               <div className="flex items-center">
-                <Clock className="h-5 w-5 mr-3 text-muted-foreground" />
+                <Clock className="h-5 w-5 mr-3 text-muted-foreground flex-shrink-0" />
                 <span>{event.startTime} - {event.endTime}</span>
               </div>
             )}
             
             {event.venue && (
-              <div className="flex items-center">
-                <MapPin className="h-5 w-5 mr-3 text-muted-foreground" />
-                <span>{event.venue}</span>
+              <div className="flex items-center col-span-2">
+                <MapPin className="h-5 w-5 mr-3 text-muted-foreground flex-shrink-0" />
+                <span className="truncate">{event.venue}</span>
               </div>
             )}
             
             {event.genre && (
               <div className="flex items-center">
-                <Music className="h-5 w-5 mr-3 text-muted-foreground" />
+                <Music className="h-5 w-5 mr-3 text-muted-foreground flex-shrink-0" />
                 <span>{event.genre}</span>
               </div>
             )}
             
             <div className="flex items-center">
-              <Users className="h-5 w-5 mr-3 text-muted-foreground" />
+              <Users className="h-5 w-5 mr-3 text-muted-foreground flex-shrink-0" />
               <span>Capacity: {getCapacity()}</span>
             </div>
             
             <div className="flex items-center">
-              <DollarSign className="h-5 w-5 mr-3 text-muted-foreground" />
+              <DollarSign className="h-5 w-5 mr-3 text-muted-foreground flex-shrink-0" />
               <span>Projected Revenue: {getProjectedRevenue()}</span>
             </div>
           </div>
