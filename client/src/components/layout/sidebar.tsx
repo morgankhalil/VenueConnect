@@ -40,7 +40,7 @@ export function Sidebar({
   ];
 
   return (
-    <aside className="flex flex-shrink-0">
+    <aside className="hidden md:flex md:flex-shrink-0">
       <div className="flex flex-col w-64 border-r border-gray-200 pt-5 pb-4 bg-white">
         <div className="flex items-center flex-shrink-0 px-4">
           <h1 className="text-xl font-heading font-bold text-primary-800 flex items-center">
