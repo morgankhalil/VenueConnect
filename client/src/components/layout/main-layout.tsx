@@ -15,17 +15,21 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Get user data from API
-  const { data: user } = useQuery({
+  const { data: user, isLoading: isLoadingUser, error: userError } = useQuery({
     queryKey: ['/api/user'],
     queryFn: () => apiRequest('GET', '/api/user').then(res => res.json())
   });
 
   // Get connected venues from API
-  const { data: connectedVenues } = useQuery({
+  const { data: connectedVenues = [] } = useQuery({
     queryKey: ['/api/venues/connected'],
     queryFn: () => apiRequest('GET', '/api/venues/connected').then(res => res.json()),
     initialData: []
   });
+
+  if (isLoadingUser) return <div>Loading...</div>;
+  if (userError) return <div>Error loading user data</div>;
+  if (!user) return <div>No user data available</div>;
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
