@@ -1,9 +1,10 @@
+
 import { QueryClient } from '@tanstack/react-query';
 
 // Configure base API URL
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? 'https://your-fastapi-backend.com' // Replace with your actual API domain
-  : 'http://your-local-fastapi:8000'; // Replace with your local FAST API port
+  : `http://0.0.0.0:5000`; // Use port 5000 for local development
 
 export const queryClient = new QueryClient({
   defaultOptions: {
