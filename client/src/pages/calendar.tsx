@@ -9,20 +9,36 @@ export default function CalendarPage() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [filter, setFilter] = useState<string>("all");
 
-  const { data: events = [], isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['events'],
     queryFn: getEvents
   });
 
+  // Ensure events is always an array, even if the API returns null or undefined
+  const events = Array.isArray(data) ? data : [];
+
+  // Apply type filtering - use status if type is missing
   const filteredEvents = filter === "all" 
     ? events 
-    : events.filter(event => event.type === filter);
+    : events.filter(event => {
+        // Use the 'type' field if it exists, otherwise fall back to 'status'
+        const eventType = event.type || event.status;
+        return eventType === filter;
+      });
 
-  const currentMonthEvents = filteredEvents.filter(event => {
-    if (!date) return false;
-    return new Date(event.date).getMonth() === date.getMonth() && 
-           new Date(event.date).getFullYear() === date.getFullYear();
-  }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  // Get events for the current month
+  const currentMonthEvents = Array.isArray(filteredEvents) 
+    ? filteredEvents.filter(event => {
+        if (!date || !event || !event.date) return false;
+        const eventDate = new Date(event.date);
+        return eventDate.getMonth() === date.getMonth() && 
+               eventDate.getFullYear() === date.getFullYear();
+      }).sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateA - dateB;
+      })
+    : [];
 
   if (isLoading) return <div>Loading...</div>;
 
@@ -73,11 +89,17 @@ export default function CalendarPage() {
                 key={event.id}
                 className="p-4 rounded-md border"
               >
-                <h3 className="font-medium">{event.title}</h3>
+                <h3 className="font-medium">
+                  {event.title || 
+                   (event.artist ? event.artist.name : "Unnamed Event")}
+                </h3>
                 <p className="text-sm text-gray-500">
                   {new Date(event.date).toLocaleDateString()} {event.startTime}
                 </p>
-                <p className="text-sm">{event.description}</p>
+                <p className="text-sm">
+                  {event.description || 
+                   `At ${event.venue?.name || 'Unknown Venue'}${event.status ? ` (${event.status})` : ''}`}
+                </p>
               </div>
             ))}
           </div>

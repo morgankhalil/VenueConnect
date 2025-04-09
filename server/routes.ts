@@ -456,6 +456,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add API events endpoint
+  app.get("/api/events", async (req, res) => {
+    try {
+      // Get events with artists and venues
+      const results = await db
+        .select({
+          id: events.id,
+          artistId: events.artistId,
+          venueId: events.venueId,
+          date: events.date,
+          startTime: events.startTime,
+          status: events.status,
+          ticketUrl: events.ticketUrl,
+          sourceId: events.sourceId,
+          sourceName: events.sourceName,
+          createdAt: events.createdAt,
+          artist: artists,
+          venue: venues
+        })
+        .from(events)
+        .leftJoin(artists, eq(events.artistId, artists.id))
+        .leftJoin(venues, eq(events.venueId, venues.id));
+
+      // Transform to a more frontend-friendly format
+      const transformedResults = results.map(result => ({
+        id: result.id,
+        title: result.artist?.name || 'Unnamed Event',
+        artistId: result.artistId,
+        venueId: result.venueId,
+        date: result.date,
+        startTime: result.startTime,
+        status: result.status,
+        ticketUrl: result.ticketUrl,
+        sourceId: result.sourceId,
+        sourceName: result.sourceName,
+        createdAt: result.createdAt,
+        artist: result.artist,
+        venue: result.venue,
+        type: result.status,
+        description: `${result.artist?.name || 'Unknown Artist'} at ${result.venue?.name || 'Unknown Venue'}`
+      }));
+      
+      res.json(transformedResults);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      res.status(500).json({ error: "Failed to fetch events" });
+    }
+  });
+
   app.use(router);
   
   // Mount admin routes

@@ -49,6 +49,12 @@ export interface Event {
   status: string;
   sourceId: string | null;
   sourceName: string | null;
+  // Extended fields from API
+  type?: string;
+  title?: string;
+  description?: string;
+  artist?: Artist;
+  venue?: Venue;
 }
 
 export interface VenueNetwork {
