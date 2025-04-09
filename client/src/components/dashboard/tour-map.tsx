@@ -4,9 +4,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   defaultMapCenter, 
   defaultMapZoom, 
-  calculateCenter, 
-  calculateZoom, 
-  calculateDistance,
   venueMarkerColors, 
   routeLineStyle
 } from "@/lib/mapUtils";
@@ -26,6 +23,19 @@ interface TourMapProps {
   onDateRangeFilterChange?: (range: string) => void;
 }
 
+// Haversine distance calculation function
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Radius of the Earth in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c; // Distance in km
+}
+
 export function TourMap({ 
   events, 
   onSelectEvent,
@@ -35,73 +45,115 @@ export function TourMap({
   onDateRangeFilterChange
 }: TourMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const [map, setMap] = useState<any>(null);
-  const [mapLoaded, setMapLoaded] = useState(false);
+  const [map, setMap] = useState<L.Map | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Initialize map once when component mounts
   useEffect(() => {
-    let isMounted = true;
+    if (!mapContainerRef.current) return;
     
-    // Use the enhanced card-based visualization for a better user experience
-    console.log("Using enhanced timeline visualization");
-    setIsLoading(false);
-    setError("Enhanced routing timeline visualization activated");
-    
-    return () => {
-      isMounted = false;
-    };
+    try {
+      console.log("Initializing map");
+      
+      // Fix Leaflet icon path issues
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      });
+
+      // Create map instance
+      const leafletMap = L.map(mapContainerRef.current).setView(
+        [defaultMapCenter[1], defaultMapCenter[0]], // Convert to [lat, lng]
+        defaultMapZoom
+      );
+      
+      // Add tile layer (OpenStreetMap)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(leafletMap);
+      
+      setMap(leafletMap);
+      setIsLoading(false);
+      console.log("Map initialized successfully");
+      
+      return () => {
+        if (leafletMap) {
+          console.log("Cleaning up map");
+          leafletMap.remove();
+        }
+      };
+    } catch (err: any) {
+      console.error("Map initialization error:", err.message);
+      setError(`Map error: ${err.message}`);
+      setIsLoading(false);
+    }
   }, []);
 
-  // Marker and route layer references
-  const markersRef = useRef<L.Marker[]>([]);
-  const routeLayerRef = useRef<L.Polyline | null>(null);
-  
-  // Update map when events change
+  // Update markers and routes when events or map changes
   useEffect(() => {
-    if (map && mapLoaded && events.length > 0) {
-      // Clear existing markers
-      markersRef.current.forEach(marker => marker.remove());
-      markersRef.current = [];
+    if (!map || !events.length) return;
+    
+    try {
+      // Clear any existing layers
+      map.eachLayer(layer => {
+        if (layer instanceof L.Marker || layer instanceof L.Polyline) {
+          layer.remove();
+        }
+      });
       
-      // Clear existing route
-      if (routeLayerRef.current) {
-        routeLayerRef.current.remove();
-        routeLayerRef.current = null;
+      // Check if there's a base tile layer
+      let hasBaseTileLayer = false;
+      map.eachLayer(layer => {
+        if (layer instanceof L.TileLayer) {
+          hasBaseTileLayer = true;
+        }
+      });
+      
+      if (!hasBaseTileLayer) {
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
       }
-
-      // Add new markers for each event
+      
+      // Create bounds to fit all markers
       const bounds = L.latLngBounds([]);
       
+      // Add markers for each event
       events.forEach(event => {
         const { latitude, longitude, artist, venue, date, isCurrentVenue, isRoutingOpportunity } = event;
         
-        // Create custom icon based on event type
+        // Select marker color based on event type
         const markerColor = isCurrentVenue 
           ? venueMarkerColors.currentVenue 
           : isRoutingOpportunity 
             ? venueMarkerColors.routingOpportunity 
             : venueMarkerColors.confirmedVenue;
-            
+        
+        // Create custom marker with color
         const customIcon = L.divIcon({
           className: 'custom-marker',
-          html: `<div style="width: 20px; height: 20px; border-radius: 50%; background-color: ${markerColor}; border: 2px solid white;"></div>`,
-          iconSize: [20, 20],
-          iconAnchor: [10, 10]
+          html: `<div style="width: 24px; height: 24px; border-radius: 50%; background-color: ${markerColor}; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
         });
         
-        // Create popup with event details
+        // Create popup content
         const popupContent = `
-          <strong>${artist}</strong><br/>
-          ${venue}<br/>
-          ${new Date(date).toLocaleDateString()}
+          <div style="font-family: system-ui, sans-serif; padding: 4px;">
+            <strong style="font-size: 14px;">${artist}</strong><br/>
+            <span style="font-size: 13px;">${venue}</span><br/>
+            <span style="font-size: 12px; color: #666;">${new Date(date).toLocaleDateString()}</span>
+          </div>
         `;
         
         // Add marker to map
         const marker = L.marker([latitude, longitude], { icon: customIcon })
           .bindPopup(popupContent)
           .addTo(map);
-          
+        
         // Add click handler
         marker.on('click', () => {
           if (onSelectEvent) {
@@ -109,53 +161,43 @@ export function TourMap({
           }
         });
         
-        // Store marker reference for cleanup
-        markersRef.current.push(marker);
-        
         // Extend bounds to include this marker
         bounds.extend([latitude, longitude]);
       });
-
-      // Create a line connecting the events in chronological order
-      const sortedEvents = [...events].sort((a, b) => 
-        new Date(a.date).getTime() - new Date(b.date).getTime()
-      );
       
-      const routePoints = sortedEvents.map(event => 
-        [event.latitude, event.longitude] as [number, number]
-      );
-      
-      // Add the route line to the map
-      if (routePoints.length > 1) {
-        routeLayerRef.current = L.polyline(routePoints, {
+      // Create route line connecting venues chronologically
+      if (events.length > 1) {
+        const sortedEvents = [...events].sort((a, b) => 
+          new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+        
+        const routePoints = sortedEvents.map(event => 
+          [event.latitude, event.longitude] as [number, number]
+        );
+        
+        L.polyline(routePoints, {
           color: routeLineStyle.color,
           weight: routeLineStyle.width,
           dashArray: routeLineStyle.dashArray.join(','),
           opacity: 0.9
         }).addTo(map);
       }
-
-      // Fit map to bounds with padding
+      
+      // Fit map to bounds if we have any markers
       if (bounds.getNorthEast() && bounds.getSouthWest()) {
         map.fitBounds(bounds, {
-          padding: [50, 50], // Add padding
-          maxZoom: 12 // Limit zoom level
+          padding: [40, 40],
+          maxZoom: 11
         });
       }
+    } catch (err: any) {
+      console.error("Error updating map markers:", err);
     }
-  }, [map, mapLoaded, events, onSelectEvent]);
+  }, [map, events, onSelectEvent]);
 
-  const zoomIn = () => {
-    if (map) {
-      map.zoomIn();
-    }
-  };
-
-  const zoomOut = () => {
-    if (map) {
-      map.zoomOut();
-    }
-  };
+  // Zoom controls
+  const zoomIn = () => map?.zoomIn();
+  const zoomOut = () => map?.zoomOut();
 
   return (
     <Card>
@@ -200,19 +242,17 @@ export function TourMap({
             </div>
           ) : error ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-              <p className="text-primary-500 mb-2 font-medium">Route Timeline Visualization</p>
+              <p className="text-red-500 mb-2">Map Error</p>
               <p className="text-sm text-gray-600 mb-4">{error}</p>
               
-              {/* Enhanced card-based visualization with routing indicators */}
+              {/* Fallback visualization when map fails */}
               <div className="w-full max-w-2xl p-4 bg-white rounded-lg shadow overflow-auto max-h-[400px]">
                 <h4 className="font-medium text-gray-900 mb-3">Venue Routing Opportunities Timeline</h4>
                 
-                {/* Sort events chronologically for timeline display */}
                 <div className="space-y-0">
                   {[...events]
                     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
                     .map((event, idx, allEvents) => {
-                      // Calculate distance to next venue if applicable
                       const nextEvent = idx < allEvents.length - 1 ? allEvents[idx + 1] : null;
                       const hasNextEvent = nextEvent !== null;
                       
@@ -236,43 +276,23 @@ export function TourMap({
                                ' Confirmed Show'}
                             </div>
                             
-                            {/* Coordinates info */}
                             <div className="text-xs text-gray-400 mt-1">
                               Location: {event.latitude.toFixed(2)}, {event.longitude.toFixed(2)}
                             </div>
                           </div>
                           
-                          {/* Connection line to next event */}
+                          {/* Distance to next venue */}
                           {hasNextEvent && (
                             <div className="flex items-center my-2 ml-4">
                               <div className="w-1 h-16 bg-primary-300 rounded-full"></div>
                               <div className="ml-2 text-xs text-gray-500">
                                 <span className="text-primary-500 font-medium">
-                                  {((event.latitude !== nextEvent.latitude || event.longitude !== nextEvent.longitude) 
-                                    ? Math.round(
-                                        // Inline distance calculation to avoid import issues
-                                        (() => {
-                                          // Haversine formula
-                                          const R = 6371; // Earth radius in km
-                                          const lat1 = event.latitude;
-                                          const lon1 = event.longitude;
-                                          const lat2 = nextEvent.latitude;
-                                          const lon2 = nextEvent.longitude;
-                                          const deg2rad = (deg: number) => deg * (Math.PI / 180);
-                                          
-                                          const dLat = deg2rad(lat2 - lat1);
-                                          const dLon = deg2rad(lon2 - lon1);
-                                          
-                                          const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                                                    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
-                                                    Math.sin(dLon/2) * Math.sin(dLon/2);
-                                          
-                                          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-                                          return R * c; // Distance in km
-                                        })()
-                                      )
-                                    : 0)
-                                  } km
+                                  {Math.round(calculateDistance(
+                                    event.latitude,
+                                    event.longitude,
+                                    nextEvent.latitude,
+                                    nextEvent.longitude
+                                  ))} km
                                 </span> to next venue
                               </div>
                             </div>
@@ -306,7 +326,7 @@ export function TourMap({
         </div>
         
         {/* Map Legend */}
-        <div className="mt-4 flex items-center space-x-4 text-sm">
+        <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
           <div className="flex items-center">
             <span className="w-3 h-3 bg-green-500 rounded-full inline-block mr-1"></span>
             <span className="text-gray-600">Confirmed Show</span>
