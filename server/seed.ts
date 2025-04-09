@@ -32,27 +32,19 @@ async function seed() {
     // Insert demo venues
     const venueData = [
       {
-        name: 'The Echo Lounge',
-        address: '123 Main St',
-        city: 'Columbus',
-        state: 'OH',
-        zipCode: '43215',
+        name: 'Bug Jar',
+        address: '219 Monroe Ave',
+        city: 'Rochester',
+        state: 'NY',
+        zipCode: '14607',
         country: 'USA',
-        capacity: 1000,
-        latitude: 39.9612,
-        longitude: -82.9988,
-        ownerId: user.id
-      },
-      {
-        name: 'The Fillmore',
-        address: '456 Fillmore St',
-        city: 'San Francisco',
-        state: 'CA',
-        zipCode: '94117',
-        country: 'USA',
-        capacity: 1150,
-        latitude: 37.7749,
-        longitude: -122.4194,
+        capacity: 300,
+        latitude: 43.1517,
+        longitude: -77.5959,
+        description: 'The Bug Jar is a legendary Rochester music venue known for its indie and alternative shows',
+        contactEmail: 'info@bugjar.com',
+        contactPhone: '585-454-2966',
+        website: 'http://bugjar.com',
         ownerId: user.id
       }
     ];
