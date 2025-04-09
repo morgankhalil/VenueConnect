@@ -54,6 +54,8 @@ export function TourMap({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<MapboxMap | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [tokenLoading, setTokenLoading] = useState(true);
+  const [tokenFetched, setTokenFetched] = useState(false);
 
   useEffect(() => {
     // Load MapBox script dynamically
@@ -96,25 +98,39 @@ export function TourMap({
 
         if (isMounted) {
           setMap(mapInstance);
+          setTokenFetched(true);
+          setTokenLoading(false);
         }
       } catch (err) {
         console.error("Error initializing map:", err);
+        setTokenLoading(false);
       }
     };
     
     // Wait for both script to load and token to be fetched
     const fetchToken = async () => {
       try {
+        console.log("Fetching Mapbox token...");
         const response = await fetch('/api/mapbox-token');
         const data = await response.json();
+        console.log("Token response:", data);
+        
         if (isMounted) {
           localMapboxToken = data.token || "";
-          if (window.mapboxgl) {
-            initializeMap();
+          
+          if (localMapboxToken) {
+            console.log("Token received, length:", localMapboxToken.length);
+            if (window.mapboxgl) {
+              initializeMap();
+            }
+          } else {
+            console.log("Empty token received");
+            setTokenLoading(false);
           }
         }
       } catch (err) {
         console.error("Error fetching Mapbox token:", err);
+        setTokenLoading(false);
       }
     };
     
@@ -277,8 +293,6 @@ export function TourMap({
     }
   };
 
-  const mapboxTokenAvailable = window.mapboxgl && window.mapboxgl.accessToken;
-
   return (
     <Card>
       <CardContent className="p-4">
@@ -315,7 +329,7 @@ export function TourMap({
         </div>
         
         <div className="relative h-96 rounded-lg overflow-hidden bg-gray-50">
-          {!mapboxTokenAvailable ? (
+          {tokenLoading || !tokenFetched ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
               <p className="text-gray-500 mb-2">Waiting for Mapbox token...</p>
               <p className="text-sm text-gray-400">The map will display routing opportunities between venues once configured.</p>
