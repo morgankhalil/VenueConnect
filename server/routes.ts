@@ -9,7 +9,7 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { Router } from 'express';
 import { db } from './db';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, or, sql } from 'drizzle-orm';
 import { venues, artists, events, predictions, collaborativeOpportunities, collaborativeParticipants, venueNetwork, messages } from '../shared/schema';
 
 // Import admin and webhook routes
@@ -233,58 +233,80 @@ router.post('/api/venue-network', async (req, res) => {
 router.get('/api/venue-network/graph/:id', async (req, res) => {
   const venueId = parseInt(req.params.id);
   
-  // First get the main venue
-  const mainVenue = await db
-    .select()
-    .from(venues)
-    .where(eq(venues.id, venueId))
-    .limit(1);
+  try {
+    // First get the main venue
+    const mainVenue = await db
+      .select()
+      .from(venues)
+      .where(eq(venues.id, venueId))
+      .limit(1);
 
-  if (!mainVenue.length) {
-    return res.status(404).json({ error: "Venue not found" });
+    if (!mainVenue.length) {
+      return res.status(404).json({ error: "Venue not found" });
+    }
+
+    // Get connections
+    const connections = await db
+      .select()
+      .from(venueNetwork)
+      .where(eq(venueNetwork.venueId, venueId));
+
+    // Get connected venues
+    const connectedVenueIds = connections.map(c => c.connectedVenueId);
+    
+    // Use a different approach to get connected venues
+    let connectedVenues: any[] = [];
+    
+    // Fetch each venue individually to avoid type issues
+    for (const id of connectedVenueIds) {
+      const result = await db
+        .select()
+        .from(venues)
+        .where(eq(venues.id, id));
+      
+      if (result.length > 0) {
+        connectedVenues.push(result[0]);
+      }
+    }
+
+    // Create nodes for visualization
+    const mainVenueNode = {
+      id: mainVenue[0].id,
+      name: mainVenue[0].name,
+      city: mainVenue[0].city,
+      state: mainVenue[0].state,
+      isCurrentVenue: true,
+      collaborativeBookings: 0,
+      trustScore: 0,
+      latitude: mainVenue[0].latitude,
+      longitude: mainVenue[0].longitude
+    };
+
+    const connectedNodes = connectedVenues.map(venue => ({
+      id: venue.id,
+      name: venue.name,
+      city: venue.city,
+      state: venue.state,
+      isCurrentVenue: false,
+      collaborativeBookings: connections.find(c => c.connectedVenueId === venue.id)?.collaborativeBookings || 0,
+      trustScore: connections.find(c => c.connectedVenueId === venue.id)?.trustScore || 0,
+      latitude: venue.latitude,
+      longitude: venue.longitude
+    }));
+
+    const nodes = [mainVenueNode, ...connectedNodes];
+
+    const links = connections.map(conn => ({
+      source: conn.venueId,
+      target: conn.connectedVenueId,
+      value: conn.collaborativeBookings || 1
+    }));
+
+    res.json({ nodes, links });
+  } catch (error) {
+    console.error("Error fetching venue network graph:", error);
+    res.status(500).json({ error: "Failed to fetch venue network data" });
   }
-
-  // Get connections
-  const connections = await db
-    .select()
-    .from(venueNetwork)
-    .where(eq(venueNetwork.venueId, venueId));
-
-  // Get connected venues
-  const connectedVenueIds = connections.map(c => c.connectedVenueId);
-  
-  // Fetch connected venues
-  const connectedVenues = await db
-    .select()
-    .from(venues)
-    .where(
-      sql`id = ANY(${sql.array(connectedVenueIds, 'int4')})`
-    );
-
-  const networkVenues = [
-    { ...mainVenue[0], isCurrentVenue: true },
-    ...connectedVenues.map(venue => ({ ...venue, isCurrentVenue: false }))
-  ];
-
-  const nodes = networkVenues.map(venue => ({
-    id: venue.id,
-    name: venue.name,
-    city: venue.city,
-    state: venue.state,
-    isCurrentVenue: venue.isCurrentVenue,
-    collaborativeBookings: connections.find(c => c.connectedVenueId === venue.id)?.collaborativeBookings || 0,
-    trustScore: connections.find(c => c.connectedVenueId === venue.id)?.trustScore || 0,
-    latitude: venue.latitude,
-    longitude: venue.longitude
-  }));
-
-  const links = connections.map(conn => ({
-    source: conn.venueId,
-    target: conn.connectedVenueId,
-    value: conn.collaborativeBookings || 1
-  }));
-
-  res.json({ nodes, links });
 });
 
 
