@@ -1,9 +1,13 @@
 import React, { useState } from "react";
+import { useLocation } from "wouter";
 import { 
   Menu, 
   Search as SearchIcon, 
   Bell, 
-  ChevronDown
+  ChevronDown,
+  User,
+  Settings as SettingsIcon,
+  CreditCard
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -33,6 +37,7 @@ export function Header({
   onSearch 
 }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [, navigate] = useLocation();
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,9 +107,18 @@ export function Header({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Billing</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/profile")}>
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/settings")}>
+                <SettingsIcon className="mr-2 h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/billing")}>
+                <CreditCard className="mr-2 h-4 w-4" />
+                Billing
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onLogout}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
