@@ -30,9 +30,9 @@ export default function Settings() {
 
   // Get venue data from API
   const { data: venue, isLoading: isLoadingVenue } = useQuery({
-    queryKey: ['/api/venues/14'], // Using venue ID from user
-    queryFn: () => apiRequest('GET', `/api/venues/14`).then(res => res.json()),
-    enabled: !!user // Only run this query if user data exists
+    queryKey: ['/api/venues', user?.id], 
+    queryFn: () => apiRequest('GET', `/api/venues/${user?.id}`).then(res => res.json()),
+    enabled: !!user && !!user.id // Only run this query if user data exists and has ID
   });
   
   // Update form values when user data is loaded
@@ -247,23 +247,23 @@ export default function Settings() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="venue-address">Address</Label>
-                      <Input id="venue-address" defaultValue="123 Main St" />
+                      <Input id="venue-address" defaultValue={venue?.address || ""} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="venue-city">City</Label>
-                      <Input id="venue-city" defaultValue="Columbus" />
+                      <Input id="venue-city" defaultValue={venue?.city || ""} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="venue-state">State</Label>
-                      <Input id="venue-state" defaultValue="OH" />
+                      <Input id="venue-state" defaultValue={venue?.state || ""} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="venue-zip">Zip Code</Label>
-                      <Input id="venue-zip" defaultValue="43215" />
+                      <Input id="venue-zip" defaultValue={venue?.zipCode || ""} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="venue-capacity">Capacity</Label>
-                      <Input id="venue-capacity" type="number" defaultValue="1000" />
+                      <Input id="venue-capacity" type="number" defaultValue={venue?.capacity || 0} />
                     </div>
                   </div>
                   
@@ -272,7 +272,7 @@ export default function Settings() {
                     <Textarea 
                       id="venue-description" 
                       className="min-h-[100px]"
-                      defaultValue="The Echo Lounge is a premier music venue in Columbus, featuring state-of-the-art sound systems and an intimate atmosphere for performances."
+                      defaultValue={venue?.description || "No venue description available."}
                     />
                   </div>
                   
@@ -284,11 +284,11 @@ export default function Settings() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="stage-dimensions">Stage Dimensions</Label>
-                          <Input id="stage-dimensions" defaultValue="30ft x 20ft" />
+                          <Input id="stage-dimensions" defaultValue={venue?.stageDimensions || ""} />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="sound-system">Sound System</Label>
-                          <Input id="sound-system" defaultValue="L-Acoustics PA System" />
+                          <Input id="sound-system" defaultValue={venue?.soundSystem || ""} />
                         </div>
                       </div>
                       <div className="space-y-2">
@@ -296,7 +296,7 @@ export default function Settings() {
                         <Textarea 
                           id="tech-specs" 
                           className="min-h-[100px]"
-                          defaultValue="Complete sound system with digital mixing console, professional lighting rig, green rooms, and backstage amenities."
+                          defaultValue={venue?.technicalDetails || ""}
                         />
                       </div>
                     </div>
@@ -369,65 +369,47 @@ export default function Settings() {
                         <div>Actions</div>
                       </div>
                       
-                      <div className="p-4 border-b grid grid-cols-5 items-center">
-                        <div className="col-span-2">The Fillmore (San Francisco)</div>
-                        <div>
-                          <Select defaultValue="high">
-                            <SelectTrigger>
-                              <SelectValue placeholder="Trust Level" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="high">High</SelectItem>
-                              <SelectItem value="medium">Medium</SelectItem>
-                              <SelectItem value="low">Low</SelectItem>
-                            </SelectContent>
-                          </Select>
+                      {/* This would ideally be populated from the API with venue connections */}
+                      {/* Display a loading state while fetching network connections */}
+                      {!venue ? (
+                        <div className="p-4 text-center text-muted-foreground">
+                          Loading network connections...
                         </div>
-                        <div>Full Access</div>
-                        <div>
-                          <Button variant="outline" size="sm">Edit</Button>
+                      ) : venue.networkConnections && venue.networkConnections.length > 0 ? (
+                        // If there are connections, map through them
+                        venue.networkConnections.map((connection, index) => (
+                          <div key={index} className="p-4 border-b grid grid-cols-5 items-center">
+                            <div className="col-span-2">{connection.venueName || "Unnamed Venue"}</div>
+                            <div>
+                              <Select defaultValue={connection.trustLevel || "medium"}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Trust Level" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="high">High</SelectItem>
+                                  <SelectItem value="medium">Medium</SelectItem>
+                                  <SelectItem value="low">Low</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>{connection.accessLevel || "Limited Access"}</div>
+                            <div>
+                              <Button variant="outline" size="sm">Edit</Button>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        // If no connections, show empty state
+                        <div className="p-4 text-center text-muted-foreground">
+                          No network connections yet. Connect with other venues to build your network.
                         </div>
-                      </div>
-                      
-                      <div className="p-4 border-b grid grid-cols-5 items-center">
-                        <div className="col-span-2">9:30 Club (Washington DC)</div>
-                        <div>
-                          <Select defaultValue="medium">
-                            <SelectTrigger>
-                              <SelectValue placeholder="Trust Level" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="high">High</SelectItem>
-                              <SelectItem value="medium">Medium</SelectItem>
-                              <SelectItem value="low">Low</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>Limited Access</div>
-                        <div>
-                          <Button variant="outline" size="sm">Edit</Button>
-                        </div>
-                      </div>
-                      
-                      <div className="p-4 grid grid-cols-5 items-center">
-                        <div className="col-span-2">First Avenue (Minneapolis)</div>
-                        <div>
-                          <Select defaultValue="low">
-                            <SelectTrigger>
-                              <SelectValue placeholder="Trust Level" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="high">High</SelectItem>
-                              <SelectItem value="medium">Medium</SelectItem>
-                              <SelectItem value="low">Low</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>Basic Access</div>
-                        <div>
-                          <Button variant="outline" size="sm">Edit</Button>
-                        </div>
-                      </div>
+                      )}
+                    </div>
+                    
+                    <div className="text-right mt-4">
+                      <Button variant="outline">
+                        Add New Connection
+                      </Button>
                     </div>
                   </div>
                   
