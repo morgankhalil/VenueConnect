@@ -204,14 +204,27 @@ router.get('/venue-network/graph/:id', async (req, res) => {
 // Get current user
 router.get("/api/user", async (req, res) => {
   try {
-    // For now, return a default user until auth is implemented
-    res.json({
-      id: 1,
-      name: "Bug Jar Admin",
-      venueName: "Bug Jar",
-      avatar: undefined
-    });
+    // Get first user from venues table as default user
+    const user = await db.select().from(venues).limit(1);
+    
+    if (user && user[0]) {
+      res.json({
+        id: user[0].id,
+        name: user[0].name,
+        venueName: user[0].name,
+        avatar: undefined
+      });
+    } else {
+      // Fallback data if no venues exist
+      res.json({
+        id: 1,
+        name: "Demo User",
+        venueName: "Demo Venue",
+        avatar: undefined
+      });
+    }
   } catch (error) {
+    console.error("Error fetching user:", error);
     res.status(500).json({ error: "Failed to get user data" });
   }
 });
