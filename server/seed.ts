@@ -146,6 +146,27 @@ async function seed() {
       }
     }
 
+    // Create predictions for each artist with random venues
+    for (const artist of sampleArtists) {
+      const randomVenue = venues[Math.floor(Math.random() * venues.length)];
+      const futureDates = [15, 30, 45, 60].map(days => {
+        const date = new Date();
+        date.setDate(date.getDate() + days);
+        return date;
+      });
+
+      for (const date of futureDates) {
+        await db.insert(predictions).values({
+          artistId: artist.id,
+          venueId: randomVenue.id,
+          suggestedDate: date.toISOString().split('T')[0],
+          confidenceScore: Math.floor(Math.random() * 30) + 70, // 70-100
+          status: 'pending',
+          reasoning: `${artist.name} has played similar venues in this region`
+        });
+      }
+    }
+
     // Insert webhook configurations
     await db.insert(webhookConfigurations).values([
       {
