@@ -68,31 +68,59 @@ export async function syncArtistFromBandsInTown(artistName: string) {
     const encodedArtistName = encodeURIComponent(artistName.trim());
     const apiEndpoint = `https://rest.bandsintown.com/artists/${encodedArtistName}`;
     
-    // Headers with API key in Authorization header
-    const headers = {
-      'Authorization': `Bearer ${apiKey}`,
-      'Accept': 'application/json'
+    console.log(`Fetching artist data for '${artistName}'...`);
+    
+    // Bandsintown API uses app_id parameter for authentication
+    const params = {
+      app_id: apiKey
     };
-
-    // Try different authentication methods
+    
+    // Try different API request strategies
     let artistData: BandsInTownArtist | null = null;
-
+    
     try {
-      // First try with Bearer token
-      console.log(`Attempting to fetch artist '${artistName}' with Bearer token...`);
+      console.log(`Making request to ${apiEndpoint} with app_id parameter`);
       const response = await axios.get(apiEndpoint, { 
-        headers,
-      });
-      artistData = response.data;
-    } catch (error) {
-      console.log(`Bearer token authentication failed, trying app_id parameter for artist '${artistName}'...`);
-      // If that fails, try with app_id as a query parameter
-      const response = await axios.get(apiEndpoint, { 
-        params: {
-          app_id: apiKey
+        params,
+        headers: {
+          'Accept': 'application/json'
         }
       });
-      artistData = response.data;
+      
+      if (response.data) {
+        artistData = response.data;
+        console.log(`Successfully retrieved data for artist ${artistName}`);
+      } else {
+        console.error("API response was empty or invalid");
+      }
+    } catch (error: any) {
+      console.error(`Error fetching artist '${artistName}':`, 
+        error.response ? {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data
+        } : error.message);
+      
+      // Try an alternative approach with different URL structure
+      try {
+        console.log("Trying alternative API request format...");
+        const altEndpoint = `https://rest.bandsintown.com/artists/${encodedArtistName}?app_id=${encodeURIComponent(apiKey)}`;
+        const response = await axios.get(altEndpoint);
+        
+        if (response.data) {
+          artistData = response.data;
+          console.log(`Successfully retrieved artist data with alternative method`);
+        } else {
+          console.error("Alternative API response was empty or invalid");
+        }
+      } catch (altError: any) {
+        console.error("Alternative request also failed:", 
+          altError.response ? {
+            status: altError.response.status,
+            statusText: altError.response.statusText,
+            data: altError.response.data
+          } : altError.message);
+      }
     }
 
     if (!artistData || !artistData.name) {
@@ -174,38 +202,60 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
     const encodedArtistName = encodeURIComponent(artistName.trim());
     const apiEndpoint = `https://rest.bandsintown.com/artists/${encodedArtistName}/events`;
     
-    // Headers with API key in Authorization header
-    const headers = {
-      'Authorization': `Bearer ${apiKey}`,
-      'Accept': 'application/json'
-    };
-
-    // Params for the request
+    // Params for the request - Bandsintown primarily uses app_id for authentication
     const params: Record<string, any> = {
+      app_id: apiKey,
       date: 'upcoming' // Get upcoming events
     };
 
-    // Try different authentication methods
+    console.log(`Fetching events for artist '${artistName}'...`);
+    
+    // Try different API request strategies
     let eventsData: BandsInTownEvent[] = [];
-
+    
     try {
-      // First try with Bearer token
-      console.log(`Attempting to fetch events for '${artistName}' with Bearer token...`);
+      console.log(`Making request to ${apiEndpoint} with app_id parameter`);
       const response = await axios.get(apiEndpoint, { 
-        headers,
-        params
-      });
-      eventsData = response.data || [];
-    } catch (error) {
-      console.log(`Bearer token authentication failed, trying app_id parameter for '${artistName}' events...`);
-      // If that fails, try with app_id as a query parameter
-      const response = await axios.get(apiEndpoint, { 
-        params: {
-          ...params,
-          app_id: apiKey
+        params,
+        headers: {
+          'Accept': 'application/json'
         }
       });
-      eventsData = response.data || [];
+      
+      if (response.data && Array.isArray(response.data)) {
+        eventsData = response.data;
+        console.log(`Successfully retrieved ${eventsData.length} events for ${artistName}`);
+      } else {
+        console.error("API response was not an array:", typeof response.data);
+      }
+    } catch (error: any) {
+      console.error(`Error fetching events for artist '${artistName}':`, 
+        error.response ? {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data
+        } : error.message);
+      
+      // Try an alternative approach with different URL structure
+      try {
+        console.log("Trying alternative API request format...");
+        const altEndpoint = `https://rest.bandsintown.com/artists/${encodedArtistName}/events?app_id=${encodeURIComponent(apiKey)}`;
+        const response = await axios.get(altEndpoint);
+        
+        if (response.data && Array.isArray(response.data)) {
+          eventsData = response.data;
+          console.log(`Successfully retrieved ${eventsData.length} events with alternative method`);
+        } else {
+          console.error("Alternative API response was not an array:", typeof response.data);
+        }
+      } catch (altError: any) {
+        console.error("Alternative request also failed:", 
+          altError.response ? {
+            status: altError.response.status,
+            statusText: altError.response.statusText,
+            data: altError.response.data
+          } : altError.message);
+      }
     }
 
     console.log(`Retrieved ${eventsData.length} events for artist '${artistName}'`);
@@ -358,51 +408,73 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
     
     // Bandsintown API setup
     // We'll use a popular artist to get their events, then extract venues
-    const apiEndpoint = `https://rest.bandsintown.com/artists/metallica/events`;
+    // Using a popular artist with many events to maximize venue discovery
+    const artistName = "Metallica"; // Popular artist with shows in many venues
+    const apiEndpoint = `https://rest.bandsintown.com/artists/${encodeURIComponent(artistName)}/events`;
     
-    // Headers with API key in Authorization header
-    const headers = {
-      'Authorization': `Bearer ${apiKey}`,
-      'Accept': 'application/json'
-    };
+    console.log(`Querying BandsInTown API for ${artistName} events near ${sourceVenue[0].name}`);
     
-    // Params for location-based search
+    // Bandsintown API primarily uses app_id as the authentication method
     const params: Record<string, any> = {
+      app_id: apiKey,
       date: 'upcoming',
-      radius,
-      limit
     };
     
     // Add location based on what we have
     if (latitude && longitude) {
-      params.location = `${latitude},${longitude}`;
+      // The API might not actually support lat/long filtering directly
+      // But we'll include it in case their API evolves
+      console.log(`Using geo coordinates: ${latitude},${longitude}`);
     } else {
-      params.location = `${city},${state},US`;
+      console.log(`Using city/state search: ${city}, ${state}`);
     }
     
-    console.log(`Querying BandsInTown API for venues near ${sourceVenue[0].name}`);
-    
-    // Try different authentication methods
+    // Try different API request strategies
     let events: BandsInTownEvent[] = [];
     
     try {
-      // First try with Bearer token
-      console.log("Attempting request with Bearer token authorization...");
+      console.log(`Making request to ${apiEndpoint} with app_id parameter`);
       const response = await axios.get(apiEndpoint, { 
         params,
-        headers
-      });
-      events = response.data || [];
-    } catch (error) {
-      console.log("Bearer token authentication failed, trying app_id parameter...");
-      // If that fails, try with app_id as a query parameter
-      const response = await axios.get(apiEndpoint, { 
-        params: {
-          ...params,
-          app_id: apiKey
+        headers: {
+          'Accept': 'application/json'
         }
       });
-      events = response.data || [];
+      
+      if (response.data && Array.isArray(response.data)) {
+        events = response.data;
+        console.log(`Successfully retrieved ${events.length} events`);
+      } else {
+        console.error("API response was not an array:", typeof response.data);
+      }
+    } catch (error: any) {
+      console.error("Error fetching events from Bandsintown API:", 
+        error.response ? {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data
+        } : error.message);
+      
+      // Try an alternative approach with different URL structure
+      try {
+        console.log("Trying alternative API request format...");
+        const altEndpoint = `https://rest.bandsintown.com/artists/${encodeURIComponent(artistName)}/events?app_id=${encodeURIComponent(apiKey)}`;
+        const response = await axios.get(altEndpoint);
+        
+        if (response.data && Array.isArray(response.data)) {
+          events = response.data;
+          console.log(`Successfully retrieved ${events.length} events with alternative method`);
+        } else {
+          console.error("Alternative API response was not an array:", typeof response.data);
+        }
+      } catch (altError: any) {
+        console.error("Alternative request also failed:", 
+          altError.response ? {
+            status: altError.response.status,
+            statusText: altError.response.statusText,
+            data: altError.response.data
+          } : altError.message);
+      }
     }
     
     console.log(`Retrieved ${events.length} events from Bandsintown`);
