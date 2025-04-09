@@ -2,6 +2,12 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
+
+import webhookRouter from './webhooks/webhook-routes';
+
+// Add webhook routes
+app.use('/api/webhooks', webhookRouter);
+
 import { insertUserSchema, insertVenueSchema, insertArtistSchema, insertEventSchema, 
          insertVenueNetworkSchema, insertPredictionSchema, insertInquirySchema, 
          insertCollaborativeOpportunitySchema, insertCollaborativeParticipantSchema } from "@shared/schema";

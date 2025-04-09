@@ -7,6 +7,28 @@ async function seed() {
     // Clear all existing data
     console.log('Clearing existing data...');
     await db.delete(venueNetwork);
+
+import { registerBandsintownWebhook } from './webhooks/webhook-setup';
+
+// Function to setup webhooks after seeding
+async function setupWebhooks() {
+  const baseUrl = process.env.BASE_URL || 'https://venue-platform.example.com';
+  const webhookUrl = `${baseUrl}/api/webhooks/bandsintown`;
+  
+  try {
+    const apiKey = process.env.BANDSINTOWN_API_KEY;
+    if (!apiKey) {
+      console.error('BANDSINTOWN_API_KEY not configured');
+      return;
+    }
+
+    const result = await registerBandsintownWebhook(webhookUrl, apiKey);
+    console.log('Webhook setup result:', result);
+  } catch (error) {
+    console.error('Error setting up webhooks:', error);
+  }
+}
+
     await db.delete(venues);
     await db.delete(users);
     console.log('Database cleared successfully');
