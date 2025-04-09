@@ -21,7 +21,11 @@ export default function VenueNetwork() {
   // Fetch network data
   const { data: networkData, isLoading: isLoadingNetwork } = useQuery({
     queryKey: ['/api/venue-network/graph', currentVenueId],
-    queryFn: () => getVenueNetworkGraph(currentVenueId)
+    queryFn: async () => {
+      const data = await getVenueNetworkGraph(currentVenueId);
+      console.log('Network data from API:', data);
+      return data;
+    }
   });
 
   // Fetch collaborative opportunities (This is removed in the edited code, but kept for completeness if needed later)
@@ -83,7 +87,7 @@ export default function VenueNetwork() {
     );
   }
 
-  if (!networkData || !networkData.nodes?.length) {
+  if (!networkData?.nodes || networkData.nodes.length === 0) {
     return (
       <div className="py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
