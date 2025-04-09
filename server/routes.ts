@@ -61,6 +61,33 @@ router.get('/events', async (req, res) => {
   res.json(result);
 });
 
+router.get('/venues/recent', async (req, res) => {
+  const result = await db.select()
+    .from(venues)
+    .orderBy(sql`created_at DESC`)
+    .limit(3);
+  res.json(result);
+});
+
+router.get('/events/calendar', async (req, res) => {
+  const { month, year } = req.query;
+  const result = await db.select({
+    events: events,
+    artist: artists,
+    venue: venues
+  })
+  .from(events)
+  .leftJoin(artists, eq(events.artistId, artists.id))
+  .leftJoin(venues, eq(events.venueId, venues.id))
+  .where(
+    and(
+      sql`EXTRACT(MONTH FROM ${events.date}) = ${month}`,
+      sql`EXTRACT(YEAR FROM ${events.date}) = ${year}`
+    )
+  );
+  res.json(result);
+});
+
 router.get('/venues/:id/events', async (req, res) => {
   const result = await db.select().from(events).where(eq(events.venueId, parseInt(req.params.id)));
   res.json(result);

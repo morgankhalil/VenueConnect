@@ -26,63 +26,11 @@ export default function Dashboard() {
     queryFn: getPredictionsWithDetails
   });
 
-  // Recent venues data - this would be fetched from API in a real app
-  const recentVenues = [
-    {
-      id: 1,
-      name: "The Fillmore",
-      address: "456 Fillmore St",
-      city: "San Francisco",
-      state: "CA",
-      zipCode: "94117",
-      country: "USA",
-      capacity: 1150,
-      contactEmail: null,
-      contactPhone: null,
-      latitude: 37.7749,
-      longitude: -122.4194,
-      website: null,
-      description: null,
-      imageUrl: null,
-      ownerId: 2
-    },
-    {
-      id: 2,
-      name: "9:30 Club",
-      address: "815 V St NW",
-      city: "Washington",
-      state: "DC",
-      zipCode: "20001",
-      country: "USA",
-      capacity: 1200,
-      contactEmail: null,
-      contactPhone: null,
-      latitude: 38.9172,
-      longitude: -77.0250,
-      website: null,
-      description: null,
-      imageUrl: null,
-      ownerId: 3
-    },
-    {
-      id: 3,
-      name: "First Avenue",
-      address: "701 N 1st Ave",
-      city: "Minneapolis",
-      state: "MN",
-      zipCode: "55403",
-      country: "USA",
-      capacity: 1550,
-      contactEmail: null,
-      contactPhone: null,
-      latitude: 44.9781,
-      longitude: -93.2763,
-      website: null,
-      description: null,
-      imageUrl: null,
-      ownerId: 4
-    }
-  ];
+  // Fetch recent venues
+  const { data: recentVenues, isLoading: isLoadingVenues } = useQuery({
+    queryKey: ['/api/venues/recent'],
+    queryFn: () => apiRequest('GET', '/api/venues/recent').then(res => res.json())
+  });
 
   const handleSendInquiry = (prediction: PredictionWithDetails) => {
     toast({

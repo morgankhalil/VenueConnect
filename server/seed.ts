@@ -1,5 +1,7 @@
+
 import { db } from './db';
 import { users, venues, artists, events, predictions, venueNetwork, collaborativeOpportunities, collaborativeParticipants, inquiries } from '../shared/schema';
+import { eq } from 'drizzle-orm';
 
 async function seed() {
   try {
@@ -48,17 +50,41 @@ async function seed() {
         latitude: 37.7749,
         longitude: -122.4194,
         ownerId: user.id
+      },
+      {
+        name: '9:30 Club',
+        address: '815 V St NW',
+        city: 'Washington',
+        state: 'DC',
+        zipCode: '20001',
+        country: 'USA',
+        capacity: 1200,
+        latitude: 38.9172,
+        longitude: -77.0250,
+        ownerId: user.id
+      },
+      {
+        name: 'First Avenue',
+        address: '701 N 1st Ave',
+        city: 'Minneapolis',
+        state: 'MN',
+        zipCode: '55403',
+        country: 'USA',
+        capacity: 1550,
+        latitude: 44.9781,
+        longitude: -93.2763,
+        ownerId: user.id
       }
     ];
 
     const insertedVenues = await db.insert(venues).values(venueData).returning();
 
-    // Insert demo artists
+    // Insert demo artists with more realistic data
     const artistData = [
       {
-        name: 'The Black Keys',
-        genres: ['rock', 'blues'],
-        popularity: 85
+        name: 'Fleet Foxes',
+        genres: ['indie', 'folk'],
+        popularity: 89
       },
       {
         name: 'Japanese Breakfast',
@@ -67,80 +93,42 @@ async function seed() {
       },
       {
         name: 'Khruangbin',
-        genres: ['funk', 'world'],
-        popularity: 82
+        genres: ['rock', 'world'],
+        popularity: 85
+      },
+      {
+        name: 'The National',
+        genres: ['indie', 'rock'],
+        popularity: 90
+      },
+      {
+        name: 'Big Thief',
+        genres: ['indie', 'folk'],
+        popularity: 87
       }
     ];
 
     const insertedArtists = await db.insert(artists).values(artistData).returning();
 
-    // Insert demo events
-    const today = new Date();
-    const eventData = insertedArtists.map((artist, index) => ({
-      artistId: artist.id,
-      venueId: insertedVenues[0].id,
-      date: new Date(today.getFullYear(), today.getMonth() + index, 15).toISOString(),
-      startTime: '20:00',
-      status: index === 0 ? 'confirmed' : index === 1 ? 'hold' : 'opportunity'
-    }));
+    // Insert more varied events
+    const eventTypes = ['confirmed', 'hold', 'opportunity', 'inquiry'];
+    const events = [];
+    
+    for (let i = 0; i < 20; i++) {
+      const eventDate = new Date();
+      eventDate.setDate(eventDate.getDate() + Math.floor(Math.random() * 90));
+      
+      events.push({
+        artistId: insertedArtists[Math.floor(Math.random() * insertedArtists.length)].id,
+        venueId: insertedVenues[Math.floor(Math.random() * insertedVenues.length)].id,
+        date: eventDate.toISOString(),
+        startTime: '20:00',
+        status: eventTypes[Math.floor(Math.random() * eventTypes.length)],
+        ticketUrl: 'https://example.com/tickets'
+      });
+    }
 
-    await db.insert(events).values(eventData);
-
-    // Insert demo predictions
-    const predictionData = [
-      {
-        artistId: insertedArtists[0].id,
-        venueId: insertedVenues[0].id,
-        suggestedDate: new Date(2025, 1, 18).toISOString(),
-        confidenceScore: 92,
-        status: 'pending',
-        reasoning: 'Strong match based on venue capacity and artist routing'
-      },
-      {
-        artistId: insertedArtists[1].id,
-        venueId: insertedVenues[0].id,
-        suggestedDate: new Date(2025, 2, 15).toISOString(),
-        confidenceScore: 88,
-        status: 'pending',
-        reasoning: 'Artist has performed at similar venues in the region'
-      }
-    ];
-
-    await db.insert(predictions).values(predictionData);
-
-    // Insert demo venue network connections
-    const networkData = {
-      venueId: insertedVenues[0].id,
-      connectedVenueId: insertedVenues[1].id,
-      status: 'active',
-      trustScore: 85,
-      collaborativeBookings: 12
-    };
-
-    await db.insert(venueNetwork).values(networkData);
-
-    // Insert collaborative opportunities
-    const [opportunity] = await db.insert(collaborativeOpportunities).values({
-      artistId: insertedArtists[1].id,
-      creatorVenueId: insertedVenues[0].id,
-      dateRangeStart: new Date(2025, 2, 15).toISOString(),
-      dateRangeEnd: new Date(2025, 2, 30).toISOString(),
-      status: 'pending'
-    }).returning();
-
-    // Insert collaborative participants
-    await db.insert(collaborativeParticipants).values([
-      {
-        opportunityId: opportunity.id,
-        venueId: insertedVenues[0].id,
-        status: 'pending'
-      },
-      {
-        opportunityId: opportunity.id,
-        venueId: insertedVenues[1].id,
-        status: 'pending'
-      }
-    ]);
+    await db.insert(events).values(events);
 
     console.log('Database seeded successfully');
   } catch (error) {
