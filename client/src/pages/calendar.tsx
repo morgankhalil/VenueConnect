@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import FullMonthCalendar from "@/components/calendar/full-month-calendar";
 import CalendarLegend from "@/components/calendar/calendar-legend";
 import EventModal from "@/components/calendar/event-modal";
@@ -313,18 +314,20 @@ export default function Calendar() {
         <div className="mt-6">
           <Tabs defaultValue="month" value={view} onValueChange={setView}>
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <Button variant="outline" size="icon" onClick={goToPreviousMonth}>
-                  <ChevronLeft className="h-4 w-4" />
+              <div className="flex items-center space-x-4">
+                <Button variant="outline" size="sm" onClick={goToPreviousMonth} className="rounded-full px-4">
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Previous
                 </Button>
-                <div className="text-lg font-medium">
+                <div className="text-xl font-semibold">
                   {date?.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                 </div>
-                <Button variant="outline" size="icon" onClick={goToNextMonth}>
-                  <ChevronRight className="h-4 w-4" />
+                <Button variant="outline" size="sm" onClick={goToNextMonth} className="rounded-full px-4">
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
-              <TabsList>
+              <TabsList className="rounded-full">
                 <TabsTrigger value="month">Month</TabsTrigger>
                 <TabsTrigger value="week">Week</TabsTrigger>
                 <TabsTrigger value="day">Day</TabsTrigger>
@@ -465,31 +468,36 @@ export default function Calendar() {
 
             <TabsContent value="week">
               <div className="space-y-6">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <Button variant="outline" size="sm" onClick={goToPreviousWeek}>
+                <Card className="w-full">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-6">
+                      <Button variant="outline" size="sm" onClick={goToPreviousWeek} className="rounded-full px-4">
                         <ChevronLeft className="h-4 w-4 mr-1" />
-                        Previous Week
+                        Previous
                       </Button>
-                      <h3 className="text-lg font-medium text-center">
+                      <h3 className="text-xl font-semibold text-center">
                         {date && getWeekBounds(new Date(date)).monday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         {' - '}
                         {date && getWeekBounds(new Date(date)).sunday.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </h3>
-                      <Button variant="outline" size="sm" onClick={goToNextWeek}>
-                        Next Week
+                      <Button variant="outline" size="sm" onClick={goToNextWeek} className="rounded-full px-4">
+                        Next
                         <ChevronRight className="h-4 w-4 ml-1" />
                       </Button>
                     </div>
-                  </CardHeader>
-                  <CardContent className="p-4">
-                    <div className="grid grid-cols-7 gap-1 mb-2 text-center text-sm font-medium">
+                    
+                    <div className="mb-2 grid grid-cols-7 text-center rounded-t-lg overflow-hidden">
                       {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                        <div key={day} className="py-2 border-b">{day}</div>
+                        <div 
+                          key={day} 
+                          className="font-medium text-xs sm:text-sm py-3 bg-gray-100 border-b border-gray-200"
+                        >
+                          {day}
+                        </div>
                       ))}
                     </div>
-                    <div className="grid grid-cols-7 gap-1 min-h-[500px]">
+                    
+                    <div className="grid grid-cols-7 gap-px rounded-lg overflow-hidden shadow-sm">
                       {/* Generate date cells for the week */}
                       {date && (() => {
                         const { monday } = getWeekBounds(new Date(date));
@@ -510,23 +518,31 @@ export default function Calendar() {
                           return (
                             <div 
                               key={i} 
-                              className={`border p-1 h-full overflow-auto ${isToday ? 'bg-primary-50' : ''} ${isSelected ? 'ring-2 ring-primary' : ''}`}
+                              className={cn(
+                                "relative h-28 sm:h-80 p-2 border border-gray-200 bg-white",
+                                "transition-all duration-200 ease-in-out",
+                                isToday && "bg-blue-50/20 font-medium",
+                                isSelected && "ring-2 ring-primary ring-inset",
+                                "hover:bg-gray-50 cursor-pointer"
+                              )}
                               onClick={() => setDate(new Date(cellDate))}
                             >
-                              <div className="text-right text-sm mb-1 sticky top-0 bg-white/90">
+                              <div className="text-right font-medium text-xs sm:text-sm mb-1 sticky top-0 bg-white/90">
                                 {cellDate.getDate()}
                               </div>
-                              <div className="space-y-1 text-xs">
+                              <div className="space-y-1 overflow-y-auto max-h-20 sm:max-h-72">
                                 {dayEvents.map(event => (
                                   <div 
                                     key={event.id} 
-                                    className={`p-1 rounded truncate cursor-pointer ${
+                                    className={cn(
+                                      "text-xs px-2 py-1 rounded-md truncate cursor-pointer transition-all",
+                                      "hover:shadow-sm",
                                       event.type === 'confirmed' ? 'bg-green-100 text-green-800 border border-green-300' :
                                       event.type === 'hold' ? 'bg-amber-100 text-amber-800 border border-amber-300' :
                                       event.type === 'opportunity' ? 'bg-blue-100 text-blue-800 border border-blue-300' :
                                       event.type === 'inquiry' ? 'bg-purple-100 text-purple-800 border border-purple-300' :
                                       'bg-gray-100 text-gray-800 border border-gray-300'
-                                    }`}
+                                    )}
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleEventClick(event);
@@ -542,16 +558,24 @@ export default function Calendar() {
                                       }`}></div>
                                       {event.startTime && <span className="font-mono">{event.startTime}</span>}
                                     </div>
-                                    <div className="font-medium">{event.title}</div>
-                                    {event.venue && event.venue !== 'Your Venue' && <div className="text-[10px] opacity-80">{event.venue}</div>}
+                                    <div className="font-medium mt-1">{event.title}</div>
+                                    {event.venue && event.venue !== 'Your Venue' && <div className="text-[10px] opacity-80 mt-1">{event.venue}</div>}
                                   </div>
                                 ))}
+                                {dayEvents.length > 6 && (
+                                  <div className="text-xs text-center mt-1 font-medium text-primary">
+                                    +{dayEvents.length - 6} more
+                                  </div>
+                                )}
                               </div>
                             </div>
                           );
                         });
                       })()}
                     </div>
+                    
+                    {/* Calendar Legend */}
+                    <CalendarLegend />
                   </CardContent>
                 </Card>
                 
@@ -666,91 +690,100 @@ export default function Calendar() {
 
             <TabsContent value="day">
               <div className="space-y-6">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <Button variant="outline" size="sm" onClick={goToPreviousDay}>
+                <Card className="w-full">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-6">
+                      <Button variant="outline" size="sm" onClick={goToPreviousDay} className="rounded-full px-4">
                         <ChevronLeft className="h-4 w-4 mr-1" />
-                        Previous Day
+                        Previous
                       </Button>
-                      <h3 className="text-lg font-medium">
+                      <h3 className="text-xl font-semibold">
                         {date?.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                       </h3>
-                      <Button variant="outline" size="sm" onClick={goToNextDay}>
-                        Next Day
+                      <Button variant="outline" size="sm" onClick={goToNextDay} className="rounded-full px-4">
+                        Next
                         <ChevronRight className="h-4 w-4 ml-1" />
                       </Button>
                     </div>
-                  </CardHeader>
-                  <CardContent className="py-6">
-                    {currentDayEvents.length === 0 ? (
-                      <div className="text-center py-20 text-muted-foreground">No events scheduled for this day</div>
-                    ) : (
-                      <div className="space-y-6">
-                        {currentDayEvents.map(event => (
-                          <div key={event.id} className="flex border rounded-md overflow-hidden">
-                            <div 
-                              className={`w-2 flex-shrink-0 ${
-                                event.type === 'confirmed' ? 'bg-green-500' :
-                                event.type === 'hold' ? 'bg-amber-500' :
-                                event.type === 'opportunity' ? 'bg-blue-500' :
-                                event.type === 'inquiry' ? 'bg-purple-500' :
-                                'bg-gray-500'
-                              }`}
-                            />
-                            <div className="flex-grow p-4 cursor-pointer hover:bg-gray-50" onClick={() => handleEventClick(event)}>
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <h3 className="font-semibold text-lg">{event.title}</h3>
-                                  <div className="flex flex-wrap items-center gap-4 mt-1 text-sm text-muted-foreground">
-                                    {event.startTime && (
-                                      <div className="flex items-center">
-                                        <Clock className="h-4 w-4 mr-1" />
-                                        {event.startTime} - {event.endTime}
-                                      </div>
-                                    )}
-                                    {event.genre && (
-                                      <div className="flex items-center">
-                                        <Music className="h-4 w-4 mr-1" />
-                                        {event.genre}
-                                      </div>
-                                    )}
-                                    {event.venue && (
-                                      <div className="flex items-center">
-                                        <MapPin className="h-4 w-4 mr-1" />
-                                        {event.venue}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                                <Badge className={`
-                                  ${event.type === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                    event.type === 'hold' ? 'bg-amber-100 text-amber-800' :
-                                    event.type === 'opportunity' ? 'bg-blue-100 text-blue-800' :
-                                    event.type === 'inquiry' ? 'bg-purple-100 text-purple-800' :
-                                    'bg-gray-100 text-gray-800'}
-                                `}>
-                                  {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
-                                  {event.confidence && (event.type === 'opportunity' || event.type === 'inquiry') && ` (${event.confidence}%)`}
-                                </Badge>
-                              </div>
-                              {event.description && (
-                                <p className="mt-2 text-sm">{event.description}</p>
-                              )}
-                              {event.type === 'confirmed' && event.ticketUrl && (
-                                <div className="mt-4">
-                                  <Button size="sm" variant="outline" asChild>
-                                    <a href={event.ticketUrl} target="_blank" rel="noopener noreferrer">
-                                      Ticket Information
-                                    </a>
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                    
+                    <div className="rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                      <div className="py-3 px-4 bg-gray-100 border-b border-gray-200 font-medium text-base">
+                        Schedule for {date?.toLocaleDateString('en-US', { weekday: 'long' })}
                       </div>
-                    )}
+                      
+                      <div className="divide-y">
+                        {currentDayEvents.length === 0 ? (
+                          <div className="text-center py-20 text-muted-foreground">No events scheduled for this day</div>
+                        ) : (
+                          currentDayEvents.map(event => (
+                            <div key={event.id} className="p-4 hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleEventClick(event)}>
+                              <div className="flex items-start gap-3">
+                                <div className={`w-1 h-12 rounded-full flex-shrink-0 ${
+                                  event.type === 'confirmed' ? 'bg-green-500' :
+                                  event.type === 'hold' ? 'bg-amber-500' :
+                                  event.type === 'opportunity' ? 'bg-blue-500' :
+                                  event.type === 'inquiry' ? 'bg-purple-500' :
+                                  'bg-gray-500'
+                                }`} />
+                                <div className="flex-grow">
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <h3 className="font-semibold text-lg">{event.title}</h3>
+                                      <div className="flex flex-wrap items-center gap-4 mt-1 text-sm text-muted-foreground">
+                                        {event.startTime && (
+                                          <div className="flex items-center">
+                                            <Clock className="h-4 w-4 mr-1" />
+                                            {event.startTime} - {event.endTime}
+                                          </div>
+                                        )}
+                                        {event.genre && (
+                                          <div className="flex items-center">
+                                            <Music className="h-4 w-4 mr-1" />
+                                            {event.genre}
+                                          </div>
+                                        )}
+                                        {event.venue && (
+                                          <div className="flex items-center">
+                                            <MapPin className="h-4 w-4 mr-1" />
+                                            {event.venue}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <Badge className={cn(
+                                      "rounded-full px-3",
+                                      event.type === 'confirmed' ? 'bg-green-100 text-green-800 border-green-300' :
+                                      event.type === 'hold' ? 'bg-amber-100 text-amber-800 border-amber-300' :
+                                      event.type === 'opportunity' ? 'bg-blue-100 text-blue-800 border-blue-300' :
+                                      event.type === 'inquiry' ? 'bg-purple-100 text-purple-800 border-purple-300' :
+                                      'bg-gray-100 text-gray-800 border-gray-300'
+                                    )}>
+                                      {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
+                                      {event.confidence && (event.type === 'opportunity' || event.type === 'inquiry') && ` (${event.confidence}%)`}
+                                    </Badge>
+                                  </div>
+                                  {event.description && (
+                                    <p className="mt-2 text-sm text-gray-600">{event.description}</p>
+                                  )}
+                                  {event.type === 'confirmed' && event.ticketUrl && (
+                                    <div className="mt-3">
+                                      <Button size="sm" variant="outline" className="rounded-full" asChild>
+                                        <a href={event.ticketUrl} target="_blank" rel="noopener noreferrer">
+                                          Ticket Information
+                                        </a>
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Calendar Legend */}
+                    <CalendarLegend />
                   </CardContent>
                 </Card>
                 
@@ -873,45 +906,86 @@ export default function Calendar() {
             </TabsContent>
 
             <TabsContent value="list">
-              <Card>
-                <CardHeader className="pb-2">
-                  <h3 className="text-lg font-medium">Events for {date?.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h3>
-                </CardHeader>
-                <CardContent className="p-6">
-                  {currentMonthEvents.length === 0 ? (
-                    <p className="text-center py-8 text-muted-foreground">No events for this month</p>
-                  ) : (
-                    <div className="space-y-4">
-                      {currentMonthEvents.map(event => (
-                        <div 
-                          key={event.id}
-                          className="p-4 border rounded-md flex justify-between items-center cursor-pointer hover:bg-gray-50"
-                          onClick={() => handleEventClick(event)}
-                        >
-                          <div>
-                            <h4 className="font-medium">{event.title}</h4>
-                            <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                              <span>{event.date.toLocaleDateString()}</span>
-                              {event.startTime && <span>• {event.startTime}</span>}
-                              {event.venue && <span>• {event.venue}</span>}
+              <Card className="w-full">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-6">
+                    <Button variant="outline" size="sm" onClick={goToPreviousMonth} className="rounded-full px-4">
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Previous
+                    </Button>
+                    <h3 className="text-xl font-semibold">
+                      Events for {date?.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    </h3>
+                    <Button variant="outline" size="sm" onClick={goToNextMonth} className="rounded-full px-4">
+                      Next
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                  
+                  <div className="rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                    <div className="py-3 px-4 bg-gray-100 border-b border-gray-200 font-medium">
+                      {currentMonthEvents.length} events in {date?.toLocaleDateString('en-US', { month: 'long' })}
+                    </div>
+                    
+                    <div className="divide-y">
+                      {currentMonthEvents.length === 0 ? (
+                        <div className="text-center py-12 text-muted-foreground">No events for this month</div>
+                      ) : (
+                        currentMonthEvents.map(event => (
+                          <div 
+                            key={event.id}
+                            className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition-colors"
+                            onClick={() => handleEventClick(event)}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className={`w-1 h-12 rounded-full flex-shrink-0 ${
+                                event.type === 'confirmed' ? 'bg-green-500' :
+                                event.type === 'hold' ? 'bg-amber-500' :
+                                event.type === 'opportunity' ? 'bg-blue-500' :
+                                event.type === 'inquiry' ? 'bg-purple-500' :
+                                'bg-gray-500'
+                              }`} />
+                              <div>
+                                <h4 className="font-semibold text-base">{event.title}</h4>
+                                <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-muted-foreground">
+                                  <div className="flex items-center">
+                                    <CalendarIcon className="h-4 w-4 mr-1" />
+                                    {event.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                  </div>
+                                  {event.startTime && (
+                                    <div className="flex items-center">
+                                      <Clock className="h-4 w-4 mr-1" />
+                                      {event.startTime}
+                                    </div>
+                                  )}
+                                  {event.venue && (
+                                    <div className="flex items-center">
+                                      <MapPin className="h-4 w-4 mr-1" />
+                                      {event.venue}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                          <div>
-                            <Badge className={`
-                              ${event.type === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                event.type === 'hold' ? 'bg-amber-100 text-amber-800' :
-                                event.type === 'opportunity' ? 'bg-blue-100 text-blue-800' :
-                                event.type === 'inquiry' ? 'bg-purple-100 text-purple-800' :
-                                'bg-gray-100 text-gray-800'}
-                            `}>
+                            <Badge className={cn(
+                              "rounded-full px-3",
+                              event.type === 'confirmed' ? 'bg-green-100 text-green-800 border-green-300' :
+                              event.type === 'hold' ? 'bg-amber-100 text-amber-800 border-amber-300' :
+                              event.type === 'opportunity' ? 'bg-blue-100 text-blue-800 border-blue-300' :
+                              event.type === 'inquiry' ? 'bg-purple-100 text-purple-800 border-purple-300' :
+                              'bg-gray-100 text-gray-800 border-gray-300'
+                            )}>
                               {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
                               {event.confidence && (event.type === 'opportunity' || event.type === 'inquiry') && ` (${event.confidence}%)`}
                             </Badge>
                           </div>
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
-                  )}
+                  </div>
+                  
+                  {/* Calendar Legend */}
+                  <CalendarLegend />
                 </CardContent>
               </Card>
             </TabsContent>
