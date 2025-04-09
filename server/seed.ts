@@ -63,8 +63,15 @@ async function seed() {
     // Sync some real artists that commonly play at Bug Jar
     const artistNames = [
       'Cloud Nothings',
-      'Big Thief', 
-      'King Gizzard & The Lizard Wizard'
+      'Big Thief',
+      'King Gizzard & The Lizard Wizard',
+      'Thee Oh Sees',
+      'Ty Segall',
+      'Mac DeMarco',
+      'Kurt Vile',
+      'Japanese Breakfast',
+      'Angel Olsen',
+      'Parquet Courts'
     ];
 
     const sampleArtists = [];
