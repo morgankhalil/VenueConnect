@@ -406,11 +406,25 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
       console.log(`Source venue ${sourceVenue[0].name} is missing geo coordinates, using city/state search instead`);
     }
     
-    // Bandsintown API setup
-    // We'll use a popular artist to get their events, then extract venues
-    // Using a popular artist with many events to maximize venue discovery
-    const artistName = "Metallica"; // Popular artist with shows in many venues
-    const apiEndpoint = `https://rest.bandsintown.com/artists/${encodeURIComponent(artistName)}/events`;
+    // Get recent events at the source venue to find artists
+    const recentEvents = await db
+      .select()
+      .from(events)
+      .where(eq(events.venueId, sourceVenueId))
+      .limit(5);
+
+    const artists = await db
+      .select()
+      .from(artists)
+      .where(in_(artists.id, recentEvents.map(e => e.artistId)));
+
+    // Use these artists to find connected venues
+    const eventsData: BandsInTownEvent[] = [];
+    
+    for (const artist of artists) {
+      if (!artist.name) continue;
+      
+      const apiEndpoint = `https://rest.bandsintown.com/artists/${encodeURIComponent(artist.name)}/events`;
     
     console.log(`Querying BandsInTown API for ${artistName} events near ${sourceVenue[0].name}`);
     
