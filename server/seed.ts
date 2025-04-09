@@ -58,7 +58,7 @@ async function seed() {
     }).returning();
 
     // Import real artist data from Bandsintown
-    const { syncArtistFromBandsInTown } = require('./data-sync/bands-in-town-sync');
+    import { syncArtistFromBandsInTown } from './data-sync/bands-in-town-sync';
     
     // Sync some real artists that commonly play at Bug Jar
     const artistNames = [
