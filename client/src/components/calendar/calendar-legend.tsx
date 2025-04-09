@@ -10,7 +10,7 @@ const CalendarLegend: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-wrap gap-4 justify-center mt-6 pt-4 border-t">
+    <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 sm:gap-4 justify-center mt-6 pt-4 border-t">
       {legendItems.map((item) => (
         <div key={item.label} className="flex items-center gap-2">
           <div className={`w-3 h-3 rounded-full ${item.color} ring-2 ring-white ring-offset-1`}></div>

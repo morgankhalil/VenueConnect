@@ -44,69 +44,69 @@ export default function Calendar() {
     artist?: string;
     genre?: string;
   }
-  
+
   // Create a more comprehensive set of demo events for the current month and a few months around it
   const generateDemoEvents = (): CalendarEvent[] => {
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth();
-    
+
     // Demo event data with a mix of event types spread across several months
     const demoEvents: CalendarEvent[] = [];
-    
+
     // Artists and venues
     const artists = [
       "Fleet Foxes", "Japanese Breakfast", "Tame Impala", "The National", 
       "Glass Animals", "Phoebe Bridgers", "The War on Drugs", "Soccer Mommy",
       "Big Thief", "Lucy Dacus", "Khruangbin", "Kurt Vile"
     ];
-    
+
     const genres = [
       "Rock", "Indie", "Folk", "Electronic", "Hip-Hop", "Jazz", "Pop"
     ];
-    
+
     const otherVenues = [
       "The Fillmore", "9:30 Club", "First Avenue", "Bowery Ballroom", 
       "The Troubadour", "The Wiltern", "Brooklyn Steel", "The Independent"
     ];
-    
+
     // Generate events for the current month plus/minus 2 months
     for (let monthOffset = -2; monthOffset <= 2; monthOffset++) {
       const month = new Date(currentYear, currentMonth + monthOffset, 1);
       const monthName = month.toLocaleString('default', { month: 'long' });
       const daysInMonth = new Date(currentYear, currentMonth + monthOffset + 1, 0).getDate();
-      
+
       // Number of events to create per month
       const eventsPerMonth = 4 + Math.floor(Math.random() * 6); // 4-9 events
-      
+
       for (let i = 0; i < eventsPerMonth; i++) {
         // Random day within the month
         const day = 1 + Math.floor(Math.random() * daysInMonth);
         const date = new Date(currentYear, currentMonth + monthOffset, day);
-        
+
         // Avoid dates in the past if current month
         if (monthOffset === 0 && day < today.getDate()) {
           continue;
         }
-        
+
         // Generate random start time - hours between 18 and 22 (6 PM to 10 PM)
         const hours = 18 + Math.floor(Math.random() * 4);
         const minutes = [0, 15, 30, 45][Math.floor(Math.random() * 4)];
         const startTime = `${hours}:${minutes.toString().padStart(2, '0')}`;
-        
+
         // Event duration - 1 to 3 hours
         const durationHours = 1 + Math.floor(Math.random() * 3);
         const endHours = hours + durationHours;
         const endTime = `${endHours}:${minutes.toString().padStart(2, '0')}`;
-        
+
         // Event properties
         const artist = artists[Math.floor(Math.random() * artists.length)];
         const genre = genres[Math.floor(Math.random() * genres.length)];
         const otherVenue = otherVenues[Math.floor(Math.random() * otherVenues.length)];
-        
+
         // Decide event type based on date (more opportunities in the future, more confirmed in the near future)
         let type: 'confirmed' | 'opportunity' | 'network' | 'hold' | 'inquiry';
-        
+
         if (monthOffset < 0) {
           // Past months: mostly confirmed or network events
           type = Math.random() > 0.3 ? 'confirmed' : 'network';
@@ -124,10 +124,10 @@ export default function Calendar() {
           else if (typeRand < 0.7) type = 'opportunity';
           else type = 'inquiry';
         }
-        
+
         // Network events are at other venues
         const venue = type === 'network' ? otherVenue : 'Your Venue';
-        
+
         // Create the event
         const event: CalendarEvent = {
           id: demoEvents.length + 1,
@@ -140,55 +140,55 @@ export default function Calendar() {
           artist,
           venue
         };
-        
+
         // Add confidence score for opportunities
         if (type === 'opportunity' || type === 'inquiry') {
           event.confidence = 70 + Math.floor(Math.random() * 25); // 70-94%
         }
-        
+
         // Add ticket URL for confirmed events
         if (type === 'confirmed') {
           event.ticketUrl = "https://example.com/tickets";
         }
-        
+
         // Add description
         event.description = `${artist} ${type === 'confirmed' ? 'performing' : 'potentially performing'} at ${venue}. Genre: ${genre}.`;
-        
+
         demoEvents.push(event);
       }
     }
-    
+
     return demoEvents;
   };
-  
+
   const events = generateDemoEvents();
 
   // Filter events by the selected type
   const filteredEvents = filter === "all" 
     ? events 
     : events.filter(event => event.type === filter);
-  
+
   // Filter events for the current month view
   const currentMonthEvents = filteredEvents.filter(event => {
     if (!date) return false;
     return event.date.getMonth() === date.getMonth() && 
            event.date.getFullYear() === date.getFullYear();
   }).sort((a, b) => a.date.getTime() - b.date.getTime());
-  
+
   // Get the start and end of the current week for weekly view
   const getWeekBounds = (d: Date) => {
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
     const monday = new Date(d.setDate(diff));
     monday.setHours(0, 0, 0, 0);
-    
+
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
     sunday.setHours(23, 59, 59, 999);
-    
+
     return { monday, sunday };
   };
-  
+
   // Filter events for the current week
   const currentWeekEvents = filteredEvents.filter(event => {
     if (!date) return false;
@@ -198,14 +198,14 @@ export default function Calendar() {
     // Sort by date first
     const dateCompare = a.date.getTime() - b.date.getTime();
     if (dateCompare !== 0) return dateCompare;
-    
+
     // If same date, sort by start time
     if (a.startTime && b.startTime) {
       return a.startTime.localeCompare(b.startTime);
     }
     return 0;
   });
-  
+
   // Filter events for the current day
   const currentDayEvents = filteredEvents.filter(event => {
     if (!date) return false;
@@ -219,7 +219,7 @@ export default function Calendar() {
     }
     return 0;
   });
-  
+
   // Weekly navigation
   const goToPreviousWeek = () => {
     if (!date) return;
@@ -227,14 +227,14 @@ export default function Calendar() {
     newDate.setDate(newDate.getDate() - 7);
     setDate(newDate);
   };
-  
+
   const goToNextWeek = () => {
     if (!date) return;
     const newDate = new Date(date);
     newDate.setDate(newDate.getDate() + 7);
     setDate(newDate);
   };
-  
+
   // Daily navigation
   const goToPreviousDay = () => {
     if (!date) return;
@@ -242,7 +242,7 @@ export default function Calendar() {
     newDate.setDate(newDate.getDate() - 1);
     setDate(newDate);
   };
-  
+
   const goToNextDay = () => {
     if (!date) return;
     const newDate = new Date(date);
@@ -272,7 +272,7 @@ export default function Calendar() {
   };
 
   const [, setLocation] = useLocation();
-  
+
   const handleEventClick = (event: CalendarEvent) => {
     // Navigate to event details page instead of showing modal
     setLocation(`/event/${event.id}`);
@@ -308,21 +308,21 @@ export default function Calendar() {
         <div className="mt-6">
           <Tabs defaultValue="month" value={view} onValueChange={setView}>
             <div className="flex justify-end mb-4">
-              <TabsList className="rounded-full">
-                <TabsTrigger value="month">Month</TabsTrigger>
-                <TabsTrigger value="week">Week</TabsTrigger>
-                <TabsTrigger value="day">Day</TabsTrigger>
-                <TabsTrigger value="list">List</TabsTrigger>
+              <TabsList className="rounded-full w-full sm:w-auto">
+                <TabsTrigger value="month" className="flex-1 sm:flex-none">Month</TabsTrigger>
+                <TabsTrigger value="week" className="flex-1 sm:flex-none">Week</TabsTrigger>
+                <TabsTrigger value="day" className="flex-1 sm:flex-none">Day</TabsTrigger>
+                <TabsTrigger value="list" className="flex-1 sm:flex-none">List</TabsTrigger>
               </TabsList>
             </div>
 
             {/* No component definition directly in JSX - we'll define the component outside the render */}
-            
+
             <TabsContent value="month">
               <div className="space-y-6">
                 {/* Monthly Stats - Moved to the top */}
                 <EventSummary events={currentMonthEvents} title="Monthly Summary" />
-                
+
                 <Card className="w-full">
                   <CardContent className="p-4">
                     <FullMonthCalendar 
@@ -331,7 +331,7 @@ export default function Calendar() {
                       onDateChange={setDate}
                       onEventClick={handleEventClick}
                     />
-                    
+
                     {/* Calendar Legend */}
                     <CalendarLegend />
                   </CardContent>
@@ -413,7 +413,7 @@ export default function Calendar() {
               <div className="space-y-6">
                 {/* Weekly Summary at the top */}
                 <EventSummary events={currentWeekEvents} title="Weekly Summary" />
-                
+
                 <Card className="w-full">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-6">
@@ -431,7 +431,7 @@ export default function Calendar() {
                         <ChevronRight className="h-4 w-4 ml-1" />
                       </Button>
                     </div>
-                    
+
                     <div className="mb-2 grid grid-cols-7 text-center rounded-t-lg overflow-hidden">
                       {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
                         <div 
@@ -442,7 +442,7 @@ export default function Calendar() {
                         </div>
                       ))}
                     </div>
-                    
+
                     <div className="grid grid-cols-7 gap-px rounded-lg overflow-hidden shadow-sm">
                       {/* Generate date cells for the week */}
                       {date && (() => {
@@ -450,17 +450,17 @@ export default function Calendar() {
                         return Array.from({ length: 7 }, (_, i) => {
                           const cellDate = new Date(monday);
                           cellDate.setDate(monday.getDate() + i);
-                          
+
                           // Get events for this day
                           const dayEvents = filteredEvents.filter(event => 
                             event.date.getDate() === cellDate.getDate() &&
                             event.date.getMonth() === cellDate.getMonth() &&
                             event.date.getFullYear() === cellDate.getFullYear()
                           );
-                          
+
                           const isToday = new Date().toDateString() === cellDate.toDateString();
                           const isSelected = date?.toDateString() === cellDate.toDateString();
-                          
+
                           return (
                             <div 
                               key={i} 
@@ -519,12 +519,12 @@ export default function Calendar() {
                         });
                       })()}
                     </div>
-                    
+
                     {/* Calendar Legend */}
                     <CalendarLegend />
                   </CardContent>
                 </Card>
-                
+
                 {/* Weekly Events List */}
                 <Card>
                   <CardHeader className="pb-3">
@@ -587,7 +587,7 @@ export default function Calendar() {
                     )}
                   </CardContent>
                 </Card>
-                
+
                 {/* Weekly Stats Card */}
                 <Card>
                   <CardHeader className="pb-3">
@@ -638,7 +638,7 @@ export default function Calendar() {
               <div className="space-y-6">
                 {/* Day Summary at the top */}
                 <EventSummary events={currentDayEvents} title="Day Summary" />
-                
+
                 <Card className="w-full">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-6">
@@ -654,12 +654,12 @@ export default function Calendar() {
                         <ChevronRight className="h-4 w-4 ml-1" />
                       </Button>
                     </div>
-                    
+
                     <div className="rounded-lg border border-gray-200 overflow-hidden shadow-sm">
                       <div className="py-3 px-4 bg-gray-100 border-b border-gray-200 font-medium text-base">
                         Schedule for {date?.toLocaleDateString('en-US', { weekday: 'long' })}
                       </div>
-                      
+
                       <div className="divide-y">
                         {currentDayEvents.length === 0 ? (
                           <div className="text-center py-20 text-muted-foreground">No events scheduled for this day</div>
@@ -730,12 +730,12 @@ export default function Calendar() {
                         )}
                       </div>
                     </div>
-                    
+
                     {/* Calendar Legend */}
                     <CalendarLegend />
                   </CardContent>
                 </Card>
-                
+
                 {/* Timeline View */}
                 <Card>
                   <CardHeader className="pb-3">
@@ -754,7 +754,7 @@ export default function Calendar() {
                           );
                         })}
                       </div>
-                      
+
                       {/* Events on timeline */}
                       {currentDayEvents.length === 0 ? (
                         <div className="h-full flex items-center justify-center text-muted-foreground">
@@ -766,16 +766,16 @@ export default function Calendar() {
                             // Parse hours and calculate position
                             const timeMatch = event.startTime?.match(/(\d+):(\d+)/);
                             if (!timeMatch) return null;
-                            
+
                             const hour = parseInt(timeMatch[1], 10);
                             const minute = parseInt(timeMatch[2], 10);
-                            
+
                             // Only show events between 16:00 and 23:00
                             if (hour < 16 || hour > 23) return null;
-                            
+
                             // Calculate position (percentage from top)
                             const position = ((hour - 16) + (minute / 60)) * (100 / 7);
-                            
+
                             // Calculate height based on duration
                             let height = 10; // default height
                             if (event.endTime) {
@@ -787,7 +787,7 @@ export default function Calendar() {
                                 height = durationHours * (100 / 7);
                               }
                             }
-                            
+
                             return (
                               <div 
                                 key={event.id}
@@ -819,7 +819,7 @@ export default function Calendar() {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 {/* Other Events Today */}
                 {currentDayEvents.filter(e => !e.startTime).length > 0 && (
                   <Card>
@@ -858,7 +858,7 @@ export default function Calendar() {
               <div className="space-y-6">
                 {/* Monthly Summary for list view */}
                 <EventSummary events={currentMonthEvents} title="Monthly Summary" />
-                
+
                 <Card className="w-full">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-6">
@@ -874,12 +874,12 @@ export default function Calendar() {
                       <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
                   </div>
-                  
+
                   <div className="rounded-lg border border-gray-200 overflow-hidden shadow-sm">
                     <div className="py-3 px-4 bg-gray-100 border-b border-gray-200 font-medium">
                       {currentMonthEvents.length} events in {date?.toLocaleDateString('en-US', { month: 'long' })}
                     </div>
-                    
+
                     <div className="divide-y">
                       {currentMonthEvents.length === 0 ? (
                         <div className="text-center py-12 text-muted-foreground">No events for this month</div>
@@ -936,7 +936,7 @@ export default function Calendar() {
                       )}
                     </div>
                   </div>
-                  
+
                   {/* Calendar Legend */}
                   <CalendarLegend />
                 </CardContent>

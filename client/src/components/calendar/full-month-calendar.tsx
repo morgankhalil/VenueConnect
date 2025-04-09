@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CalendarEvent {
   id: number;
@@ -34,6 +35,7 @@ interface CalendarDay {
 }
 
 const FullMonthCalendar: React.FC<FullMonthCalendarProps> = ({
+  const isMobile = useIsMobile();
   events,
   selectedDate,
   onDateChange,
@@ -222,7 +224,7 @@ const FullMonthCalendar: React.FC<FullMonthCalendarProps> = ({
   
   const getDayClass = (day: CalendarDay) => {
     return cn(
-      "relative h-28 sm:h-32 p-2 border border-gray-200 bg-white",
+      "relative h-24 sm:h-32 p-1 sm:p-2 border border-gray-200 bg-white",
       "transition-all duration-200 ease-in-out",
       "first:rounded-tl-lg last:rounded-tr-lg",
       "[&:nth-child(n+36)]:rounded-b-lg", 
@@ -271,8 +273,8 @@ const FullMonthCalendar: React.FC<FullMonthCalendarProps> = ({
               {day.date.getDate()}
             </div>
             
-            <div className="space-y-1 overflow-y-auto max-h-20 sm:max-h-24">
-              {day.events.slice(0, 3).map(event => (
+            <div className="space-y-0.5 sm:space-y-1 overflow-y-auto max-h-16 sm:max-h-24">
+              {day.events.slice(0, isMobile ? 2 : 3).map(event => (
                 <div
                   key={event.id}
                   className={cn(
