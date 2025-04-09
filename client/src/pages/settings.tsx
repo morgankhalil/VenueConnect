@@ -43,6 +43,23 @@ export default function Settings() {
     retry: 1 // Only retry once if there's an error
   });
   
+  // Get venue network connections
+  const { data: networkData, isLoading: isLoadingNetwork } = useQuery({
+    queryKey: ['/api/venue-network/graph', user?.id],
+    queryFn: async () => {
+      if (!user?.id || isNaN(Number(user.id))) {
+        return { nodes: [], links: [] };
+      }
+      return apiRequest('GET', `/api/venue-network/graph/${user.id}`)
+        .then(res => res.json())
+        .catch(err => {
+          console.error("Error fetching venue network:", err);
+          return { nodes: [], links: [] };
+        });
+    },
+    enabled: !!user && !!user.id && !isNaN(Number(user.id))
+  });
+  
   // Update form values when user data is loaded
   React.useEffect(() => {
     if (user) {
@@ -379,33 +396,41 @@ export default function Settings() {
                       
                       {/* This would ideally be populated from the API with venue connections */}
                       {/* Display a loading state while fetching network connections */}
-                      {!venue ? (
+                      {isLoadingNetwork ? (
                         <div className="p-4 text-center text-muted-foreground">
                           Loading network connections...
                         </div>
-                      ) : venue.networkConnections && venue.networkConnections.length > 0 ? (
-                        // If there are connections, map through them
-                        venue.networkConnections.map((connection, index) => (
-                          <div key={index} className="p-4 border-b grid grid-cols-5 items-center">
-                            <div className="col-span-2">{connection.venueName || "Unnamed Venue"}</div>
-                            <div>
-                              <Select defaultValue={connection.trustLevel || "medium"}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Trust Level" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="high">High</SelectItem>
-                                  <SelectItem value="medium">Medium</SelectItem>
-                                  <SelectItem value="low">Low</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div>{connection.accessLevel || "Limited Access"}</div>
-                            <div>
-                              <Button variant="outline" size="sm">Edit</Button>
-                            </div>
-                          </div>
-                        ))
+                      ) : networkData && networkData.nodes && networkData.nodes.length > 1 ? (
+                        // If there are connections, map through them (exclude the current venue)
+                        networkData.nodes
+                          .filter(node => !node.isCurrentVenue)
+                          .map((node, index) => {
+                            const connection = networkData.links.find(link => 
+                              link.target === node.id || link.source === node.id
+                            ) || { value: 0 };
+                            
+                            return (
+                              <div key={index} className="p-4 border-b grid grid-cols-5 items-center">
+                                <div className="col-span-2">{node.name || "Unnamed Venue"}</div>
+                                <div>
+                                  <Select defaultValue={node.trustScore >= 70 ? "high" : (node.trustScore >= 40 ? "medium" : "low")}>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Trust Level" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="high">High</SelectItem>
+                                      <SelectItem value="medium">Medium</SelectItem>
+                                      <SelectItem value="low">Low</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div>{connection.value > 5 ? "Full Access" : (connection.value > 2 ? "Standard Access" : "Limited Access")}</div>
+                                <div>
+                                  <Button variant="outline" size="sm">Edit</Button>
+                                </div>
+                              </div>
+                            );
+                          })
                       ) : (
                         // If no connections, show empty state
                         <div className="p-4 text-center text-muted-foreground">

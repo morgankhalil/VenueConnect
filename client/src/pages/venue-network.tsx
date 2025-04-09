@@ -8,12 +8,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getVenueNetworkGraph, getCollaborativeOpportunitiesByVenue, createVenueConnection } from "@/lib/api";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function VenueNetwork() {
   const { toast } = useToast();
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const queryClient = useQueryClient();
-  const currentVenueId = 1;
+  
+  // Get the current user to determine venue ID
+  const { data: user } = useQuery({
+    queryKey: ['/api/user'],
+    queryFn: () => apiRequest('GET', '/api/user').then(res => res.json())
+  });
+  
+  // Use the user's venue ID if available, otherwise fallback to a default
+  const currentVenueId = user?.id || 1;
 
   const { data: networkData, isLoading: isLoadingNetwork } = useQuery({
     queryKey: ['/api/venue-network/graph', currentVenueId],
@@ -104,7 +113,7 @@ export default function VenueNetwork() {
           <TabsContent value="list">
             <Card>
               <CardContent className="p-6">
-                {networkData?.nodes?.length > 1 ? (
+                {networkData && networkData.nodes && networkData.nodes.length > 1 ? (
                   <div className="grid gap-4">
                     {networkData.nodes.filter(node => !node.isCurrentVenue).map((node) => (
                       <div key={node.id} className="flex items-center justify-between p-4 bg-white rounded-lg border hover:bg-gray-50">
