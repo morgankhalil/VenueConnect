@@ -536,38 +536,39 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
         continue;
       }
 
-      // Add this new venue to our database with sanitized data
       const insertData = {
         name: sanitizedName,
         city: sanitizedCity,
         state: sanitizedRegion,
-        country: (venueData.country || 'US').trim().substring(0, 2), // Limit to 2 characters for country code
+        country: (venueData.country || 'US').trim().substring(0, 2),
         latitude: venueData.latitude || null,
         longitude: venueData.longitude || null,
-        capacity: Math.floor(Math.random() * 1000) + 100, // Random capacity between 100-1100
-        address: `${sanitizedName} address`, // Use name as placeholder since API doesn't provide address
-        zipCode: `${Math.floor(Math.random() * 90000) + 10000}`, // Random 5-digit ZIP code
-        description: `Music venue located in ${sanitizedCity}, ${sanitizedRegion}`.trim().substring(0, 500), // Limit description length
+        capacity: Math.floor(Math.random() * 1000) + 100,
+        address: `${sanitizedName} address`,
+        zipCode: `${Math.floor(Math.random() * 90000) + 10000}`,
+        description: `Music venue located in ${sanitizedCity}, ${sanitizedRegion}`.trim().substring(0, 500),
         ownerId: sourceVenue[0].ownerId
       };
 
-      // Insert the new venue
-      const newVenues = await db.insert(venues).values(insertData).returning();
+      try {
+        // Insert the new venue
+        const [newVenue] = await db.insert(venues).values(insertData).returning();
+        if (newVenue) {
+          addedVenues.push(newVenue);
 
-      if (newVenues.length > 0) {
-        const newVenue = newVenues[0];
-        addedVenues.push(newVenue);
+          // Create network connection with the source venue
+          await db.insert(venueNetwork).values({
+            venueId: sourceVenueId,
+            connectedVenueId: newVenue.id,
+            status: 'active',
+            trustScore: Math.floor(Math.random() * 80) + 20,
+            collaborativeBookings: Math.floor(Math.random() * 5)
+          });
 
-        // Create network connection with the source venue
-        await db.insert(venueNetwork).values({
-          venueId: sourceVenueId,
-          connectedVenueId: newVenue.id,
-          status: 'active',
-          trustScore: Math.floor(Math.random() * 80) + 20, // Random score between 20-100
-          collaborativeBookings: Math.floor(Math.random() * 5) // Random 0-5 collaborations
-        });
-
-        console.log(`Added new venue: ${newVenue.name} in ${newVenue.city}`);
+          console.log(`Added new venue: ${newVenue.name} in ${newVenue.city}`);
+        }
+      } catch (err) {
+        console.error(`Error adding venue ${sanitizedName}:`, err);
       }
     }
 
