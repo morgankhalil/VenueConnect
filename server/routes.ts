@@ -241,6 +241,29 @@ router.get('/venue-network/graph/:id', async (req, res) => {
 });
 
 
+// Add API prefix route for venues/id
+router.get('/api/venues/:id', async (req, res) => {
+  try {
+    const venueId = parseInt(req.params.id);
+    
+    // Check if venueId is a valid number
+    if (isNaN(venueId)) {
+      return res.status(400).json({ error: "Invalid venue ID" });
+    }
+    
+    const result = await db.select().from(venues).where(eq(venues.id, venueId));
+    
+    if (result.length === 0) {
+      return res.status(404).json({ error: "Venue not found" });
+    }
+    
+    res.json(result[0]);
+  } catch (error) {
+    console.error("Error fetching venue:", error);
+    res.status(500).json({ error: "Failed to fetch venue" });
+  }
+});
+
 // Get current user
 router.get("/api/user", async (req, res) => {
   try {

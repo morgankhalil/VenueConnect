@@ -29,10 +29,18 @@ export default function Settings() {
   });
 
   // Get venue data from API
-  const { data: venue, isLoading: isLoadingVenue } = useQuery({
+  const { data: venue, isLoading: isLoadingVenue, error: venueError } = useQuery({
     queryKey: ['/api/venues', user?.id], 
-    queryFn: () => apiRequest('GET', `/api/venues/${user?.id}`).then(res => res.json()),
-    enabled: !!user && !!user.id // Only run this query if user data exists and has ID
+    queryFn: () => {
+      // Make sure we have a valid user ID
+      if (!user?.id || isNaN(Number(user.id))) {
+        console.error("Invalid user ID:", user?.id);
+        return Promise.reject(new Error("Invalid user ID"));
+      }
+      return apiRequest('GET', `/api/venues/${user.id}`).then(res => res.json());
+    },
+    enabled: !!user && !!user.id && !isNaN(Number(user.id)), // Only run if user exists with valid ID
+    retry: 1 // Only retry once if there's an error
   });
   
   // Update form values when user data is loaded
