@@ -129,16 +129,28 @@ router.get('/messages', async (req, res) => {
 
 // Venue Network
 router.get('/venue-network/graph/:id', async (req, res) => {
+  const venueId = parseInt(req.params.id);
+  
+  // First get the main venue
+  const mainVenue = await db
+    .select()
+    .from(venues)
+    .where(eq(venues.id, venueId))
+    .limit(1);
+
+  if (!mainVenue.length) {
+    return res.status(404).json({ error: "Venue not found" });
+  }
+
+  // Get connections
   const connections = await db
     .select()
     .from(venueNetwork)
-    .where(eq(venueNetwork.venueId, parseInt(req.params.id)));
+    .where(eq(venueNetwork.venueId, venueId));
 
+  // Get connected venues
   const connectedVenueIds = connections.map(c => c.connectedVenueId);
-  const networkVenues = await db
-    .select()
-    .from(venues)
-    .where(eq(venues.id, parseInt(req.params.id)));
+  const networkVenues = [mainVenue[0]];
 
   const nodes = networkVenues.map(venue => ({
     id: venue.id,
