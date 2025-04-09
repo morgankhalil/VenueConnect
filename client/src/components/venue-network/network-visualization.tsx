@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -67,39 +68,22 @@ export function NetworkVisualization({
   onNodeClick,
   onAddVenue
 }: NetworkVisualizationProps) {
+  if (!data?.nodes?.length) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center h-80 space-y-4">
+          <p>No venues found in the network.</p>
+          <Button onClick={onAddVenue}>Add First Venue</Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // Find map center based on current venue
-  const mapCenter = React.useMemo(() => {
-    const currentVenue = data.nodes.find(n => n.isCurrentVenue);
-    return currentVenue 
-      ? [currentVenue.latitude, currentVenue.longitude] 
-      : [39.5, -98.5]; // US center
-  }, [data.nodes]);
-
-  // Create connection lines between venues
-  const networkLines = React.useMemo(() => {
-    return data.links.map((link, idx) => {
-      const source = data.nodes.find(n => n.id === link.source);
-      const target = data.nodes.find(n => n.id === link.target);
-
-      if (!source || !target) return null;
-
-      return (
-        <Polyline
-          key={`link-${idx}`}
-          positions={[
-            [source.latitude, source.longitude],
-            [target.latitude, target.longitude]
-          ]}
-          pathOptions={{
-            color: '#4f46e5',
-            weight: 2,
-            opacity: 0.6,
-            dashArray: '5,5'
-          }}
-        />
-      );
-    });
-  }, [data]);
+  const currentVenue = data.nodes.find(n => n.isCurrentVenue);
+  const mapCenter = currentVenue 
+    ? [currentVenue.latitude, currentVenue.longitude] 
+    : [39.5, -98.5]; // US center
 
   return (
     <Card>
@@ -125,7 +109,28 @@ export function NetworkVisualization({
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            {networkLines}
+            {data.links.map((link, idx) => {
+              const source = data.nodes.find(n => n.id === link.source);
+              const target = data.nodes.find(n => n.id === link.target);
+              
+              if (!source || !target) return null;
+              
+              return (
+                <Polyline
+                  key={`link-${idx}`}
+                  positions={[
+                    [source.latitude, source.longitude],
+                    [target.latitude, target.longitude]
+                  ]}
+                  pathOptions={{
+                    color: '#4f46e5',
+                    weight: 2,
+                    opacity: 0.6,
+                    dashArray: '5,5'
+                  }}
+                />
+              );
+            })}
 
             {data.nodes.map((node) => (
               <Marker
