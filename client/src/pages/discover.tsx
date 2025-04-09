@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OpportunityCard } from "@/components/dashboard/opportunity-card";
+import { VenueMap } from "@/components/maps/venue-map";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -246,9 +247,55 @@ export default function Discover() {
             <TabsContent value="map" className="mt-6">
               <Card>
                 <CardContent className="p-4">
-                  <div className="bg-gray-100 rounded-lg p-10 text-center">
-                    <p className="text-lg font-medium">Map View</p>
-                    <p className="text-sm text-muted-foreground mt-2">The map view would display opportunities geographically</p>
+                  <div className="relative bg-white rounded-lg">
+                    <div className="p-3 border-b">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <h3 className="text-base font-medium">Geographic Opportunities</h3>
+                        <div className="flex space-x-2">
+                          <Button variant="outline" size="sm">Filter</Button>
+                          <Button variant="outline" size="sm">Region</Button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="h-[500px] relative">
+                      {/* Use our new VenueMap component with Leaflet */}
+                      <VenueMap
+                        events={[
+                          {
+                            id: 1,
+                            venue: "The Fillmore",
+                            artist: "The Decemberists",
+                            date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+                            latitude: 37.7749,
+                            longitude: -122.4194,
+                            isCurrentVenue: false,
+                            isRoutingOpportunity: false
+                          },
+                          {
+                            id: 2,
+                            venue: "The Wiltern",
+                            artist: "The Decemberists",
+                            date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+                            latitude: 34.0522,
+                            longitude: -118.2437,
+                            isCurrentVenue: false,
+                            isRoutingOpportunity: true
+                          },
+                          {
+                            id: 3,
+                            venue: "Paramount Theatre",
+                            artist: "The Decemberists",
+                            date: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString(),
+                            latitude: 47.6062,
+                            longitude: -122.3321,
+                            isCurrentVenue: true,
+                            isRoutingOpportunity: false
+                          }
+                        ]}
+                        height="100%"
+                        showLegend={true}
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>

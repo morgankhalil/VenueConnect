@@ -1,106 +1,172 @@
-import React, { useEffect, useRef, useState } from 'react';
-
-// Access the global mapboxgl that was loaded from the CDN
-declare const mapboxgl: any;
+import React, { useState } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { VenueMap } from "@/components/maps/venue-map";
+import { MapEvent } from "@/types";
 
 export default function MapTest() {
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const [mapError, setMapError] = useState<string | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState<string>("us");
   
-  useEffect(() => {
-    if (!mapContainerRef.current) return;
-    
-    try {
-      console.log("Mapbox test initializing");
-      
-      // Check if mapboxgl is available
-      if (!mapboxgl) {
-        throw new Error("Mapbox GL JS is not loaded");
+  // Sample data for different regions
+  const mapData: Record<string, MapEvent[]> = {
+    us: [
+      {
+        id: 1,
+        venue: "The Fillmore",
+        artist: "Fleet Foxes",
+        date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+        latitude: 37.7749,
+        longitude: -122.4194,
+        isCurrentVenue: false,
+        isRoutingOpportunity: false
+      },
+      {
+        id: 2,
+        venue: "9:30 Club",
+        artist: "Fleet Foxes",
+        date: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString(),
+        latitude: 38.9172,
+        longitude: -77.0250,
+        isCurrentVenue: false,
+        isRoutingOpportunity: true
+      },
+      {
+        id: 3,
+        venue: "First Avenue",
+        artist: "Fleet Foxes",
+        date: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000).toISOString(),
+        latitude: 44.9781,
+        longitude: -93.2763,
+        isCurrentVenue: true,
+        isRoutingOpportunity: false
       }
-      
-      // Access token for mapbox - using the actual token from environment
-      mapboxgl.accessToken = "pk.eyJ1IjoibWlzc21hbmFnZW1lbnQiLCJhIjoiY205OTllOGFvMDhsaDJrcTliYjdha241dCJ9.In3R8-WuiwMYenu_SnZ4aA";
-      
-      // Initialize the map with Mapbox open-source style
-      const map = new mapboxgl.Map({
-        container: mapContainerRef.current,
-        style: {
-          version: 8,
-          sources: {
-            'osm-tiles': {
-              type: 'raster',
-              tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
-              tileSize: 256,
-              attribution: '&copy; OpenStreetMap Contributors'
-            }
-          },
-          layers: [
-            {
-              id: 'osm-tiles',
-              type: 'raster',
-              source: 'osm-tiles',
-              minzoom: 0,
-              maxzoom: 19
-            }
-          ]
-        },
-        center: [-96.0, 39.5], // [lng, lat]
-        zoom: 3
-      });
-      
-      // Add navigation controls (zoom, etc)
-      map.addControl(new mapboxgl.NavigationControl());
-      
-      // Add a marker
-      new mapboxgl.Marker()
-        .setLngLat([-96.0, 39.5])
-        .setPopup(new mapboxgl.Popup().setHTML("<h3>Center of USA</h3>"))
-        .addTo(map);
-      
-      // Add some test markers
-      const testLocations = [
-        { lng: -122.4194, lat: 37.7749, name: "San Francisco" },
-        { lng: -87.6298, lat: 41.8781, name: "Chicago" },
-        { lng: -74.0060, lat: 40.7128, name: "New York" },
-        { lng: -84.3880, lat: 33.7490, name: "Atlanta" },
-      ];
-      
-      // Add markers for each location
-      testLocations.forEach(location => {
-        new mapboxgl.Marker({ color: '#3B82F6' })
-          .setLngLat([location.lng, location.lat])
-          .setPopup(new mapboxgl.Popup().setHTML(`<h3>${location.name}</h3>`))
-          .addTo(map);
-      });
-      
-      console.log("Mapbox initialized successfully");
-      
-      // Clean up
-      return () => {
-        map.remove();
-      };
-    } catch (err: any) {
-      console.error("Mapbox test error:", err);
-      setMapError(err.message || "Failed to initialize map");
-    }
-  }, []);
+    ],
+    europe: [
+      {
+        id: 4,
+        venue: "O2 Arena",
+        artist: "Arcade Fire",
+        date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+        latitude: 51.5033,
+        longitude: 0.0031,
+        isCurrentVenue: false,
+        isRoutingOpportunity: false
+      },
+      {
+        id: 5,
+        venue: "Olympia",
+        artist: "Arcade Fire",
+        date: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000).toISOString(),
+        latitude: 48.8566,
+        longitude: 2.3522,
+        isCurrentVenue: false,
+        isRoutingOpportunity: true
+      },
+      {
+        id: 6,
+        venue: "Paradiso",
+        artist: "Arcade Fire",
+        date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
+        latitude: 52.3676,
+        longitude: 4.8945,
+        isCurrentVenue: true,
+        isRoutingOpportunity: false
+      }
+    ],
+    asia: [
+      {
+        id: 7,
+        venue: "Nippon Budokan",
+        artist: "Tame Impala",
+        date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        latitude: 35.6895,
+        longitude: 139.7514,
+        isCurrentVenue: false,
+        isRoutingOpportunity: false
+      },
+      {
+        id: 8,
+        venue: "AsiaWorld-Expo",
+        artist: "Tame Impala",
+        date: new Date(Date.now() + 33 * 24 * 60 * 60 * 1000).toISOString(),
+        latitude: 22.3089,
+        longitude: 113.9144,
+        isCurrentVenue: false,
+        isRoutingOpportunity: true
+      },
+      {
+        id: 9,
+        venue: "Impact Arena",
+        artist: "Tame Impala",
+        date: new Date(Date.now() + 36 * 24 * 60 * 60 * 1000).toISOString(),
+        latitude: 13.7563,
+        longitude: 100.5018,
+        isCurrentVenue: true,
+        isRoutingOpportunity: false
+      }
+    ]
+  };
+  
+  // Function to handle marker clicks
+  const handleMarkerClick = (event: MapEvent) => {
+    console.log("Marker clicked:", event);
+    // Additional logic can be added here
+  };
   
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Map Test Page</h1>
-      <p className="mb-4">Using Mapbox GL JS</p>
-      
-      {mapError ? (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-          <p className="font-medium">Map Error</p>
-          <p className="text-sm">{mapError}</p>
+    <div className="py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+        <h1 className="text-2xl font-heading font-semibold text-gray-900">Map Testing</h1>
+        <p className="mt-2 text-gray-600">
+          This page demonstrates the Leaflet map integration with OpenStreetMap tiles.
+          No API key is required for this implementation.
+        </p>
+        
+        <div className="mt-6">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                <h2 className="text-lg font-medium">Tour Route Visualization</h2>
+                
+                <div className="flex gap-2">
+                  <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                    <SelectTrigger className="w-[150px]">
+                      <SelectValue placeholder="Select Region" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="us">North America</SelectItem>
+                      <SelectItem value="europe">Europe</SelectItem>
+                      <SelectItem value="asia">Asia</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Button variant="outline">Filter Options</Button>
+                </div>
+              </div>
+              
+              <div className="h-[600px] relative rounded-md overflow-hidden">
+                <VenueMap
+                  events={mapData[selectedRegion]}
+                  height="100%"
+                  showLegend={true}
+                  onMarkerClick={handleMarkerClick}
+                  showRoute={true}
+                />
+              </div>
+              
+              <div className="mt-4 p-4 bg-gray-50 rounded-md">
+                <h3 className="text-sm font-medium mb-2">About This Map</h3>
+                <p className="text-sm text-gray-600">
+                  This map uses Leaflet with OpenStreetMap tiles, which are completely free and don't 
+                  require any API keys. The markers show different venue statuses: green for confirmed shows, 
+                  amber for holds, and gray for potential venues. The dotted blue line shows the tour route.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      ) : null}
-      
-      <div 
-        className="border border-gray-300 rounded-lg h-[500px] relative overflow-hidden" 
-        ref={mapContainerRef}
-      />
+      </div>
     </div>
   );
 }

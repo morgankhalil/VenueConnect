@@ -4,9 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { VenueMap } from "@/components/maps/venue-map";
 import { Venue } from "@shared/schema";
+import { MapEvent } from "@/types";
 import { getVenue, getEventsByVenue } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
+import { Info, MapPin } from "lucide-react";
 
 export default function VenueDetails() {
   const [_, params] = useRoute<{ id: string }>("/venues/:id");
@@ -180,6 +184,7 @@ export default function VenueDetails() {
         <TabsList className="mb-6">
           <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="events">Events</TabsTrigger>
+          <TabsTrigger value="location">Location</TabsTrigger>
           <TabsTrigger value="insights">Insights</TabsTrigger>
         </TabsList>
         
@@ -309,6 +314,131 @@ export default function VenueDetails() {
                   No upcoming events scheduled.
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="location">
+          <Card>
+            <CardHeader>
+              <h3 className="text-lg font-medium">Location</h3>
+            </CardHeader>
+            <CardContent>
+              {/* Leaflet Map */}
+              <div className="h-[400px] rounded-md overflow-hidden relative">
+                {venue.latitude && venue.longitude ? (
+                  <VenueMap 
+                    events={[
+                      // Current venue
+                      {
+                        id: 1,
+                        venue: venue.name,
+                        artist: "",
+                        date: new Date().toISOString(),
+                        latitude: venue.latitude,
+                        longitude: venue.longitude,
+                        isCurrentVenue: true,
+                        isRoutingOpportunity: false
+                      },
+                      // Nearby venues - dynamically positioned based on venue location
+                      {
+                        id: 2,
+                        venue: "Nearby Venue 1",
+                        artist: "",
+                        date: new Date().toISOString(),
+                        latitude: venue.latitude + 0.02,
+                        longitude: venue.longitude - 0.03,
+                        isCurrentVenue: false,
+                        isRoutingOpportunity: true
+                      },
+                      {
+                        id: 3,
+                        venue: "Nearby Venue 2",
+                        artist: "",
+                        date: new Date().toISOString(),
+                        latitude: venue.latitude - 0.01,
+                        longitude: venue.longitude + 0.02,
+                        isCurrentVenue: false,
+                        isRoutingOpportunity: false
+                      },
+                      {
+                        id: 4,
+                        venue: "Nearby Venue 3",
+                        artist: "",
+                        date: new Date().toISOString(),
+                        latitude: venue.latitude - 0.03,
+                        longitude: venue.longitude - 0.01,
+                        isCurrentVenue: false,
+                        isRoutingOpportunity: true
+                      }
+                    ]}
+                    height="100%"
+                    showLegend={true}
+                    initialZoom={12}
+                    initialCenter={[venue.latitude, venue.longitude]}
+                    showRoute={false}
+                  />
+                ) : (
+                  <div className="h-full flex items-center justify-center bg-gray-100">
+                    <div className="text-center p-4">
+                      <MapPin className="mx-auto h-10 w-10 text-gray-400 mb-2" />
+                      <p className="text-gray-500 mb-1">Location Not Available</p>
+                      <p className="text-sm text-gray-400">This venue does not have location coordinates.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="mt-4 p-4 bg-gray-50 rounded-md">
+                <div className="flex items-start gap-2">
+                  <Info className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium">Location Details</span><br />
+                      {venue.address}<br />
+                      {venue.city}, {venue.state} {venue.zipCode}<br />
+                      {venue.country}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-4">
+                <h4 className="text-sm font-medium mb-2">Map Legend</h4>
+                <div className="flex flex-wrap gap-4 text-sm">
+                  <div className="flex items-center">
+                    <span className="w-3 h-3 bg-gray-400 rounded-full inline-block mr-1"></span>
+                    <span className="text-gray-600">This Venue</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="w-3 h-3 bg-amber-500 rounded-full inline-block mr-1"></span>
+                    <span className="text-gray-600">Routing Opportunity</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="w-3 h-3 bg-green-500 rounded-full inline-block mr-1"></span>
+                    <span className="text-gray-600">Confirmed Partner</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <h4 className="text-sm font-medium mb-2">Nearby Venues</h4>
+                <div className="space-y-3">
+                  {[1, 2, 3].map(id => (
+                    <div key={id} className="p-3 border rounded-md">
+                      <div className="flex justify-between">
+                        <div>
+                          <h5 className="font-medium">Nearby Venue {id}</h5>
+                          <p className="text-sm text-gray-500">{(2 + id * 0.5).toFixed(1)} miles away</p>
+                        </div>
+                        <Badge variant={id % 2 === 0 ? "outline" : "secondary"}>
+                          {id % 2 === 0 ? "Routing Opportunity" : "Connected"}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
