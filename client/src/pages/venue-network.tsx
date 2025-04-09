@@ -1,37 +1,27 @@
+
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { NetworkVisualization } from "@/components/venue-network/network-visualization";
-import { DataTable } from "@/components/ui/data-table";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { getVenueNetworkGraph, getCollaborativeOpportunitiesByVenue, createVenueConnection } from "@/lib/api";
-import { CollaborativeOpportunityWithDetails, Venue } from "@/types";
-import { useToast } from "@/hooks/use-toast";
+import { TabsContent, Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { getVenueNetworkGraph, getCollaborativeOpportunitiesByVenue, createVenueConnection } from "@/lib/api";
 
 export default function VenueNetwork() {
   const { toast } = useToast();
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const queryClient = useQueryClient();
-
-  // For now, hardcode currentVenueId to 1 (The Echo Lounge)
   const currentVenueId = 1;
 
-  // Fetch network data
   const { data: networkData, isLoading: isLoadingNetwork } = useQuery({
     queryKey: ['/api/venue-network/graph', currentVenueId],
     queryFn: async () => {
       const data = await getVenueNetworkGraph(currentVenueId);
-      console.log('Network data from API:', data);
       return data;
     }
-  });
-
-  // Fetch collaborative opportunities (This is removed in the edited code, but kept for completeness if needed later)
-  const { data: collaborativeOpportunities, isLoading: isLoadingOpportunities } = useQuery({
-    queryKey: ['/api/venues', currentVenueId, 'collaborative-opportunities'],
-    queryFn: () => getCollaborativeOpportunitiesByVenue(currentVenueId)
   });
 
   const createConnectionMutation = useMutation({
@@ -74,31 +64,8 @@ export default function VenueNetwork() {
     return (
       <div className="py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-          <h1 className="text-2xl font-heading font-semibold text-gray-900">Venue Network</h1>
-          <div className="mt-6">
-            <Card>
-              <CardContent className="flex items-center justify-center h-80">
-                <p>Loading network data...</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!networkData?.nodes || networkData.nodes.length === 0) {
-    return (
-      <div className="py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-          <h1 className="text-2xl font-heading font-semibold text-gray-900">Venue Network</h1>
-          <div className="mt-6">
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center h-80 space-y-4">
-                <p>No venues found in the network.</p>
-                <Button onClick={handleAddVenue}>Add First Venue</Button>
-              </CardContent>
-            </Card>
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-heading font-semibold text-gray-900">Loading Network...</h1>
           </div>
         </div>
       </div>
@@ -108,42 +75,97 @@ export default function VenueNetwork() {
   return (
     <div className="py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-        <h1 className="text-2xl font-heading font-semibold text-gray-900">Venue Network</h1>
-
-        <div className="mt-6">
-          <NetworkVisualization 
-            data={networkData || { nodes: [], links: [] }} 
-            onNodeClick={handleNodeClick}
-            onAddVenue={handleAddVenue}
-          />
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-heading font-semibold text-gray-900">Venue Network</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Manage your venue connections and discover new collaboration opportunities
+            </p>
+          </div>
+          <Button onClick={handleAddVenue} size="lg" className="shadow-sm">
+            Connect New Venue
+          </Button>
         </div>
 
-        <div className="mt-6">
-          <Card>
-            <CardContent className="p-4">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Connected Venues</h3>
-              {networkData?.nodes.filter(node => !node.isCurrentVenue).map(node => (
-                <div key={node.id} className="mb-4 p-4 border rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h4 className="font-medium">{node.name}</h4>
-                      <p className="text-sm text-gray-500">{node.city}, {node.state}</p>
+        <Tabs defaultValue="map" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="map">Network Map</TabsTrigger>
+            <TabsTrigger value="list">Connected Venues</TabsTrigger>
+            <TabsTrigger value="stats">Network Stats</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="map" className="space-y-4">
+            <NetworkVisualization 
+              data={networkData || { nodes: [], links: [] }} 
+              onNodeClick={handleNodeClick}
+              onAddVenue={handleAddVenue}
+            />
+          </TabsContent>
+
+          <TabsContent value="list">
+            <Card>
+              <CardContent className="p-6">
+                <div className="grid gap-4">
+                  {networkData?.nodes.filter(node => !node.isCurrentVenue).map((node) => (
+                    <div key={node.id} className="flex items-center justify-between p-4 bg-white rounded-lg border">
+                      <div>
+                        <h3 className="font-medium text-gray-900">{node.name}</h3>
+                        <p className="text-sm text-gray-500">{node.city}, {node.state}</p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <Badge variant="secondary">
+                          Trust Score: {node.trustScore}%
+                        </Badge>
+                        <Badge variant="outline">
+                          {node.collaborativeBookings} Collaborations
+                        </Badge>
+                      </div>
                     </div>
-                    <Badge>
-                      Trust Score: {node.trustScore}%
-                    </Badge>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="stats">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <h3 className="text-sm font-medium text-gray-500">Total Connections</h3>
+                  <p className="text-2xl font-semibold">{networkData?.nodes.length - 1}</p>
+                </CardHeader>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <h3 className="text-sm font-medium text-gray-500">Total Collaborations</h3>
+                  <p className="text-2xl font-semibold">
+                    {networkData?.links.reduce((sum, link) => sum + link.value, 0)}
+                  </p>
+                </CardHeader>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <h3 className="text-sm font-medium text-gray-500">Average Trust Score</h3>
+                  <p className="text-2xl font-semibold">
+                    {networkData?.nodes.length > 1 
+                      ? Math.round(networkData.nodes
+                          .filter(n => !n.isCurrentVenue)
+                          .reduce((sum, n) => sum + n.trustScore, 0) / 
+                          (networkData.nodes.length - 1)
+                        )
+                      : 0}%
+                  </p>
+                </CardHeader>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Invite Venue to Network</DialogTitle>
+            <DialogTitle>Connect with a New Venue</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <form onSubmit={(e) => {
@@ -181,7 +203,7 @@ export default function VenueNetwork() {
                   Cancel
                 </Button>
                 <Button type="submit">
-                  Send Invitation
+                  Send Connection Request
                 </Button>
               </div>
             </form>

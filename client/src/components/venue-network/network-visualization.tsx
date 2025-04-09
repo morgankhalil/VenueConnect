@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -79,30 +78,20 @@ export function NetworkVisualization({
     );
   }
 
-  // Find map center based on current venue
   const currentVenue = data.nodes.find(n => n.isCurrentVenue);
   const mapCenter = currentVenue 
     ? [currentVenue.latitude, currentVenue.longitude] 
-    : [39.5, -98.5]; // US center
+    : [39.5, -98.5];
 
   return (
     <Card>
-      <CardContent className="p-4">
-        <div className="sm:flex sm:items-center sm:justify-between mb-4">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">Venue Network</h3>
-          <div className="mt-3 sm:mt-0 sm:ml-4">
-            <Button onClick={onAddVenue}>
-              <Plus className="mr-1 h-4 w-4" />
-              Invite Venue
-            </Button>
-          </div>
-        </div>
-
-        <div className="h-[400px] rounded-lg overflow-hidden">
+      <CardContent className="p-0">
+        <div className="h-[600px] rounded-lg overflow-hidden">
           <MapContainer
             center={mapCenter as [number, number]}
             zoom={4}
             style={{ height: '100%', width: '100%' }}
+            className="z-0"
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -112,9 +101,9 @@ export function NetworkVisualization({
             {data.links.map((link, idx) => {
               const source = data.nodes.find(n => n.id === link.source);
               const target = data.nodes.find(n => n.id === link.target);
-              
+
               if (!source || !target) return null;
-              
+
               return (
                 <Polyline
                   key={`link-${idx}`}
@@ -157,7 +146,6 @@ export function NetworkVisualization({
             ))}
           </MapContainer>
         </div>
-
         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center">
             <div className="text-2xl font-semibold text-primary-700">
