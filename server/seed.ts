@@ -80,6 +80,10 @@ async function seed() {
         if (artist) {
           sampleArtists.push(artist);
           console.log(`Added artist: ${artist.name}`);
+          
+          // Also sync events for this artist
+          const events = await syncArtistEventsFromBandsInTown(name);
+          console.log(`Synced ${events.length} events for ${artist.name}`);
         }
       } catch (err) {
         console.error(`Error syncing artist ${name}:`, err);
