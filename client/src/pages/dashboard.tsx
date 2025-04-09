@@ -47,10 +47,20 @@ export default function Dashboard() {
     });
   };
 
-  // Check for loading states before rendering components
+  // Check for loading states and empty data
   if (isLoadingStats || isLoadingPredictions || isLoadingVenues) {
     return <div>Loading...</div>;
   }
+
+  // Initialize empty data placeholders
+  const displayPredictions = predictions || [];
+  const displayVenues = recentVenues || [];
+  const displayStats = statsData || {
+    upcomingOpportunities: 0,
+    confirmedBookings: 0,
+    venueNetworkCount: 0,
+    recentInquiries: 0
+  };
 
   return (
     <div className="py-6">
@@ -63,19 +73,19 @@ export default function Dashboard() {
         <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <StatsCard
             title="Upcoming Opportunities"
-            value={statsData?.upcomingOpportunities || 0}
+            value={displayStats.upcomingOpportunities}
             change={{ value: 12, increasing: true }}
             icon="opportunities"
           />
           <StatsCard
             title="Confirmed Bookings"
-            value={statsData?.confirmedBookings || 0}
+            value={displayStats.confirmedBookings}
             change={{ value: 8, increasing: true }}
             icon="bookings"
           />
           <StatsCard
             title="Venue Network"
-            value={statsData?.venueNetworkCount || 0}
+            value={displayStats.venueNetworkCount}
             change={{ value: 2, increasing: true }}
             icon="network"
           />
@@ -101,7 +111,7 @@ export default function Dashboard() {
 
           {/* Opportunities Grid */}
           <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {predictions?.map((prediction) => (
+            {displayPredictions.map((prediction) => (
               <OpportunityCard
                 key={prediction.id}
                 prediction={prediction}
@@ -123,7 +133,7 @@ export default function Dashboard() {
         <div className="mt-8">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Recently Added Venues</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {recentVenues?.map((venue) => ( //Added conditional check here to prevent error if recentVenues is null or undefined.
+            {displayVenues.map((venue) => (
               <VenueCard
                 key={venue.id}
                 venue={venue}
