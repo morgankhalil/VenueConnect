@@ -23,7 +23,7 @@ export default function Discover() {
   // Fetch predictions data (individual opportunities)
   const { data: predictions, isLoading: predictionsLoading } = useQuery({
     queryKey: ['/api/predictions'],
-    queryFn: getMockPredictions
+    queryFn: getPredictionsWithDetails
   });
   
   // Fetch tour groups

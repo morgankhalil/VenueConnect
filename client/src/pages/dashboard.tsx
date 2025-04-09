@@ -4,7 +4,7 @@ import { StatsCard } from "@/components/dashboard/stats-card";
 import { OpportunityCard } from "@/components/dashboard/opportunity-card";
 import { VenueCard } from "@/components/venue-network/venue-card";
 import { Button } from "@/components/ui/button";
-import { getMockStatsData, getMockPredictions } from "@/lib/api";
+import { getStatsData, getPredictionsWithDetails } from "@/lib/api";
 import { PredictionWithDetails } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { Filter, ArrowUpRight, BarChart3, List } from "lucide-react";
@@ -17,13 +17,13 @@ export default function Dashboard() {
   // Fetch dashboard data
   const { data: statsData, isLoading: isLoadingStats } = useQuery({
     queryKey: ['/api/stats'],
-    queryFn: getMockStatsData
+    queryFn: getStatsData
   });
 
   // Get predictions data for opportunities section
   const { data: predictions, isLoading: isLoadingPredictions } = useQuery({
     queryKey: ['/api/predictions'],
-    queryFn: getMockPredictions
+    queryFn: getPredictionsWithDetails
   });
 
   // Recent venues data - this would be fetched from API in a real app
