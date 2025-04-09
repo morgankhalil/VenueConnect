@@ -4,6 +4,19 @@ import { users, venues, artists, events, predictions, venueNetwork, collaborativ
 
 async function seed() {
   try {
+    // Clear all existing data
+    console.log('Clearing existing data...');
+    await db.delete(collaborativeParticipants);
+    await db.delete(collaborativeOpportunities);
+    await db.delete(predictions);
+    await db.delete(inquiries);
+    await db.delete(events);
+    await db.delete(venueNetwork);
+    await db.delete(venues);
+    await db.delete(artists);
+    await db.delete(users);
+    console.log('Database cleared successfully');
+
     // Get or create demo user
     let user = (await db.select().from(users).where(eq(users.username, 'demo')))[0];
     if (!user) {
