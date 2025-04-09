@@ -12,8 +12,9 @@ import { db } from './db';
 import { eq, and, sql } from 'drizzle-orm';
 import { venues, artists, events, predictions, collaborativeOpportunities, collaborativeParticipants, venueNetwork, messages } from '../shared/schema';
 
-// Import admin routes
+// Import admin and webhook routes
 import adminRouter from './routes/admin';
+import webhookRouter from './webhooks/webhook-routes';
 
 const router = Router();
 
@@ -358,6 +359,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount admin routes
   app.use('/api/admin', adminRouter);
+  
+  // Mount webhook routes
+  app.use('/api/webhooks', webhookRouter);
 
   // Artists routes
   app.get("/api/artists", async (req, res) => {

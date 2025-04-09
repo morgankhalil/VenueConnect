@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { WebhookSettings } from "@/components/settings/webhook-settings";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -66,6 +67,19 @@ export default function Settings() {
         });
     },
     enabled: !!user && !!user.id && !isNaN(Number(user.id))
+  });
+  
+  // Check if the Bandsintown API key is configured
+  const { data: bandsintownApiStatus } = useQuery({
+    queryKey: ['/api/admin/api-keys/bandsintown/status'],
+    queryFn: async () => {
+      return apiRequest('GET', '/api/admin/api-keys/bandsintown/status')
+        .then(res => res.json())
+        .catch(err => {
+          console.error("Error checking Bandsintown API key status:", err);
+          return { configured: false, message: "Failed to check API key status" };
+        });
+    }
   });
   
   // Update form values when user data is loaded
@@ -541,6 +555,13 @@ export default function Settings() {
                             </p>
                           </div>
                         </div>
+                      </div>
+                      
+                      {/* Webhook Settings */}
+                      <div className="mt-6">
+                        <WebhookSettings 
+                          apiKeyConfigured={!!bandsintownApiStatus?.configured} 
+                        />
                       </div>
                       
                       <div className="border rounded-md p-4">
