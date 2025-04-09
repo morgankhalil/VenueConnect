@@ -83,6 +83,24 @@ export default function VenueNetwork() {
     );
   }
 
+  if (!networkData || !networkData.nodes?.length) {
+    return (
+      <div className="py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+          <h1 className="text-2xl font-heading font-semibold text-gray-900">Venue Network</h1>
+          <div className="mt-6">
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center h-80 space-y-4">
+                <p>No venues found in the network.</p>
+                <Button onClick={handleAddVenue}>Add First Venue</Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
