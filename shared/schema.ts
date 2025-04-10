@@ -45,7 +45,6 @@ export const venues = pgTable("venues", {
   wheelchairAccessible: boolean("wheelchair_accessible"),
   foodBeverage: boolean("food_beverage"),
   contactEmail: text("contact_email"),
-  contactPhone: text("contact_phone"),
   lastUpdated: timestamp("last_updated"),
   ownerId: integer("owner_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
