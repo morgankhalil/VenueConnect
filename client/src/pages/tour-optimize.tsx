@@ -236,30 +236,38 @@ export default function TourOptimizePage() {
               </div>
             )}
             
-            <div className="flex justify-center space-x-4">
+            <div className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-4">
               <Button
                 onClick={handleOptimize}
                 disabled={!hasEnoughVenuesWithDates || optimizeMutation.isPending}
                 size="lg"
+                className="w-full md:w-auto"
               >
                 {optimizeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 <Truck className="mr-2 h-5 w-5" />
                 Optimize Tour Route
               </Button>
               
-              {hasEnoughVenuesWithDates && (
-                <OptimizationWizardDialog 
-                  tourId={Number(params?.id)}
-                  onComplete={(result) => {
-                    setOptimizationResult(result);
-                    refetch();
-                    toast({
-                      title: 'AI Optimization Complete',
-                      description: `Tour optimized with personalized preferences. Score: ${result.optimizationScore.toFixed(2)}`,
-                    });
-                  }}
-                />
-              )}
+              {/* Always render the wizard button but disable it if not enough venues */}
+              <OptimizationWizardDialog 
+                tourId={Number(params?.id)}
+                disabled={!hasEnoughVenuesWithDates}
+                onComplete={(result) => {
+                  setOptimizationResult(result);
+                  refetch();
+                  toast({
+                    title: 'AI Optimization Complete',
+                    description: `Tour optimized with personalized preferences. Score: ${result.optimizationScore.toFixed(2)}`,
+                  });
+                }}
+              />
+            </div>
+            
+            {/* Information message about AI Wizard */}
+            <div className="mt-4 text-center text-sm text-muted-foreground">
+              <p>
+                Use the <strong>AI Optimization Wizard</strong> for a guided experience with customized preferences
+              </p>
             </div>
           </CardContent>
         </Card>

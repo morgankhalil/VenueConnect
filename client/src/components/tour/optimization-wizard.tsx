@@ -841,18 +841,20 @@ export function OptimizationWizard({ tourId, onComplete, onCancel }: WizardProps
 // Dialog wrapper for the wizard
 export function OptimizationWizardDialog({ 
   tourId, 
-  onComplete 
+  onComplete,
+  disabled = false
 }: { 
   tourId: number,
-  onComplete: (result: any) => void
+  onComplete: (result: any) => void,
+  disabled?: boolean
 }) {
   const [open, setOpen] = useState(false);
   
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Wand2 className="mr-2 h-4 w-4" />
+      <DialogTrigger asChild disabled={disabled}>
+        <Button size="lg" variant="outline" className="border-primary/50 bg-primary/5 hover:bg-primary/10 w-full md:w-auto" disabled={disabled}>
+          <Wand2 className="mr-2 h-5 w-5" />
           AI Optimization Wizard
         </Button>
       </DialogTrigger>
