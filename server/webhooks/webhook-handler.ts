@@ -81,15 +81,6 @@ export function validateWebhookSignature(
 export async function processBandsintownEventWebhook(
   payload: BandsintownEventWebhook
 ): Promise<void> {
-  const today = new Date();
-  const endDate = new Date('2025-05-31');
-  const eventDate = new Date(payload.data.datetime);
-  
-  // Skip events outside our date range
-  if (eventDate < today || eventDate > endDate) {
-    console.log(`Skipping event outside date range: ${eventDate}`);
-    return;
-  }
   try {
     const { event_type, data } = payload;
     console.log(`Processing Bandsintown webhook: ${event_type}`);
