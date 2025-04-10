@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRoute, useLocation } from 'wouter';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { getTour, optimizeTourRoute } from '@/lib/api';
+import { OptimizationWizardDialog } from '@/components/tour/optimization-wizard';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -235,7 +236,7 @@ export default function TourOptimizePage() {
               </div>
             )}
             
-            <div className="flex justify-center">
+            <div className="flex justify-center space-x-4">
               <Button
                 onClick={handleOptimize}
                 disabled={!hasEnoughVenuesWithDates || optimizeMutation.isPending}
@@ -245,6 +246,20 @@ export default function TourOptimizePage() {
                 <Truck className="mr-2 h-5 w-5" />
                 Optimize Tour Route
               </Button>
+              
+              {hasEnoughVenuesWithDates && (
+                <OptimizationWizardDialog 
+                  tourId={Number(params?.id)}
+                  onComplete={(result) => {
+                    setOptimizationResult(result);
+                    refetch();
+                    toast({
+                      title: 'AI Optimization Complete',
+                      description: `Tour optimized with personalized preferences. Score: ${result.optimizationScore.toFixed(2)}`,
+                    });
+                  }}
+                />
+              )}
             </div>
           </CardContent>
         </Card>

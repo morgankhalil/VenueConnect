@@ -471,6 +471,7 @@ router.patch('/tours/:tourId/venues/:venueId', async (req, res) => {
 router.post('/tours/:id/optimize', async (req, res) => {
   try {
     const tourId = Number(req.params.id);
+    const wizardPreferences = req.body?.preferences || null;
     
     // Validate tour exists
     const tourResult = await db
@@ -504,8 +505,20 @@ router.post('/tours/:id/optimize', async (req, res) => {
     
     const preferences = preferencesResult.length ? preferencesResult[0] : null;
     
-    // Create optimization constraints from preferences
-    const constraints = {
+    // Create optimization constraints from preferences or wizard preferences
+    const constraints = wizardPreferences ? {
+      // Use wizard preferences if available, with fallbacks to database preferences
+      optimizationGoal: wizardPreferences.optimizationGoal || 'balance',
+      maxTravelDistancePerDay: wizardPreferences.maxTravelDistancePerDay || preferences?.maxTravelDistancePerDay,
+      minDaysBetweenShows: wizardPreferences.minDaysBetweenShows || preferences?.minDaysBetweenShows,
+      maxDaysBetweenShows: wizardPreferences.maxDaysBetweenShows || preferences?.maxDaysBetweenShows,
+      avoidDates: wizardPreferences.avoidCities || preferences?.avoidDates as string[] | undefined,
+      requiredDaysOff: wizardPreferences.requiredDaysOff || preferences?.requiredDayOff as string[] | undefined,
+      preferredRegions: wizardPreferences.preferredRegions || preferences?.preferredRegions as string[] | undefined,
+      focusOnArtistFanbase: wizardPreferences.focusOnArtistFanbase || false,
+      prioritizeVenueSize: wizardPreferences.prioritizeVenueSize || 'any'
+    } : {
+      // Fall back to stored preferences
       maxTravelDistancePerDay: preferences?.maxTravelDistancePerDay ?? undefined,
       minDaysBetweenShows: preferences?.minDaysBetweenShows ?? undefined,
       maxDaysBetweenShows: preferences?.maxDaysBetweenShows ?? undefined,

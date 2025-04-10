@@ -731,7 +731,7 @@ export function OptimizationWizard({ tourId, onComplete, onCancel }: WizardProps
   
   // Optimization mutation
   const optimizeMutation = useMutation({
-    mutationFn: () => optimizeTourRoute(tourId),
+    mutationFn: () => optimizeTourRoute(tourId, preferences),
     onSuccess: (data) => {
       toast({
         title: 'Tour Optimized',
