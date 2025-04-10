@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapEvent } from '@/types';
-import { getStatusInfo, isPriorityHold, getPriorityLevel } from '@/lib/tour-status';
+import { getStatusInfo, isPriorityHold } from '@/lib/tour-status';
 
 // Map bounds helper component - fits the map to markers
 function FitBoundsToMarkers({ events }: { events: MapEvent[] }) {
@@ -53,30 +53,24 @@ export function VenueMap({
   
   // Create custom marker icons based on status
   const createMarkerIcon = (status: string, index: number) => {
-    const normalizedStatus = status.toLowerCase();
-    
-    // Get status info from our utility
-    const statusInfo = getStatusInfo(normalizedStatus);
+    // Get status info from our utility (maps to simplified status)
+    const statusInfo = getStatusInfo(status);
     
     // Use the color from status info
     let backgroundColor = statusInfo.color;
     
-    // Create a border style based on status - to help differentiate priority levels
+    // Create a border style based on status
     let borderStyle = "2px solid white";
     
-    // Special styling for priority holds - make them more visually distinct
-    if (isPriorityHold(normalizedStatus)) {
-      const priorityLevel = getPriorityLevel(normalizedStatus);
-      // Make higher priority holds more prominent
-      if (priorityLevel === 1) {
-        borderStyle = "3px solid white";
-      } else if (priorityLevel === 2) {
-        borderStyle = "2px solid white";
-      } else if (priorityLevel === 3) {
-        borderStyle = "2px dashed white"; 
-      } else if (priorityLevel === 4) {
-        borderStyle = "1px dashed white";
-      }
+    // Special styling for different status types
+    if (statusInfo.code === 'confirmed') {
+      borderStyle = "3px solid white"; // Most prominent for confirmed
+    } else if (statusInfo.code === 'hold') {
+      borderStyle = "2px solid white"; // Standard for holds 
+    } else if (statusInfo.code === 'potential') {
+      borderStyle = "1px dashed white"; // Less prominent for potentials
+    } else if (statusInfo.code === 'cancelled') {
+      borderStyle = "1px dotted white"; // Least prominent for cancelled
     }
     
     // Create a custom HTML element for the marker
@@ -201,73 +195,27 @@ export function VenueMap({
         <div className="absolute bottom-8 left-3 bg-white/90 p-2 rounded-md shadow-sm border text-xs z-[1000] max-w-[200px]">
           <div className="text-gray-700 font-medium mb-1">Venue Status Legend</div>
           
-          {/* Final Statuses */}
+          {/* Simplified Status Legend */}
           <div className="mb-2">
-            <div className="text-gray-500 mb-1 text-[10px] uppercase">Final Status</div>
             <div className="flex items-center mb-1">
               <span className="w-3 h-3 rounded-full inline-block mr-1" 
                     style={{ backgroundColor: getStatusInfo('confirmed').color }}></span>
               <span className="text-gray-700">Confirmed</span>
             </div>
+            <div className="flex items-center mb-1">
+              <span className="w-3 h-3 rounded-full inline-block mr-1" 
+                    style={{ backgroundColor: getStatusInfo('hold').color }}></span>
+              <span className="text-gray-700">Hold</span>
+            </div>
+            <div className="flex items-center mb-1">
+              <span className="w-3 h-3 rounded-full inline-block mr-1" 
+                    style={{ backgroundColor: getStatusInfo('potential').color }}></span>
+              <span className="text-gray-700">Potential</span>
+            </div>
             <div className="flex items-center">
               <span className="w-3 h-3 rounded-full inline-block mr-1" 
                     style={{ backgroundColor: getStatusInfo('cancelled').color }}></span>
               <span className="text-gray-700">Cancelled</span>
-            </div>
-          </div>
-
-          {/* Priority Holds */}
-          <div className="mb-2">
-            <div className="text-gray-500 mb-1 text-[10px] uppercase">Priority Holds</div>
-            <div className="flex items-center mb-1">
-              <span className="w-3 h-3 rounded-full inline-block mr-1" 
-                    style={{ backgroundColor: getStatusInfo('hold1').color }}></span>
-              <span className="text-gray-700">Priority 1 (Highest)</span>
-            </div>
-            <div className="flex items-center mb-1">
-              <span className="w-3 h-3 rounded-full inline-block mr-1" 
-                    style={{ backgroundColor: getStatusInfo('hold2').color }}></span>
-              <span className="text-gray-700">Priority 2</span>
-            </div>
-            <div className="flex items-center mb-1">
-              <span className="w-3 h-3 rounded-full inline-block mr-1" 
-                    style={{ backgroundColor: getStatusInfo('hold3').color }}></span>
-              <span className="text-gray-700">Priority 3</span>
-            </div>
-            <div className="flex items-center">
-              <span className="w-3 h-3 rounded-full inline-block mr-1" 
-                    style={{ backgroundColor: getStatusInfo('hold4').color }}></span>
-              <span className="text-gray-700">Priority 4</span>
-            </div>
-          </div>
-          
-          {/* Contact Phase */}
-          <div className="mb-2">
-            <div className="text-gray-500 mb-1 text-[10px] uppercase">Contact Phase</div>
-            <div className="flex items-center mb-1">
-              <span className="w-3 h-3 rounded-full inline-block mr-1" 
-                    style={{ backgroundColor: getStatusInfo('contacted').color }}></span>
-              <span className="text-gray-700">Contacted</span>
-            </div>
-            <div className="flex items-center">
-              <span className="w-3 h-3 rounded-full inline-block mr-1" 
-                    style={{ backgroundColor: getStatusInfo('negotiating').color }}></span>
-              <span className="text-gray-700">Negotiating</span>
-            </div>
-          </div>
-          
-          {/* Planning Phase */}
-          <div>
-            <div className="text-gray-500 mb-1 text-[10px] uppercase">Planning Phase</div>
-            <div className="flex items-center mb-1">
-              <span className="w-3 h-3 rounded-full inline-block mr-1" 
-                    style={{ backgroundColor: getStatusInfo('suggested').color }}></span>
-              <span className="text-gray-700">Suggested</span>
-            </div>
-            <div className="flex items-center">
-              <span className="w-3 h-3 rounded-full inline-block mr-1" 
-                    style={{ backgroundColor: getStatusInfo('potential').color }}></span>
-              <span className="text-gray-700">Potential</span>
             </div>
           </div>
         </div>

@@ -7,11 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   TOUR_VENUE_STATUSES, 
   STATUS_DISPLAY_NAMES, 
-  STATUS_DESCRIPTIONS, 
-  PLANNING_STATUSES,
-  CONTACT_STATUSES,
-  PRIORITY_HOLD_STATUSES,
-  CONFIRMATION_STATUSES
+  STATUS_DESCRIPTIONS
 } from "@/lib/tour-status";
 
 import {
@@ -146,52 +142,10 @@ export function TourVenueForm({
                   <SelectValue placeholder="Select a status" />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* Planning Status Group */}
+                  {/* Simplified Status Selection */}
                   <SelectGroup>
-                    <SelectLabel>Planning</SelectLabel>
-                    {PLANNING_STATUSES.map((status) => (
-                      <SelectItem 
-                        key={status} 
-                        value={status}
-                        title={STATUS_DESCRIPTIONS[status]}
-                      >
-                        {STATUS_DISPLAY_NAMES[status]}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                  
-                  {/* Contact Status Group */}
-                  <SelectGroup>
-                    <SelectLabel>Contact Phase</SelectLabel>
-                    {CONTACT_STATUSES.map((status) => (
-                      <SelectItem 
-                        key={status} 
-                        value={status}
-                        title={STATUS_DESCRIPTIONS[status]}
-                      >
-                        {STATUS_DISPLAY_NAMES[status]}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                  
-                  {/* Priority Hold Status Group */}
-                  <SelectGroup>
-                    <SelectLabel>Priority Holds</SelectLabel>
-                    {PRIORITY_HOLD_STATUSES.map((status) => (
-                      <SelectItem 
-                        key={status} 
-                        value={status}
-                        title={STATUS_DESCRIPTIONS[status]}
-                      >
-                        {STATUS_DISPLAY_NAMES[status]}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                  
-                  {/* Confirmation Status Group */}
-                  <SelectGroup>
-                    <SelectLabel>Final Status</SelectLabel>
-                    {CONFIRMATION_STATUSES.map((status) => (
+                    <SelectLabel>Venue Status</SelectLabel>
+                    {TOUR_VENUE_STATUSES.map((status) => (
                       <SelectItem 
                         key={status} 
                         value={status}

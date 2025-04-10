@@ -10,9 +10,7 @@ import {
   getStatusBadgeVariant, 
   STATUS_DISPLAY_NAMES,
   isPriorityHold,
-  PLANNING_STATUSES,
-  CONTACT_STATUSES,
-  PRIORITY_HOLD_STATUSES
+  TOUR_VENUE_STATUSES
 } from '@/lib/tour-status';
 import { UpdateVenueForm } from './update-venue-form';
 import {
@@ -901,24 +899,8 @@ export function TourDetail({ tourId }: TourDetailProps) {
                                         </SelectTrigger>
                                         <SelectContent>
                                           <SelectGroup>
-                                            <SelectLabel>Planning</SelectLabel>
-                                            {PLANNING_STATUSES.map(status => (
-                                              <SelectItem key={status} value={status}>
-                                                {STATUS_DISPLAY_NAMES[status]}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectGroup>
-                                          <SelectGroup>
-                                            <SelectLabel>Contact Phase</SelectLabel>
-                                            {CONTACT_STATUSES.map(status => (
-                                              <SelectItem key={status} value={status}>
-                                                {STATUS_DISPLAY_NAMES[status]}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectGroup>
-                                          <SelectGroup>
-                                            <SelectLabel>Priority Holds</SelectLabel>
-                                            {PRIORITY_HOLD_STATUSES.map(status => (
+                                            <SelectLabel>Venue Status</SelectLabel>
+                                            {TOUR_VENUE_STATUSES.map(status => (
                                               <SelectItem key={status} value={status}>
                                                 {STATUS_DISPLAY_NAMES[status]}
                                               </SelectItem>
