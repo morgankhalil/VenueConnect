@@ -7,38 +7,6 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
-// Core venue data with known Bandsintown IDs
-const CORE_VENUES = [
-  {
-    name: 'The Bowery Ballroom',
-    address: '6 Delancey St',
-    city: 'New York',
-    state: 'NY',
-    country: 'USA',
-    capacity: 575,
-    latitude: 40.7204,
-    longitude: -73.9934,
-    description: 'Historic Manhattan venue known for indie rock shows',
-    bandsintownId: '1847-the-bowery-ballroom',
-    website: 'https://boweryballroom.com',
-    contactEmail: 'info@boweryballroom.com'
-  },
-  {
-    name: 'The 9:30 Club',
-    address: '815 V St NW',
-    city: 'Washington',
-    state: 'DC',
-    country: 'USA',
-    capacity: 1200,
-    latitude: 38.9178,
-    longitude: -77.0230,
-    description: 'Legendary DC music venue',
-    bandsintownId: '209-9-30-club',
-    website: 'https://930.com',
-    contactEmail: 'info@930.com'
-  }
-];
-
 // Core artists for seeding
 const CORE_ARTISTS = [
   {
@@ -56,6 +24,13 @@ const CORE_ARTISTS = [
     description: 'American rock band from New York City'
   }
 ];
+
+interface VenueFilter {
+  minCapacity?: number;
+  maxCapacity?: number;
+  city?: string;
+  state?: string;
+}
 
 async function clearDatabase() {
   console.log('Clearing existing data...');
@@ -79,20 +54,23 @@ async function createVenueManager() {
   return manager;
 }
 
-async function seedVenues(manager: any) {
-  console.log('Seeding venues...');
-  const insertedVenues = [];
+async function getFilteredVenues(filter: VenueFilter) {
+  let query = db.select().from(venues);
   
-  for (const venue of CORE_VENUES) {
-    const [newVenue] = await db.insert(venues).values({
-      ...venue,
-      ownerId: manager.id
-    }).returning();
-    console.log(`Created venue: ${venue.name}`);
-    insertedVenues.push(newVenue);
+  if (filter.minCapacity) {
+    query = query.where(venues.capacity >= filter.minCapacity);
+  }
+  if (filter.maxCapacity) {
+    query = query.where(venues.capacity <= filter.maxCapacity);
+  }
+  if (filter.city) {
+    query = query.where(eq(venues.city, filter.city));
+  }
+  if (filter.state) {
+    query = query.where(eq(venues.state, filter.state));
   }
   
-  return insertedVenues;
+  return await query;
 }
 
 async function seedArtists() {
@@ -160,13 +138,23 @@ async function seedEvents(venueList: any[], artistList: any[]) {
   }
 }
 
-async function seed() {
+async function seed(filter: VenueFilter = { minCapacity: 500, maxCapacity: 5000 }) {
   try {
     console.log('Starting database seeding...');
+    console.log('Using venue filter:', filter);
     
     await clearDatabase();
     const manager = await createVenueManager();
-    const venueList = await seedVenues(manager);
+    
+    // Get filtered venues
+    const venueList = await getFilteredVenues(filter);
+    console.log(`Found ${venueList.length} venues matching criteria`);
+    
+    if (venueList.length === 0) {
+      console.error('No venues found matching the criteria. Seeding stopped.');
+      process.exit(1);
+    }
+    
     const artistList = await seedArtists();
     await createVenueNetwork(venueList);
     await seedEvents(venueList, artistList);
@@ -178,5 +166,10 @@ async function seed() {
   }
 }
 
-// Run the seeding process
-seed();
+// You can customize the filter when running the seed function
+seed({
+  minCapacity: 500,
+  maxCapacity: 3000,
+  // city: 'New York',     // Optional: Filter by city
+  // state: 'NY'          // Optional: Filter by state
+});
