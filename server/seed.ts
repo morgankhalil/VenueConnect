@@ -34,27 +34,30 @@ async function seed() {
         address: '6 Delancey St',
         city: 'New York',
         state: 'NY',
-        zipCode: '10002',
         country: 'USA',
         capacity: 575,
         latitude: 40.7204,
         longitude: -73.9934,
         description: 'Historic Manhattan venue known for indie rock shows',
         ownerId: venueManager.id,
-        bandsintownId: '1847-the-bowery-ballroom'
+        bandsintownId: '1847-the-bowery-ballroom',
+        website: 'https://boweryballroom.com',
+        contactEmail: 'info@boweryballroom.com'
       },
       {
         name: 'The 9:30 Club',
         address: '815 V St NW',
         city: 'Washington',
         state: 'DC',
-        zipCode: '20001',
         country: 'USA',
         capacity: 1200,
         latitude: 38.9178,
         longitude: -77.0230,
         description: 'Legendary DC music venue featuring diverse acts',
-        ownerId: venueManager.id
+        ownerId: venueManager.id,
+        bandsintownId: '209-9-30-club',
+        website: 'https://930.com',
+        contactEmail: 'info@930.com'
       },
       {
         name: 'The Troubadour',
