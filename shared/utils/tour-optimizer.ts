@@ -267,7 +267,7 @@ export function optimizeTourRoute(
  * @param venues Available venues
  * @param daysBetween Number of days between start and end
  * @param constraints Optimization constraints
- * @returns List of venues that can fill the gap
+ * @returns List of venues that can fill the gap, with suggestion metadata
  */
 function findVenuesForGap(
   start: RoutingPoint,
@@ -318,21 +318,71 @@ function findVenuesForGap(
     venue.longitude !== null
   );
   
-  // Try to find at least some venues, using minShows
-  for (let i = 1; i <= minShows; i++) {
-    // Find position along the path
-    const ratio = i / (minShows + 1);
-    const pointLat = start.latitude + (end.latitude - start.latitude) * ratio;
-    const pointLon = start.longitude + (end.longitude - start.longitude) * ratio;
+  // Calculate route complexity based on gap size
+  const isLongGap = daysBetween > 7;
+  const isVeryLongGap = daysBetween > 14;
+  
+  // For short gaps, we want venues very close to the direct path
+  // For longer gaps, we can explore more venues with greater deviation
+  const deviationFactor = isLongGap ? 0.3 : 0.1;
+  const maxVenues = isVeryLongGap ? 5 : (isLongGap ? 3 : 1);
+  
+  // Try to find potential venues, prioritizing those along the route
+  const venueScores: { venue: Venue; score: number }[] = [];
+  
+  // Calculate a score for each venue
+  for (const venue of filteredVenues) {
+    if (!venue.latitude || !venue.longitude) continue;
     
-    const nearest = findNearestVenue(
-      { latitude: pointLat, longitude: pointLon },
-      // Exclude venues we've already selected
-      filteredVenues.filter(v => !result.includes(v))
+    // Calculate distance from start and end
+    const distanceFromStart = calculateDistance(
+      start.latitude, 
+      start.longitude, 
+      venue.latitude,
+      venue.longitude
     );
     
-    if (nearest) {
-      result.push(nearest.venue);
+    const distanceFromEnd = calculateDistance(
+      venue.latitude,
+      venue.longitude,
+      end.latitude, 
+      end.longitude
+    );
+    
+    // Calculate direct distance from start to end
+    const directDistance = calculateDistance(
+      start.latitude,
+      start.longitude,
+      end.latitude, 
+      end.longitude
+    );
+    
+    // Calculate total travel distance if we include this venue
+    const totalDistanceWithVenue = distanceFromStart + distanceFromEnd;
+    
+    // Calculate deviation from direct path
+    // Lower is better - closer to the direct path
+    const deviation = totalDistanceWithVenue / directDistance - 1;
+    
+    // Calculate score (lower is better)
+    // We want venues that minimize added travel distance but are still on a reasonable path
+    const score = deviation;
+    
+    // Store venue with score
+    venueScores.push({ venue, score });
+  }
+  
+  // Sort venues by score (lowest score first)
+  venueScores.sort((a, b) => a.score - b.score);
+  
+  // Take top venues based on max allowed
+  // But limit to venues that don't deviate too much from the path
+  for (const { venue, score } of venueScores) {
+    if (result.length >= maxVenues) break;
+    
+    // Only include venues with reasonable deviation
+    if (score <= deviationFactor) {
+      result.push(venue);
     }
   }
   
