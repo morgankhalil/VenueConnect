@@ -63,30 +63,16 @@ app.use(async (req, res, next) => {
     if (process.env.NODE_ENV !== 'production') {
       console.log("Creating demo user session for development");
       
-      // Get the first venue and its owner
-      const venue = await db.query.venues.findFirst({
-        with: {
-          owner: true
-        }
-      });
+      // Try to find a venue with ID 1 (simplest approach)
+      const venueId = 1;
       
-      if (venue && venue.owner) {
-        // Set the user in session
-        req.session.user = {
-          id: venue.owner.id,
-          name: venue.owner.name || venue.owner.username || "Demo User",
-          role: venue.owner.role || "venue_manager",
-          venueId: venue.id
-        };
-      } else {
-        // Fallback to a demo user if no venue/owner exists
-        req.session.user = {
-          id: 1,
-          name: "Demo User",
-          role: "admin", // Give admin role for easy access to features
-          venueId: null
-        };
-      }
+      // Fallback to a demo user with admin role for development
+      req.session.user = {
+        id: 1,
+        name: "Demo Admin",
+        role: "admin", // Give admin role for easy access to features
+        venueId: venueId
+      };
       return next();
     } else {
       // In production, enforce authentication
