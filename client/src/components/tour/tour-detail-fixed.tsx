@@ -217,13 +217,15 @@ export function TourDetail({ tourId }: TourDetailProps) {
     updateStatusMutation.mutate(status);
   };
   
-  // Check if the tour has enough venues with dates for optimization
+  // Check if the tour has enough venues for optimization
+  // For optimization, we can work with any venues regardless of dates or status
+  const hasEnoughVenuesForOptimization = (tour?.venues?.length || 0) >= 2;
+  
+  // But we can still filter to see which ones have confirmed dates 
   const venuesWithDates = tour?.venues?.filter(v => 
     (v.tourVenue.status === 'confirmed' || v.tourVenue.status === 'booked' || v.tourVenue.status === 'planning') && 
     v.tourVenue.date
   ) || [];
-  
-  const hasEnoughVenuesWithDates = venuesWithDates.length >= 2;
   
   const handleOptimize = () => {
     optimizeMutation.mutate();
@@ -281,7 +283,7 @@ export function TourDetail({ tourId }: TourDetailProps) {
                   size="sm"
                   variant="default"
                   className="bg-gradient-to-r from-primary to-primary/80"
-                  disabled={!hasEnoughVenuesWithDates}
+                  disabled={!hasEnoughVenuesForOptimization}
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
                   Tour Optimizer
@@ -401,7 +403,7 @@ export function TourDetail({ tourId }: TourDetailProps) {
                     <Button 
                       size="sm"
                       variant="default"
-                      disabled={!hasEnoughVenuesWithDates}
+                      disabled={!hasEnoughVenuesForOptimization}
                       className="bg-gradient-to-r from-primary to-primary/80"
                     >
                       <Sparkles className="mr-2 h-4 w-4" />
@@ -484,9 +486,9 @@ export function TourDetail({ tourId }: TourDetailProps) {
                   <p className="text-muted-foreground mb-3">
                     No venue locations available to display
                   </p>
-                  {!hasEnoughVenuesWithDates ? (
+                  {!hasEnoughVenuesForOptimization ? (
                     <p className="text-sm text-amber-500 mb-4">
-                      You need at least 2 venues with dates to optimize.
+                      You need at least 2 venues to use the Tour Optimizer.
                     </p>
                   ) : null}
                   <Dialog>
@@ -678,7 +680,7 @@ export function TourDetail({ tourId }: TourDetailProps) {
                     <Button 
                       size="sm"
                       variant="default"
-                      disabled={!hasEnoughVenuesWithDates}
+                      disabled={!hasEnoughVenuesForOptimization}
                       className="bg-gradient-to-r from-primary to-primary/80"
                     >
                       <Sparkles className="mr-2 h-4 w-4" />
@@ -983,7 +985,7 @@ export function TourDetail({ tourId }: TourDetailProps) {
                   <p className="text-muted-foreground mb-4">
                     Generate venue suggestions to find potential venues that fit your tour schedule
                   </p>
-                  {!hasEnoughVenuesWithDates ? (
+                  {!hasEnoughVenuesForOptimization ? (
                     <p className="text-sm text-amber-500 mb-4">
                       You need at least 2 venues with dates to generate suggestions.
                     </p>
@@ -1138,7 +1140,7 @@ export function TourDetail({ tourId }: TourDetailProps) {
                     variant="outline"
                     size="sm"
                     onClick={handleOptimize}
-                    disabled={!hasEnoughVenuesWithDates || optimizeMutation.isPending}
+                    disabled={!hasEnoughVenuesForOptimization || optimizeMutation.isPending}
                   >
                     {optimizeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     <Truck className="mr-2 h-4 w-4" />
@@ -1147,7 +1149,7 @@ export function TourDetail({ tourId }: TourDetailProps) {
                 </div>
               </div>
               
-              {!hasEnoughVenuesWithDates && (
+              {!hasEnoughVenuesForOptimization && (
                 <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-md mt-6">
                   <h3 className="font-medium flex items-center">
                     <Clock className="h-5 w-5 mr-2" />
