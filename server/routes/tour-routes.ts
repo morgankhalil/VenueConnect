@@ -514,21 +514,41 @@ router.post('/tours/:id/optimize', async (req, res) => {
       preferredRegions: preferences?.preferredRegions as string[] | undefined
     };
     
-    // Extract fixed points from existing tour venues with confirmed dates
-    const fixedPoints = tourVenuesResult
+    // Extract fixed and semi-fixed points from existing tour venues with dates
+    // Include confirmed venues as fixed points (these won't move)
+    const confirmedPoints = tourVenuesResult
       .filter(tv => tv.tourVenue.status === 'confirmed' && tv.tourVenue.date !== null)
       .map(tv => ({
         id: tv.venue.id,
         latitude: Number(tv.venue.latitude),
         longitude: Number(tv.venue.longitude),
         date: tv.tourVenue.date ? new Date(tv.tourVenue.date) : null,
-        isFixed: true
+        isFixed: true,
+        status: 'confirmed'
+      }));
+      
+    // Include booked and planning venues as semi-fixed points (can be optimized but are part of the tour)
+    const plannedPoints = tourVenuesResult
+      .filter(tv => 
+        (tv.tourVenue.status === 'booked' || tv.tourVenue.status === 'planning') && 
+        tv.tourVenue.date !== null
+      )
+      .map(tv => ({
+        id: tv.venue.id,
+        latitude: Number(tv.venue.latitude),
+        longitude: Number(tv.venue.longitude),
+        date: tv.tourVenue.date ? new Date(tv.tourVenue.date) : null,
+        isFixed: false,
+        status: tv.tourVenue.status
       }));
     
-    // We need at least 2 fixed points
-    if (fixedPoints.length < 2) {
+    // Combine all points, with at least 2 points total
+    const allTourPoints = [...confirmedPoints, ...plannedPoints];
+    
+    // We need at least 2 points with dates for optimization
+    if (allTourPoints.length < 2) {
       return res.status(400).json({ 
-        error: "Tour optimization requires at least 2 confirmed venues with dates" 
+        error: "Tour optimization requires at least 2 venues with dates (confirmed, booked, or in planning)" 
       });
     }
     
@@ -559,7 +579,7 @@ router.post('/tours/:id/optimize', async (req, res) => {
     
     // Run the optimization algorithm
     const optimizedRoute = optimizeTourRoute(
-      fixedPoints,
+      allTourPoints,
       potentialVenuesResult,
       constraints
     );
@@ -581,7 +601,7 @@ router.post('/tours/:id/optimize', async (req, res) => {
       optimizationScore: optimizedRoute.optimizationScore,
       totalDistance: optimizedRoute.totalDistance,
       totalTravelTime: optimizedRoute.totalTravelTime,
-      fixedPoints,
+      fixedPoints: allTourPoints,
       potentialFillVenues: optimizedRoute.tourVenues,
       gaps: optimizedRoute.gaps
     });

@@ -6,6 +6,7 @@ export interface RoutingPoint {
   longitude: number | null;
   date?: Date | null;
   isFixed: boolean;
+  status?: string; // 'confirmed', 'booked', 'planning'
 }
 
 export interface OptimizationConstraints {
@@ -116,23 +117,27 @@ export function findNearestVenue(
 
 /**
  * Optimize a tour route using the nearest neighbor algorithm with constraints
- * @param startingPoints Fixed points in the tour (cities/venues with confirmed dates)
+ * @param tourPoints Points in the tour (confirmed/booked/planning venues with dates)
  * @param potentialStops Potential venues that could be added to the tour
  * @param constraints Optimization constraints
  * @returns Optimized tour route
  */
 export function optimizeTourRoute(
-  startingPoints: RoutingPoint[],
+  tourPoints: RoutingPoint[],
   potentialStops: Venue[],
   constraints: OptimizationConstraints = {}
 ): OptimizedRoute {
-  // Ensure we have at least 2 fixed points to work with (start and end)
-  if (startingPoints.length < 2) {
-    throw new Error("At least 2 fixed points are required for tour optimization");
+  // Ensure we have at least 2 points to work with
+  if (tourPoints.length < 2) {
+    throw new Error("At least 2 points are required for tour optimization");
   }
   
-  // Sort fixed points by date if provided
-  const sortedFixedPoints = [...startingPoints].sort((a, b) => {
+  // Separate confirmed venues (fixed) from planning/booked venues (can be adjusted)
+  const fixedPoints = tourPoints.filter(point => point.isFixed);
+  const adjustablePoints = tourPoints.filter(point => !point.isFixed);
+  
+  // Sort all points by date if provided
+  const sortedPoints = [...tourPoints].sort((a, b) => {
     if (!a.date || !b.date) return 0;
     return a.date.getTime() - b.date.getTime();
   });
@@ -146,8 +151,8 @@ export function optimizeTourRoute(
     optimizationScore: 0
   };
   
-  // First, add all the fixed points to the result
-  sortedFixedPoints.forEach(point => {
+  // First, add all existing tour points to the result
+  sortedPoints.forEach(point => {
     if (point.latitude && point.longitude) {
       result.tourVenues.push({
         venue: {
@@ -173,10 +178,10 @@ export function optimizeTourRoute(
     }
   });
   
-  // Process pairs of fixed points to find gaps and optimize between them
-  for (let i = 0; i < sortedFixedPoints.length - 1; i++) {
-    const current = sortedFixedPoints[i];
-    const next = sortedFixedPoints[i + 1];
+  // Process pairs of points to find gaps and optimize between them
+  for (let i = 0; i < sortedPoints.length - 1; i++) {
+    const current = sortedPoints[i];
+    const next = sortedPoints[i + 1];
     
     // Skip points without coordinates
     if (!current.latitude || !current.longitude || !next.latitude || !next.longitude) {
