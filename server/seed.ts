@@ -27,7 +27,7 @@ async function seed() {
       role: 'venue_manager'
     }).returning();
 
-    // Real venues data
+    // Real venues data with Bandsintown IDs
     const venueDataList = [
       {
         name: 'The Bowery Ballroom',
@@ -40,7 +40,8 @@ async function seed() {
         latitude: 40.7204,
         longitude: -73.9934,
         description: 'Historic Manhattan venue known for indie rock shows',
-        ownerId: venueManager.id
+        ownerId: venueManager.id,
+        bandsintownId: '1847-the-bowery-ballroom'
       },
       {
         name: 'The 9:30 Club',
