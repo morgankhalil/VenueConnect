@@ -313,6 +313,9 @@ export async function updateTourVenue(tourId: number, venueId: number, updates: 
  * @param tourId The ID of the tour to optimize
  * @returns A promise that resolves to the optimized route
  */
+/**
+ * Optimize a tour route with preferences
+ */
 export async function optimizeTourRoute(tourId: number, preferences?: any) {
   try {
     const response = await fetch(`/api/tour/tours/${tourId}/optimize`, {
@@ -322,14 +325,14 @@ export async function optimizeTourRoute(tourId: number, preferences?: any) {
     });
     
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
       throw new Error(errorData.error || 'Failed to optimize tour');
     }
     
     return await response.json();
   } catch (error: any) {
     console.error('Tour optimization error:', error);
-    throw error;
+    throw new Error(error.message || 'Failed to optimize tour');
   }
 }
 

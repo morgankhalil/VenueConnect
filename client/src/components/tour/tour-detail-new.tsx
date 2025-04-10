@@ -212,7 +212,7 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
 
   //Mutation to apply the optimized tour
   const applyMutation = useMutation({
-    mutationFn: () => applyOptimizedTour(Number(tourId), optimizationResult),
+    mutationFn: () => applyTourOptimization(Number(tourId), optimizationResult),
     onSuccess: () => {
       toast({
         title: 'Tour Updated',
