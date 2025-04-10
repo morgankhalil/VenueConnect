@@ -146,6 +146,33 @@ export function optimizeTourRoute(
     optimizationScore: 0
   };
   
+  // First, add all the fixed points to the result
+  sortedFixedPoints.forEach(point => {
+    if (point.latitude && point.longitude) {
+      result.tourVenues.push({
+        venue: {
+          id: point.id,
+          name: `Venue ${point.id}`, // The UI will look up the full venue info
+          city: "",
+          region: null,
+          country: null,
+          latitude: point.latitude,
+          longitude: point.longitude,
+          capacity: null,
+          description: null,
+          websiteUrl: null,
+          contactEmail: null,
+          phoneNumber: null,
+          address: null,
+          venueType: null,
+          createdAt: null
+        },
+        date: point.date,
+        isFixed: point.isFixed
+      });
+    }
+  });
+  
   // Process pairs of fixed points to find gaps and optimize between them
   for (let i = 0; i < sortedFixedPoints.length - 1; i++) {
     const current = sortedFixedPoints[i];
@@ -190,12 +217,27 @@ export function optimizeTourRoute(
         
         if (gapVenues.length > 0) {
           // Add these venues to the route
-          gapVenues.forEach(venueStop => {
-            // TODO: Create actual TourVenue objects once we have database integration
+          gapVenues.forEach((venueStop, index) => {
+            const daysIntoGap = Math.round(daysBetween * ((index + 1) / (gapVenues.length + 1)));
+            const venueDate = new Date(current.date!.getTime());
+            venueDate.setDate(venueDate.getDate() + daysIntoGap);
+            
+            result.tourVenues.push({
+              venue: venueStop,
+              date: venueDate,
+              isFixed: false
+            });
           });
         } else {
           // Create a gap record if no venues found
-          // TODO: Create actual TourGap object once we have database integration
+          result.gaps.push({
+            startDate: current.date,
+            endDate: next.date,
+            daysBetween: daysBetween,
+            startVenueId: current.id,
+            endVenueId: next.id,
+            potentialVenues: []
+          });
         }
       }
     }

@@ -213,7 +213,7 @@ export default function TourOptimizePage() {
                   <div className="space-y-4">
                     <h3 className="font-medium">Optimized Venue Sequence</h3>
                     <div className="space-y-2">
-                      {optimizationResult.potentialFillVenues?.map((venue: any, index: number) => (
+                      {optimizationResult.tourVenues?.map((venue: any, index: number) => (
                         <div key={index} className="flex items-center p-3 bg-muted/30 rounded-md">
                           <div className="w-8 h-8 flex items-center justify-center bg-primary/10 rounded-full mr-3">
                             <span className="font-medium text-sm">{index + 1}</span>
@@ -222,7 +222,7 @@ export default function TourOptimizePage() {
                             <div className="font-medium">{venue.venue?.name}</div>
                             <div className="text-sm text-muted-foreground flex items-center">
                               <MapPin className="h-3 w-3 mr-1" />
-                              {venue.venue?.city}
+                              {venue.venue?.city || 'Location data unavailable'}
                               {venue.venue?.region ? `, ${venue.venue?.region}` : ''}
                             </div>
                           </div>
