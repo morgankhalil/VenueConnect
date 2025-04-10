@@ -22,6 +22,11 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Add health check endpoint
+app.get('/', (_, res) => {
+  res.status(200).send('OK');
+});
+
 // Set up session middleware
 app.use(session({
   secret: 'venue-connect-session-secret',
