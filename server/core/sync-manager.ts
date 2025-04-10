@@ -16,7 +16,7 @@ export class SyncManager {
   };
   private logger: SyncLogger;
 
-  constructor() {
+  private init() {
     const apiKey = process.env.BANDSINTOWN_API_KEY;
     if (!apiKey) throw new Error('BANDSINTOWN_API_KEY is required');
     this.apiKey = apiKey;

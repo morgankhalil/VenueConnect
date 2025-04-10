@@ -1,8 +1,23 @@
 
-import { beforeAll } from '@jest/globals';
-import dotenv from 'dotenv';
+import { jest } from '@jest/globals';
+import { db } from '../db';
 
+// Mock database operations
+jest.mock('../db', () => ({
+  db: {
+    insert: jest.fn(),
+    select: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn()
+  }
+}));
+
+// Setup before tests
 beforeAll(() => {
-  dotenv.config();
-  // Add any other test setup here
+  // Add any global test setup here
+});
+
+// Cleanup after tests
+afterAll(() => {
+  // Add any global test cleanup here
 });
