@@ -77,6 +77,7 @@ export function Header({
           <div className="hidden md:block mr-6">
             <h2 className="text-xl font-medium tracking-tight dark:text-white fade-in">
               Welcome back, <span className="text-primary font-semibold">{userName.split(' ')[0]}</span>
+              <span className="text-accent ml-1">!</span>
             </h2>
           </div>
 
@@ -109,7 +110,7 @@ export function Header({
             className="relative rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
           >
             <Bell className="h-5 w-5" />
-            <Badge className="absolute top-0 right-0 h-2 w-2 p-0 bg-primary border-white dark:border-gray-900" variant="secondary" />
+            <Badge className="absolute top-0 right-0 h-2 w-2 p-0 bg-accent border-white dark:border-gray-900 pulse-accent" variant="secondary" />
           </Button>
 
           <Button 

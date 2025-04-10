@@ -126,7 +126,7 @@ export function Sidebar({
               <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
                 Venue Network
               </h3>
-              <button className="text-primary hover:text-primary/80 transition-colors">
+              <button className="text-accent hover:text-primary transition-colors">
                 <PlusCircle className="h-5 w-5" />
               </button>
             </div>
@@ -150,7 +150,7 @@ export function Sidebar({
                       className={cn(
                         "w-2.5 h-2.5 mr-3 rounded-full",
                         venue.isOnline 
-                          ? "bg-green-500 animate-pulse" 
+                          ? "bg-accent pulse-accent" 
                           : "bg-gray-400"
                       )}
                     />
@@ -158,8 +158,8 @@ export function Sidebar({
                   </a>
                 ))
               ) : (
-                <div className="px-4 py-3 rounded-lg bg-muted/50 text-center">
-                  <Users className="h-5 w-5 mx-auto mb-2 text-muted-foreground" />
+                <div className="px-4 py-3 rounded-lg bg-muted/50 text-center border border-accent/20">
+                  <Users className="h-5 w-5 mx-auto mb-2 text-accent" />
                   <p className="text-sm text-muted-foreground">
                     No connected venues yet
                   </p>

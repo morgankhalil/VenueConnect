@@ -28,6 +28,18 @@
 }
 
 @layer base {
+  :root {
+    --accent: 180 100% 50%; /* Pure Cyan */
+    --accent-foreground: 0 0% 0%;
+    --accent-hover: 185 100% 45%;
+  }
+
+  .dark {
+    --accent: 180 100% 50%;
+    --accent-foreground: 0 0% 0%;
+    --accent-hover: 185 100% 45%;
+  }
+
   * {
     @apply border-border;
   }
@@ -43,6 +55,24 @@
   }
 }
 
+@layer utilities {
+  .text-accent {
+    color: hsl(var(--accent));
+  }
+  
+  .bg-accent {
+    background-color: hsl(var(--accent));
+  }
+  
+  .border-accent {
+    border-color: hsl(var(--accent));
+  }
+
+  .ring-accent {
+    --tw-ring-color: hsl(var(--accent));
+  }
+}
+
 /* Custom Components & Utility Classes */
 .glass-card {
   @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-gray-200 dark:border-gray-800;
@@ -50,6 +80,18 @@
 
 .gradient-card {
   background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.05), rgba(var(--primary-rgb), 0.15));
+}
+
+.accent-gradient {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+}
+
+.accent-border {
+  border-color: hsl(var(--accent));
+}
+
+.accent-text {
+  color: hsl(var(--accent));
 }
 
 .hover-lift {
@@ -77,4 +119,14 @@
 @keyframes slideUp {
   from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+.pulse-accent {
+  animation: pulseAccent 2s infinite;
+}
+
+@keyframes pulseAccent {
+  0% { box-shadow: 0 0 0 0 hsla(var(--accent), 0.7); }
+  70% { box-shadow: 0 0 0 10px hsla(var(--accent), 0); }
+  100% { box-shadow: 0 0 0 0 hsla(var(--accent), 0); }
 }
