@@ -537,6 +537,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount webhook routes
   app.use('/api/webhooks', webhookRouter);
+  
+  // Mount tour routes
+  app.use('/api/tour', tourRouter);
 
   // Artists routes
   app.get("/api/artists", async (req, res) => {

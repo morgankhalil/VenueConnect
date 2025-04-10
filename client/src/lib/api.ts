@@ -183,3 +183,179 @@ export async function sendMessage(message: {
     headers: { 'Content-Type': 'application/json' }
   });
 }
+
+/* Tour Management API Functions */
+
+/**
+ * Get all tours with optional filtering
+ * @param filters Optional query parameters for filtering tours
+ * @returns A promise that resolves to the tours
+ */
+export async function getTours(filters?: {
+  artistId?: number;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+}) {
+  const queryParams = new URLSearchParams();
+  
+  if (filters?.artistId) queryParams.append('artistId', filters.artistId.toString());
+  if (filters?.status) queryParams.append('status', filters.status);
+  if (filters?.startDate) queryParams.append('startDate', filters.startDate);
+  if (filters?.endDate) queryParams.append('endDate', filters.endDate);
+  
+  const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/api/tour/tours${queryString}`);
+}
+
+/**
+ * Get a single tour by ID
+ * @param tourId The ID of the tour to get
+ * @returns A promise that resolves to the tour
+ */
+export async function getTour(tourId: number) {
+  return apiRequest(`/api/tour/tours/${tourId}`);
+}
+
+/**
+ * Create a new tour
+ * @param tour The tour details
+ * @returns A promise that resolves when the tour is created
+ */
+export async function createTour(tour: {
+  name: string;
+  artistId: number;
+  status?: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  totalBudget?: number;
+}) {
+  return apiRequest('/api/tour/tours', {
+    method: 'POST',
+    body: JSON.stringify(tour),
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+/**
+ * Update a tour
+ * @param tourId The ID of the tour to update
+ * @param updates The tour updates
+ * @returns A promise that resolves when the tour is updated
+ */
+export async function updateTour(tourId: number, updates: {
+  name?: string;
+  status?: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  totalBudget?: number;
+}) {
+  return apiRequest(`/api/tour/tours/${tourId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+/**
+ * Add a venue to a tour
+ * @param tourId The ID of the tour to add the venue to
+ * @param venue The venue details
+ * @returns A promise that resolves when the venue is added
+ */
+export async function addVenueToTour(tourId: number, venue: {
+  venueId: number;
+  status?: string;
+  date?: string;
+  sequence?: number;
+  notes?: string;
+}) {
+  return apiRequest(`/api/tour/tours/${tourId}/venues`, {
+    method: 'POST',
+    body: JSON.stringify(venue),
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+/**
+ * Optimize a tour route
+ * @param tourId The ID of the tour to optimize
+ * @returns A promise that resolves to the optimized route
+ */
+export async function optimizeTourRoute(tourId: number) {
+  return apiRequest(`/api/tour/tours/${tourId}/optimize`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+/**
+ * Get artist tour preferences
+ * @param artistId The ID of the artist to get preferences for
+ * @returns A promise that resolves to the artist tour preferences
+ */
+export async function getArtistTourPreferences(artistId: number) {
+  return apiRequest(`/api/tour/artists/${artistId}/tour-preferences`);
+}
+
+/**
+ * Set artist tour preferences
+ * @param artistId The ID of the artist to set preferences for
+ * @param preferences The artist tour preferences
+ * @returns A promise that resolves when the preferences are set
+ */
+export async function setArtistTourPreferences(artistId: number, preferences: {
+  maxTravelDistancePerDay?: number;
+  minDaysBetweenShows?: number;
+  maxDaysBetweenShows?: number;
+  avoidDates?: string[];
+  requiredDayOff?: string[];
+  preferredRegions?: string[];
+}) {
+  return apiRequest(`/api/tour/artists/${artistId}/tour-preferences`, {
+    method: 'POST',
+    body: JSON.stringify(preferences),
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+/**
+ * Get venue tour preferences
+ * @param venueId The ID of the venue to get preferences for
+ * @returns A promise that resolves to the venue tour preferences
+ */
+export async function getVenueTourPreferences(venueId: number) {
+  return apiRequest(`/api/tour/venues/${venueId}/tour-preferences`);
+}
+
+/**
+ * Set venue tour preferences
+ * @param venueId The ID of the venue to set preferences for
+ * @param preferences The venue tour preferences
+ * @returns A promise that resolves when the preferences are set
+ */
+export async function setVenueTourPreferences(venueId: number, preferences: {
+  availableDates?: string[];
+  typicalCapacity?: number;
+  typicalTicketPrice?: number;
+  preferredGenres?: string[];
+  blackoutDates?: string[];
+  advanceBookingDays?: number;
+}) {
+  return apiRequest(`/api/tour/venues/${venueId}/tour-preferences`, {
+    method: 'POST',
+    body: JSON.stringify(preferences),
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+/**
+ * Get tour statistics for an artist
+ * @param artistId The ID of the artist to get statistics for
+ * @returns A promise that resolves to the tour statistics
+ */
+export async function getArtistTourStats(artistId: number) {
+  return apiRequest(`/api/tour/artists/${artistId}/tour-stats`);
+}
