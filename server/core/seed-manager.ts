@@ -70,6 +70,7 @@ export class SeedManager {
 
   async seedVenue(venueId: string): Promise<any> {
     try {
+      console.log(`Fetching venue data for ${venueId}...`);
       const data = await this.makeApiRequest<VenueData>(
         `https://rest.bandsintown.com/venues/${venueId}`
       );
@@ -93,6 +94,7 @@ export class SeedManager {
   }
 
   async getVenueEvents(venueId: string): Promise<EventData[]> {
+    console.log(`Fetching events for venue ${venueId}...`);
     return this.makeApiRequest<EventData[]>(
       `https://rest.bandsintown.com/venues/${venueId}/events`
     );
@@ -100,6 +102,7 @@ export class SeedManager {
 
   async seedArtist(artistData: ArtistData): Promise<any> {
     try {
+      // Check if artist already exists
       const existingArtist = await db.select()
         .from(artists)
         .where(eq(artists.bandsintownId, artistData.bandsintownId))
