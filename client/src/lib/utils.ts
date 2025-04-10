@@ -22,3 +22,31 @@ export function formatCurrency(amount: number, currency = 'USD') {
     maximumFractionDigits: 0,
   }).format(amount);
 }
+
+export function formatDistance(distanceInKm?: number | null): string {
+  if (distanceInKm === undefined || distanceInKm === null) {
+    return 'Not calculated';
+  }
+  return `${Math.round(distanceInKm)} km`;
+}
+
+export function formatTravelTime(timeInMinutes?: number | null): string {
+  if (timeInMinutes === undefined || timeInMinutes === null) {
+    return 'Not calculated';
+  }
+  const hours = Math.floor(timeInMinutes / 60);
+  const minutes = Math.round(timeInMinutes % 60);
+  
+  if (hours === 0) {
+    return `${minutes} min`;
+  } else if (minutes === 0) {
+    return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+  } else {
+    return `${hours} ${hours === 1 ? 'hour' : 'hours'} ${minutes} min`;
+  }
+}
+
+export function calculateImprovement(current: number, optimized: number): number {
+  if (current === 0) return 0;
+  return Math.round((1 - optimized / current) * 100);
+}

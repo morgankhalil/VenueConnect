@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 import { getTour, optimizeTourRoute, updateTour } from '@/lib/api';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { VenueStatusBadge } from './venue-status-badge';
+import { StatCard } from './stat-card';
+import { VenueList } from './venue-list';
 import { 
   getStatusInfo, 
   getStatusBadgeVariant, 
@@ -60,10 +62,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { TourVenueForm } from './tour-venue-form';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { formatDate, formatCurrency } from '@/lib/utils';
+import { formatDate, formatCurrency, formatDistance, formatTravelTime, calculateImprovement } from '@/lib/utils';
 import { 
   CalendarDays, Info, Map, MapPin, Loader2, PenLine, Truck, BarChart3, 
   ArrowRight, Check, Ban, Clock, Route, Calendar, Building, ChevronRight,
