@@ -80,9 +80,11 @@ async function fetchVenueEvents(venueName: string, venueId: string): Promise<Ban
     const apiEndpoint = `https://rest.bandsintown.com/venues/${venueId}/events`;
 
     const response = await axios.get(apiEndpoint, {
+      params: { 
+        app_id: apiKey
+      },
       headers: { 
-        'Accept': 'application/json',
-        'x-api-key': apiKey
+        'Accept': 'application/json'
       }
     });
 
