@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { NetworkVisualization } from "@/components/venue-network/network-visualization";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -21,26 +21,41 @@ export default function VenueNetwork() {
     queryFn: () => apiRequest('/api/user')
   });
   
-  // Use the user's venueId from their profile
-  // Fallback to a known venue ID (195 is The Middle East in Cambridge)
-  const currentVenueId = user?.venueId || 195;
+  // Use a React.useEffect to track venue ID changes
+  const [currentVenueId, setCurrentVenueId] = useState<number | null>(null);
+  
+  // Update the currentVenueId state when the user data changes
+  useEffect(() => {
+    if (user?.venueId) {
+      console.log(`User venue ID changed to ${user.venueId}`);
+      setCurrentVenueId(user.venueId);
+    } else {
+      // Fallback to a known venue ID (195 is The Middle East in Cambridge)
+      setCurrentVenueId(195);
+    }
+  }, [user?.venueId]);
 
   // Ensure the venue network graph is refetched when the user changes 
   const { data: networkData, isLoading: isLoadingNetwork, refetch: refetchNetwork } = useQuery({
     queryKey: ['/api/venue-network/graph', currentVenueId],
     queryFn: async () => {
       console.log(`Fetching venue network for venue ID: ${currentVenueId}`);
-      const data = await getVenueNetworkGraph(currentVenueId);
+      const data = await getVenueNetworkGraph(currentVenueId || 195);
       return data;
     },
     enabled: !!currentVenueId, // Only fetch when we have a venue ID
     refetchOnWindowFocus: false,
     refetchOnMount: true,
-    // Ensure we definitely get fresh data when the component mounts or venue changes
     refetchOnReconnect: true,
-    // Longer stale time to avoid unnecessary refetches
-    staleTime: 1000 * 60 * 5 // 5 minutes
   });
+  
+  // Force a refetch when the venueId changes
+  useEffect(() => {
+    if (currentVenueId) {
+      console.log(`Refetching network data for venue ID: ${currentVenueId}`);
+      refetchNetwork();
+    }
+  }, [currentVenueId, refetchNetwork]);
 
   const createConnectionMutation = useMutation({
     mutationFn: (connection: { 
