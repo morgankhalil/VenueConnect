@@ -846,13 +846,27 @@ export function UnifiedTourOptimizer({ tourId, onSuccess, initialTab = 'preferen
                     </Button>
                     <Button 
                       onClick={() => {
-                        refetchTour();
-                        toast({
-                          title: 'Changes Applied',
-                          description: 'Tour has been updated with the optimized route'
-                        });
+                        if (optimizeMutation.data) {
+                          // Call the API to apply optimization changes
+                          applyTourOptimization(tourId, optimizeMutation.data)
+                            .then(() => {
+                              // Refresh tour data after successful application
+                              refetchTour();
+                              toast({
+                                title: 'Changes Applied',
+                                description: 'Tour has been updated with the optimized route'
+                              });
+                            })
+                            .catch((error) => {
+                              toast({
+                                title: 'Error Applying Changes',
+                                description: error?.message || 'Failed to apply tour optimization changes',
+                                variant: 'destructive'
+                              });
+                            });
+                        }
                       }}
-                      disabled={!preferencesChanged() && optimizeMutation.data}
+                      disabled={!optimizeMutation.data}
                     >
                       Apply Changes
                       <ChevronRight className="ml-2 h-4 w-4" />
