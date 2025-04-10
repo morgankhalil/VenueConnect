@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapEvent } from '@/types';
+import { getStatusInfo, isPriorityHold } from '@/lib/tour-status';
 
 // Map bounds helper component - fits the map to markers
 function FitBoundsToMarkers({ events }: { events: MapEvent[] }) {
@@ -52,19 +53,13 @@ export function VenueMap({
   
   // Create custom marker icons based on status
   const createMarkerIcon = (status: string, index: number) => {
-    // Determine background color based on status
-    let backgroundColor = '#9CA3AF'; // Default gray
+    const normalizedStatus = status.toLowerCase();
     
-    // Status-based colors
-    if (status === 'confirmed') {
-      backgroundColor = '#10B981'; // Green for confirmed
-    } else if (status === 'suggested' || status === 'hold') {
-      backgroundColor = '#F59E0B'; // Amber for suggestions or holds
-    } else if (status === 'booked') {
-      backgroundColor = '#3B82F6'; // Blue for booked
-    } else if (status === 'planning') {
-      backgroundColor = '#8B5CF6'; // Purple for planning
-    }
+    // Get status info from our utility
+    const statusInfo = getStatusInfo(normalizedStatus);
+    
+    // Use the color from status info
+    let backgroundColor = statusInfo.color;
     
     // Create a custom HTML element for the marker
     return new DivIcon({
@@ -152,20 +147,15 @@ export function VenueMap({
                   )}
                   
                   <div className="mt-2">
-                    <span className={`
-                      inline-block px-2 py-0.5 rounded-full text-xs font-medium
-                      ${markerStatus === 'confirmed' ? 'bg-green-100 text-green-800' : 
-                        markerStatus === 'suggested' || markerStatus === 'hold' ? 'bg-amber-100 text-amber-800' : 
-                        markerStatus === 'booked' ? 'bg-blue-100 text-blue-800' :
-                        markerStatus === 'planning' ? 'bg-purple-100 text-purple-800' :
-                        'bg-gray-100 text-gray-800'}
-                    `}>
-                      {markerStatus === 'confirmed' ? 'Confirmed' : 
-                       markerStatus === 'suggested' ? 'Suggested' :
-                       markerStatus === 'hold' ? 'On Hold' : 
-                       markerStatus === 'booked' ? 'Booked' :
-                       markerStatus === 'planning' ? 'Planning' :
-                       'Potential'}
+                    <span 
+                      className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium`}
+                      style={{
+                        backgroundColor: `${getStatusInfo(markerStatus).color}20`, // 20% opacity version of the color
+                        color: getStatusInfo(markerStatus).color
+                      }}
+                      title={getStatusInfo(markerStatus).description}
+                    >
+                      {getStatusInfo(markerStatus).displayName}
                     </span>
                   </div>
                 </div>
