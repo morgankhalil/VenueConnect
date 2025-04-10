@@ -39,9 +39,10 @@ export async function syncVenueEventsFromBandsInTown(venueId: string, venueName:
       .set({ bandsintownId: venueId })
       .where(eq(venues.name, venueName));
 
-    const response = await axios.get(`https://rest.bandsintown.com/venues/${venueId}/events`, {
+    const response = await axios.get(`https://rest.bandsintown.com/events/search`, {
       params: { 
-        app_id: apiKey
+        app_id: apiKey,
+        venue_id: venueId
       },
       headers: {
         'Accept': 'application/json'
