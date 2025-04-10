@@ -1,7 +1,7 @@
 
 import { db } from './db';
-import { users, venues, venueNetwork, events, artists, tours } from '../shared/schema';
-import { syncVenueEventsFromBandsInTown } from './data-sync/bands-in-town-sync';
+import { users, venues, venueNetwork, events, artists } from '../shared/schema';
+import { eq } from 'drizzle-orm';
 import dotenv from 'dotenv';
 
 // Load environment variables
@@ -36,28 +36,31 @@ const CORE_VENUES = [
     bandsintownId: '209-9-30-club',
     website: 'https://930.com',
     contactEmail: 'info@930.com'
+  }
+];
+
+// Core artists for seeding
+const CORE_ARTISTS = [
+  {
+    name: 'Arctic Monkeys',
+    genres: ['indie rock', 'alternative'],
+    popularity: 85,
+    imageUrl: null,
+    description: 'British rock band formed in Sheffield'
   },
   {
-    name: 'House of Blues',
-    address: '329 N Dearborn St',
-    city: 'Chicago',
-    state: 'IL',
-    country: 'USA',
-    capacity: 1800,
-    latitude: 41.8879,
-    longitude: -87.6295,
-    description: 'Famous blues and rock venue',
-    bandsintownId: '1847-house-of-blues-chicago',
-    website: 'https://houseofblues.com/chicago',
-    contactEmail: 'info@hob.com'
+    name: 'The Strokes',
+    genres: ['indie rock', 'garage rock'],
+    popularity: 80,
+    imageUrl: null,
+    description: 'American rock band from New York City'
   }
 ];
 
 async function clearDatabase() {
   console.log('Clearing existing data...');
-  await db.delete(venueNetwork);
   await db.delete(events);
-  await db.delete(tours);
+  await db.delete(venueNetwork);
   await db.delete(artists);
   await db.delete(venues);
   await db.delete(users);
@@ -85,51 +88,74 @@ async function seedVenues(manager: any) {
       ...venue,
       ownerId: manager.id
     }).returning();
+    console.log(`Created venue: ${venue.name}`);
     insertedVenues.push(newVenue);
   }
   
   return insertedVenues;
 }
 
-async function createVenueNetwork(venues: any[]) {
-  console.log('Creating venue network...');
-  for (let i = 0; i < venues.length; i++) {
-    for (let j = i + 1; j < venues.length; j++) {
+async function seedArtists() {
+  console.log('Seeding artists...');
+  const insertedArtists = [];
+  
+  for (const artist of CORE_ARTISTS) {
+    const [newArtist] = await db.insert(artists).values(artist).returning();
+    console.log(`Created artist: ${artist.name}`);
+    insertedArtists.push(newArtist);
+  }
+  
+  return insertedArtists;
+}
+
+async function createVenueNetwork(venueList: any[]) {
+  console.log('Creating venue network connections...');
+  
+  for (let i = 0; i < venueList.length; i++) {
+    for (let j = i + 1; j < venueList.length; j++) {
       const distance = Math.sqrt(
-        Math.pow(venues[i].latitude - venues[j].latitude, 2) +
-        Math.pow(venues[i].longitude - venues[j].longitude, 2)
+        Math.pow(venueList[i].latitude - venueList[j].latitude, 2) +
+        Math.pow(venueList[i].longitude - venueList[j].longitude, 2)
       );
       
       const trustScore = Math.max(70, Math.min(95, 100 - (distance * 2)));
       
       await db.insert(venueNetwork).values({
-        venueId: venues[i].id,
-        connectedVenueId: venues[j].id,
+        venueId: venueList[i].id,
+        connectedVenueId: venueList[j].id,
         status: 'active',
         trustScore: Math.floor(trustScore),
         collaborativeBookings: Math.floor(Math.random() * 10) + 1
       });
+      
+      console.log(`Created network connection: ${venueList[i].name} <-> ${venueList[j].name}`);
     }
   }
 }
 
-async function syncEvents(venues: any[]) {
-  console.log('Syncing events from Bandsintown...');
-  const apiKey = process.env.BANDSINTOWN_API_KEY;
-  if (!apiKey) {
-    console.error('ERROR: BANDSINTOWN_API_KEY environment variable is not set');
-    return;
-  }
-
-  for (const venue of venues) {
-    if (!venue.bandsintownId) continue;
-    
-    try {
-      console.log(`Syncing events for ${venue.name}`);
-      const eventCount = await syncVenueEventsFromBandsInTown(venue.bandsintownId, venue.name);
-      console.log(`Created ${eventCount} events for ${venue.name}`);
-    } catch (error) {
-      console.error(`Error syncing events for ${venue.name}:`, error);
+async function seedEvents(venueList: any[], artistList: any[]) {
+  console.log('Seeding sample events...');
+  
+  const startDate = new Date();
+  const endDate = new Date();
+  endDate.setMonth(endDate.getMonth() + 3);
+  
+  for (const artist of artistList) {
+    for (const venue of venueList) {
+      const eventDate = new Date(
+        startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime())
+      );
+      
+      await db.insert(events).values({
+        artistId: artist.id,
+        venueId: venue.id,
+        date: eventDate.toISOString().split('T')[0],
+        startTime: '20:00',
+        status: 'confirmed',
+        sourceName: 'manual'
+      });
+      
+      console.log(`Created event: ${artist.name} at ${venue.name} on ${eventDate.toISOString().split('T')[0]}`);
     }
   }
 }
@@ -140,9 +166,10 @@ async function seed() {
     
     await clearDatabase();
     const manager = await createVenueManager();
-    const venues = await seedVenues(manager);
-    await createVenueNetwork(venues);
-    await syncEvents(venues);
+    const venueList = await seedVenues(manager);
+    const artistList = await seedArtists();
+    await createVenueNetwork(venueList);
+    await seedEvents(venueList, artistList);
     
     console.log('Database seeding completed successfully');
   } catch (error) {
