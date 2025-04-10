@@ -282,27 +282,59 @@ export class SeedManager {
       await this.clearDatabase();
 
       const seededVenues = [];
+      const failedVenues = [];
+      let totalEvents = 0;
 
       // 1. Seed Venues
       for (const venue of venueData) {
-        this.logger.log(`Processing venue: ${venue.name}`);
-        const seededVenue = await this.seedVenue(venue);
-        if (seededVenue) {
-          seededVenues.push(seededVenue);
-          // 2. Get Venue Events and create them (which will create artists)
-          const events = await this.getVenueEvents(venue.bandsintownId);
-          for (const eventData of events) {
-            await this.seedEvent(seededVenue, eventData);
+        try {
+          this.logger.log(`Processing venue: ${venue.name}`);
+          const seededVenue = await this.seedVenue(venue);
+          
+          if (seededVenue) {
+            seededVenues.push(seededVenue);
+            
+            // 2. Get Venue Events and create them (which will create artists)
+            try {
+              const events = await this.getVenueEvents(venue.bandsintownId);
+              for (const eventData of events) {
+                try {
+                  await this.seedEvent(seededVenue, eventData);
+                  totalEvents++;
+                } catch (eventError) {
+                  this.logger.log(`Failed to seed event for ${venue.name}: ${eventError}`, 'error');
+                }
+              }
+            } catch (eventsError) {
+              this.logger.log(`Failed to fetch events for ${venue.name}: ${eventsError}`, 'error');
+            }
           }
+        } catch (venueError) {
+          this.logger.log(`Failed to process venue ${venue.name}: ${venueError}`, 'error');
+          failedVenues.push(venue.name);
         }
       }
 
       // 3. Create Venue Network after all venues are seeded
-      await this.createVenueNetwork(seededVenues);
+      if (seededVenues.length > 0) {
+        try {
+          await this.createVenueNetwork(seededVenues);
+        } catch (networkError) {
+          this.logger.log(`Failed to create venue network: ${networkError}`, 'error');
+        }
+      }
 
-      this.logger.log('\nSeeding completed successfully!');
+      this.logger.log('\nSeeding completed with summary:', 'info');
+      this.logger.log(`- Venues seeded successfully: ${seededVenues.length}`, 'info');
+      this.logger.log(`- Failed venues: ${failedVenues.length}`, 'info');
+      this.logger.log(`- Total events created: ${totalEvents}`, 'info');
+      
+      if (failedVenues.length > 0) {
+        this.logger.log(`Failed venues: ${failedVenues.join(', ')}`, 'warning');
+      }
+
     } catch (error) {
-      this.logger.log('Seeding failed:', 'error');
+      this.logger.log('Seeding process failed:', 'error');
       throw error;
     }
   }
