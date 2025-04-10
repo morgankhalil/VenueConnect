@@ -1,9 +1,16 @@
-
 import { db } from '../db';
-import { venues, events, artists, venueNetwork } from '../../shared/schema';
+import { users, venues, venueNetwork, events, artists, tours, tourVenues } from '../../shared/schema';
+import { eq, and } from 'drizzle-orm';
+import { SyncLogger } from './sync-logger';
 import axios from 'axios';
-import { eq } from 'drizzle-orm';
 import { setTimeout } from 'timers/promises';
+
+interface VenueFilter {
+  minCapacity?: number;
+  maxCapacity?: number;
+  cities?: string[];
+  states?: string[];
+}
 
 interface VenueData {
   name: string;
@@ -13,6 +20,11 @@ interface VenueData {
   latitude?: number;
   longitude?: number;
   bandsintownId: string;
+  address?: string;
+  country?: string;
+  zipCode?: string;
+  description?: string;
+  ownerId?: number;
 }
 
 interface ArtistData {
@@ -30,16 +42,12 @@ interface EventData {
 }
 
 export class SeedManager {
+  private logger: SyncLogger;
   private apiKey: string;
   private rateLimitDelay = 1000; // 1 second between API calls
-  private stats = {
-    venues: 0,
-    events: 0,
-    artists: 0,
-    networkConnections: 0
-  };
 
   constructor() {
+    this.logger = new SyncLogger('SeedManager');
     const apiKey = process.env.BANDSINTOWN_API_KEY;
     if (!apiKey) throw new Error('BANDSINTOWN_API_KEY is required');
     this.apiKey = apiKey;
@@ -64,54 +72,118 @@ export class SeedManager {
     }
   }
 
-  async clearDatabase() {
-    console.log('Clearing database in correct order...');
-    await db.delete(events);
-    await db.delete(venueNetwork); 
-    await db.delete(artists);
-    await db.delete(venues);
-    console.log('Database cleared');
+  async clearTable(tableName: string) {
+    this.logger.log(`Clearing table: ${tableName}`);
+    switch (tableName) {
+      case 'events':
+        await db.delete(events);
+        break;
+      case 'tourVenues':
+        await db.delete(tourVenues);
+        break;
+      case 'tours':
+        await db.delete(tours);
+        break;
+      case 'venueNetwork':
+        await db.delete(venueNetwork);
+        break;
+      case 'artists':
+        await db.delete(artists);
+        break;
+      case 'venues':
+        await db.delete(venues);
+        break;
+      case 'users':
+        await db.delete(users);
+        break;
+      default:
+        throw new Error(`Unknown table: ${tableName}`);
+    }
   }
 
-  async seedVenue(venueId: string): Promise<any> {
-    try {
-      console.log(`Fetching venue data for ${venueId}...`);
-      const data = await this.makeApiRequest<VenueData>(
-        `https://rest.bandsintown.com/venues/${venueId}`
-      );
-      
-      // Check if venue exists
-      const existingVenue = await db.select()
-        .from(venues)
-        .where(eq(venues.bandsintownId, venueId))
-        .limit(1);
+  async clearDatabase() {
+    this.logger.log('Starting database clear');
+    // Clear tables in correct dependency order
+    const tables = ['events', 'tourVenues', 'tours', 'venueNetwork', 'artists', 'venues', 'users'];
+    for (const table of tables) {
+      await this.clearTable(table);
+    }
+    this.logger.log('Database cleared successfully');
+  }
 
-      if (existingVenue.length) {
-        console.log(`Venue ${data.name} already exists, skipping...`);
-        return existingVenue[0];
+  async validateVenue(venueData: any) {
+    const required = ['name', 'city', 'state'];
+    for (const field of required) {
+      if (!venueData[field]) {
+        throw new Error(`Missing required field: ${field}`);
+      }
+    }
+
+    // Check for duplicate venue
+    const existing = await db.select()
+      .from(venues)
+      .where(
+        and(
+          eq(venues.name, venueData.name),
+          eq(venues.city, venueData.city)
+        )
+      );
+
+    return existing.length === 0;
+  }
+
+  async seedVenue(venueData: any) {
+    try {
+      const isValid = await this.validateVenue(venueData);
+      if (!isValid) {
+        this.logger.log(`Skipping duplicate venue: ${venueData.name}`, 'warn');
+        return null;
       }
 
       const [venue] = await db.insert(venues).values({
-        name: data.name,
-        city: data.city,
-        state: data.region,
-        capacity: data.capacity || 0,
-        latitude: data.latitude,
-        longitude: data.longitude,
-        bandsintownId: venueId
+        name: venueData.name,
+        address: venueData.address || `${venueData.name}, ${venueData.city}`,
+        city: venueData.city,
+        state: venueData.state,
+        country: venueData.country || 'US',
+        zipCode: venueData.zipCode || '',
+        latitude: venueData.latitude || 0,
+        longitude: venueData.longitude || 0,
+        capacity: venueData.capacity || 500,
+        description: venueData.description || `Venue: ${venueData.name}`,
+        ownerId: venueData.ownerId || 1
       }).returning();
 
-      this.stats.venues++;
-      console.log(`Added venue: ${data.name}`);
+      this.logger.log(`Seeded venue: ${venue.name}`);
       return venue;
     } catch (error) {
-      console.error(`Failed to seed venue ${venueId}:`, error);
+      this.logger.log(`Error seeding venue ${venueData.name}: ${error}`, 'error');
       throw error;
     }
   }
 
+  async getFilteredVenues(filter: VenueFilter) {
+    let query = db.select().from(venues);
+
+    if (filter.minCapacity) {
+      query = query.where(venues.capacity >= filter.minCapacity);
+    }
+    if (filter.maxCapacity) {
+      query = query.where(venues.capacity <= filter.maxCapacity);
+    }
+    if (filter.states?.length) {
+      query = query.where(venues.state.in(filter.states));
+    }
+    if (filter.cities?.length) {
+      query = query.where(venues.city.in(filter.cities));
+    }
+
+    return await query;
+  }
+
+
   async getVenueEvents(venueId: string): Promise<EventData[]> {
-    console.log(`Fetching events for venue ${venueId}...`);
+    this.logger.log(`Fetching events for venue ${venueId}...`);
     return this.makeApiRequest<EventData[]>(
       `https://rest.bandsintown.com/venues/${venueId}/events`
     );
@@ -121,7 +193,7 @@ export class SeedManager {
     try {
       const eventDate = new Date(eventData.datetime);
       const artist = await this.seedArtist(eventData.artist);
-      
+
       // Check if event exists
       const existingEvent = await db.select()
         .from(events)
@@ -129,7 +201,7 @@ export class SeedManager {
         .limit(1);
 
       if (existingEvent.length) {
-        console.log(`Event already exists for ${artist.name} at ${venue.name}, skipping...`);
+        this.logger.log(`Event already exists for ${artist.name} at ${venue.name}, skipping...`);
         return;
       }
 
@@ -143,10 +215,9 @@ export class SeedManager {
         sourceName: 'bandsintown'
       });
 
-      this.stats.events++;
-      console.log(`Added event: ${artist.name} at ${venue.name}`);
+      this.logger.log(`Added event: ${artist.name} at ${venue.name}`);
     } catch (error) {
-      console.error(`Failed to seed event:`, error);
+      this.logger.log(`Failed to seed event: ${error}`, 'error');
       throw error;
     }
   }
@@ -168,78 +239,70 @@ export class SeedManager {
         popularity: artistData.popularity || 50
       }).returning();
 
-      this.stats.artists++;
-      console.log(`Added artist: ${artistData.name}`);
+      this.logger.log(`Added artist: ${artistData.name}`);
       return artist;
     } catch (error) {
-      console.error(`Failed to seed artist ${artistData.name}:`, error);
+      this.logger.log(`Failed to seed artist ${artistData.name}: ${error}`, 'error');
       throw error;
     }
   }
 
-  async createVenueNetwork(venues: any[]): Promise<void> {
-    console.log('Creating venue network connections...');
-    
-    for (let i = 0; i < venues.length; i++) {
-      for (let j = i + 1; j < venues.length; j++) {
-        const venue1 = venues[i];
-        const venue2 = venues[j];
-        
-        if (!venue1.latitude || !venue2.latitude) continue;
+  async createVenueNetwork(venueList: any[]) {
+    this.logger.log('Creating venue network connections');
 
-        // Calculate approximate distance
-        const distance = Math.sqrt(
-          Math.pow(venue1.latitude - venue2.latitude, 2) +
-          Math.pow(venue1.longitude - venue2.longitude, 2)
-        );
+    for (let i = 0; i < venueList.length; i++) {
+      for (let j = i + 1; j < venueList.length; j++) {
+        try {
+          const distance = Math.sqrt(
+            Math.pow(venueList[i].latitude - venueList[j].latitude, 2) +
+            Math.pow(venueList[i].longitude - venueList[j].longitude, 2)
+          );
 
-        // Trust score inversely proportional to distance
-        const trustScore = Math.max(70, Math.min(95, 100 - (distance * 2)));
+          const trustScore = Math.max(70, Math.min(95, 100 - (distance * 2)));
 
-        await db.insert(venueNetwork).values({
-          venueId: venue1.id,
-          connectedVenueId: venue2.id,
-          status: 'active',
-          trustScore: Math.floor(trustScore)
-        });
+          await db.insert(venueNetwork).values({
+            venueId: venueList[i].id,
+            connectedVenueId: venueList[j].id,
+            status: 'active',
+            trustScore: Math.floor(trustScore),
+            collaborativeBookings: Math.floor(Math.random() * 10) + 1
+          });
 
-        this.stats.networkConnections++;
+          this.logger.log(`Created network: ${venueList[i].name} <-> ${venueList[j].name}`);
+        } catch (error) {
+          this.logger.log(`Error creating network connection: ${error}`, 'error');
+        }
       }
     }
   }
 
-  async run(venueIds: Record<string, string>) {
+  async run(venueData: VenueData[]) {
     try {
-      console.log('Starting seed process...');
+      this.logger.log('Starting seed process...');
       await this.clearDatabase();
-      
+
       const seededVenues = [];
-      
+
       // 1. Seed Venues
-      for (const [venueName, venueId] of Object.entries(venueIds)) {
-        console.log(`Processing venue: ${venueName}`);
-        const venue = await this.seedVenue(venueId);
-        seededVenues.push(venue);
-        
-        // 2. Get Venue Events and create them (which will create artists)
-        const events = await this.getVenueEvents(venueId);
-        for (const eventData of events) {
-          await this.seedEvent(venue, eventData);
+      for (const venue of venueData) {
+        this.logger.log(`Processing venue: ${venue.name}`);
+        const seededVenue = await this.seedVenue(venue);
+        if (seededVenue) {
+          seededVenues.push(seededVenue);
+          // 2. Get Venue Events and create them (which will create artists)
+          const events = await this.getVenueEvents(venue.bandsintownId);
+          for (const eventData of events) {
+            await this.seedEvent(seededVenue, eventData);
+          }
         }
       }
 
       // 3. Create Venue Network after all venues are seeded
       await this.createVenueNetwork(seededVenues);
 
-      console.log('\nSeeding completed successfully!');
-      console.log('Statistics:');
-      console.log(`- Venues seeded: ${this.stats.venues}`);
-      console.log(`- Events created: ${this.stats.events}`);
-      console.log(`- Artists added: ${this.stats.artists}`);
-      console.log(`- Network connections: ${this.stats.networkConnections}`);
-
+      this.logger.log('\nSeeding completed successfully!');
     } catch (error) {
-      console.error('Seeding failed:', error);
+      this.logger.log('Seeding failed:', 'error');
       throw error;
     }
   }
