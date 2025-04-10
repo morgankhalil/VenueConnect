@@ -38,6 +38,7 @@ export interface OptimizedVenueData {
   // Additional metadata for the optimizer
   score?: number;
   gapFilling?: boolean;
+  sequence?: number; // Used to determine the order of venues in the tour
 }
 
 /**
@@ -358,6 +359,11 @@ export function optimizeTourRoute(
   result.tourVenues.sort((a, b) => {
     if (!a.date || !b.date) return 0;
     return a.date.getTime() - b.date.getTime();
+  });
+  
+  // Assign sequence numbers based on the sorted order
+  result.tourVenues.forEach((venue, index) => {
+    venue.sequence = index + 1; // Sequences start at 1
   });
   
   // Calculate optimization score (higher is better)

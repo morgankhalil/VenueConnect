@@ -647,27 +647,43 @@ router.post('/tours/:id/apply-optimization', async (req, res) => {
       return res.status(404).json({ error: "Tour not found" });
     }
     
-    // Get existing tour venues
+    // Get existing tour venues with venue data
     const existingTourVenues = await db
-      .select()
+      .select({
+        tourVenue: tourVenues,
+        venue: venues
+      })
       .from(tourVenues)
+      .leftJoin(venues, eq(tourVenues.venueId, venues.id))
       .where(eq(tourVenues.tourId, tourId));
+    
+    // Create a map of confirmed venues (these will not be modified)
+    const confirmedVenues = new Set(
+      existingTourVenues
+        .filter(tv => tv.tourVenue.status === 'confirmed')
+        .map(tv => tv.tourVenue.venueId)
+    );
+    
+    // Step 1: Process all optimized venues to update or add them
+    const updatedVenueIds = new Set();
     
     // Update or create tour venues from optimized data
     for (const venue of optimizationData.potentialFillVenues || []) {
       if (!venue.venue || !venue.venue.id) continue;
       
       const venueId = venue.venue.id;
-      const existingTourVenue = existingTourVenues.find(tv => tv.venueId === venueId);
+      updatedVenueIds.add(venueId);
+      
+      const existingTourVenue = existingTourVenues.find(tv => tv.tourVenue.venueId === venueId);
       
       if (existingTourVenue) {
         // Update existing tour venue if it's not confirmed
-        if (existingTourVenue.status !== 'confirmed') {
+        if (existingTourVenue.tourVenue.status !== 'confirmed') {
           await db
             .update(tourVenues)
             .set({
-              date: venue.suggestedDate ? new Date(venue.suggestedDate) : existingTourVenue.date,
-              sequence: venue.sequence || existingTourVenue.sequence,
+              date: venue.suggestedDate ? new Date(venue.suggestedDate) : existingTourVenue.tourVenue.date,
+              sequence: venue.sequence || existingTourVenue.tourVenue.sequence,
               updatedAt: new Date()
             })
             .where(and(
@@ -690,6 +706,31 @@ router.post('/tours/:id/apply-optimization', async (req, res) => {
             updatedAt: new Date()
           });
       }
+    }
+    
+    // Step 2: For all existing venues not in the optimization data 
+    // and not confirmed, update their sequence to be high (to appear last)
+    // This ensures proper ordering of ALL tour venues
+    for (const tv of existingTourVenues) {
+      const venueId = tv.tourVenue.venueId;
+      
+      // Skip venues we've already processed or that are confirmed
+      if (updatedVenueIds.has(venueId) || confirmedVenues.has(venueId)) {
+        continue;
+      }
+      
+      // Update non-confirmed venues that weren't in the optimization
+      await db
+        .update(tourVenues)
+        .set({
+          // Use a high sequence number to place them at the end
+          sequence: 999,
+          updatedAt: new Date()
+        })
+        .where(and(
+          eq(tourVenues.tourId, tourId),
+          eq(tourVenues.venueId, venueId)
+        ));
     }
     
     // Update tour with optimization metrics
