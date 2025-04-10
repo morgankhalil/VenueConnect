@@ -447,10 +447,79 @@ export function TourDetail({ tourId }: TourDetailProps) {
                                 {formatDate(item.suggestedDate)}
                               </Badge>
                             )}
-                            <Badge className="ml-2 bg-blue-500 hover:bg-blue-600">Suggested</Badge>
-                            <Button size="sm" variant="outline" className="ml-2 border-blue-300 hover:bg-blue-100 hover:text-blue-800">
-                              Add to Tour
-                            </Button>
+                            <Badge 
+                              className="ml-2" 
+                              style={{
+                                backgroundColor: item.status ? getStatusInfo(item.status).color : getStatusInfo('suggested').color,
+                                color: 'white'
+                              }}
+                            >
+                              {item.status ? STATUS_DISPLAY_NAMES[item.status] : 'Suggested'}
+                            </Badge>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="ml-2"
+                                  style={{
+                                    borderColor: `${getStatusInfo(item.status || 'suggested').color}30`,
+                                    color: getStatusInfo(item.status || 'suggested').color
+                                  }}
+                                >
+                                  Add to Tour
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Add {item.venue.name} to Tour</DialogTitle>
+                                  <DialogDescription>
+                                    This venue is a good fit for your tour schedule.
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4 py-2">
+                                  <div className="space-y-2">
+                                    <p className="text-sm font-medium">Suggested Date</p>
+                                    <Badge>
+                                      <Calendar className="h-3.5 w-3.5 mr-1" />
+                                      {formatDate(item.suggestedDate)}
+                                    </Badge>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <p className="text-sm font-medium">Recommended Priority</p>
+                                    <div className="flex space-x-2">
+                                      {item.status ? (
+                                        <Badge
+                                          style={{
+                                            backgroundColor: getStatusInfo(item.status).color,
+                                            color: 'white'
+                                          }}
+                                        >
+                                          {STATUS_DISPLAY_NAMES[item.status]}
+                                        </Badge>
+                                      ) : (
+                                        <Badge className="bg-blue-500">Suggested</Badge>
+                                      )}
+                                      {item.detourRatio && (
+                                        <Badge variant="outline" className="text-xs">
+                                          {Math.round((item.detourRatio - 1) * 100)}% route deviation
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                <DialogFooter>
+                                  <Button onClick={() => {
+                                    // TODO: Implement adding the venue to tour with appropriate status
+                                    // This would call an API endpoint to add the venue
+                                    // For now we'll just close the dialog
+                                    console.log('Adding venue with status:', item.status || 'suggested');
+                                  }}>
+                                    Add to Tour
+                                  </Button>
+                                </DialogFooter>
+                              </DialogContent>
+                            </Dialog>
                           </div>
                         ))
                       }
