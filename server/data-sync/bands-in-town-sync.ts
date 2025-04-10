@@ -210,7 +210,7 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
     
     const params: Record<string, any> = {
       app_id: apiKey,
-      date: `${today.toISOString().split('T')[0]},${nextYear.toISOString().split('T')[0]}`
+      date: 'upcoming'
     };
 
     console.log(`Fetching events for artist '${artistName}'...`);
