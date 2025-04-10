@@ -27,12 +27,15 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius: n
 
   try {
     const response = await axios.get(`https://rest.bandsintown.com/venues/search`, {
+      headers: {
+        'Accept': 'application/json',
+        'x-api-key': apiKey
+      },
       params: {
         query: sourceVenue[0].name,
         location: `${sourceVenue[0].latitude},${sourceVenue[0].longitude}`,
         radius: radius,
-        limit: limit,
-        app_id: apiKey
+        limit: limit
       }
     });
 
@@ -73,9 +76,9 @@ export async function syncVenueFromBandsInTown(venueId: string, venueName: strin
   try {
     // First get venue details
     const response = await axios.get(`https://rest.bandsintown.com/venues/${venueId}`, {
-      params: { app_id: apiKey },
       headers: {
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'x-api-key': apiKey
       }
     });
 
