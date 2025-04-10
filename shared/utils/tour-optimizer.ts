@@ -1,14 +1,20 @@
 import { Venue, Artist, TourVenue, Tour, TourGap } from "../schema";
 
+/**
+ * Represents a point in the tour route
+ */
 export interface RoutingPoint {
   id: number;
   latitude: number | null;
   longitude: number | null;
   date?: Date | null;
   isFixed: boolean;
-  status?: string; // 'confirmed', 'booked', 'planning'
+  status?: string; // 'confirmed', 'booked', 'planning', etc.
 }
 
+/**
+ * Constraints for tour optimization
+ */
 export interface OptimizationConstraints {
   maxTravelDistancePerDay?: number;
   minDaysBetweenShows?: number;
@@ -18,9 +24,35 @@ export interface OptimizationConstraints {
   preferredRegions?: string[];
 }
 
+/**
+ * Extended venue data with optimization metadata
+ * This is purely for the optimization result and not stored in the database
+ */
+export interface OptimizedVenueData {
+  venue: Venue;
+  date?: Date | null;
+  isFixed: boolean;
+  status?: string;
+  suggestedDate?: Date;
+  detourRatio?: number;
+  // Additional metadata for the optimizer
+  score?: number;
+  gapFilling?: boolean;
+}
+
+/**
+ * Result of tour optimization
+ */
 export interface OptimizedRoute {
-  tourVenues: TourVenue[];
-  gaps: TourGap[];
+  tourVenues: OptimizedVenueData[];
+  gaps: {
+    startDate: Date | null;
+    endDate: Date | null;
+    daysBetween: number;
+    startVenueId: number;
+    endVenueId: number;
+    potentialVenues: Venue[];
+  }[];
   totalDistance: number;
   totalTravelTime: number;
   optimizationScore: number;
@@ -165,15 +197,17 @@ export function optimizeTourRoute(
           longitude: point.longitude,
           capacity: null,
           description: null,
-          websiteUrl: null,
+          website: null,
           contactEmail: null,
-          phoneNumber: null,
-          address: null,
-          venueType: null,
-          createdAt: null
+          contactPhone: null, // Matches schema name
+          imageUrl: null,
+          ownerId: null,
+          bandsintownId: null,
+          createdAt: null,
         },
         date: point.date,
-        isFixed: point.isFixed
+        isFixed: point.isFixed,
+        status: point.status || 'confirmed'
       });
     }
   });
@@ -221,18 +255,76 @@ export function optimizeTourRoute(
         );
         
         if (gapVenues.length > 0) {
-          // Add these venues to the route
+          // Add these venues to the route as suggestions
           gapVenues.forEach((venueStop, index) => {
+            // Determine optimal date for this venue in the gap
             const daysIntoGap = Math.round(daysBetween * ((index + 1) / (gapVenues.length + 1)));
             const venueDate = new Date(current.date!.getTime());
             venueDate.setDate(venueDate.getDate() + daysIntoGap);
             
-            // Add venue as a suggested venue with proper data
+            // Calculate how optimal this venue is for the route
+            const distanceFromCurrent = calculateDistance(
+              current.latitude!, 
+              current.longitude!, 
+              Number(venueStop.latitude) || 0, 
+              Number(venueStop.longitude) || 0
+            );
+            
+            const distanceToNext = calculateDistance(
+              Number(venueStop.latitude) || 0, 
+              Number(venueStop.longitude) || 0,
+              next.latitude!, 
+              next.longitude!
+            );
+            
+            const directRouteDistance = calculateDistance(
+              current.latitude!,
+              current.longitude!,
+              next.latitude!,
+              next.longitude!
+            );
+            
+            const detourRatio = (distanceFromCurrent + distanceToNext) / directRouteDistance;
+            
+            // Determine priority level based on how good this venue is
+            // Lower detour ratio = higher priority
+            let priority = 'suggested'; // Default status
+            
+            // Determine status based on venue quality and fit
+            if (detourRatio < 1.1) {
+              // Almost directly on route - highest priority suggestion
+              priority = 'hold1'; 
+            } else if (detourRatio < 1.2) {
+              // Very good option - high priority
+              priority = 'hold2';
+            } else if (detourRatio < 1.4) {
+              // Decent option - medium priority
+              priority = 'hold3';
+            } else if (detourRatio < 2.0) {
+              // Acceptable but not ideal - low priority
+              priority = 'hold4';
+            } else {
+              // Just a potential option
+              priority = 'potential';
+            }
+            
+            // Special case: If this venue fills a significant gap (5+ days)
+            // upgrade its importance
+            if (daysBetween >= 5 && index === 0 && gapVenues.length === 1) {
+              // This is the only venue filling a big gap - make it high priority
+              priority = priority === 'potential' ? 'suggested' : priority;
+            }
+            
+            // Add venue with suggested date and calculated status
             result.tourVenues.push({
               venue: venueStop,
               date: venueDate,
               isFixed: false,
-              status: 'suggested'
+              status: priority,
+              suggestedDate: venueDate, // Additional field for UI display
+              detourRatio: detourRatio, // Store for reference
+              gapFilling: true, // Mark as a gap-filling suggestion
+              score: detourRatio, // Store the score for reference
             });
           });
         } else {
@@ -250,12 +342,25 @@ export function optimizeTourRoute(
     }
   }
   
+  // Sort the venues by date for proper display
+  result.tourVenues.sort((a, b) => {
+    if (!a.date || !b.date) return 0;
+    return a.date.getTime() - b.date.getTime();
+  });
+  
   // Calculate optimization score (higher is better)
-  // Simple version: 100 - (normalized distance penalty) - (normalized time penalty)
+  // More sophisticated version considering gap filling quality
   const baseScore = 100;
   const distancePenalty = Math.min(20, result.totalDistance / 100);
   const timePenalty = Math.min(20, result.totalTravelTime / 500);
-  result.optimizationScore = Math.round(baseScore - distancePenalty - timePenalty);
+  
+  // Reward for filling gaps appropriately
+  const gapFillingBonus = Math.min(10, result.tourVenues.filter(v => !v.isFixed).length * 2);
+  
+  result.optimizationScore = Math.round(baseScore - distancePenalty - timePenalty + gapFillingBonus);
+  
+  // Cap score at reasonable bounds
+  result.optimizationScore = Math.max(0, Math.min(100, result.optimizationScore));
   
   return result;
 }
