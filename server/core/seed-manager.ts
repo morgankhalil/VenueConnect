@@ -111,51 +111,45 @@ export class SeedManager {
     this.logger.log('Database cleared successfully');
   }
 
-  async validateVenue(venueData: any) {
-    const required = ['name', 'city', 'state'];
-    for (const field of required) {
-      if (!venueData[field]) {
-        throw new Error(`Missing required field: ${field}`);
-      }
-    }
-
-    // Check for duplicate venue
-    const existing = await db.select()
-      .from(venues)
-      .where(
-        and(
-          eq(venues.name, venueData.name),
-          eq(venues.city, venueData.city)
-        )
-      );
-
-    return existing.length === 0;
+  isValidVenueData(venueData: any): boolean {
+    const requiredFields = ['name', 'city', 'state', 'bandsintownId'];
+    return requiredFields.every(field => venueData.hasOwnProperty(field));
   }
 
   async seedVenue(venueData: any) {
+    // Validate required venue data
+    if (!this.isValidVenueData(venueData)) {
+      this.logger.log(`Invalid venue data for: ${venueData.name}`, 'error');
+      return null;
+    }
+
     try {
-      const isValid = await this.validateVenue(venueData);
-      if (!isValid) {
-        this.logger.log(`Skipping duplicate venue: ${venueData.name}`, 'warn');
-        return null;
+      this.logger.log(`Processing venue: ${venueData.name}`);
+
+      // Check for existing venue to prevent duplicates
+      const existingVenue = await db.query.venues.findFirst({
+        where: eq(venues.bandsintownId, venueData.bandsintownId)
+      });
+
+      if (existingVenue) {
+        this.logger.log(`Venue already exists: ${venueData.name}`, 'warning');
+        return existingVenue;
       }
 
-      const [venue] = await db.insert(venues).values({
+      const seededVenue = await db.insert(venues).values({
         name: venueData.name,
-        address: venueData.address || `${venueData.name}, ${venueData.city}`,
+        capacity: venueData.capacity || 0,
+        latitude: venueData.latitude,
+        longitude: venueData.longitude,
+        bandsintownId: venueData.bandsintownId,
         city: venueData.city,
         state: venueData.state,
-        country: venueData.country || 'US',
-        zipCode: venueData.zipCode || '',
-        latitude: venueData.latitude || 0,
-        longitude: venueData.longitude || 0,
-        capacity: venueData.capacity || 500,
-        description: venueData.description || `Venue: ${venueData.name}`,
-        ownerId: venueData.ownerId || 1
+        createdAt: new Date(),
+        updatedAt: new Date()
       }).returning();
 
-      this.logger.log(`Seeded venue: ${venue.name}`);
-      return venue;
+      this.logger.log(`Successfully seeded venue: ${venueData.name}`, 'info');
+      return seededVenue[0];
     } catch (error) {
       this.logger.log(`Error seeding venue ${venueData.name}: ${error}`, 'error');
       throw error;
@@ -290,10 +284,10 @@ export class SeedManager {
         try {
           this.logger.log(`Processing venue: ${venue.name}`);
           const seededVenue = await this.seedVenue(venue);
-          
+
           if (seededVenue) {
             seededVenues.push(seededVenue);
-            
+
             // 2. Get Venue Events and create them (which will create artists)
             try {
               const events = await this.getVenueEvents(venue.bandsintownId);
@@ -328,7 +322,7 @@ export class SeedManager {
       this.logger.log(`- Venues seeded successfully: ${seededVenues.length}`, 'info');
       this.logger.log(`- Failed venues: ${failedVenues.length}`, 'info');
       this.logger.log(`- Total events created: ${totalEvents}`, 'info');
-      
+
       if (failedVenues.length > 0) {
         this.logger.log(`Failed venues: ${failedVenues.join(', ')}`, 'warning');
       }
