@@ -43,9 +43,11 @@ export function TourDetailMap({ tour, userVenueId, onClose }: TourDetailMapProps
   const [selectedEvent, setSelectedEvent] = useState<MapEvent | null>(null);
   
   // Sort events by date
-  const sortedEvents = [...tour.events].sort((a, b) => 
-    new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
+  const sortedEvents = [...tour.events].sort((a, b) => {
+    if (!a.date) return -1;
+    if (!b.date) return 1;
+    return new Date(a.date).getTime() - new Date(b.date).getTime();
+  });
   
   // Initialize map once
   useEffect(() => {
@@ -184,11 +186,14 @@ export function TourDetailMap({ tour, userVenueId, onClose }: TourDetailMapProps
         el.innerHTML = `<span style="color: white; font-weight: bold; font-size: 12px;">${stopNumber}</span>`;
         
         // Date formatting
-        const eventDate = new Date(date);
-        const formattedDate = eventDate.toLocaleDateString(undefined, {
-          month: 'short',
-          day: 'numeric'
-        });
+        let formattedDate = 'No date';
+        if (date) {
+          const eventDate = new Date(date);
+          formattedDate = eventDate.toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric'
+          });
+        }
         
         // Create popup with more details
         const popup = new mapboxgl.Popup({ offset: 15, maxWidth: '300px' })
@@ -443,11 +448,14 @@ export function TourDetailMap({ tour, userVenueId, onClose }: TourDetailMapProps
                           </div>
                           
                           <div className="text-xs text-gray-500 mt-1">
-                            {new Date(event.date).toLocaleDateString(undefined, {
-                              weekday: 'short',
-                              month: 'short', 
-                              day: 'numeric'
-                            })}
+                            {event.date ? 
+                              new Date(event.date).toLocaleDateString(undefined, {
+                                weekday: 'short',
+                                month: 'short', 
+                                day: 'numeric'
+                              })
+                              : 'No date specified'
+                            }
                           </div>
                         </div>
                       </div>
@@ -499,22 +507,29 @@ export function TourDetailMap({ tour, userVenueId, onClose }: TourDetailMapProps
               </div>
               
               <div className="flex items-center gap-3">
-                <Badge variant={
-                  selectedEvent.isCurrentVenue ? 'secondary' :
-                  selectedEvent.isRoutingOpportunity ? 'outline' : 'default'
-                }>
-                  {selectedEvent.isCurrentVenue ? 'Potential' : 
-                   selectedEvent.isRoutingOpportunity ? 'On Hold' : 'Confirmed'}
-                </Badge>
+                {selectedEvent && (
+                  <>
+                    <Badge variant={
+                      selectedEvent.isCurrentVenue ? 'secondary' :
+                      selectedEvent.isRoutingOpportunity ? 'outline' : 'default'
+                    }>
+                      {selectedEvent.isCurrentVenue ? 'Potential' : 
+                       selectedEvent.isRoutingOpportunity ? 'On Hold' : 'Confirmed'}
+                    </Badge>
+                  </>
+                )}
                 
                 <div className="text-sm text-gray-500 flex items-center">
                   <Calendar className="h-4 w-4 mr-1" />
-                  {new Date(selectedEvent.date).toLocaleDateString(undefined, {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
+                  {selectedEvent && selectedEvent.date ? 
+                    new Date(selectedEvent.date).toLocaleDateString(undefined, {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })
+                    : 'No date specified'
+                  }
                 </div>
               </div>
               

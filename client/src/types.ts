@@ -14,6 +14,16 @@ export interface MapEvent {
   sequence?: number;
 }
 
+export interface TourGroup {
+  id: number;
+  name: string;
+  artistName: string;
+  region: string;
+  events: MapEvent[];
+  optimizationScore?: number;
+  initialOptimizationScore?: number;
+}
+
 export interface OptimizationVenue {
   id: number;
   latitude: number;
