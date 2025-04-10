@@ -1,4 +1,3 @@
-
 import { db } from './db';
 import { users, venues, venueNetwork } from '../shared/schema';
 
@@ -11,170 +10,148 @@ async function seed() {
     await db.delete(users);
     console.log('Database cleared successfully');
 
-    // Create demo users
-    const [demoUser] = await db.insert(users).values({
-      username: 'demo',
-      password: 'demo123',
-      name: 'Demo User',
-      email: 'demo@example.com',
+    // Create venue manager user
+    const [venueManager] = await db.insert(users).values({
+      username: 'manager',
+      password: 'venue123',
+      name: 'Venue Manager',
+      email: 'manager@venues.com',
       role: 'venue_manager'
     }).returning();
 
-    // Create multiple small/medium venues across the US
+    // Real venues data
     const venueDataList = [
-      // Northeast
       {
-        name: 'Paradise Rock Club',
-        address: '967 Commonwealth Avenue',
-        city: 'Boston',
-        state: 'MA',
-        zipCode: '02215',
+        name: 'The Bowery Ballroom',
+        address: '6 Delancey St',
+        city: 'New York',
+        state: 'NY',
+        zipCode: '10002',
         country: 'USA',
-        capacity: 933,
-        latitude: 42.3490,
-        longitude: -71.1300,
-        description: 'Historic venue featuring indie and alternative acts',
-        ownerId: demoUser.id
+        capacity: 575,
+        latitude: 40.7204,
+        longitude: -73.9934,
+        description: 'Historic Manhattan venue known for indie rock shows',
+        ownerId: venueManager.id
       },
       {
-        name: 'Black Cat',
-        address: '1811 14th St NW',
+        name: 'The 9:30 Club',
+        address: '815 V St NW',
         city: 'Washington',
         state: 'DC',
-        zipCode: '20009',
+        zipCode: '20001',
+        country: 'USA',
+        capacity: 1200,
+        latitude: 38.9178,
+        longitude: -77.0230,
+        description: 'Legendary DC music venue featuring diverse acts',
+        ownerId: venueManager.id
+      },
+      {
+        name: 'The Troubadour',
+        address: '9081 Santa Monica Blvd',
+        city: 'West Hollywood',
+        state: 'CA',
+        zipCode: '90069',
         country: 'USA',
         capacity: 400,
-        latitude: 38.9150,
-        longitude: -77.0314,
-        description: 'Punk and indie rock venue with two stages',
-        ownerId: demoUser.id
-      },
-      // Midwest
-      {
-        name: 'First Avenue',
-        address: '701 First Avenue North',
-        city: 'Minneapolis',
-        state: 'MN',
-        zipCode: '55403',
-        country: 'USA',
-        capacity: 500,
-        latitude: 44.9784,
-        longitude: -93.2759,
-        description: 'Historic venue made famous by Prince',
-        ownerId: demoUser.id
+        latitude: 34.0815,
+        longitude: -118.3874,
+        description: 'Historic LA venue where Elton John made his US debut',
+        ownerId: venueManager.id
       },
       {
-        name: 'Metro',
-        address: '3730 N Clark St',
-        city: 'Chicago',
-        state: 'IL',
-        zipCode: '60613',
-        country: 'USA',
-        capacity: 1100,
-        latitude: 41.9498,
-        longitude: -87.6588,
-        description: 'Iconic Chicago venue featuring indie and alternative acts',
-        ownerId: demoUser.id
-      },
-      // West Coast
-      {
-        name: 'Neumos',
-        address: '925 E Pike St',
-        city: 'Seattle',
-        state: 'WA',
-        zipCode: '98122',
-        country: 'USA',
-        capacity: 650,
-        latitude: 47.6137,
-        longitude: -122.3196,
-        description: 'Capitol Hill music venue featuring indie rock',
-        ownerId: demoUser.id
-      },
-      {
-        name: 'Bottom of the Hill',
-        address: '1233 17th Street',
+        name: 'The Fillmore',
+        address: '1805 Geary Blvd',
         city: 'San Francisco',
         state: 'CA',
-        zipCode: '94107',
+        zipCode: '94115',
         country: 'USA',
-        capacity: 350,
-        latitude: 37.7649,
-        longitude: -122.3969,
-        description: 'Intimate venue known for indie and punk shows',
-        ownerId: demoUser.id
+        capacity: 1150,
+        latitude: 37.7841,
+        longitude: -122.4332,
+        description: 'Historic venue from the psychedelic era',
+        ownerId: venueManager.id
       },
-      // South
       {
-        name: 'Exit/In',
-        address: '2208 Elliston Pl',
+        name: 'Red Rocks Amphitheatre',
+        address: '18300 W Alameda Pkwy',
+        city: 'Morrison',
+        state: 'CO',
+        zipCode: '80465',
+        country: 'USA',
+        capacity: 9525,
+        latitude: 39.6655,
+        longitude: -105.2059,
+        description: 'Iconic outdoor venue carved into a rock structure',
+        ownerId: venueManager.id
+      },
+      {
+        name: 'The Ryman Auditorium',
+        address: '116 5th Ave N',
         city: 'Nashville',
         state: 'TN',
-        zipCode: '37203',
+        zipCode: '37219',
+        country: 'USA',
+        capacity: 2362,
+        latitude: 36.1614,
+        longitude: -86.7785,
+        description: 'Mother Church of Country Music',
+        ownerId: venueManager.id
+      },
+      {
+        name: 'House of Blues',
+        address: '329 N Dearborn St',
+        city: 'Chicago',
+        state: 'IL',
+        zipCode: '60654',
+        country: 'USA',
+        capacity: 1800,
+        latitude: 41.8879,
+        longitude: -87.6295,
+        description: 'Famous blues and rock venue in downtown Chicago',
+        ownerId: venueManager.id
+      },
+      {
+        name: 'The Crocodile',
+        address: '2200 2nd Ave',
+        city: 'Seattle',
+        state: 'WA',
+        zipCode: '98121',
         country: 'USA',
         capacity: 500,
-        latitude: 36.1511,
-        longitude: -86.8054,
-        description: 'Historic Nashville rock venue',
-        ownerId: demoUser.id
-      },
-      {
-        name: '40 Watt Club',
-        address: '285 W Washington St',
-        city: 'Athens',
-        state: 'GA',
-        zipCode: '30601',
-        country: 'USA',
-        capacity: 500,
-        latitude: 33.9577,
-        longitude: -83.3796,
-        description: 'Legendary Athens music venue',
-        ownerId: demoUser.id
-      },
-      // Southwest
-      {
-        name: 'Mohawk',
-        address: '912 Red River St',
-        city: 'Austin',
-        state: 'TX',
-        zipCode: '78701',
-        country: 'USA',
-        capacity: 450,
-        latitude: 30.2708,
-        longitude: -97.7362,
-        description: 'Multi-level venue in the heart of Austin',
-        ownerId: demoUser.id
-      },
-      {
-        name: 'Launchpad',
-        address: '618 Central Ave SW',
-        city: 'Albuquerque',
-        state: 'NM',
-        zipCode: '87102',
-        country: 'USA',
-        capacity: 450,
-        latitude: 35.0844,
-        longitude: -106.6504,
-        description: 'Downtown venue featuring local and touring acts',
-        ownerId: demoUser.id
+        latitude: 47.6145,
+        longitude: -122.3437,
+        description: 'Historic Seattle venue known for grunge scene',
+        ownerId: venueManager.id
       }
     ];
 
     const insertedVenues = await db.insert(venues).values(venueDataList).returning();
 
-    // Create venue network connections
+    // Create realistic venue network connections
     for (let i = 0; i < insertedVenues.length; i++) {
       for (let j = i + 1; j < insertedVenues.length; j++) {
+        // Calculate distance-based trust score
+        const distance = Math.sqrt(
+          Math.pow(insertedVenues[i].latitude! - insertedVenues[j].latitude!, 2) +
+          Math.pow(insertedVenues[i].longitude! - insertedVenues[j].longitude!, 2)
+        );
+
+        // Higher trust score for venues closer together
+        const trustScore = Math.max(70, Math.min(95, 100 - (distance * 2)));
+
         await db.insert(venueNetwork).values({
           venueId: insertedVenues[i].id,
           connectedVenueId: insertedVenues[j].id,
           status: 'active',
-          trustScore: Math.floor(Math.random() * 30) + 70, // 70-100
-          collaborativeBookings: Math.floor(Math.random() * 5) // 0-5 initial collaborations
+          trustScore: Math.floor(trustScore),
+          collaborativeBookings: Math.floor(Math.random() * 10) + 1 // 1-10 collaborations
         });
       }
     }
 
-    console.log('Database seeded successfully with venues');
+    console.log('Database seeded successfully with real venues');
   } catch (error) {
     console.error('Error seeding database:', error);
     process.exit(1);
