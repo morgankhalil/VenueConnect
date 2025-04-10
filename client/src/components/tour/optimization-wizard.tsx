@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { optimizeTourRoute } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
@@ -447,7 +447,7 @@ function ProcessingStep({ optimizationResult, isLoading, tourId }: StepProps) {
   const [status, setStatus] = useState('Initializing...');
   
   // Simulate progressive updates for better UX
-  useState(() => {
+  useEffect(() => {
     if (isLoading && !optimizationResult) {
       const interval = setInterval(() => {
         setProgress((prev) => {
