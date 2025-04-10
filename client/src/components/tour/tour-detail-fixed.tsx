@@ -419,7 +419,7 @@ export function TourDetail({ tourId }: TourDetailProps) {
                     {optimizationResult ? 'Re-Optimize' : 'Quick Optimize'}
                   </Button>
                   
-                  <Link href={`/tours/${tourId}/optimize`}>
+                  <Link href={`/tours/${tourId}/wizard`}>
                     <Button 
                       size="sm"
                       variant="outline"
@@ -707,7 +707,7 @@ export function TourDetail({ tourId }: TourDetailProps) {
                     {optimizationResult ? 'Re-Run Suggestions' : 'Generate Suggestions'}
                   </Button>
                   
-                  <Link href={`/tours/${tourId}/optimize`}>
+                  <Link href={`/tours/${tourId}/wizard`}>
                     <Button 
                       size="sm"
                       variant="outline"
