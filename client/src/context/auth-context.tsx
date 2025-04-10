@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { User, hasPermission, Permission } from '@/lib/permissions';
 import axios from 'axios';
@@ -37,6 +37,7 @@ const apiCall = async (url: string, options: { method: string; data?: any }) => 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [, setLocation] = useLocation();
   const [currentVenueId, setCurrentVenueId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
   
   // Get current user information
   const { data: user, isLoading, refetch } = useQuery<User | null>({

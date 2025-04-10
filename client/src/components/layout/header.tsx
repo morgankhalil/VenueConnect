@@ -11,6 +11,7 @@ import {
   LogOut,
   HelpCircle
 } from "lucide-react";
+import { forceLogout } from "@/lib/auth";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -167,7 +168,24 @@ export function Header({
               <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-800" />
               <DropdownMenuItem 
                 className="cursor-pointer py-2 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900" 
-                onClick={onLogout}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  // First try the regular logout
+                  if (onLogout) {
+                    try {
+                      onLogout();
+                    } catch (error) {
+                      console.error("Normal logout failed, trying force logout:", error);
+                    }
+                  }
+                  
+                  // Always force logout as a backup
+                  setTimeout(() => {
+                    forceLogout();
+                  }, 100);
+                }}
               >
                 <LogOut className="mr-2 h-4 w-4 text-[hsl(var(--custom-grey-medium))]" />
                 <span>Logout</span>
