@@ -7,3 +7,15 @@ const webhookRouter = Router();
 webhookRouter.post('/bandsintown', webhookMiddleware());
 
 export default webhookRouter;
+
+// Daily sync webhook endpoint
+webhookRouter.post('/daily-sync', async (req, res) => {
+  try {
+    const { runDailySync } = await import('./daily-sync');
+    await runDailySync();
+    res.json({ status: 'success', message: 'Daily sync completed' });
+  } catch (error) {
+    console.error('Error in daily sync webhook:', error);
+    res.status(500).json({ error: 'Failed to run daily sync' });
+  }
+});
