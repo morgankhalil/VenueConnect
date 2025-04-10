@@ -4,6 +4,7 @@ import { Link, useLocation } from 'wouter';
 import { getTour, optimizeTourRoute, updateTour } from '@/lib/api';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { UpdateVenueForm } from './update-venue-form';
 import {
   Card,
   CardContent,
