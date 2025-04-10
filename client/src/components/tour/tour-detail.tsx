@@ -352,6 +352,29 @@ export function TourDetail({ tourId }: TourDetailProps) {
                               </span>
                             ) : '-'}
                           </TableCell>
+                          <TableCell>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button size="sm" variant="ghost">
+                                  <PenLine className="h-4 w-4 mr-1" />
+                                  Edit
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Update Venue Details</DialogTitle>
+                                  <DialogDescription>
+                                    Update status, date, and other details for this venue.
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <UpdateVenueForm 
+                                  tourId={Number(tourId)} 
+                                  venueData={venueData} 
+                                  onSuccess={() => refetch()} 
+                                />
+                              </DialogContent>
+                            </Dialog>
+                          </TableCell>
                         </TableRow>
                       ))}
                   </TableBody>

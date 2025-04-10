@@ -115,8 +115,15 @@ async function seedTours() {
         }
         
         // Different statuses for venues to show different states
-        const statuses = ['proposed', 'requested', 'confirmed'];
-        const status = statuses[Math.floor(Math.random() * (i < 2 ? 3 : 2))]; // More confirmed for early shows
+        // For the first tour, make at least the first two venues confirmed to enable optimization testing
+        let status = 'proposed';
+        if (newTour.id === 1) {
+          // For the first tour, ensure at least 2 confirmed venues
+          status = i < 2 ? 'confirmed' : ['proposed', 'requested', 'confirmed'][Math.floor(Math.random() * 3)];
+        } else {
+          // For other tours, random distribution but more confirmed for early shows
+          status = ['proposed', 'requested', 'confirmed'][Math.floor(Math.random() * (i < 2 ? 3 : 2))];
+        }
         
         await db.insert(tourVenues).values({
           tourId: newTour.id,
