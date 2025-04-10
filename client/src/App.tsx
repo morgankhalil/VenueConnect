@@ -3,6 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ui/theme-provider";
+import { AuthProvider } from "@/context/auth-context";
 import { MainLayout } from "@/components/layout/main-layout";
 import Dashboard from "@/pages/dashboard";
 import VenueNetwork from "@/pages/venue-network";
@@ -63,22 +64,33 @@ function App() {
   
   // Special case for map test page
   if (location === '/map-test') {
-    return <MapTest />;
+    return (
+      <ThemeProvider defaultTheme="system">
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <MapTest />
+            <Toaster />
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    );
   }
   
   return (
     <ThemeProvider defaultTheme="system">
       <QueryClientProvider client={queryClient}>
-        {isAuthPage ? (
-          // Render auth pages without the MainLayout
-          <Router />
-        ) : (
-          // Render app pages with the MainLayout
-          <MainLayout>
+        <AuthProvider>
+          {isAuthPage ? (
+            // Render auth pages without the MainLayout
             <Router />
-          </MainLayout>
-        )}
-        <Toaster />
+          ) : (
+            // Render app pages with the MainLayout
+            <MainLayout>
+              <Router />
+            </MainLayout>
+          )}
+          <Toaster />
+        </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );
