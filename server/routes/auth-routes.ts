@@ -64,33 +64,61 @@ router.post('/login', async (req, res) => {
  * Destroys the session and clears user information
  */
 router.post('/logout', (req, res) => {
-  // In development mode, just set a flag to prevent auto-login
-  if (process.env.NODE_ENV !== 'production') {
-    if (req.session) {
-      // @ts-ignore - Add a logout flag to the session
-      req.session.loggedOut = true;
-      // Also clear the user info
-      req.session.user = undefined;
-      
-      return res.json({
-        success: true,
-        message: 'Logged out successfully'
-      });
-    }
-  } else {
-    // In production mode, destroy the session
-    req.session.destroy((err) => {
-      if (err) {
-        return res.status(500).json({
-          error: 'Failed to logout'
+  try {
+    console.log('Logging out user...');
+    
+    if (process.env.NODE_ENV !== 'production') {
+      // In development mode, set the loggedOut flag to true and remove user data
+      if (req.session) {
+        // First delete the user information
+        delete req.session.user;
+        
+        // Set the explicit logout flag
+        // @ts-ignore - Add a logout flag to the session
+        req.session.loggedOut = true;
+        
+        // Save the session changes explicitly
+        req.session.save((err) => {
+          if (err) {
+            console.error('Error saving session during logout:', err);
+            return res.status(500).json({
+              error: 'Failed to logout'
+            });
+          }
+          
+          console.log('Session saved, user logged out successfully in development mode');
+          return res.json({
+            success: true,
+            message: 'Logged out successfully'
+          });
+        });
+      } else {
+        return res.json({
+          success: true,
+          message: 'Already logged out'
         });
       }
-      
-      res.clearCookie('connect.sid');
-      return res.json({
-        success: true,
-        message: 'Logged out successfully'
+    } else {
+      // In production mode, destroy the session
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('Error destroying session during logout:', err);
+          return res.status(500).json({
+            error: 'Failed to logout'
+          });
+        }
+        
+        res.clearCookie('connect.sid');
+        return res.json({
+          success: true,
+          message: 'Logged out successfully'
+        });
       });
+    }
+  } catch (error) {
+    console.error('Unexpected error during logout:', error);
+    return res.status(500).json({
+      error: 'An unexpected error occurred during logout'
     });
   }
 });

@@ -61,9 +61,15 @@ app.use(async (req, res, next) => {
   // Comment this section out to enforce proper authentication
   try {
     if (process.env.NODE_ENV !== 'production') {
-      // Check if user has explicitly logged out
+      // Check if this is a logout request - always allow it
+      if (req.path === '/api/auth/logout') {
+        return next();
+      }
+      
+      // Check if user has explicitly logged out - don't auto-login in that case
       // @ts-ignore - Access the logout flag
-      if (req.session.loggedOut) {
+      if (req.session.loggedOut === true) {
+        console.log("User is logged out, not creating demo session");
         return res.status(401).json({ error: "Authentication required" });
       }
       
@@ -79,6 +85,11 @@ app.use(async (req, res, next) => {
         role: "admin", // Give admin role for easy access to features
         venueId: venueId
       };
+      
+      // Make sure the loggedOut flag is explicitly false
+      // @ts-ignore
+      req.session.loggedOut = false;
+      
       return next();
     } else {
       // In production, enforce authentication

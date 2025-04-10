@@ -80,24 +80,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Logout mutation
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      return apiCall('/api/auth/logout', {
+      console.log("Calling logout API endpoint");
+      const result = await apiCall('/api/auth/logout', {
         method: 'POST',
       });
+      console.log("Logout API response:", result);
+      return result;
     },
     onSuccess: () => {
-      refetch();
+      console.log("Logout successful, updating client state");
+      // Set local user state to null immediately
+      queryClient.setQueryData(['/api/user'], null);
+      
+      // Show success message
       toast({
         title: 'Logged out',
         description: 'You have been logged out successfully',
       });
-      setLocation('/login');
+      
+      // Force redirect to login page
+      console.log("Redirecting to login page");
+      setLocation('/auth/login');
+      
+      // Wait a moment and then refetch to ensure we've got the latest state
+      setTimeout(() => {
+        refetch();
+      }, 100);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Logout error:", error);
       toast({
         title: 'Error',
-        description: 'Failed to logout',
+        description: 'Failed to logout. Redirecting to login page...',
         variant: 'destructive',
       });
+      
+      // Even on error, redirect to login page
+      setTimeout(() => {
+        setLocation('/auth/login');
+      }, 500);
     },
   });
   

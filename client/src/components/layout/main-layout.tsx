@@ -82,12 +82,23 @@ export function MainLayout({ children }: MainLayoutProps) {
   
   const handleLogout = async () => {
     try {
-      await logout();
-      // Clear any cached data in React Query
+      console.log("Starting logout process...");
+      // First, clear all cached data to prevent stale data
       queryClient.clear();
-      console.log("Logout completed");
+      
+      // Then call the logout endpoint
+      await logout();
+      
+      console.log("Logout completed, redirecting to login page");
+      
+      // Force navigation to login page (backup in case the context's redirect doesn't work)
+      setTimeout(() => {
+        window.location.href = "/auth/login";
+      }, 100);
     } catch (error) {
       console.error("Error logging out:", error);
+      // Even if error, try to redirect to login page
+      window.location.href = "/auth/login";
     }
   };
 
