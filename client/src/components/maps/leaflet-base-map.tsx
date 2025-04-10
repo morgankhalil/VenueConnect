@@ -31,6 +31,7 @@ export function LeafletBaseMap({
         zoom={zoom}
         style={{ height: '100%', width: '100%' }}
         zoomControl={showZoomControl}
+        className="leaflet-container-lower"
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

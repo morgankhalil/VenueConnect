@@ -29,6 +29,27 @@
 
 @layer base {
   :root {
+
+/* Z-index stacking fixes */
+.leaflet-container,
+.leaflet-container-lower {
+  z-index: 1 !important;
+}
+
+.leaflet-pane {
+  z-index: 1 !important;
+}
+
+.leaflet-control {
+  z-index: 2 !important;
+}
+
+/* Ensure modals and their overlays stack above maps */
+[data-radix-dialog-overlay],
+[data-radix-dialog-content] {
+  z-index: 50 !important;
+}
+
     /* Grey scale accent colors */
     --accent: 0 0% 50%; /* Grey Accent */
     --accent-foreground: 0 0% 100%;
