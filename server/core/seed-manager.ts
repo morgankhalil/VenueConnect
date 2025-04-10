@@ -183,10 +183,29 @@ export class SeedManager {
     );
   }
 
-  async seedEvent(venue: any, eventData: EventData): Promise<void> {
+  async seedEvent(venue: any, eventData: EventData, stats: any): Promise<void> {
     try {
+      if (!eventData.datetime || !eventData.artist || !eventData.sourceId) {
+        stats.invalidData++;
+        this.logger.log(`Invalid event data received`, 'warning');
+        return;
+      }
+
       const eventDate = new Date(eventData.datetime);
-      const artist = await this.seedArtist(eventData.artist);
+      if (isNaN(eventDate.getTime())) {
+        stats.errors.validation++;
+        this.logger.log(`Invalid date format: ${eventData.datetime}`, 'warning');
+        return;
+      }
+
+      let artist;
+      try {
+        artist = await this.seedArtist(eventData.artist);
+      } catch (artistError) {
+        stats.errors.api++;
+        this.logger.log(`Failed to seed artist: ${artistError}`, 'error');
+        return;
+      }
 
       // Check if event exists
       const existingEvent = await db.select()
@@ -195,6 +214,7 @@ export class SeedManager {
         .limit(1);
 
       if (existingEvent.length) {
+        stats.duplicates++;
         this.logger.log(`Event already exists for ${artist.name} at ${venue.name}, skipping...`);
         return;
       }
@@ -209,8 +229,10 @@ export class SeedManager {
         sourceName: 'bandsintown'
       });
 
+      stats.totalEvents++;
       this.logger.log(`Added event: ${artist.name} at ${venue.name}`);
     } catch (error) {
+      stats.errors.database++;
       this.logger.log(`Failed to seed event: ${error}`, 'error');
       throw error;
     }
