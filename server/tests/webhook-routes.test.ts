@@ -3,13 +3,19 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
 import { webhookRoutes } from '../webhooks/webhook-routes';
-import { validateWebhookSignature } from '../webhooks/webhook-handler';
+import { validateWebhookSignature, processBandsintownEventWebhook } from '../webhooks/webhook-handler';
 
-// Mock validateWebhookSignature
+// Mock webhook handler functions
 jest.mock('../webhooks/webhook-handler', () => ({
   validateWebhookSignature: jest.fn().mockReturnValue(true),
-  processBandsintownEventWebhook: jest.fn().mockResolvedValue(undefined)
+  processBandsintownEventWebhook: jest.fn().mockResolvedValue({ success: true }),
+  processVenueUpdateWebhook: jest.fn().mockResolvedValue({ success: true }),
+  processDailySyncWebhook: jest.fn().mockResolvedValue({ success: true })
 }));
+
+// Cast mocked functions
+const mockValidateSignature = validateWebhookSignature as jest.MockedFunction<typeof validateWebhookSignature>;
+const mockProcessEventWebhook = processBandsintownEventWebhook as jest.MockedFunction<typeof processBandsintownEventWebhook>;
 
 const app = express();
 app.use(express.json());
@@ -24,13 +30,27 @@ describe('Webhook Routes', () => {
     it('should handle daily sync webhook successfully', async () => {
       const response = await request(app)
         .post('/api/webhooks/daily-sync')
-        .send({});
+        .send({
+          source: 'automated',
+          timestamp: new Date().toISOString()
+        });
       
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
         status: 'success',
         message: 'Daily sync completed'
       });
+    });
+
+    it('should handle sync errors gracefully', async () => {
+      mockProcessEventWebhook.mockRejectedValueOnce(new Error('Sync failed'));
+
+      const response = await request(app)
+        .post('/api/webhooks/daily-sync')
+        .send({});
+      
+      expect(response.status).toBe(500);
+      expect(response.body).toHaveProperty('error');
     });
   });
 
@@ -40,18 +60,26 @@ describe('Webhook Routes', () => {
       data: {
         id: '123',
         artist: {
+          id: 'artist_123',
           name: 'Test Artist',
           url: 'http://test.com',
-          image_url: 'http://test.com/image.jpg'
+          image_url: 'http://test.com/image.jpg',
+          tracker_count: 5000
         },
         venue: {
+          id: 'venue_123',
           name: 'Test Venue',
           city: 'Test City',
           country: 'US',
           latitude: 40.7128,
           longitude: -74.0060
         },
-        datetime: '2024-04-10T20:00:00Z'
+        datetime: '2024-04-10T20:00:00Z',
+        offers: [{
+          type: 'Tickets',
+          url: 'http://tickets.com',
+          status: 'available'
+        }]
       }
     };
 
@@ -66,7 +94,7 @@ describe('Webhook Routes', () => {
     });
 
     it('should reject webhook with invalid signature', async () => {
-      (validateWebhookSignature as jest.Mock).mockReturnValueOnce(false);
+      mockValidateSignature.mockReturnValueOnce(false);
 
       const response = await request(app)
         .post('/api/webhooks/bandsintown')
@@ -74,6 +102,9 @@ describe('Webhook Routes', () => {
         .send(validPayload);
       
       expect(response.status).toBe(401);
+      expect(response.body).toEqual({
+        error: 'Invalid webhook signature'
+      });
     });
 
     it('should handle missing signature header', async () => {
@@ -82,6 +113,27 @@ describe('Webhook Routes', () => {
         .send(validPayload);
       
       expect(response.status).toBe(401);
+      expect(response.body).toEqual({
+        error: 'Missing webhook signature'
+      });
+    });
+
+    it('should validate required payload fields', async () => {
+      const invalidPayload = {
+        event_type: 'event.created',
+        data: {
+          id: '123'
+          // Missing required fields
+        }
+      };
+
+      const response = await request(app)
+        .post('/api/webhooks/bandsintown')
+        .set('X-Webhook-Signature', 'valid-signature')
+        .send(invalidPayload);
+      
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error');
     });
 
     it('should handle event updates', async () => {
