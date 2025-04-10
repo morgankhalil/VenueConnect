@@ -1,28 +1,42 @@
 
-# Bandsintown Integration Revision Plan
+# Bandsintown API Integration Issue
 
-## Phase 1: Basic Venue Integration
-1. Establish single source of truth for venue data
-2. Simplify venue seeding to use single script
-3. Validate venue data before sync
+## Current Problem
+- Getting 403 Forbidden response from Bandsintown API
+- This indicates an authentication issue with the API key
 
-## Phase 2: Event Integration
-1. One-way sync of events from Bandsintown
-2. Store minimal event data required
-3. Daily sync for new events
+## Diagnosis
+1. The API calls are failing with a 403 status code
+2. This typically means either:
+   - The API key is not set
+   - The API key is invalid
+   - The API key doesn't have sufficient permissions
 
-## Phase 3: Artist Integration
-1. Extract artist data from events
-2. Build artist profiles gradually
-3. Track performance history
+## Solution Steps
 
-## Implementation Notes:
-- Use app_id authentication consistently
-- Implement robust error handling
-- Log all API interactions
-- Cache responses where appropriate
+1. First, verify the API key is set:
+   - Check if BANDSINTOWN_API_KEY exists in your environment variables
+   - You can do this through the Replit Secrets tool (lock icon in sidebar)
 
-## API Authentication:
-1. Configure API key in environment variables through Replit Secrets
-2. Use consistent authentication method across all requests
-3. Validate API responses before processing
+2. If the key is not set:
+   - Go to the Replit Secrets tool
+   - Add a new secret with key "BANDSINTOWN_API_KEY"
+   - Get your API key from Bandsintown's developer portal
+   - Paste your API key as the value
+
+3. If the key is set but still getting 403:
+   - Verify the API key is valid on Bandsintown's developer portal
+   - Check if your API key has the correct permissions
+   - Try generating a new API key if needed
+
+4. After setting up the API key:
+   - Restart the server
+   - Try running the venue sync again
+
+## Testing
+Once the API key is properly configured, run:
+```bash
+npx tsx server/seed-venues-from-bandsintown.ts
+```
+
+This should now successfully connect to the Bandsintown API without the 403 error.
