@@ -1,9 +1,9 @@
-
 import { db } from '../db';
-import { venues, events, artists } from '../../shared/schema';
-import axios from 'axios';
+import { events, artists, venues } from '@shared/schema';
 import { eq } from 'drizzle-orm';
+import axios from 'axios';
 import { setTimeout } from 'timers/promises';
+import { SyncLogger } from './sync-logger';
 
 export class SyncManager {
   private apiKey: string;
@@ -14,20 +14,13 @@ export class SyncManager {
     venuesUpdated: 0,
     errors: 0
   };
-  
   private logger: SyncLogger;
 
   constructor() {
     const apiKey = process.env.BANDSINTOWN_API_KEY;
     if (!apiKey) throw new Error('BANDSINTOWN_API_KEY is required');
     this.apiKey = apiKey;
-    this.logger = new SyncLogger('SyncManager');
-  }
-
-  constructor() {
-    const apiKey = process.env.BANDSINTOWN_API_KEY;
-    if (!apiKey) throw new Error('BANDSINTOWN_API_KEY is required');
-    this.apiKey = apiKey;
+    this.logger = new SyncLogger();
   }
 
   private async makeApiRequest<T>(url: string): Promise<T> {
@@ -35,7 +28,7 @@ export class SyncManager {
       this.logger.log(`Making API request to: ${url}`, 'info');
       const response = await axios.get(url, {
         params: { app_id: this.apiKey },
-        headers: { 
+        headers: {
           'Accept': 'application/json',
           'User-Agent': 'VenueNetwork/1.0'
         }
@@ -120,7 +113,7 @@ export class SyncManager {
       if (existingArtist) {
         await db.update(artists)
           .set({
-            popularity: artistData.tracker_count 
+            popularity: artistData.tracker_count
               ? Math.min(100, Math.floor(artistData.tracker_count / 1000))
               : existingArtist.popularity,
             lastSyncedAt: new Date()
@@ -133,7 +126,7 @@ export class SyncManager {
         name: artistData.name,
         imageUrl: artistData.image_url,
         bandsintownId: artistData.id,
-        popularity: artistData.tracker_count 
+        popularity: artistData.tracker_count
           ? Math.min(100, Math.floor(artistData.tracker_count / 1000))
           : 50,
         lastSyncedAt: new Date()
@@ -151,9 +144,9 @@ export class SyncManager {
   async run() {
     try {
       console.log('Starting sync process...');
-      
+
       const venueList = await db.select().from(venues);
-      
+
       for (const venue of venueList) {
         if (venue.bandsintownId) {
           await this.syncVenue(venue.bandsintownId);

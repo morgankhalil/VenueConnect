@@ -1,22 +1,29 @@
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, jest } from '@jest/globals';
 import { processBandsintownEventWebhook } from '../webhooks/webhook-handler';
-import { SyncLogger } from '../core/sync-logger';
-
-jest.mock('../core/sync-logger');
 
 describe('Webhook Handler', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   it('should process a valid Bandsintown event webhook', async () => {
     const mockPayload = {
       event_type: 'event.created',
       data: {
-        artist: { name: 'Test Artist' },
-        venue: { name: 'Test Venue' },
-        datetime: '2024-04-10T20:00:00Z'
+        venue: {
+          name: 'Test Venue',
+          city: 'New York',
+          country: 'US',
+          capacity: 500
+        },
+        artist: {
+          name: 'Test Artist',
+          genres: ['rock'],
+          tracker_count: 1000
+        },
+        datetime: '2024-04-10T20:00:00',
+        offers: [{
+          type: 'tickets',
+          url: 'http://example.com/tickets',
+          status: 'available'
+        }]
       }
     };
 
@@ -26,7 +33,17 @@ describe('Webhook Handler', () => {
   it('should handle missing data gracefully', async () => {
     const mockPayload = {
       event_type: 'event.created',
-      data: {}
+      data: {
+        venue: {
+          name: 'Test Venue',
+          city: 'New York',
+          country: 'US'
+        },
+        artist: {
+          name: 'Test Artist'
+        },
+        datetime: '2024-04-10T20:00:00'
+      }
     };
 
     await expect(processBandsintownEventWebhook(mockPayload)).resolves.not.toThrow();

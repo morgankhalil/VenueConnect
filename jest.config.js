@@ -8,13 +8,12 @@ const config = {
       useESM: true,
     }],
   },
-  extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
     '^@/(.*)$': '<rootDir>/client/src/$1',
-    '^@shared/(.*)$': '<rootDir>/shared/$1',
-    '^@assets/(.*)$': '<rootDir>/attached_assets/$1'
+    '^@shared/(.*)$': '<rootDir>/shared/$1'
   },
+  setupFiles: ['<rootDir>/server/tests/setup.ts']
 };
 
-export default config;
+module.exports = config;
