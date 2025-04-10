@@ -151,8 +151,8 @@ export const venuesRelations = relations(venues, ({ one, many }) => ({
   }),
   events: many(events),
   predictionsAsVenue: many(predictions),
-  venueConnections: many(venueNetwork, { relationName: "venueConnections" }),
-  connectedByVenues: many(venueNetwork, { relationName: "connectedByVenues" }),
+  venueConnections: many(venueNetwork),
+  connectedByVenues: many(venueNetwork),
 }));
 
 export const artistsRelations = relations(artists, ({ many }) => ({
@@ -194,12 +194,10 @@ export const venueNetworkRelations = relations(venueNetwork, ({ one }) => ({
   venue: one(venues, {
     fields: [venueNetwork.venueId],
     references: [venues.id],
-    relationName: "venueConnections",
   }),
   connectedVenue: one(venues, {
     fields: [venueNetwork.connectedVenueId],
     references: [venues.id],
-    relationName: "connectedByVenues",
   }),
 }));
 
