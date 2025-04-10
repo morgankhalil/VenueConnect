@@ -14,12 +14,12 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
+  const { theme } = useTheme();
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { theme } = useTheme();
-  const isMobile = useIsMobile();
 
   // Handle scroll effects for header
   useEffect(() => {

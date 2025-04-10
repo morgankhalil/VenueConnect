@@ -62,9 +62,9 @@ export function UnifiedTourOptimizer({ tourId, onOptimized }: { tourId: number; 
       </Button>
 
       <Dialog open={isConfiguring} onOpenChange={setIsConfiguring}>
-        <DialogContent className="sm:max-w 2xl">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Tour Optimization Settings</DialogTitle>
+            <DialogTitle>Optimize Tour Route</DialogTitle>
             <DialogDescription>
               Configure optimization preferences to improve your tour schedule
             </DialogDescription>
