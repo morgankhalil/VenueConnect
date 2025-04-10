@@ -664,26 +664,53 @@ router.post('/tours/:id/apply-optimization', async (req, res) => {
         .map(tv => tv.tourVenue.venueId)
     );
     
-    // Step 1: Process all optimized venues to update or add them
+    // First, create a sorted and combined list of all venues
+    // Sort optimization data by date to ensure proper sequencing
+    const sortedVenues = [...(optimizationData.potentialFillVenues || [])].sort((a, b) => {
+      if (!a.suggestedDate || !b.suggestedDate) return 0;
+      return new Date(a.suggestedDate).getTime() - new Date(b.suggestedDate).getTime();
+    });
+    
+    // Step 1: Reset all sequences first to avoid conflicts
+    // This ensures we have a clean slate for sequence ordering
+    await db
+      .update(tourVenues)
+      .set({
+        sequence: 0,
+        updatedAt: new Date()
+      })
+      .where(and(
+        eq(tourVenues.tourId, tourId),
+        sql`${tourVenues.status} != 'confirmed'` // Don't touch confirmed venues
+      ));
+      
+    console.log('Applying optimized tour with', sortedVenues.length, 'venues');
+    
+    // Step 2: Process all optimized venues in sequence order
     const updatedVenueIds = new Set();
     
-    // Update or create tour venues from optimized data
-    for (const venue of optimizationData.potentialFillVenues || []) {
+    // Update or create tour venues from optimized data, preserving the sequence from the sorted list
+    for (let i = 0; i < sortedVenues.length; i++) {
+      const venue = sortedVenues[i];
       if (!venue.venue || !venue.venue.id) continue;
       
       const venueId = venue.venue.id;
       updatedVenueIds.add(venueId);
+      
+      // Calculate sequence based on position in the sorted array (1-based)
+      const sequenceNum = i + 1;
       
       const existingTourVenue = existingTourVenues.find(tv => tv.tourVenue.venueId === venueId);
       
       if (existingTourVenue) {
         // Update existing tour venue if it's not confirmed
         if (existingTourVenue.tourVenue.status !== 'confirmed') {
+          console.log(`Updating venue ${venueId} with sequence ${sequenceNum}`);
           await db
             .update(tourVenues)
             .set({
               date: venue.suggestedDate ? new Date(venue.suggestedDate) : existingTourVenue.tourVenue.date,
-              sequence: venue.sequence || existingTourVenue.tourVenue.sequence,
+              sequence: sequenceNum, // Use the calculated sequence
               updatedAt: new Date()
             })
             .where(and(
@@ -693,6 +720,7 @@ router.post('/tours/:id/apply-optimization', async (req, res) => {
         }
       } else if (venue.gapFilling && venue.suggestedDate) {
         // Add new venue if it's a gap filler
+        console.log(`Adding new venue ${venueId} with sequence ${sequenceNum}`);
         await db
           .insert(tourVenues)
           .values({
@@ -700,7 +728,7 @@ router.post('/tours/:id/apply-optimization', async (req, res) => {
             venueId,
             status: 'proposed',
             date: new Date(venue.suggestedDate),
-            sequence: venue.sequence || 0,
+            sequence: sequenceNum, // Use the calculated sequence
             notes: 'Added via tour optimization',
             createdAt: new Date(),
             updatedAt: new Date()
@@ -708,9 +736,10 @@ router.post('/tours/:id/apply-optimization', async (req, res) => {
       }
     }
     
-    // Step 2: For all existing venues not in the optimization data 
-    // and not confirmed, update their sequence to be high (to appear last)
-    // This ensures proper ordering of ALL tour venues
+    // Step 3: For venues not included in optimization, set high sequence numbers
+    // Use a base high number plus increments to preserve some order
+    let highSequence = 1000;
+    
     for (const tv of existingTourVenues) {
       const venueId = tv.tourVenue.venueId;
       
@@ -719,12 +748,13 @@ router.post('/tours/:id/apply-optimization', async (req, res) => {
         continue;
       }
       
+      console.log(`Setting venue ${venueId} to high sequence ${highSequence}`);
+      
       // Update non-confirmed venues that weren't in the optimization
       await db
         .update(tourVenues)
         .set({
-          // Use a high sequence number to place them at the end
-          sequence: 999,
+          sequence: highSequence++, // Use incremented sequence to preserve some ordering
           updatedAt: new Date()
         })
         .where(and(

@@ -850,12 +850,14 @@ export function UnifiedTourOptimizer({ tourId, onSuccess, initialTab = 'preferen
                           // Call the API to apply optimization changes
                           applyTourOptimization(tourId, optimizeMutation.data)
                             .then(() => {
-                              // Refresh tour data after successful application
-                              refetchTour();
+                              // Show success message
                               toast({
                                 title: 'Changes Applied',
                                 description: 'Tour has been updated with the optimized route'
                               });
+                              
+                              // Redirect to tour details page to show the updated schedule
+                              window.location.href = `/tour/${tourId}`;
                             })
                             .catch((error) => {
                               toast({
@@ -868,7 +870,7 @@ export function UnifiedTourOptimizer({ tourId, onSuccess, initialTab = 'preferen
                       }}
                       disabled={!optimizeMutation.data}
                     >
-                      Apply Changes
+                      Apply Changes & Return to Tour
                       <ChevronRight className="ml-2 h-4 w-4" />
                     </Button>
                   </CardFooter>
