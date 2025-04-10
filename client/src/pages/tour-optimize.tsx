@@ -30,12 +30,13 @@ import { Home, ChevronRight, Music } from 'lucide-react';
  * Provides a full-screen experience for the unified tour optimizer
  */
 export default function OptimizeTour() {
-  const { tourId } = useParams();
+  const { id } = useParams();
+  const tourId = Number(id);
   
   // Fetch tour data
   const { data: tour, isLoading } = useQuery({
-    queryKey: ['/api/tour/tours', Number(tourId)],
-    queryFn: () => getTourById(Number(tourId))
+    queryKey: ['/api/tour/tours', tourId],
+    queryFn: () => getTourById(tourId)
   });
   
   return (
