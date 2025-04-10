@@ -105,9 +105,14 @@ export function VenueMap({
     });
   };
   
-  // Sort events by date if dates are available
+  // Sort events by sequence first (if available), then by date as fallback
   const sortedEvents = [...events].sort((a, b) => {
-    if (a.date && b.date) {
+    // If both have sequence, sort by sequence
+    if (a.sequence !== undefined && b.sequence !== undefined) {
+      return a.sequence - b.sequence;
+    }
+    // Otherwise, if both have dates, sort by date
+    else if (a.date && b.date) {
       return new Date(a.date).getTime() - new Date(b.date).getTime();
     }
     return 0;

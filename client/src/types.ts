@@ -11,6 +11,7 @@ export interface MapEvent {
   isRoutingOpportunity?: boolean;
   status: string;
   venue_id?: number;
+  sequence?: number;
 }
 
 export interface OptimizationVenue {

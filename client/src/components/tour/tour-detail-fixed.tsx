@@ -100,7 +100,7 @@ export function TourDetail({ tourId }: TourDetailProps) {
     if (tour?.venues) {
       const venues = tour.venues
         .filter(v => v.venue && v.venue.latitude && v.venue.longitude)
-        .map(v => ({
+        .map((v, index) => ({
           id: v.venue.id,
           venue: v.venue.name || `Venue ${v.venue.id}`,
           latitude: v.venue.latitude,
@@ -109,7 +109,8 @@ export function TourDetail({ tourId }: TourDetailProps) {
           isCurrentVenue: false,
           isRoutingOpportunity: false,
           status: v.tourVenue.status || 'confirmed',
-          venue_id: v.venue.id
+          venue_id: v.venue.id,
+          sequence: v.tourVenue.sequence || index
         }));
       
       if (venues.length > 0) {
@@ -128,6 +129,7 @@ export function TourDetail({ tourId }: TourDetailProps) {
             .map((point: any, index: number) => {
               // Find the matching venue from the tour data
               const matchingVenue = tour?.venues?.find(v => v.venue?.id === point.id)?.venue;
+              const sequence = point.sequence !== undefined ? point.sequence : index;
               
               return {
                 id: point.id,
@@ -138,7 +140,8 @@ export function TourDetail({ tourId }: TourDetailProps) {
                 isCurrentVenue: false,
                 isRoutingOpportunity: false,
                 status: point.status || 'confirmed',
-                venue_id: point.id
+                venue_id: point.id,
+                sequence: sequence
               };
             })
         : [];
@@ -153,22 +156,39 @@ export function TourDetail({ tourId }: TourDetailProps) {
               // Only include venues that are not already in fixedVenues
               !fixedVenues.some(v => v.id === item.venue.id)
             )
-            .map((item: any) => ({
-              id: item.venue.id,
-              venue: item.venue.name || `Venue ${item.venue.id}`,
-              latitude: item.venue.latitude,
-              longitude: item.venue.longitude,
-              date: item.suggestedDate || undefined,
-              isCurrentVenue: false,
-              isRoutingOpportunity: true, // Mark suggested venues as routing opportunities for the map
-              // Use the item's status if it exists, otherwise default to 'suggested'
-              status: item.status || 'suggested',
-              venue_id: item.venue.id
-            }))
+            .map((item: any, index: number) => {
+              // Calculate sequence based on suggestedSequence or fallback to after fixed venues
+              const sequence = item.suggestedSequence !== undefined ? 
+                item.suggestedSequence : 
+                (fixedVenues.length + index);
+                
+              return {
+                id: item.venue.id,
+                venue: item.venue.name || `Venue ${item.venue.id}`,
+                latitude: item.venue.latitude,
+                longitude: item.venue.longitude,
+                date: item.suggestedDate || undefined,
+                isCurrentVenue: false,
+                isRoutingOpportunity: true, // Mark suggested venues as routing opportunities for the map
+                // Use the item's status if it exists, otherwise default to 'suggested'
+                status: item.status || 'suggested',
+                venue_id: item.venue.id,
+                sequence: sequence
+              };
+            })
         : [];
       
       // Combine and set all map events
       const allEvents = [...fixedVenues, ...suggestedVenues];
+      
+      // Sort events by sequence to ensure markers are numbered correctly
+      allEvents.sort((a, b) => {
+        if (a.sequence !== undefined && b.sequence !== undefined) {
+          return a.sequence - b.sequence;
+        }
+        return 0;
+      });
+      
       setMapEvents(allEvents);
     }
   }, [optimizationResult, tour]);
