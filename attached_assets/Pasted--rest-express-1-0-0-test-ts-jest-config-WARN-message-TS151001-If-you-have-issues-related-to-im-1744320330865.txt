@@ -1,0 +1,46 @@
+
+> rest-express@1.0.0 test
+ts-jest[config] (WARN) message TS151001: If you have issues related to imports, you should consider setting `esModuleInterop` to `true` in your TypeScript configuration file (usually `tsconfig.json`). See https://blogs.msdn.microsoft.com/typescript/2018/01/31/announcing-typescript-2-7/#easier-ecmascript-module-interoperability for more information.
+ FAIL  server/tests/webhook-routes.test.ts
+  ● Test suite failed to run
+
+    Cannot find module 'supertest' from 'server/tests/webhook-routes.test.ts'
+
+      1 |
+      2 | import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+    > 3 | import request from 'supertest';
+        | ^
+      4 | import express from 'express';
+      5 | import { webhookRoutes } from '../webhooks/webhook-routes';
+      6 |
+
+      at Resolver._throwModNotFoundError (node_modules/jest-resolve/build/resolver.js:427:11)
+      at Object.<anonymous> (server/tests/webhook-routes.test.ts:3:1)
+
+ts-jest[config] (WARN) message TS151001: If you have issues related to imports, you should consider setting `esModuleInterop` to `true` in your TypeScript configuration file (usually `tsconfig.json`). See https://blogs.msdn.microsoft.com/typescript/2018/01/31/announcing-typescript-2-7/#easier-ecmascript-module-interoperability for more information.
+ FAIL  server/tests/webhook-handler.test.ts
+  ● Test suite failed to run
+
+    Cannot find module '@shared/schema' from 'server/webhooks/webhook-handler.ts'
+
+    Require stack:
+      server/webhooks/webhook-handler.ts
+      server/tests/webhook-handler.test.ts
+
+      2 | import crypto from 'crypto';
+      3 | import { db } from '../db';
+    > 4 | import { events, artists, venues } from '@shared/schema';
+        | ^
+      5 | import { eq, and } from 'drizzle-orm';
+      6 | import { SyncLogger } from '../core/sync-logger';
+      7 |
+
+      at Resolver._throwModNotFoundError (node_modules/jest-resolve/build/resolver.js:427:11)
+      at Object.<anonymous> (server/webhooks/webhook-handler.ts:4:1)
+      at Object.<anonymous> (server/tests/webhook-handler.test.ts:3:1)
+
+Test Suites: 2 failed, 2 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        1.077 s
+Ran all test suites.
