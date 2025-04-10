@@ -283,8 +283,21 @@ export function TourDetail({ tourId }: TourDetailProps) {
               >
                 {optimizeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 <Truck className="mr-2 h-4 w-4" />
-                Optimize
+                Quick Optimize
               </Button>
+              
+              <Link href={`/tours/${tourId}/optimize`}>
+                <Button 
+                  size="sm"
+                  variant="outline"
+                  className="border-primary/50 bg-primary/5 hover:bg-primary/10"
+                  disabled={!hasEnoughVenuesWithDates}
+                >
+                  <Wand2 className="mr-2 h-4 w-4" />
+                  AI Wizard
+                </Button>
+              </Link>
+              
               <Link href={`/tours/${tourId}/edit`}>
                 <Button size="sm">
                   <PenLine className="mr-2 h-4 w-4" />
