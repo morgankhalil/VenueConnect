@@ -504,7 +504,7 @@ export function TourDetail({ tourId }: TourDetailProps) {
             <ul className="space-y-2 mb-4">
               <li className="flex items-start">
                 <Check className="h-5 w-5 mr-2 text-green-500 shrink-0" />
-                <span>Calculate the most efficient route between confirmed venues</span>
+                <span>Calculate the most efficient route between venues with dates</span>
               </li>
               <li className="flex items-start">
                 <Check className="h-5 w-5 mr-2 text-green-500 shrink-0" />
@@ -516,7 +516,7 @@ export function TourDetail({ tourId }: TourDetailProps) {
               </li>
               <li className="flex items-start">
                 <Clock className="h-5 w-5 mr-2 text-amber-500 shrink-0" />
-                <span>You need at least 2 confirmed venues with dates</span>
+                <span>You need at least 2 venues with dates (confirmed, booked, or planning)</span>
               </li>
             </ul>
           </div>

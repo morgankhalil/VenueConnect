@@ -55,7 +55,7 @@ export default function TourOptimizePage() {
     onError: () => {
       toast({
         title: 'Optimization Failed',
-        description: 'Failed to optimize tour route. Please ensure you have at least 2 confirmed venues with dates.',
+        description: 'Failed to optimize tour route. Please ensure you have at least 2 venues with dates (confirmed, booked, or planning).',
         variant: 'destructive',
       });
     },
