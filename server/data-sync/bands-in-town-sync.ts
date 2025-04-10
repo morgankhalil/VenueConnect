@@ -203,9 +203,14 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
     const apiEndpoint = `https://rest.bandsintown.com/artists/${encodedArtistName}/events`;
 
     // Params for the request - Bandsintown primarily uses app_id for authentication
+    // Search for events in next 12 months
+    const today = new Date();
+    const nextYear = new Date();
+    nextYear.setFullYear(today.getFullYear() + 1);
+    
     const params: Record<string, any> = {
       app_id: apiKey,
-      date: 'upcoming' // Get upcoming events
+      date: `${today.toISOString().split('T')[0]},${nextYear.toISOString().split('T')[0]}`
     };
 
     console.log(`Fetching events for artist '${artistName}'...`);
@@ -222,11 +227,13 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
         }
       });
 
+      console.log('Raw API response:', JSON.stringify(response.data, null, 2));
       if (response.data && Array.isArray(response.data)) {
         eventsData = response.data;
         console.log(`Successfully retrieved ${eventsData.length} events for ${artistName}`);
       } else {
         console.error("API response was not an array:", typeof response.data);
+        console.error("Response data:", response.data);
       }
     } catch (error: any) {
       console.error(`Error fetching events for artist '${artistName}':`, 
