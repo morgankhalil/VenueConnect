@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapEvent } from '@/types';
-import { getStatusInfo, isPriorityHold } from '@/lib/tour-status';
+import { getStatusInfo, isPriorityHold, getPriorityLevel } from '@/lib/tour-status';
 
 // Map bounds helper component - fits the map to markers
 function FitBoundsToMarkers({ events }: { events: MapEvent[] }) {
@@ -61,18 +61,36 @@ export function VenueMap({
     // Use the color from status info
     let backgroundColor = statusInfo.color;
     
+    // Create a border style based on status - to help differentiate priority levels
+    let borderStyle = "2px solid white";
+    
+    // Special styling for priority holds - make them more visually distinct
+    if (isPriorityHold(normalizedStatus)) {
+      const priorityLevel = getPriorityLevel(normalizedStatus);
+      // Make higher priority holds more prominent
+      if (priorityLevel === 1) {
+        borderStyle = "3px solid white";
+      } else if (priorityLevel === 2) {
+        borderStyle = "2px solid white";
+      } else if (priorityLevel === 3) {
+        borderStyle = "2px dashed white"; 
+      } else if (priorityLevel === 4) {
+        borderStyle = "1px dashed white";
+      }
+    }
+    
     // Create a custom HTML element for the marker
     return new DivIcon({
       className: '',
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
+      iconSize: [30, 30],
+      iconAnchor: [15, 15],
       html: `
         <div style="
-          width: 24px;
-          height: 24px;
+          width: 30px;
+          height: 30px;
           border-radius: 50%;
           background-color: ${backgroundColor};
-          border: 2px solid white;
+          border: ${borderStyle};
           box-shadow: 0 2px 4px rgba(0,0,0,0.3);
           display: flex;
           align-items: center;

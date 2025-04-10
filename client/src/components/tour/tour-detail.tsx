@@ -156,7 +156,8 @@ export function TourDetail({ tourId }: TourDetailProps) {
               date: item.suggestedDate || undefined,
               isCurrentVenue: false,
               isRoutingOpportunity: true, // Mark suggested venues as routing opportunities for the map
-              status: 'suggested',
+              // Use the item's status if it exists, otherwise default to 'suggested'
+              status: item.status || 'suggested',
               venue_id: item.venue.id
             }))
         : [];
