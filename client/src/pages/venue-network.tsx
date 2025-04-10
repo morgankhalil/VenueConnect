@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getVenueNetworkGraph, getCollaborativeOpportunitiesByVenue, createVenueConnection } from "@/lib/api";
 import { apiRequest } from "@/lib/queryClient";
+import { VenueSelector } from "@/components/venue-selector";
 
 export default function VenueNetwork() {
   const { toast } = useToast();
@@ -21,9 +22,9 @@ export default function VenueNetwork() {
     queryFn: () => apiRequest('/api/user')
   });
   
-  // Use the user's ID as venue ID since the API returns venue ID as user.id
+  // Use the user's venueId from their profile
   // Fallback to a known venue ID (195 is The Middle East in Cambridge)
-  const currentVenueId = user?.id || 195;
+  const currentVenueId = user?.venueId || 195;
 
   const { data: networkData, isLoading: isLoadingNetwork } = useQuery({
     queryKey: ['/api/venue-network/graph', currentVenueId],
@@ -91,9 +92,12 @@ export default function VenueNetwork() {
               Manage your venue connections and discover new collaboration opportunities
             </p>
           </div>
-          <Button onClick={handleAddVenue} size="lg" className="shadow-sm">
-            Connect New Venue
-          </Button>
+          <div className="flex items-center space-x-2">
+            <VenueSelector />
+            <Button onClick={handleAddVenue} size="lg" className="shadow-sm">
+              Connect New Venue
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="map" className="space-y-4">
