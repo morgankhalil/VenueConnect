@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { db } from '../db';
-import { events, artists, venues } from '../../shared/schema';
+import { venues } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
 
 export async function syncArtistEventsFromBandsInTown(artistName: string) {
@@ -24,34 +24,35 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
   }
 }
 
-export async function syncVenueEventsFromBandsInTown(venueId: string, venueName: string) {
+export async function syncVenueFromBandsInTown(venueId: string, venueName: string) {
   const apiKey = process.env.BANDSINTOWN_API_KEY;
   if (!apiKey) {
     throw new Error('Bandsintown API key is not configured');
   }
 
   try {
-    // First update the venue's Bandsintown ID
-    await db.update(venues)
-      .set({ bandsintownId: venueId })
-      .where(eq(venues.name, venueName));
-
-    const response = await axios.get(`https://rest.bandsintown.com/events/search`, {
-      params: { 
-        venue_id: venueId
-      },
+    // First get venue details
+    const response = await axios.get(`https://rest.bandsintown.com/venues/${venueId}`, {
+      params: { app_id: apiKey },
       headers: {
-        'Accept': 'application/json',
-        'x-api-key': apiKey
+        'Accept': 'application/json'
       }
     });
 
-    if (response.data && Array.isArray(response.data)) {
-      return response.data.length;
+    if (response.data) {
+      // Update venue with Bandsintown data
+      await db.update(venues)
+        .set({ 
+          bandsintownId: venueId,
+          lastSyncedAt: new Date()
+        })
+        .where(eq(venues.name, venueName));
+
+      return response.data;
     }
-    return 0;
+    return null;
   } catch (error) {
-    console.error('Error fetching venue events:', error);
+    console.error(`Error syncing venue ${venueName}:`, error);
     throw error;
   }
 }
