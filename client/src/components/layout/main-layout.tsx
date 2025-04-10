@@ -145,7 +145,14 @@ export function MainLayout({ children }: MainLayoutProps) {
             </div>
             
             <nav className="space-y-1.5">
-              {navigationConfig.map((item) => {
+              {[
+                { name: "Dashboard", href: "/" },
+                { name: "Calendar", href: "/calendar" },
+                { name: "Discover", href: "/discover" },
+                { name: "Venue Network", href: "/venue-network" },
+                { name: "Messages", href: "/messages" },
+                { name: "Settings", href: "/settings" },
+              ].map((item) => {
                 const [location] = useLocation();
                 const isActive = item.href === "/" 
                   ? location === "/" 
