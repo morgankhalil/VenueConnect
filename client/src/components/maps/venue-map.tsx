@@ -175,26 +175,77 @@ export function VenueMap({
       
       {/* Map legend */}
       {showLegend && (
-        <div className="absolute bottom-8 left-3 bg-white/90 p-2 rounded-md shadow-sm border text-xs z-[1000]">
-          <div className="flex items-center mb-1">
-            <span className="w-3 h-3 bg-green-500 rounded-full inline-block mr-1"></span>
-            <span className="text-gray-700">Confirmed</span>
+        <div className="absolute bottom-8 left-3 bg-white/90 p-2 rounded-md shadow-sm border text-xs z-[1000] max-w-[200px]">
+          <div className="text-gray-700 font-medium mb-1">Venue Status Legend</div>
+          
+          {/* Final Statuses */}
+          <div className="mb-2">
+            <div className="text-gray-500 mb-1 text-[10px] uppercase">Final Status</div>
+            <div className="flex items-center mb-1">
+              <span className="w-3 h-3 rounded-full inline-block mr-1" 
+                    style={{ backgroundColor: getStatusInfo('confirmed').color }}></span>
+              <span className="text-gray-700">Confirmed</span>
+            </div>
+            <div className="flex items-center">
+              <span className="w-3 h-3 rounded-full inline-block mr-1" 
+                    style={{ backgroundColor: getStatusInfo('cancelled').color }}></span>
+              <span className="text-gray-700">Cancelled</span>
+            </div>
           </div>
-          <div className="flex items-center mb-1">
-            <span className="w-3 h-3 bg-amber-500 rounded-full inline-block mr-1"></span>
-            <span className="text-gray-700">Suggested</span>
+
+          {/* Priority Holds */}
+          <div className="mb-2">
+            <div className="text-gray-500 mb-1 text-[10px] uppercase">Priority Holds</div>
+            <div className="flex items-center mb-1">
+              <span className="w-3 h-3 rounded-full inline-block mr-1" 
+                    style={{ backgroundColor: getStatusInfo('hold1').color }}></span>
+              <span className="text-gray-700">Priority 1 (Highest)</span>
+            </div>
+            <div className="flex items-center mb-1">
+              <span className="w-3 h-3 rounded-full inline-block mr-1" 
+                    style={{ backgroundColor: getStatusInfo('hold2').color }}></span>
+              <span className="text-gray-700">Priority 2</span>
+            </div>
+            <div className="flex items-center mb-1">
+              <span className="w-3 h-3 rounded-full inline-block mr-1" 
+                    style={{ backgroundColor: getStatusInfo('hold3').color }}></span>
+              <span className="text-gray-700">Priority 3</span>
+            </div>
+            <div className="flex items-center">
+              <span className="w-3 h-3 rounded-full inline-block mr-1" 
+                    style={{ backgroundColor: getStatusInfo('hold4').color }}></span>
+              <span className="text-gray-700">Priority 4</span>
+            </div>
           </div>
-          <div className="flex items-center mb-1">
-            <span className="w-3 h-3 bg-blue-500 rounded-full inline-block mr-1"></span>
-            <span className="text-gray-700">Booked</span>
+          
+          {/* Contact Phase */}
+          <div className="mb-2">
+            <div className="text-gray-500 mb-1 text-[10px] uppercase">Contact Phase</div>
+            <div className="flex items-center mb-1">
+              <span className="w-3 h-3 rounded-full inline-block mr-1" 
+                    style={{ backgroundColor: getStatusInfo('contacted').color }}></span>
+              <span className="text-gray-700">Contacted</span>
+            </div>
+            <div className="flex items-center">
+              <span className="w-3 h-3 rounded-full inline-block mr-1" 
+                    style={{ backgroundColor: getStatusInfo('negotiating').color }}></span>
+              <span className="text-gray-700">Negotiating</span>
+            </div>
           </div>
-          <div className="flex items-center mb-1">
-            <span className="w-3 h-3 bg-purple-500 rounded-full inline-block mr-1"></span>
-            <span className="text-gray-700">Planning</span>
-          </div>
-          <div className="flex items-center">
-            <span className="w-3 h-3 bg-gray-400 rounded-full inline-block mr-1"></span>
-            <span className="text-gray-700">Potential</span>
+          
+          {/* Planning Phase */}
+          <div>
+            <div className="text-gray-500 mb-1 text-[10px] uppercase">Planning Phase</div>
+            <div className="flex items-center mb-1">
+              <span className="w-3 h-3 rounded-full inline-block mr-1" 
+                    style={{ backgroundColor: getStatusInfo('suggested').color }}></span>
+              <span className="text-gray-700">Suggested</span>
+            </div>
+            <div className="flex items-center">
+              <span className="w-3 h-3 rounded-full inline-block mr-1" 
+                    style={{ backgroundColor: getStatusInfo('potential').color }}></span>
+              <span className="text-gray-700">Potential</span>
+            </div>
           </div>
         </div>
       )}

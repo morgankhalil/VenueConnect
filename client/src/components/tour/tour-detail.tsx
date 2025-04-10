@@ -4,6 +4,7 @@ import { Link, useLocation } from 'wouter';
 import { getTour, optimizeTourRoute, updateTour } from '@/lib/api';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { VenueStatusBadge } from './venue-status-badge';
 import { 
   getStatusInfo, 
   getStatusBadgeVariant, 
@@ -803,36 +804,7 @@ export function TourDetail({ tourId }: TourDetailProps) {
   );
 }
 
-function VenueStatusBadge({ status }: { status: string }) {
-  const normalizedStatus = status.toLowerCase();
-  const statusInfo = getStatusInfo(normalizedStatus);
-  
-  // For custom colored badges (suggested, contacted, holds)
-  if (normalizedStatus === 'suggested' || 
-      normalizedStatus === 'contacted' || 
-      normalizedStatus === 'negotiating' ||
-      isPriorityHold(normalizedStatus)) {
-    return (
-      <Badge 
-        className={`${statusInfo.cssClass} text-white`}
-        title={statusInfo.description}
-      >
-        {statusInfo.displayName}
-      </Badge>
-    );
-  }
-  
-  // For standard badge variants
-  const variant = getStatusBadgeVariant(normalizedStatus);
-  return (
-    <Badge 
-      variant={variant}
-      title={statusInfo.description}
-    >
-      {statusInfo.displayName}
-    </Badge>
-  );
-}
+
 
 function getTourStatusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
