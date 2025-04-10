@@ -311,64 +311,33 @@ export function UnifiedTourOptimizer({ tourId, onSuccess, initialTab = 'preferen
             </Card>
           )}
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="md:col-span-2">
-              <CardHeader>
-                <CardTitle>Optimization Settings</CardTitle>
-                <CardDescription>
-                  Configure how you want your tour to be optimized
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <h3 className="text-sm font-medium mb-3">Optimization Goal</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                    <Button 
-                      variant={preferences.optimizationGoal === 'distance' ? 'default' : 'outline'} 
-                      size="sm"
-                      onClick={() => selectOptimizationGoal('distance')}
-                      className="justify-start"
-                    >
-                      <Truck className="mr-2 h-4 w-4" />
-                      <span className="text-xs">Minimize Distance</span>
-                    </Button>
-                    <Button 
-                      variant={preferences.optimizationGoal === 'time' ? 'default' : 'outline'} 
-                      size="sm"
-                      onClick={() => selectOptimizationGoal('time')}
-                      className="justify-start"
-                    >
-                      <Calendar className="mr-2 h-4 w-4" />
-                      <span className="text-xs">Optimize Timing</span>
-                    </Button>
-                    <Button 
-                      variant={preferences.optimizationGoal === 'balance' ? 'default' : 'outline'} 
-                      size="sm"
-                      onClick={() => selectOptimizationGoal('balance')}
-                      className="justify-start"
-                    >
-                      <Check className="mr-2 h-4 w-4" />
-                      <span className="text-xs">Balanced</span>
-                    </Button>
-                    <Button 
-                      variant={preferences.optimizationGoal === 'revenue' ? 'default' : 'outline'} 
-                      size="sm"
-                      onClick={() => selectOptimizationGoal('revenue')}
-                      className="justify-start"
-                    >
-                      <BarChart className="mr-2 h-4 w-4" />
-                      <span className="text-xs">Maximize Revenue</span>
-                    </Button>
-                    <Button 
-                      variant={preferences.optimizationGoal === 'market' ? 'default' : 'outline'} 
-                      size="sm"
-                      onClick={() => selectOptimizationGoal('market')}
-                      className="justify-start"
-                    >
-                      <Map className="mr-2 h-4 w-4" />
-                      <span className="text-xs">Target Markets</span>
-                    </Button>
-                  </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Tour Optimizer</CardTitle>
+              <CardDescription>
+                Optimize your tour route and get venue recommendations
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="text-center py-8">
+                <div className="max-w-md mx-auto text-center space-y-4">
+                  <Building className="h-12 w-12 mx-auto text-primary" />
+                  <p className="text-muted-foreground">
+                    Our optimization engine will analyze your tour schedule and suggest the most efficient route with potential venue opportunities.
+                  </p>
+                  <Button 
+                    onClick={handleRunOptimization}
+                    disabled={!hasEnoughVenuesWithDates || optimizeMutation.isPending}
+                    size="lg"
+                    className="w-full max-w-sm"
+                  >
+                    {optimizeMutation.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-2 h-4 w-4" />
+                    )}
+                    {optimizeMutation.isPending ? 'Optimizing...' : 'Optimize Tour'}
+                  </Button>
                 </div>
                 
                 <Separator />
