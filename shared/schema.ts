@@ -36,6 +36,13 @@ export const venues = pgTable("venues", {
   website: text("website"),
   description: text("description"),
   imageUrl: text("image_url"),
+  bandsintownId: text("bandsintown_id").unique(),
+  region: text("region"), // Bandsintown sometimes uses region instead of state
+  timezone: text("timezone"),
+  streetAddress: text("street_address"), // More detailed address field
+  postalCode: text("postal_code"), // International postal code format
+  metroArea: text("metro_area"), // Metropolitan area
+  url: text("url"), // Bandsintown venue URL
   ownerId: integer("owner_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
