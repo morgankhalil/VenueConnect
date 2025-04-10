@@ -55,12 +55,23 @@ router.post('/user/venue', async (req, res) => {
       venueId: z.number()
     }).parse(req.body);
     
-    // Check if venue exists
+    // Check if venue exists and isn't already assigned
     const venueResult = await db
       .select()
       .from(venues)
       .where(eq(venues.id, validatedData.venueId))
       .limit(1);
+
+    // Check if venue is already assigned to another user
+    const existingAssignment = await db
+      .select()
+      .from(users)
+      .where(eq(users.venueId, validatedData.venueId))
+      .limit(1);
+
+    if (existingAssignment.length && existingAssignment[0].id !== req.session.user.id) {
+      return res.status(400).json({ error: "Venue is already assigned to another user" });
+    }
     
     if (!venueResult.length) {
       return res.status(404).json({ error: "Venue not found" });
