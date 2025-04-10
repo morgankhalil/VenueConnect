@@ -92,12 +92,15 @@ export default function TourOptimizePage() {
     );
   }
   
-  // Check if the tour has enough confirmed venues for optimization
-  const confirmedVenues = tour.venues?.filter(v => 
-    v.tourVenue.status === 'confirmed' && v.tourVenue.date
+  // Check if the tour has enough venues with dates for optimization
+  // We accept confirmed, booked, and planning venues as long as they have dates
+  const venuesWithDates = tour.venues?.filter(v => 
+    (v.tourVenue.status === 'confirmed' || v.tourVenue.status === 'booked' || v.tourVenue.status === 'planning') && 
+    v.tourVenue.date
   ) || [];
   
-  const hasEnoughConfirmedVenues = confirmedVenues.length >= 2;
+  const confirmedVenues = venuesWithDates.filter(v => v.tourVenue.status === 'confirmed');
+  const hasEnoughVenuesWithDates = venuesWithDates.length >= 2;
   
   return (
     <div className="container py-6">
@@ -157,15 +160,15 @@ export default function TourOptimizePage() {
               </div>
             </div>
             
-            {!hasEnoughConfirmedVenues && (
+            {!hasEnoughVenuesWithDates && (
               <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-md mb-6">
                 <h3 className="font-medium flex items-center">
                   <Clock className="h-5 w-5 mr-2" />
                   More Venues Needed
                 </h3>
                 <p className="mt-1 text-sm">
-                  Tour optimization requires at least 2 confirmed venues with dates. 
-                  You currently have {confirmedVenues.length} confirmed venue(s).
+                  Tour optimization requires at least 2 venues with dates (confirmed, booked, or planning). 
+                  You currently have {venuesWithDates.length} venue(s) with dates.
                 </p>
               </div>
             )}
@@ -173,7 +176,7 @@ export default function TourOptimizePage() {
             <div className="flex justify-center">
               <Button
                 onClick={handleOptimize}
-                disabled={!hasEnoughConfirmedVenues || optimizeMutation.isPending}
+                disabled={!hasEnoughVenuesWithDates || optimizeMutation.isPending}
                 size="lg"
               >
                 {optimizeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -232,10 +235,20 @@ export default function TourOptimizePage() {
                               {formatDate(venue.date)}
                             </Badge>
                           )}
-                          {venue.isFixed ? (
-                            <Badge className="ml-2">Fixed</Badge>
+                          {venue.status ? (
+                            <Badge className={`ml-2 ${venue.status === 'suggested' ? 'bg-blue-500' : ''}`}>
+                              {venue.status === 'confirmed' ? 'Confirmed' : 
+                               venue.status === 'booked' ? 'Booked' : 
+                               venue.status === 'planning' ? 'Planning' : 
+                               venue.status === 'suggested' ? 'Suggested' : 
+                               venue.isFixed ? 'Fixed' : 'Flexible'}
+                            </Badge>
                           ) : (
-                            <Badge variant="outline" className="ml-2">Suggested</Badge>
+                            venue.isFixed ? (
+                              <Badge className="ml-2">Fixed</Badge>
+                            ) : (
+                              <Badge variant="outline" className="ml-2">Suggested</Badge>
+                            )
                           )}
                         </div>
                       ))}
