@@ -1,37 +1,22 @@
-
 import { db } from './db';
-import { venues, artists } from '../shared/schema';
-import { syncArtistEventsFromBandsInTown } from './data-sync/bands-in-town-sync';
+import { venues, events } from '../shared/schema';
+import { syncVenuesFromBandsInTown } from './data-sync/bands-in-town-sync';
 
 async function seedEvents() {
   try {
     console.log('Starting event sync from Bandsintown...');
 
-    // Get all venues to find nearby artists
+    // Get all venues to find events
     const venueList = await db.select().from(venues);
     console.log(`Found ${venueList.length} venues to sync events for`);
 
-    // Common artists that tour at venues of this size
-    const popularArtists = [
-      'Modest Mouse',
-      'The National',
-      'Spoon',
-      'Future Islands',
-      'Japanese Breakfast',
-      'Car Seat Headrest',
-      'Kurt Vile',
-      'Angel Olsen',
-      'Big Thief',
-      'Parquet Courts'
-    ];
-
-    // Sync events for each artist
-    for (const artistName of popularArtists) {
-      console.log(`Syncing events for artist: ${artistName}`);
+    // For each venue, sync its events using BandsInTown API
+    for (const venue of venueList) {
+      console.log(`Syncing events for venue: ${venue.name}`);
       try {
-        await syncArtistEventsFromBandsInTown(artistName);
+        await syncVenuesFromBandsInTown(venue.id, 0, 100); // Radius 0 to only get events at this venue
       } catch (error) {
-        console.error(`Error syncing events for ${artistName}:`, error);
+        console.error(`Error syncing events for venue ${venue.name}:`, error);
       }
     }
 
