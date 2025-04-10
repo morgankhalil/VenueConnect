@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getVenueNetworkGraph, getCollaborativeOpportunitiesByVenue, createVenueConnection } from "@/lib/api";
 import { apiRequest } from "@/lib/queryClient";
-import { VenueSelector } from "@/components/venue-selector";
 
 export default function VenueNetwork() {
   const { toast } = useToast();
@@ -93,7 +92,6 @@ export default function VenueNetwork() {
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <VenueSelector />
             <Button onClick={handleAddVenue} size="lg" className="shadow-sm">
               Connect New Venue
             </Button>
