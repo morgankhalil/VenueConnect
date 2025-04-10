@@ -14,9 +14,11 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { theme } = useTheme(); //Corrected order
+  const [, navigate] = useLocation(); //Corrected order
+  const isMobile = useIsMobile(); //Corrected order
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false); //Corrected order
   const [scrolled, setScrolled] = useState(false);
-  const [, navigate] = useLocation();
   const queryClient = useQueryClient();
 
   // Handle scroll effects for header
@@ -24,7 +26,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -72,7 +74,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     console.log("Searching for:", query);
     // Implement search functionality
   };
-  
+
   const handleLogout = async () => {
     try {
       // Call the logout endpoint
@@ -80,13 +82,13 @@ export function MainLayout({ children }: MainLayoutProps) {
         method: 'POST',
         credentials: 'include'
       });
-      
+
       // Clear any cached data in React Query
       queryClient.clear();
-      
+
       // Navigate to the login page instead of reloading
       navigate('/auth/login');
-      
+
       console.log("Logout completed");
     } catch (error) {
       console.error("Error logging out:", error);
@@ -120,7 +122,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               <X className="h-5 w-5" />
             </Button>
           </div>
-          
+
           <div className="px-4 py-4">
             <div className="flex items-center p-3 mb-6 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10">
               <div className="flex-shrink-0 h-12 w-12">
@@ -143,7 +145,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <p className="text-sm text-muted-foreground">{userToDisplay.venueName}</p>
               </div>
             </div>
-            
+
             <nav className="space-y-1.5">
               {[
                 { name: "Dashboard", href: "/" },
@@ -157,7 +159,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                 const isActive = item.href === "/" 
                   ? location === "/" 
                   : location.startsWith(item.href);
-                
+
                 return (
                   <a
                     key={item.name}
