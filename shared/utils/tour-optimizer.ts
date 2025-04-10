@@ -9,7 +9,7 @@ export interface RoutingPoint {
   longitude: number | null;
   date?: Date | null;
   isFixed: boolean;
-  status?: string; // 'confirmed', 'booked', 'planning', etc.
+  status: string; // 'confirmed', 'booked', 'planning', etc.
 }
 
 /**

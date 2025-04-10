@@ -537,7 +537,7 @@ router.post('/tours/:id/optimize', async (req, res) => {
         longitude: Number(tv.venue.longitude),
         date: tv.tourVenue.date ? new Date(tv.tourVenue.date) : null,
         isFixed: true,
-        status: 'confirmed'
+        status: 'confirmed' as string
       }));
       
     // Include booked and planning venues as semi-fixed points (can be optimized but are part of the tour)
@@ -552,7 +552,7 @@ router.post('/tours/:id/optimize', async (req, res) => {
         longitude: Number(tv.venue.longitude),
         date: tv.tourVenue.date ? new Date(tv.tourVenue.date) : null,
         isFixed: false,
-        status: tv.tourVenue.status
+        status: tv.tourVenue.status || 'planning'
       }));
     
     // Combine all points, with at least 2 points total
