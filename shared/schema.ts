@@ -34,7 +34,6 @@ export const venues = pgTable("venues", {
   capacity: integer("capacity"),
   description: text("description"),
   bandsintownId: text("bandsintown_id").unique(),
-  bandsintownUrl: text("bandsintown_url"),
   website: text("website"),
   phoneNumber: text("phone_number"),
   imageUrl: text("image_url"),
@@ -151,8 +150,8 @@ export const venuesRelations = relations(venues, ({ one, many }) => ({
   }),
   events: many(events),
   predictionsAsVenue: many(predictions),
-  venueConnections: many(venueNetwork),
-  connectedByVenues: many(venueNetwork),
+  venueConnections: many(venueNetwork, { relationName: "venueConnections" }),
+  connectedByVenues: many(venueNetwork, { relationName: "connectedByVenues" }),
 }));
 
 export const artistsRelations = relations(artists, ({ many }) => ({
