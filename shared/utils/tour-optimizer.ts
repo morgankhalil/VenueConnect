@@ -290,29 +290,41 @@ export function optimizeTourRoute(
             // Lower detour ratio = higher priority
             let priority = 'suggested'; // Default status
             
+            // Calculate a deviation score - how much does this add to the route?
+            // 0 = perfect (right on the route), higher numbers = worse
+            const deviationScore = Math.max(0, detourRatio - 1) * 100; // percentage of added distance
+            
             // Determine status based on venue quality and fit
-            if (detourRatio < 1.1) {
-              // Almost directly on route - highest priority suggestion
+            if (deviationScore < 10) {
+              // Almost directly on route (less than 10% deviation) - highest priority
               priority = 'hold1'; 
-            } else if (detourRatio < 1.2) {
-              // Very good option - high priority
+            } else if (deviationScore < 20) {
+              // Very good option (10-20% deviation) - high priority
               priority = 'hold2';
-            } else if (detourRatio < 1.4) {
-              // Decent option - medium priority
+            } else if (deviationScore < 40) {
+              // Decent option (20-40% deviation) - medium priority
               priority = 'hold3';
-            } else if (detourRatio < 2.0) {
-              // Acceptable but not ideal - low priority
+            } else if (deviationScore < 100) {
+              // Acceptable but not ideal (40-100% deviation) - low priority
               priority = 'hold4';
             } else {
-              // Just a potential option
+              // Significant deviation (over 100% added distance) - just potential
               priority = 'potential';
             }
             
             // Special case: If this venue fills a significant gap (5+ days)
-            // upgrade its importance
+            // upgrade its importance because filling a gap is valuable
             if (daysBetween >= 5 && index === 0 && gapVenues.length === 1) {
-              // This is the only venue filling a big gap - make it high priority
-              priority = priority === 'potential' ? 'suggested' : priority;
+              // This is the only venue filling a big gap - make it higher priority
+              if (priority === 'potential') {
+                priority = 'suggested';
+              } else if (priority.startsWith('hold')) {
+                // Bump priority up by 1 level (e.g., hold4 -> hold3)
+                const currentLevel = parseInt(priority.substring(4));
+                if (currentLevel > 1) { // Don't go higher than hold1
+                  priority = `hold${currentLevel - 1}`;
+                }
+              }
             }
             
             // Add venue with suggested date and calculated status

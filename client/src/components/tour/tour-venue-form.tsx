@@ -56,8 +56,9 @@ interface TourVenueFormProps {
   tourId: number;
   venueId?: number;
   initialData?: Partial<TourVenueFormValues>;
-  onSubmit: (data: TourVenueFormValues) => void;
-  onCancel: () => void;
+  onSubmit?: (data: TourVenueFormValues) => void;
+  onCancel?: () => void;
+  onSuccess?: () => void;
 }
 
 export function TourVenueForm({ 
@@ -65,7 +66,8 @@ export function TourVenueForm({
   venueId, 
   initialData = {}, 
   onSubmit, 
-  onCancel 
+  onCancel,
+  onSuccess
 }: TourVenueFormProps) {
   const [date, setDate] = useState<Date | undefined>(
     initialData.date ? new Date(initialData.date) : undefined
@@ -86,11 +88,38 @@ export function TourVenueForm({
   });
 
   // Handle form submission
-  const handleSubmit = (values: TourVenueFormValues) => {
+  const handleSubmit = async (values: TourVenueFormValues) => {
     try {
-      // Pass the values to the parent component
-      onSubmit(values);
+      if (onSubmit) {
+        // Pass the values to the parent component if onSubmit is provided
+        onSubmit(values);
+      } else {
+        // Default implementation if onSubmit is not provided
+        // Send a request to add a venue to the tour
+        const response = await fetch(`/api/tour/tours/${tourId}/venues`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(values),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to add venue to tour');
+        }
+        
+        toast({
+          title: "Success",
+          description: "Venue added to tour successfully.",
+        });
+        
+        // Call the onSuccess callback if provided
+        if (onSuccess) {
+          onSuccess();
+        }
+      }
     } catch (error) {
+      console.error('Error saving tour venue:', error);
       toast({
         title: "Error",
         description: "Failed to save tour venue details.",
@@ -248,7 +277,11 @@ export function TourVenueForm({
 
         {/* Form Actions */}
         <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => onCancel ? onCancel() : null}
+          >
             Cancel
           </Button>
           <Button type="submit">Save</Button>
