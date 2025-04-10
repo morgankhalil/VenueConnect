@@ -1,5 +1,9 @@
 import dotenv from 'dotenv';
 import { syncVenuesFromBandsInTown, syncArtistEventsFromBandsInTown } from './bands-in-town-sync';
+import { PredictHQProvider } from './predict-hq-provider';
+
+const PREDICTHQ_ENABLED = process.env.PREDICTHQ_API_KEY ? true : false;
+const predictHQProvider = PREDICTHQ_ENABLED ? new PredictHQProvider(process.env.PREDICTHQ_API_KEY!) : null;
 
 // Load environment variables
 dotenv.config();
