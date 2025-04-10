@@ -1,0 +1,52 @@
+Database connection initialized
+Starting event sync from Bandsintown...
+Found 8 venues to sync events for
+Syncing events for venue: The Bowery Ballroom
+No recent events found for venue The Bowery Ballroom
+Found 0 artists with recent events at The Bowery Ballroom
+Retrieved 0 events from Bandsintown
+Extracted 0 unique venues from events
+Sync completed: added 0 new venues to the network
+Syncing events for venue: The 9:30 Club
+No recent events found for venue The 9:30 Club
+Found 0 artists with recent events at The 9:30 Club
+Retrieved 0 events from Bandsintown
+Extracted 0 unique venues from events
+Sync completed: added 0 new venues to the network
+Syncing events for venue: The Troubadour
+No recent events found for venue The Troubadour
+Found 0 artists with recent events at The Troubadour
+Retrieved 0 events from Bandsintown
+Extracted 0 unique venues from events
+Sync completed: added 0 new venues to the network
+Syncing events for venue: The Fillmore
+No recent events found for venue The Fillmore
+Found 0 artists with recent events at The Fillmore
+Retrieved 0 events from Bandsintown
+Extracted 0 unique venues from events
+Sync completed: added 0 new venues to the network
+Syncing events for venue: Red Rocks Amphitheatre
+No recent events found for venue Red Rocks Amphitheatre
+Found 0 artists with recent events at Red Rocks Amphitheatre
+Retrieved 0 events from Bandsintown
+Extracted 0 unique venues from events
+Sync completed: added 0 new venues to the network
+Syncing events for venue: The Ryman Auditorium
+No recent events found for venue The Ryman Auditorium
+Found 0 artists with recent events at The Ryman Auditorium
+Retrieved 0 events from Bandsintown
+Extracted 0 unique venues from events
+Sync completed: added 0 new venues to the network
+Syncing events for venue: House of Blues
+No recent events found for venue House of Blues
+Found 0 artists with recent events at House of Blues
+Retrieved 0 events from Bandsintown
+Extracted 0 unique venues from events
+Sync completed: added 0 new venues to the network
+Syncing events for venue: The Crocodile
+No recent events found for venue The Crocodile
+Found 0 artists with recent events at The Crocodile
+Retrieved 0 events from Bandsintown
+Extracted 0 unique venues from events
+Sync completed: added 0 new venues to the network
+Event sync completed
