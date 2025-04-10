@@ -124,9 +124,9 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    app.use(express.static(path.join(import.meta.dirname, "../dist")));
+    app.use(express.static(path.join(import.meta.dirname, "../dist/public")));
     app.get("*", (_req, res) => {
-      res.sendFile(path.join(import.meta.dirname, "../dist/index.html"));
+      res.sendFile(path.join(import.meta.dirname, "../dist/public/index.html"));
     });
   }
 
