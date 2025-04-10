@@ -14,10 +14,10 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const [, navigate] = useLocation();
-  const queryClient = useQueryClient();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [, navigate] = useLocation();
+  const queryClient = useQueryClient();
 
   // Handle scroll effects for header
   useEffect(() => {
