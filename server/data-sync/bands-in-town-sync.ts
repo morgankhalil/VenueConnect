@@ -404,7 +404,11 @@ export async function syncVenueEventsFromBandsInTown(venueId: string) {
     
     const response = await axios.get(apiEndpoint, {
       params: { app_id: apiKey },
-      headers: { 'Accept': 'application/json' }
+      headers: { 
+        'Accept': 'application/json',
+        'x-api-key': apiKey,
+        'Authorization': `Bearer ${apiKey}`
+      }
     });
 
     if (!response.data || !Array.isArray(response.data)) {
