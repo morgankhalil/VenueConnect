@@ -4,19 +4,40 @@ import { venues, events, artists } from '../shared/schema';
 // Placeholder for Bandsintown API interaction.  Replace with actual API calls.
 async function syncVenueEventsFromBandsInTown(venueId: string): Promise<number> {
   console.log(`Fetching events for venue ID: ${venueId} (Placeholder - No actual API call made)`);
-  // In a real application, you would make an API call to Bandsintown here
-  // and process the results to insert events into the database.
-  // This placeholder simulates the insertion of 5 events.
-  await db.insert(events).values([{
-    artistId: 1, //replace with actual artist ID from Bandsintown response
-    venueId: 1, //replace with actual venue ID from Bandsintown response
-    date: '2024-03-15', //replace with actual date from Bandsintown response
-    startTime: '20:00', //replace with actual time from Bandsintown response
+  
+  // First create the artists
+  const artistData = [
+    {
+      name: "Acid Dad",
+      genres: ["rock", "indie"],
+      imageUrl: "https://example.com/artist1.jpg",
+      popularity: 70
+    },
+    {
+      name: "The Stone Eye",
+      genres: ["rock"],
+      imageUrl: "https://example.com/artist2.jpg",
+      popularity: 65
+    }
+  ];
+
+  const createdArtists = await db.insert(artists).values(artistData).returning();
+  console.log(`Created ${createdArtists.length} artists`);
+
+  // Now create events using the actual artist IDs
+  const eventData = createdArtists.map(artist => ({
+    artistId: artist.id,
+    venueId: 1,
+    date: '2024-03-15',
+    startTime: '20:00',
     status: 'confirmed',
     ticketUrl: 'https://example.com/ticket',
     sourceId: 'bandsintown',
     sourceName: 'bandsintown'
-  }, {
+  }));
+
+  await db.insert(events).values(eventData);
+  return eventData.length;
     artistId: 2, //replace with actual artist ID from Bandsintown response
     venueId: 1, //replace with actual venue ID from Bandsintown response
     date: '2024-03-16', //replace with actual date from Bandsintown response
