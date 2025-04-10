@@ -45,48 +45,62 @@ export default function TourOptimizePage() {
   
   // Prepare map data when optimization results are available
   useEffect(() => {
-    if (optimizationResult && optimizationResult.tourVenues) {
-      // Get fixed venues from the tour
-      const fixedVenues: MapEvent[] = optimizationResult.tourVenues
-        .filter((venue: OptimizationVenue) => venue.venue && venue.latitude && venue.longitude)
-        .map((venue: OptimizationVenue, index: number) => ({
-          id: venue.id,
-          venue: venue.venue?.name || `Venue ${venue.id}`,
-          latitude: venue.latitude,
-          longitude: venue.longitude,
-          date: venue.date || undefined,
-          isCurrentVenue: false,
-          isRoutingOpportunity: false,
-          status: venue.status || 'confirmed',
-          venue_id: venue.venue?.id
-        }));
+    if (optimizationResult) {
+      console.log('Optimization result:', optimizationResult);
+      
+      // Get fixed venues from the optimization fixedPoints array
+      const fixedVenues: MapEvent[] = optimizationResult.fixedPoints
+        ? optimizationResult.fixedPoints
+            .filter((point: any) => point.latitude && point.longitude)
+            .map((point: any, index: number) => {
+              // Find the matching venue from the tour data
+              const matchingVenue = tour?.venues?.find(v => v.venue?.id === point.id);
+              
+              return {
+                id: point.id,
+                venue: matchingVenue?.venue?.name || `Venue ${point.id}`,
+                latitude: point.latitude,
+                longitude: point.longitude,
+                date: point.date || undefined,
+                isCurrentVenue: false,
+                isRoutingOpportunity: false,
+                status: point.status || 'confirmed',
+                venue_id: point.id
+              };
+            })
+        : [];
       
       // Get suggested venues from the potential fill venues
       const suggestedVenues: MapEvent[] = optimizationResult.potentialFillVenues
         ? optimizationResult.potentialFillVenues
-            .filter((venue: any) => 
-              venue.venue && 
-              venue.venue.latitude && 
-              venue.venue.longitude && 
-              (!venue.isFixed || venue.status === 'suggested')
+            .filter((item: any) => 
+              item.venue && 
+              item.venue.latitude !== null && 
+              item.venue.longitude !== null
             )
-            .map((venue: any) => ({
-              id: venue.venue.id,
-              venue: venue.venue.name || `Venue ${venue.venue.id}`,
-              latitude: venue.venue.latitude,
-              longitude: venue.venue.longitude,
-              date: venue.date || undefined,
+            .map((item: any) => ({
+              id: item.venue.id,
+              venue: item.venue.name || `Venue ${item.venue.id}`,
+              latitude: item.venue.latitude,
+              longitude: item.venue.longitude,
+              date: item.suggestedDate || undefined,
               isCurrentVenue: false,
               isRoutingOpportunity: true, // Mark suggested venues as routing opportunities for the map
               status: 'suggested',
-              venue_id: venue.venue.id
+              venue_id: item.venue.id
             }))
         : [];
       
+      console.log('Fixed venues for map:', fixedVenues);
+      console.log('Suggested venues for map:', suggestedVenues);
+      
       // Combine and set all map events
-      setMapEvents([...fixedVenues, ...suggestedVenues]);
+      const allEvents = [...fixedVenues, ...suggestedVenues];
+      setMapEvents(allEvents);
+      
+      console.log('All map events:', allEvents);
     }
-  }, [optimizationResult]);
+  }, [optimizationResult, tour]);
   
   // Optimize tour mutation
   const optimizeMutation = useMutation({
@@ -268,42 +282,76 @@ export default function TourOptimizePage() {
                   <div className="space-y-4">
                     <h3 className="font-medium">Optimized Venue Sequence</h3>
                     <div className="space-y-2">
-                      {optimizationResult.tourVenues?.map((venue: any, index: number) => (
-                        <div key={index} className="flex items-center p-3 bg-muted/30 rounded-md">
-                          <div className="w-8 h-8 flex items-center justify-center bg-primary/10 rounded-full mr-3">
-                            <span className="font-medium text-sm">{index + 1}</span>
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-medium">{venue.venue?.name}</div>
-                            <div className="text-sm text-muted-foreground flex items-center">
-                              <MapPin className="h-3 w-3 mr-1" />
-                              {venue.venue?.city || 'Location data unavailable'}
-                              {venue.venue?.region ? `, ${venue.venue?.region}` : ''}
+                      {/* Display fixed points (confirmed venues) */}
+                      {optimizationResult.fixedPoints && optimizationResult.fixedPoints.map((point: any, index: number) => {
+                        // Find the matching venue from the tour data to get full details
+                        const venueDetails = tour?.venues?.find(v => v.venue?.id === point.id)?.venue;
+                        
+                        return (
+                          <div key={`fixed-${index}`} className="flex items-center p-3 bg-muted/30 rounded-md">
+                            <div className="w-8 h-8 flex items-center justify-center bg-primary/10 rounded-full mr-3">
+                              <span className="font-medium text-sm">{index + 1}</span>
                             </div>
+                            <div className="flex-1">
+                              <div className="font-medium">{venueDetails?.name || `Venue ${point.id}`}</div>
+                              <div className="text-sm text-muted-foreground flex items-center">
+                                <MapPin className="h-3 w-3 mr-1" />
+                                {venueDetails?.city || 'Location data unavailable'}
+                                {venueDetails?.region ? `, ${venueDetails.region}` : ''}
+                              </div>
+                            </div>
+                            {point.date && (
+                              <Badge variant="outline">
+                                <Calendar className="h-3.5 w-3.5 mr-1" />
+                                {formatDate(point.date)}
+                              </Badge>
+                            )}
+                            <Badge className="ml-2">
+                              {point.status === 'confirmed' ? 'Confirmed' : 
+                               point.status === 'booked' ? 'Booked' : 
+                               point.status === 'planning' ? 'Planning' : 
+                               'Fixed'}
+                            </Badge>
                           </div>
-                          {venue.date && (
-                            <Badge variant="outline">
-                              <Calendar className="h-3.5 w-3.5 mr-1" />
-                              {formatDate(venue.date)}
+                        );
+                      })}
+                      
+                      {/* Display suggested venues */}
+                      {optimizationResult.potentialFillVenues && 
+                       optimizationResult.potentialFillVenues
+                        .filter((item: any) => item.venue)
+                        .map((item: any, index: number) => (
+                          <div key={`suggested-${index}`} className="flex items-center p-3 bg-blue-50 border border-blue-100 rounded-md">
+                            <div className="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-600 rounded-full mr-3">
+                              <span className="font-medium text-sm">{optimizationResult.fixedPoints.length + index + 1}</span>
+                            </div>
+                            <div className="flex-1">
+                              <div className="font-medium">{item.venue.name}</div>
+                              <div className="text-sm text-muted-foreground flex items-center">
+                                <MapPin className="h-3 w-3 mr-1" />
+                                {item.venue.city || 'Location data unavailable'}
+                                {item.venue.region ? `, ${item.venue.region}` : ''}
+                              </div>
+                            </div>
+                            {item.suggestedDate && (
+                              <Badge variant="outline">
+                                <Calendar className="h-3.5 w-3.5 mr-1" />
+                                {formatDate(item.suggestedDate)}
+                              </Badge>
+                            )}
+                            <Badge className="ml-2 bg-blue-500">
+                              Suggested
                             </Badge>
-                          )}
-                          {venue.status ? (
-                            <Badge className={`ml-2 ${venue.status === 'suggested' ? 'bg-blue-500' : ''}`}>
-                              {venue.status === 'confirmed' ? 'Confirmed' : 
-                               venue.status === 'booked' ? 'Booked' : 
-                               venue.status === 'planning' ? 'Planning' : 
-                               venue.status === 'suggested' ? 'Suggested' : 
-                               venue.isFixed ? 'Fixed' : 'Flexible'}
-                            </Badge>
-                          ) : (
-                            venue.isFixed ? (
-                              <Badge className="ml-2">Fixed</Badge>
-                            ) : (
-                              <Badge variant="outline" className="ml-2">Suggested</Badge>
-                            )
-                          )}
-                        </div>
+                          </div>
                       ))}
+                      
+                      {/* Show message if no venue data available */}
+                      {(!optimizationResult.fixedPoints || optimizationResult.fixedPoints.length === 0) && 
+                       (!optimizationResult.potentialFillVenues || optimizationResult.potentialFillVenues.length === 0) && (
+                        <div className="p-4 text-center text-muted-foreground bg-muted/20 rounded-md">
+                          No venue sequence data available
+                        </div>
+                      )}
                     </div>
                   </div>
                 </TabsContent>
