@@ -43,11 +43,15 @@ router.get('/tours', async (req, res) => {
     }
     
     if (startDate) {
-      filters.push(gte(tours.startDate, new Date(String(startDate))));
+      // Convert to SQL date format
+      const startDateStr = new Date(String(startDate)).toISOString().split('T')[0];
+      filters.push(sql`${tours.startDate} >= ${startDateStr}`);
     }
     
     if (endDate) {
-      filters.push(lte(tours.endDate, new Date(String(endDate))));
+      // Convert to SQL date format
+      const endDateStr = new Date(String(endDate)).toISOString().split('T')[0];
+      filters.push(sql`${tours.endDate} <= ${endDateStr}`);
     }
     
     // Execute query with filters
@@ -290,11 +294,22 @@ router.patch('/tours/:id', async (req, res) => {
       endDate: z.string().transform(s => new Date(s)).optional(),
     }).parse(req.body);
     
-    // Update the tour
+    // Convert date objects to strings for database
+    const startDateStr = validatedData.startDate ? 
+      validatedData.startDate.toISOString().split('T')[0] : undefined;
+    const endDateStr = validatedData.endDate ? 
+      validatedData.endDate.toISOString().split('T')[0] : undefined;
+      
+    // Update the tour with processed data
     const result = await db
       .update(tours)
       .set({
-        ...validatedData,
+        name: validatedData.name,
+        status: validatedData.status,
+        description: validatedData.description,
+        totalBudget: validatedData.totalBudget,
+        startDate: startDateStr,
+        endDate: endDateStr,
         updatedAt: new Date()
       })
       .where(eq(tours.id, tourId))

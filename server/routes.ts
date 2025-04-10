@@ -15,6 +15,7 @@ import { venues, artists, events, predictions, collaborativeOpportunities, colla
 // Import admin and webhook routes
 import adminRouter from './routes/admin';
 import webhookRouter from './webhooks/webhook-routes';
+import tourRouter from './routes/tour-routes';
 
 const router = Router();
 
