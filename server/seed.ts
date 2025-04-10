@@ -1,12 +1,12 @@
 import { db } from './db';
-import { users, venues, venueNetwork, events, artists } from '../shared/schema';
-import { eq } from 'drizzle-orm';
+import { users, venues, venueNetwork, events, artists, tours, tourVenues } from '../shared/schema';
+import { eq, lessThanOrEqual, greaterThanOrEqual } from 'drizzle-orm';
 import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
 
-// Major US markets
+// Major US markets with detailed city listings
 const MAJOR_MARKETS = [
   { city: 'New York', state: 'NY' },
   { city: 'Los Angeles', state: 'CA' },
@@ -34,7 +34,7 @@ interface VenueFilter {
 
 async function clearDatabase() {
   console.log('Clearing existing data...');
-  // Clear tables in order of dependencies
+  // Clear tables in correct dependency order
   await db.delete(events);
   await db.delete(tourVenues);
   await db.delete(tours);
@@ -61,10 +61,10 @@ async function getFilteredVenues(filter: VenueFilter) {
   let query = db.select().from(venues);
 
   if (filter.minCapacity) {
-    query = query.where(venues.capacity >= filter.minCapacity);
+    query = query.where(greaterThanOrEqual(venues.capacity, filter.minCapacity));
   }
   if (filter.maxCapacity) {
-    query = query.where(venues.capacity <= filter.maxCapacity);
+    query = query.where(lessThanOrEqual(venues.capacity, filter.maxCapacity));
   }
 
   // Filter for major markets
@@ -75,17 +75,18 @@ async function getFilteredVenues(filter: VenueFilter) {
   return await query;
 }
 
-
 async function createVenueNetwork(venueList: any[]) {
   console.log('Creating venue network connections...');
 
   for (let i = 0; i < venueList.length; i++) {
     for (let j = i + 1; j < venueList.length; j++) {
+      // Calculate approximate distance using lat/long
       const distance = Math.sqrt(
         Math.pow(venueList[i].latitude - venueList[j].latitude, 2) +
         Math.pow(venueList[i].longitude - venueList[j].longitude, 2)
       );
 
+      // Trust score inversely proportional to distance
       const trustScore = Math.max(70, Math.min(95, 100 - (distance * 2)));
 
       await db.insert(venueNetwork).values({
@@ -149,6 +150,8 @@ async function seed(filter: VenueFilter = { minCapacity: 50, maxCapacity: 500 })
     }
 
     await createVenueNetwork(venueList);
+    const artistList = await db.select().from(artists); // Added to seed events.
+    await seedEvents(venueList, artistList); //Added to seed events
 
     console.log('Database seeding completed successfully');
   } catch (error) {
