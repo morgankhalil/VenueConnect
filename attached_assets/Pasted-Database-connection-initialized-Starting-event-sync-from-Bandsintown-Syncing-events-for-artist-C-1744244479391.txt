@@ -1,0 +1,63 @@
+Database connection initialized
+Starting event sync from Bandsintown...
+Syncing events for artist: Coldplay
+Fetching artist data for 'Coldplay'...
+Making request to https://rest.bandsintown.com/artists/Coldplay with app_id parameter
+Successfully retrieved data for artist Coldplay
+Found artist 'Coldplay' on Bandsintown
+Artist 'Coldplay' already exists in database
+Fetching events for artist 'Coldplay'...
+Making request to https://rest.bandsintown.com/artists/Coldplay/events with app_id parameter
+Raw API response: []
+Successfully retrieved 0 events for Coldplay
+Retrieved 0 events for artist 'Coldplay'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: Taylor Swift
+Fetching artist data for 'Taylor Swift'...
+Making request to https://rest.bandsintown.com/artists/Taylor%20Swift with app_id parameter
+Successfully retrieved data for artist Taylor Swift
+Found artist 'Taylor Swift' on Bandsintown
+Artist 'Taylor Swift' already exists in database
+Fetching events for artist 'Taylor Swift'...
+Making request to https://rest.bandsintown.com/artists/Taylor%20Swift/events with app_id parameter
+Raw API response: []
+Successfully retrieved 0 events for Taylor Swift
+Retrieved 0 events for artist 'Taylor Swift'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: The Killers
+Fetching artist data for 'The Killers'...
+Making request to https://rest.bandsintown.com/artists/The%20Killers with app_id parameter
+Successfully retrieved data for artist The Killers
+Found artist 'The Killers' on Bandsintown
+Artist 'The Killers' already exists in database
+Fetching events for artist 'The Killers'...
+Making request to https://rest.bandsintown.com/artists/The%20Killers/events with app_id parameter
+Raw API response: []
+Successfully retrieved 0 events for The Killers
+Retrieved 0 events for artist 'The Killers'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: Ed Sheeran
+Fetching artist data for 'Ed Sheeran'...
+Making request to https://rest.bandsintown.com/artists/Ed%20Sheeran with app_id parameter
+Successfully retrieved data for artist Ed Sheeran
+Found artist 'Ed Sheeran' on Bandsintown
+Artist 'Ed Sheeran' already exists in database
+Fetching events for artist 'Ed Sheeran'...
+Making request to https://rest.bandsintown.com/artists/Ed%20Sheeran/events with app_id parameter
+Raw API response: []
+Successfully retrieved 0 events for Ed Sheeran
+Retrieved 0 events for artist 'Ed Sheeran'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: Foo Fighters
+Fetching artist data for 'Foo Fighters'...
+Making request to https://rest.bandsintown.com/artists/Foo%20Fighters with app_id parameter
+Successfully retrieved data for artist Foo Fighters
+Found artist 'Foo Fighters' on Bandsintown
+Artist 'Foo Fighters' already exists in database
+Fetching events for artist 'Foo Fighters'...
+Making request to https://rest.bandsintown.com/artists/Foo%20Fighters/events with app_id parameter
+Raw API response: []
+Successfully retrieved 0 events for Foo Fighters
+Retrieved 0 events for artist 'Foo Fighters'
+Sync completed: processed 0 events, added/updated 0
+Event sync completed
