@@ -194,10 +194,12 @@ export const venueNetworkRelations = relations(venueNetwork, ({ one }) => ({
   venue: one(venues, {
     fields: [venueNetwork.venueId],
     references: [venues.id],
+    relationName: "venueConnections"
   }),
   connectedVenue: one(venues, {
     fields: [venueNetwork.connectedVenueId],
     references: [venues.id],
+    relationName: "connectedByVenues"
   }),
 }));
 
