@@ -68,107 +68,115 @@ router.get('/venue-network/graph/:id', async (req, res) => {
       return res.status(404).json({ error: "Venue not found" });
     }
     
-    // First get all venue connections for this venue
+    // Get all venues with valid coordinates - we'll always show a network of venues
+    const allVenues = await db
+      .select()
+      .from(venues)
+      .where(
+        and(
+          isNotNull(venues.latitude),
+          isNotNull(venues.longitude)
+        )
+      )
+      .limit(25); // Limit to a reasonable number for performance
+    
+    // Get venue connections for this venue
     const venueConnections = await db
       .select({
         network: venueNetwork,
-        connectedVenue: venues,
+        connectedVenueId: venueNetwork.connectedVenueId,
       })
       .from(venueNetwork)
-      .leftJoin(venues, eq(venueNetwork.connectedVenueId, venues.id))
       .where(eq(venueNetwork.venueId, venueId));
     
-    // If there are no connections, let's just use all venues for now
-    // This helps during development while we build up the network
-    let allNodes = [];
-    let allLinks = [];
+    // Create a map of connected venue IDs for faster lookups
+    const connectedVenueIds = new Map();
+    venueConnections.forEach(connection => {
+      connectedVenueIds.set(connection.connectedVenueId, {
+        collaborativeBookings: connection.network.collaborativeBookings || 0,
+        trustScore: connection.network.trustScore || 50
+      });
+    });
     
-    if (venueConnections.length === 0) {
-      // No connections found - use all venues with valid coordinates for demo
-      const allVenues = await db
-        .select()
-        .from(venues)
-        .where(
-          and(
-            isNotNull(venues.latitude),
-            isNotNull(venues.longitude)
-          )
-        );
+    // Create nodes from all venues
+    const allNodes = allVenues.map(venue => {
+      const isConnected = connectedVenueIds.has(venue.id);
+      const connectionInfo = isConnected ? connectedVenueIds.get(venue.id) : null;
       
-      // Create nodes from venues
-      allNodes = allVenues.map(venue => ({
+      return {
         id: venue.id,
         name: venue.name,
         city: venue.city,
         state: venue.region || '',
         isCurrentVenue: venue.id === venueId,
-        collaborativeBookings: 0,
-        trustScore: 70, // Default for demo
+        collaborativeBookings: isConnected ? connectionInfo.collaborativeBookings : 0,
+        trustScore: isConnected ? connectionInfo.trustScore : 70, // Default trust score for non-connected venues
         latitude: venue.latitude,
         longitude: venue.longitude,
-      }));
-      
-      // Create basic links between venues (we'll improve this with real data later)
-      allLinks = [];
-      for (let i = 0; i < allVenues.length; i++) {
-        if (allVenues[i].id === venueId) {
-          // Generate links to 5 random venues
-          const connectedCount = Math.min(5, allVenues.length - 1);
-          const possibleConnections = allVenues.filter(v => v.id !== venueId);
-          
-          for (let j = 0; j < connectedCount; j++) {
-            const randomIndex = Math.floor(Math.random() * possibleConnections.length);
-            const targetVenue = possibleConnections.splice(randomIndex, 1)[0];
-            
-            allLinks.push({
-              source: venueId,
-              target: targetVenue.id,
-              value: 1
-            });
-          }
-        }
+      };
+    });
+    
+    // Create links
+    const allLinks = [];
+    
+    // Add real connection links
+    venueConnections.forEach(connection => {
+      // Only add the link if the connected venue is in our nodes list
+      if (allVenues.some(v => v.id === connection.connectedVenueId)) {
+        allLinks.push({
+          source: venueId,
+          target: connection.connectedVenueId,
+          value: connection.network.trustScore ? connection.network.trustScore / 20 : 1 // Scale for visualization
+        });
       }
-    } else {
-      // We have real connections, use those
-      // Create nodes
-      const currentVenue = centerVenue[0];
-      allNodes = [
-        {
-          id: currentVenue.id,
-          name: currentVenue.name,
-          city: currentVenue.city,
-          state: currentVenue.region || '',
-          isCurrentVenue: true,
-          collaborativeBookings: 0,
-          trustScore: 100, // Trust yourself 100%
-          latitude: currentVenue.latitude,
-          longitude: currentVenue.longitude,
-        }
-      ];
+    });
+    
+    // If we don't have enough real connections, add some potential connections
+    if (allLinks.length < 5) {
+      // Find venues that aren't already connected
+      const unconnectedVenues = allVenues.filter(v => 
+        v.id !== venueId && !connectedVenueIds.has(v.id)
+      );
       
-      // Add connected venues as nodes
-      venueConnections.forEach(connection => {
-        if (connection.connectedVenue) {
-          allNodes.push({
-            id: connection.connectedVenue.id,
-            name: connection.connectedVenue.name,
-            city: connection.connectedVenue.city,
-            state: connection.connectedVenue.region || '',
-            isCurrentVenue: false,
-            collaborativeBookings: connection.network.collaborativeBookings || 0,
-            trustScore: connection.network.trustScore || 50,
-            latitude: connection.connectedVenue.latitude,
-            longitude: connection.connectedVenue.longitude,
-          });
+      // Add links to up to 5 unconnected venues (based on proximity)
+      const currentVenueObj = centerVenue[0];
+      
+      // If we have coordinates, find nearby venues
+      if (currentVenueObj.latitude && currentVenueObj.longitude) {
+        // Sort by distance
+        unconnectedVenues.sort((a, b) => {
+          if (!a.latitude || !a.longitude) return 1;
+          if (!b.latitude || !b.longitude) return -1;
           
-          // Add link
+          const distA = calculateDistance(
+            currentVenueObj.latitude, 
+            currentVenueObj.longitude,
+            a.latitude,
+            a.longitude
+          );
+          
+          const distB = calculateDistance(
+            currentVenueObj.latitude, 
+            currentVenueObj.longitude,
+            b.latitude,
+            b.longitude
+          );
+          
+          return distA - distB;
+        });
+        
+        // Take the 5 closest venues
+        const potentialConnections = unconnectedVenues.slice(0, 5);
+        
+        // Add potential connection links
+        potentialConnections.forEach(venue => {
           allLinks.push({
             source: venueId,
-            target: connection.connectedVenue.id,
-            value: connection.network.trustScore / 20 || 1 // Scale for visualization
+            target: venue.id,
+            value: 0.5 // Thinner line for potential connections
           });
-        }
-      });
+        });
+      }
     }
     
     // Return the network data
@@ -181,6 +189,27 @@ router.get('/venue-network/graph/:id', async (req, res) => {
     res.status(500).json({ error: "Failed to fetch venue network graph" });
   }
 });
+
+/**
+ * Calculate distance between two coordinates in miles
+ */
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return 9999;
+  
+  const R = 3958.8; // Earth's radius in miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c;
+  
+  return distance;
+}
 
 /**
  * Create a venue network connection

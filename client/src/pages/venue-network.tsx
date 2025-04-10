@@ -29,10 +29,17 @@ export default function VenueNetwork() {
   const { data: networkData, isLoading: isLoadingNetwork, refetch: refetchNetwork } = useQuery({
     queryKey: ['/api/venue-network/graph', currentVenueId],
     queryFn: async () => {
+      console.log(`Fetching venue network for venue ID: ${currentVenueId}`);
       const data = await getVenueNetworkGraph(currentVenueId);
       return data;
     },
-    enabled: !!currentVenueId // Only fetch when we have a venue ID
+    enabled: !!currentVenueId, // Only fetch when we have a venue ID
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    // Ensure we definitely get fresh data when the component mounts or venue changes
+    refetchOnReconnect: true,
+    // Longer stale time to avoid unnecessary refetches
+    staleTime: 1000 * 60 * 5 // 5 minutes
   });
 
   const createConnectionMutation = useMutation({
