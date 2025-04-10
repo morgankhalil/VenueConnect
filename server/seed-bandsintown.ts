@@ -105,6 +105,10 @@ function parseArgs(): Options {
  */
 async function resetData(tables: string[]) {
   console.log('Resetting database tables:', tables.join(', '));
+
+  // Clear tours first to remove foreign key constraints
+  await db.delete(tours);
+  console.log('Tours table cleared');
   
   if (tables.includes('events')) {
     await db.delete(events);
