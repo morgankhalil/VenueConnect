@@ -208,9 +208,14 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
     const nextYear = new Date();
     nextYear.setFullYear(today.getFullYear() + 1);
     
+    // Get events from today and next 2 years
+    const today = new Date();
+    const twoYearsFromNow = new Date();
+    twoYearsFromNow.setFullYear(today.getFullYear() + 2);
+    
     const params: Record<string, any> = {
       app_id: apiKey,
-      date: 'upcoming'
+      date: `${today.toISOString().split('T')[0]},${twoYearsFromNow.toISOString().split('T')[0]}`
     };
 
     console.log(`Fetching events for artist '${artistName}'...`);
