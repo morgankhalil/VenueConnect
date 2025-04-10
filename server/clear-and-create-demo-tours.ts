@@ -1,6 +1,7 @@
 import { db } from './db';
 import { tours, tourVenues, venues, artists } from '../shared/schema';
 import { eq } from 'drizzle-orm';
+import { calculateInitialTourScore } from '../shared/utils/initial-tour-score';
 
 /**
  * Clear all existing tours and create new demo tours
@@ -8,6 +9,7 @@ import { eq } from 'drizzle-orm';
  * 1. Delete all existing tour_venues
  * 2. Delete all existing tours
  * 3. Create 5 new demo tours with different structures for optimization testing
+ * 4. Calculate and set initial optimization scores for each tour
  */
 async function clearAndCreateDemoTours() {
   try {
