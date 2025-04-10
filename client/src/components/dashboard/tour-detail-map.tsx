@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Calendar, Clock, MapPin, Zap, X, Info } from "lucide-react";
+import { getStatusInfo, getStatusBadgeVariant } from "@/lib/tour-status";
 
 declare const mapboxgl: any;
 
@@ -149,20 +150,20 @@ export function TourDetailMap({ tour, userVenueId, onClose }: TourDetailMapProps
       sortedEvents.forEach(event => {
         const { id, latitude, longitude, artist, venue, isCurrentVenue, isRoutingOpportunity, date } = event;
         
-        // Determine status based on venue type
-        let status = 'unknown';
-        let markerColor = '#6B7280'; // Default gray
+        // Determine status based on venue type using our standardized status system
+        let status = 'potential'; // Default to potential
         
         if (isCurrentVenue) {
           status = 'potential';
-          markerColor = '#9CA3AF'; // Gray for potential venue (user's venue)
         } else if (isRoutingOpportunity) {
           status = 'hold';
-          markerColor = '#F59E0B'; // Amber for holds/routing opportunities
         } else {
           status = 'confirmed';
-          markerColor = '#10B981'; // Green for confirmed shows
         }
+        
+        // Get color from status utility
+        const statusInfo = getStatusInfo(status);
+        let markerColor = statusInfo.color;
         
         // Create marker element
         const el = document.createElement('div');
@@ -206,8 +207,7 @@ export function TourDetailMap({ tour, userVenueId, onClose }: TourDetailMapProps
                   border-radius: 9999px;
                   font-size: 11px;
                   font-weight: 500;
-                  background-color: ${
-                    status === 'confirmed' ? '#DCFCE7' : 
+                  background-color: ${status === 'confirmed' ? '#DCFCE7' : 
                     status === 'hold' ? '#FEF3C7' : 
                     '#F3F4F6'
                   };
@@ -217,11 +217,7 @@ export function TourDetailMap({ tour, userVenueId, onClose }: TourDetailMapProps
                     '#4B5563'
                   };"
                 >
-                  ${
-                    status === 'confirmed' ? 'Confirmed' : 
-                    status === 'hold' ? 'On Hold' : 
-                    'Potential'
-                  }
+                  ${statusInfo.displayName}
                 </span>
               </div>
             </div>
@@ -404,20 +400,21 @@ export function TourDetailMap({ tour, userVenueId, onClose }: TourDetailMapProps
                 const isLast = idx === sortedEvents.length - 1;
                 const nextEvent = !isLast ? sortedEvents[idx + 1] : null;
                 
-                // Status badge color
-                let statusColor = 'secondary';
-                let statusText = 'Unknown';
+                // Determine status based on venue type
+                let status = 'potential'; // Default to potential
                 
                 if (event.isCurrentVenue) {
-                  statusColor = 'secondary';
-                  statusText = 'Potential';
+                  status = 'potential';
                 } else if (event.isRoutingOpportunity) {
-                  statusColor = 'outline';
-                  statusText = 'On Hold';
+                  status = 'hold';
                 } else {
-                  statusColor = 'default';
-                  statusText = 'Confirmed';
+                  status = 'confirmed';
                 }
+                
+                // Get status info from utility
+                const statusInfo = getStatusInfo(status);
+                const statusColor = getStatusBadgeVariant(status);
+                const statusText = statusInfo.displayName;
                 
                 return (
                   <div key={event.id} className="relative">
