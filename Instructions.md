@@ -35,13 +35,22 @@
 2. Create Clear Data Flow:
 ```
 Initial Seed:
-Venues -> Artists -> Events -> Venue Network
+1. Venues         (Base venue data)
+2. Venue Events   (Events at each venue)
+3. Event Artists  (Artists from those events)
+4. Venue Network  (Connect similar venues)
 
 Ongoing Sync:
 ┌─ Venue Updates
-├─ Artist Updates
-└─ Event Updates
+├─ Venue Event Updates
+└─ Event Artist Updates
 ```
+
+The flow is designed this way because:
+- Venues are our primary data point
+- Events belong to venues and provide context
+- Artists are extracted from events
+- Venue network is built based on shared artists/events
 
 3. Add Proper Validation:
 - Validate venue data before insertion
