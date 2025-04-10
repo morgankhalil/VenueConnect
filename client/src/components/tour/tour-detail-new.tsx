@@ -1,0 +1,574 @@
+import { useState, useEffect, useMemo } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Link, useLocation } from 'wouter';
+import { getTour, optimizeTourRoute, updateTour } from '@/lib/api';
+import { queryClient } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { VenueStatusBadge } from './venue-status-badge';
+import { StatCard } from './stat-card';
+import { VenueList } from './venue-list';
+import { 
+  getStatusInfo, 
+  getStatusBadgeVariant,
+} from '@/lib/tour-status';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { TourVenueForm } from './tour-venue-form';
+import { formatDate, formatCurrency, formatDistance, formatTravelTime, calculateImprovement } from '@/lib/utils';
+import { 
+  CalendarDays, Info, Map, MapPin, Loader2, PenLine,
+  ArrowRight, Calendar, Building, Sparkles
+} from 'lucide-react';
+import { MapEvent } from '@/types';
+import { VenueMap } from '@/components/maps/venue-map';
+
+type TourDetailProps = {
+  tourId: number | string;
+};
+
+export function TourDetailNew({ tourId }: TourDetailProps) {
+  const [_, navigate] = useLocation();
+  const { toast } = useToast();
+  const [optimizationResult, setOptimizationResult] = useState<any>(null);
+  const [mapEvents, setMapEvents] = useState<MapEvent[]>([]);
+  const [selectedVenue, setSelectedVenue] = useState<MapEvent | null>(null);
+  const [showAllVenues, setShowAllVenues] = useState(true);
+  
+  // Fetch tour details
+  const { 
+    data: tour, 
+    isLoading, 
+    error,
+    refetch 
+  } = useQuery({
+    queryKey: ['/api/tour/tours', tourId],
+    queryFn: () => getTour(Number(tourId)),
+  });
+  
+  // Create map events from tour venues (even without optimization)
+  useEffect(() => {
+    if (tour?.venues) {
+      const venues = tour.venues
+        .filter(v => v.venue && v.venue.latitude && v.venue.longitude)
+        .map((v, index) => ({
+          id: v.venue.id,
+          venue: v.venue.name || `Venue ${v.venue.id}`,
+          latitude: v.venue.latitude,
+          longitude: v.venue.longitude,
+          date: v.tourVenue.date || undefined,
+          isCurrentVenue: false,
+          isRoutingOpportunity: false,
+          status: v.tourVenue.status || 'confirmed',
+          venue_id: v.venue.id,
+          sequence: v.tourVenue.sequence || index
+        }));
+      
+      if (venues.length > 0) {
+        setMapEvents(venues);
+      }
+    }
+  }, [tour]);
+  
+  // Prepare map data when optimization results are available
+  useEffect(() => {
+    if (optimizationResult) {
+      // Get fixed venues from the optimization fixedPoints array
+      const fixedVenues: MapEvent[] = optimizationResult.fixedPoints
+        ? optimizationResult.fixedPoints
+            .filter((point: any) => point.latitude && point.longitude)
+            .map((point: any, index: number) => {
+              // Find the matching venue from the tour data
+              const matchingVenue = tour?.venues?.find(v => v.venue?.id === point.id)?.venue;
+              const sequence = point.sequence !== undefined ? point.sequence : index;
+              
+              return {
+                id: point.id,
+                venue: matchingVenue?.name || `Venue ${point.id}`,
+                latitude: point.latitude,
+                longitude: point.longitude,
+                date: point.date || undefined,
+                isCurrentVenue: false,
+                isRoutingOpportunity: false,
+                status: point.status || 'confirmed',
+                venue_id: point.id,
+                sequence: sequence
+              };
+            })
+        : [];
+      
+      // Get suggested venues from the potential fill venues
+      const suggestedVenues: MapEvent[] = optimizationResult.potentialFillVenues
+        ? optimizationResult.potentialFillVenues
+            .filter((item: any) => 
+              item.venue && 
+              item.venue.latitude !== null && 
+              item.venue.longitude !== null &&
+              // Only include venues that are not already in fixedVenues
+              !fixedVenues.some(v => v.id === item.venue.id)
+            )
+            .map((item: any, index: number) => {
+              // Calculate sequence based on suggestedSequence or fallback to after fixed venues
+              const sequence = item.suggestedSequence !== undefined ? 
+                item.suggestedSequence : 
+                (fixedVenues.length + index);
+                
+              return {
+                id: item.venue.id,
+                venue: item.venue.name || `Venue ${item.venue.id}`,
+                latitude: item.venue.latitude,
+                longitude: item.venue.longitude,
+                date: item.suggestedDate || undefined,
+                isCurrentVenue: false,
+                isRoutingOpportunity: true, // Mark suggested venues as routing opportunities for the map
+                // Use the item's status if it exists, otherwise default to 'suggested'
+                status: item.status || 'potential',
+                venue_id: item.venue.id,
+                sequence: sequence
+              };
+            })
+        : [];
+      
+      // Combine and set all map events
+      const allEvents = [...fixedVenues, ...suggestedVenues];
+      
+      // Sort events by sequence to ensure markers are numbered correctly
+      allEvents.sort((a, b) => {
+        if (a.sequence !== undefined && b.sequence !== undefined) {
+          return a.sequence - b.sequence;
+        }
+        return 0;
+      });
+      
+      setMapEvents(allEvents);
+    }
+  }, [optimizationResult, tour]);
+  
+  // Update tour status mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: (status: string) => 
+      updateTour(Number(tourId), { status }),
+    onSuccess: () => {
+      toast({
+        title: 'Tour Status Updated',
+        description: 'The tour status has been updated successfully.',
+      });
+      refetch();
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to update tour status.',
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Tour optimization mutation (for direct optimization via API)
+  const optimizeMutation = useMutation({
+    mutationFn: () => optimizeTourRoute(Number(tourId)),
+    onSuccess: (data) => {
+      setOptimizationResult(data);
+      toast({
+        title: 'Tour Optimized',
+        description: `Tour route optimized with score: ${data.optimizationScore.toFixed(2)}`,
+      });
+      refetch();
+    },
+    onError: () => {
+      toast({
+        title: 'Optimization Failed',
+        description: 'Failed to optimize tour route. Please ensure you have at least 2 venues with dates.',
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  const handleStatusChange = (status: string) => {
+    updateStatusMutation.mutate(status);
+  };
+  
+  // Check if the tour has enough venues for optimization
+  // For optimization, we can work with any venues regardless of dates or status
+  const hasEnoughVenuesForOptimization = (tour?.venues?.length || 0) >= 2;
+  
+  // Filtered venues based on toggle
+  const filteredVenues = useMemo(() => {
+    if (showAllVenues) {
+      return mapEvents;
+    } else {
+      // Only show venues that aren't potential/suggestions
+      return mapEvents.filter(event => 
+        event.status !== 'potential' && !event.isRoutingOpportunity
+      );
+    }
+  }, [mapEvents, showAllVenues]);
+  
+  const handleVenueClick = (venue: MapEvent) => {
+    setSelectedVenue(venue);
+    
+    // If you want to highlight the venue on the map, you could do that here
+    // For now, just show a toast with the venue info
+    toast({
+      title: venue.venue,
+      description: `Status: ${getStatusInfo(venue.status || 'confirmed').displayName}${venue.date ? ` • Date: ${formatDate(venue.date)}` : ''}`,
+    });
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-60">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  if (error || !tour) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Error Loading Tour</CardTitle>
+          <CardDescription>There was an error loading the tour details.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-destructive">Failed to load tour details. Please try again later.</p>
+        </CardContent>
+        <CardFooter>
+          <Button variant="outline" onClick={() => navigate('/tours')}>Back to Tours</Button>
+        </CardFooter>
+      </Card>
+    );
+  }
+  
+  // Calculate improvements if optimization data is available
+  const distanceImprovement = optimizationResult && tour.estimatedTravelDistance ? 
+    calculateImprovement(tour.estimatedTravelDistance, optimizationResult.totalDistance) : 
+    undefined;
+    
+  const timeImprovement = optimizationResult && tour.estimatedTravelTime ? 
+    calculateImprovement(tour.estimatedTravelTime, optimizationResult.totalTravelTime) : 
+    undefined;
+    
+  const scoreImprovement = optimizationResult && tour.optimizationScore ? 
+    Math.round(optimizationResult.optimizationScore - tour.optimizationScore) : 
+    undefined;
+  
+  return (
+    <div className="space-y-6">
+      {/* Tour Details Card */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-2xl">{tour.name}</CardTitle>
+              <div className="flex items-center space-x-2 mt-2">
+                <Badge variant={getTourStatusVariant(tour.status)}>
+                  {tour.status || 'Unknown Status'}
+                </Badge>
+                <span className="text-sm text-muted-foreground">
+                  <CalendarDays className="inline mr-1 h-4 w-4" />
+                  {tour.startDate && tour.endDate ? (
+                    `${formatDate(tour.startDate)} - ${formatDate(tour.endDate)}`
+                  ) : (
+                    'No dates set'
+                  )}
+                </span>
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <Link href={`/tours/${tourId}/optimize`}>
+                <Button 
+                  size="sm"
+                  variant="default"
+                  className="bg-gradient-to-r from-primary to-primary/80"
+                  disabled={!hasEnoughVenuesForOptimization}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Tour Optimizer
+                </Button>
+              </Link>
+              
+              <Link href={`/tours/${tourId}/edit`}>
+                <Button size="sm" variant="outline">
+                  <PenLine className="mr-2 h-4 w-4" />
+                  Edit
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {/* Artist, Venues, Budget info */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="bg-muted/50 p-4 rounded-lg">
+              <h3 className="font-medium text-sm mb-2 text-muted-foreground">Artist</h3>
+              <p className="font-medium">
+                {tour.artist ? tour.artist.name : 'No artist assigned'}
+              </p>
+            </div>
+            <div className="bg-muted/50 p-4 rounded-lg">
+              <h3 className="font-medium text-sm mb-2 text-muted-foreground">Venues</h3>
+              <p className="font-medium">
+                {tour.venues ? tour.venues.length : 0} venues
+                <span className="ml-2 text-sm text-muted-foreground">
+                  ({tour.venues?.filter(v => v.tourVenue.status === 'confirmed').length || 0} confirmed)
+                </span>
+              </p>
+            </div>
+            <div className="bg-muted/50 p-4 rounded-lg">
+              <h3 className="font-medium text-sm mb-2 text-muted-foreground">Total Budget</h3>
+              <p className="font-medium">
+                {tour.totalBudget ? formatCurrency(tour.totalBudget) : 'Not set'}
+              </p>
+            </div>
+          </div>
+          
+          {/* Description */}
+          <div className="space-y-2 mb-6">
+            <h3 className="font-medium">Description</h3>
+            <p className="text-muted-foreground">
+              {tour.description || 'No description provided.'}
+            </p>
+          </div>
+          
+          {/* Tour Status */}
+          <div className="space-y-2 mb-6">
+            <div className="flex justify-between items-center">
+              <h3 className="font-medium">Status</h3>
+              <Select
+                value={tour.status || 'planning'}
+                onValueChange={handleStatusChange}
+                disabled={updateStatusMutation.isPending}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Change Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="planning">Planning</SelectItem>
+                  <SelectItem value="booked">Booked</SelectItem>
+                  <SelectItem value="in-progress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          {/* Statistics Section */}
+          <div className="mt-6">
+            <h3 className="font-medium mb-3">Tour Statistics</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <StatCard 
+                title="Optimization Score" 
+                value={`${Math.round(tour.optimizationScore || 0)}/100`}
+                improvement={scoreImprovement}
+              />
+              <StatCard 
+                title="Travel Distance" 
+                value={formatDistance(tour.estimatedTravelDistance)}
+                improvement={distanceImprovement}
+              />
+              <StatCard 
+                title="Travel Time" 
+                value={formatTravelTime(tour.estimatedTravelTime)}
+                improvement={timeImprovement}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Map and Venue List Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Map Section: 2/3 width on large screens */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle className="flex items-center">
+                    <Map className="mr-2 h-5 w-5" />
+                    Tour Route Map
+                    {optimizationResult && (
+                      <Badge variant="outline" className="ml-3 bg-primary/10">
+                        Score: {optimizationResult.optimizationScore.toFixed(2)}/100
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    {optimizationResult 
+                      ? `Optimized route with ${optimizationResult.fixedPoints?.length || 0} confirmed and 
+                         ${optimizationResult.potentialFillVenues?.filter((v: any) => !v.isFixed)?.length || 0} potential venues`
+                      : `View your tour route with ${tour.venues?.length || 0} venues`}
+                  </CardDescription>
+                </div>
+                
+                <div className="flex space-x-2">
+                  <Link href={`/tours/${tourId}/optimize`}>
+                    <Button 
+                      size="sm"
+                      variant="default"
+                      disabled={!hasEnoughVenuesForOptimization}
+                      className="bg-gradient-to-r from-primary to-primary/80"
+                    >
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Tour Optimizer
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              {mapEvents.length > 0 ? (
+                <div className="relative">
+                  <div className="h-[500px] overflow-hidden">
+                    <VenueMap 
+                      events={filteredVenues}
+                      height={500}
+                      showLegend={true}
+                      showRoute={true}
+                      onMarkerClick={handleVenueClick}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="p-32 text-center bg-muted">
+                  <Map className="h-12 w-12 mx-auto mb-3 text-muted-foreground/60" />
+                  <p className="text-muted-foreground mb-3">
+                    No venue locations available to display
+                  </p>
+                  {!hasEnoughVenuesForOptimization ? (
+                    <p className="text-sm text-amber-500 mb-4">
+                      You need at least 2 venues to use the Tour Optimizer.
+                    </p>
+                  ) : null}
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Building className="mr-2 h-4 w-4" />
+                        Add Your First Venue
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[625px]">
+                      <DialogHeader>
+                        <DialogTitle>Add Venue to Tour</DialogTitle>
+                        <DialogDescription>
+                          Select a venue and configure its position in the tour.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <TourVenueForm 
+                        tourId={Number(tourId)} 
+                        onSuccess={() => {
+                          refetch();
+                        }} 
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Venue List Section: 1/3 width on large screens */}
+        <div className="lg:col-span-1">
+          <Card className="h-full flex flex-col">
+            <CardHeader className="flex justify-between items-center pb-2">
+              <div>
+                <CardTitle>Tour Venues</CardTitle>
+                <CardDescription>
+                  Manage venues included in this tour
+                </CardDescription>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Building className="mr-2 h-4 w-4" />
+                    Add Venue
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[625px]">
+                  <DialogHeader>
+                    <DialogTitle>Add Venue to Tour</DialogTitle>
+                    <DialogDescription>
+                      Select a venue and configure its position in the tour.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <TourVenueForm 
+                    tourId={Number(tourId)} 
+                    onSuccess={() => {
+                      refetch();
+                    }} 
+                  />
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <div className="px-4 py-2 border-b flex items-center">
+              <Switch 
+                id="show-all-venues" 
+                checked={showAllVenues} 
+                onCheckedChange={setShowAllVenues} 
+              />
+              <Label htmlFor="show-all-venues" className="ml-2">
+                Show suggested venues
+              </Label>
+            </div>
+            <CardContent className="p-0 flex-grow overflow-hidden">
+              <VenueList 
+                venues={filteredVenues} 
+                onVenueClick={handleVenueClick}
+                maxHeight={450}
+                selectedVenueId={selectedVenue?.id}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Helper function to determine tour status badge variant
+function getTourStatusVariant(status?: string) {
+  if (!status) return 'outline';
+  
+  switch (status.toLowerCase()) {
+    case 'planning':
+      return 'outline';
+    case 'booked':
+    case 'confirmed':
+      return 'default';
+    case 'in-progress':
+      return 'secondary';
+    case 'completed':
+      return 'default';
+    case 'cancelled':
+      return 'destructive';
+    default:
+      return 'outline';
+  }
+}

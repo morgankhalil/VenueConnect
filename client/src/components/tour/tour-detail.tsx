@@ -1,1 +1,1 @@
-export { TourDetail } from './tour-detail-fixed';
+export { TourDetailNew as TourDetail } from './tour-detail-new';
