@@ -79,3 +79,48 @@ The flow is designed this way because:
 - Error handling with retries
 
 Would you like me to start implementing any specific part of this plan?
+# Collaborative Development Prompt Template
+
+When working together on this codebase, please keep in mind these key documentation files that need to be kept in sync with any changes or new features:
+
+1. EXECUTIVE_SUMMARY.md - High-level vision and goals
+   - Platform vision and strategic goals
+   - Key features overview
+   - Value propositions
+   - Implementation timeline
+
+2. FEATURE_IMPLEMENTATION_PLAN.md - Implementation phases
+   - Detailed phase breakdowns
+   - Technical requirements
+   - Dependencies and architecture
+   - Testing strategy
+
+3. FEATURE_IMPLEMENTATION_INSTRUCTIONS.md - Technical documentation
+   - Database schema updates
+   - API endpoint specifications
+   - Component implementation details
+   - Integration guidelines
+
+4. IMPLEMENTATION_TASK_TRACKER.md - Progress tracking
+   - Prioritized task list
+   - Implementation status
+   - Dependencies
+   - Effort estimates
+
+## Development Process
+
+1. Any new feature discussion should start by checking alignment with EXECUTIVE_SUMMARY.md
+2. Implementation details should be added to FEATURE_IMPLEMENTATION_PLAN.md
+3. Technical specifications should be documented in FEATURE_IMPLEMENTATION_INSTRUCTIONS.md
+4. Track progress and update status in IMPLEMENTATION_TASK_TRACKER.md
+
+## Prompt Template
+
+"I am working on [feature/change]. Please help me implement it while ensuring consistency with our documentation:
+
+1. Check if this aligns with our vision in EXECUTIVE_SUMMARY.md
+2. Identify which phase in FEATURE_IMPLEMENTATION_PLAN.md this belongs to
+3. Follow technical guidelines in FEATURE_IMPLEMENTATION_INSTRUCTIONS.md
+4. Update tasks and progress in IMPLEMENTATION_TASK_TRACKER.md
+
+Please propose necessary updates to these files along with any code changes."
