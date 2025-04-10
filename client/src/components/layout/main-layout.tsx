@@ -18,45 +18,37 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
 
-  // Get user data from API
+  // Get user data from API with faster loading
   const { data: user, isLoading: isLoadingUser, error: userError } = useQuery({
     queryKey: ['/api/user'],
     queryFn: () => apiRequest('/api/user'),
-    retry: 3
+    retry: 1,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    // Load from cache immediately while fetching new data in background
+    refetchOnMount: true
   });
 
   // Get connected venues from API
   const { data: connectedVenues = [] } = useQuery({
     queryKey: ['/api/venues/connected'],
     queryFn: () => apiRequest('/api/venues/connected'),
-    initialData: []
+    initialData: [],
+    enabled: !!user, // Only fetch when user is available
+    staleTime: 1000 * 60 * 5 // Cache for 5 minutes
   });
 
-  if (isLoadingUser) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
-  }
+  // Default user if still loading, to prevent blocking the UI
+  const userToDisplay = user || {
+    id: 0,
+    name: "Loading...",
+    venueName: "Loading...",
+    role: "user",
+    avatar: null,
+    venueId: null
+  };
 
-  if (userError) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-lg font-semibold text-red-600">Error loading user data</h2>
-          <p className="text-gray-600">Please try refreshing the page</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-lg font-semibold">No user data available</h2>
-          <p className="text-gray-600">Please check your connection</p>
-        </div>
-      </div>
-    );
-  }
+  // Show a loading indicator in the header instead of blocking the entire UI
+  const isInitialLoading = isLoadingUser && !user;
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -91,9 +83,9 @@ export function MainLayout({ children }: MainLayoutProps) {
     <div className="flex h-screen overflow-hidden bg-gray-100">
       {/* Desktop Sidebar */}
       <Sidebar
-        userName={user.name}
-        venueName={user.venueName}
-        userAvatar={user.avatar}
+        userName={userToDisplay.name}
+        venueName={userToDisplay.venueName}
+        userAvatar={userToDisplay.avatar}
         connectedVenues={connectedVenues}
       />
 
@@ -130,9 +122,9 @@ export function MainLayout({ children }: MainLayoutProps) {
             ))}
           </nav>
           <Sidebar
-            userName={user.name}
-            venueName={user.venueName}
-            userAvatar={user.avatar}
+            userName={userToDisplay.name}
+            venueName={userToDisplay.venueName}
+            userAvatar={userToDisplay.avatar}
             connectedVenues={connectedVenues}
           />
         </SheetContent>
@@ -142,10 +134,11 @@ export function MainLayout({ children }: MainLayoutProps) {
       <div className="flex flex-col w-0 flex-1 overflow-hidden">
         <Header
           onMobileMenuToggle={toggleMobileMenu}
-          userAvatar={user.avatar}
-          userName={user.name}
+          userAvatar={userToDisplay.avatar}
+          userName={userToDisplay.name}
           onLogout={handleLogout}
           onSearch={handleSearch}
+          isLoading={isInitialLoading}
         />
 
         {/* Page Content */}

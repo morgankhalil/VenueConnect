@@ -27,6 +27,7 @@ interface HeaderProps {
   userName: string;
   onLogout?: () => void;
   onSearch?: (query: string) => void;
+  isLoading?: boolean;
 }
 
 export function Header({ 
@@ -34,7 +35,8 @@ export function Header({
   userAvatar, 
   userName,
   onLogout, 
-  onSearch 
+  onSearch,
+  isLoading = false
 }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [, navigate] = useLocation();
@@ -58,6 +60,13 @@ export function Header({
       >
         <Menu className="h-6 w-6" />
       </button>
+
+      {/* Loading indicator */}
+      {isLoading && (
+        <div className="absolute top-0 left-0 w-full h-1 bg-primary-50">
+          <div className="h-full bg-primary-500 animate-pulse rounded-r-full" style={{ width: '30%' }}></div>
+        </div>
+      )}
 
       <div className="flex-1 px-4 flex justify-between">
         <div className="flex-1 flex items-center">
