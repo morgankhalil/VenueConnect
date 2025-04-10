@@ -39,7 +39,7 @@ export async function syncVenueEventsFromBandsInTown(venueId: string, venueName:
       .set({ bandsintownId: venueId })
       .where(eq(venues.name, venueName));
 
-    const response = await axios.get(`https://rest.bandsintown.com/venues/${venueId}/events`, {
+    const response = await axios.get(`https://rest.bandsintown.com/v3.0/venues/${venueId}/events`, {
       params: { 
         app_id: apiKey
       },
@@ -48,7 +48,10 @@ export async function syncVenueEventsFromBandsInTown(venueId: string, venueName:
       }
     });
 
-    return response.data;
+    if (response.data && Array.isArray(response.data)) {
+      return response.data.length;
+    }
+    return 0;
   } catch (error) {
     console.error('Error fetching venue events:', error);
     throw error;
