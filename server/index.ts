@@ -52,8 +52,8 @@ app.use(async (req, res, next) => {
       // Set the user in session
       req.session.user = {
         id: venue.owner.id,
-        name: venue.owner.name || venue.owner.username,
-        role: venue.owner.role,
+        name: venue.owner.name || venue.owner.username || "User",
+        role: venue.owner.role || "user",
         venueId: venue.id
       };
     } else {
@@ -125,7 +125,7 @@ app.use((req, res, next) => {
   // ALWAYS serve the app on port 5000
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = process.env.PORT || 3000;
+  const port = 5000; // Changed to always use port 5000 for Replit workflow
   server.listen({
     port,
     host: "0.0.0.0",
