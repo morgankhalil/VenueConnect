@@ -113,43 +113,69 @@ router.get('/tours/:id', async (req, res) => {
       .where(eq(tourVenues.tourId, tourId))
       .orderBy(tourVenues.sequence);
     
-    // Get tour gaps
-    const tourGapsResult = await db
-      .select({
-        gap: tourGaps,
-        previousVenue: venues.name,
-        nextVenue: venues.name
-      })
+    // Since we can't join the same table twice with the same alias,
+    // we'll need to perform separate queries for gaps
+    const tourGapsData = await db
+      .select()
       .from(tourGaps)
-      .leftJoin(venues, eq(tourGaps.previousVenueId, venues.id))
-      .leftJoin(venues, eq(tourGaps.nextVenueId, venues.id))
       .where(eq(tourGaps.tourId, tourId));
     
-    // Get gap suggestions
-    const gapSuggestionsPromises = tourGapsResult.map(async (gap) => {
-      const suggestions = await db
-        .select({
-          suggestion: tourGapSuggestions,
-          venue: venues
-        })
-        .from(tourGapSuggestions)
-        .leftJoin(venues, eq(tourGapSuggestions.venueId, venues.id))
-        .where(eq(tourGapSuggestions.gapId, gap.gap.id));
-      
-      return {
-        ...gap,
-        suggestions
-      };
-    });
-    
-    const gapsWithSuggestions = await Promise.all(gapSuggestionsPromises);
+    // Now we process the gaps with separate queries for previous/next venues
+    const gapsWithVenues = await Promise.all(
+      tourGapsData.map(async (gap) => {
+        // Get previous venue info
+        let prevVenue = null;
+        if (gap.previousVenueId) {
+          const prevVenueResult = await db
+            .select()
+            .from(venues)
+            .where(eq(venues.id, gap.previousVenueId))
+            .limit(1);
+          
+          if (prevVenueResult.length) {
+            prevVenue = prevVenueResult[0];
+          }
+        }
+        
+        // Get next venue info
+        let nextVenue = null;
+        if (gap.nextVenueId) {
+          const nextVenueResult = await db
+            .select()
+            .from(venues)
+            .where(eq(venues.id, gap.nextVenueId))
+            .limit(1);
+          
+          if (nextVenueResult.length) {
+            nextVenue = nextVenueResult[0];
+          }
+        }
+        
+        // Get suggestions for this gap
+        const suggestionsResult = await db
+          .select({
+            suggestion: tourGapSuggestions,
+            venue: venues
+          })
+          .from(tourGapSuggestions)
+          .leftJoin(venues, eq(tourGapSuggestions.venueId, venues.id))
+          .where(eq(tourGapSuggestions.gapId, gap.id));
+        
+        return {
+          gap,
+          previousVenue: prevVenue,
+          nextVenue: nextVenue,
+          suggestions: suggestionsResult
+        };
+      })
+    );
     
     // Combine all data
     const result = {
       ...tour,
       artist,
       venues: tourVenuesResult,
-      gaps: gapsWithSuggestions
+      gaps: gapsWithVenues
     };
     
     res.json(result);
