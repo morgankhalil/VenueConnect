@@ -42,7 +42,7 @@ export function CustomCard({
   );
 }
 
-interface CustomCardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
+interface CustomCardHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
   title?: React.ReactNode;
   description?: React.ReactNode;
   icon?: React.ReactNode;

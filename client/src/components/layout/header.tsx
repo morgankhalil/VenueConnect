@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface HeaderProps {
   onMobileMenuToggle: () => void;
@@ -100,6 +101,8 @@ export function Header({
         </div>
 
         <div className="flex items-center gap-2">
+          <ThemeToggle />
+
           <Button 
             variant="ghost" 
             size="icon"
