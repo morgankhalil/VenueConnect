@@ -155,9 +155,12 @@ export function UnifiedTourOptimizer({ tourId, onSuccess, initialTab = 'preferen
     },
   });
   
-  // Determine if we have enough venues with dates
+  // Determine if we have enough venues 
+  const hasEnoughVenues = (tourData?.venues?.length || 0) >= 2;
+  
+  // Determine if we have enough venues with dates for advanced features
   const hasEnoughVenuesWithDates = tourData?.venues?.filter(
-    (venue: any) => venue.date
+    (venue: any) => venue.tourVenue?.date
   ).length >= 2;
   
   // Simulate progress animation during processing
@@ -599,11 +602,54 @@ export function UnifiedTourOptimizer({ tourId, onSuccess, initialTab = 'preferen
                   <h4 className="text-sm font-medium">Requirements:</h4>
                   <ul className="space-y-1 text-sm">
                     <li className="flex items-center">
-                      <span className={`w-5 h-5 rounded-full mr-2 flex items-center justify-center ${hasEnoughVenuesWithDates ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                        {hasEnoughVenuesWithDates ? <Check className="h-3 w-3" /> : '!'}
+                      <span className={`w-5 h-5 rounded-full mr-2 flex items-center justify-center ${hasEnoughVenues ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                        {hasEnoughVenues ? <Check className="h-3 w-3" /> : '!'}
                       </span>
-                      At least 2 venues with dates
+                      At least 2 venues in tour
                     </li>
+                    
+                    {/* Show preferences that might prevent optimization from running */}
+                    {preferences.minDaysBetweenShows > 3 && (
+                      <li className="flex items-center">
+                        <span className="w-5 h-5 rounded-full mr-2 flex items-center justify-center bg-amber-100 text-amber-700">!</span>
+                        High minimum days between shows ({preferences.minDaysBetweenShows}) may limit options
+                      </li>
+                    )}
+                    
+                    {preferences.maxDaysBetweenShows < 3 && (
+                      <li className="flex items-center">
+                        <span className="w-5 h-5 rounded-full mr-2 flex items-center justify-center bg-amber-100 text-amber-700">!</span>
+                        Low maximum days between shows ({preferences.maxDaysBetweenShows}) may be too restrictive
+                      </li>
+                    )}
+                    
+                    {preferences.maxTravelDistancePerDay < 300 && (
+                      <li className="flex items-center">
+                        <span className="w-5 h-5 rounded-full mr-2 flex items-center justify-center bg-amber-100 text-amber-700">!</span>
+                        Low maximum travel distance ({preferences.maxTravelDistancePerDay} km) may limit venue options
+                      </li>
+                    )}
+                    
+                    {preferences.preferredRegions.length > 0 && (
+                      <li className="flex items-center">
+                        <span className="w-5 h-5 rounded-full mr-2 flex items-center justify-center bg-blue-100 text-blue-700">i</span>
+                        Optimization will prioritize {preferences.preferredRegions.length} selected regions
+                      </li>
+                    )}
+                    
+                    {preferences.avoidCities.length > 0 && (
+                      <li className="flex items-center">
+                        <span className="w-5 h-5 rounded-full mr-2 flex items-center justify-center bg-blue-100 text-blue-700">i</span>
+                        Avoiding {preferences.avoidCities.length} cities may limit options
+                      </li>
+                    )}
+                    
+                    {preferences.prioritizeVenueSize !== 'any' && (
+                      <li className="flex items-center">
+                        <span className="w-5 h-5 rounded-full mr-2 flex items-center justify-center bg-blue-100 text-blue-700">i</span>
+                        Prioritizing {preferences.prioritizeVenueSize} venues only
+                      </li>
+                    )}
                   </ul>
                 </div>
               </CardContent>
