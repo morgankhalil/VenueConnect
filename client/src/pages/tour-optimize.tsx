@@ -19,8 +19,10 @@ import { Badge } from '@/components/ui/badge';
 import { formatDate } from '@/lib/utils';
 import { 
   Truck, Loader2, MapPin, Calendar, Route, Check, 
-  X, Clock, ArrowRight, ChevronRight, Building
+  X, Clock, ArrowRight, ChevronRight, Building, Map as MapIcon
 } from 'lucide-react';
+import { VenueMap } from '@/components/maps/venue-map';
+import { MapEvent, OptimizationVenue } from '@/types';
 
 export default function TourOptimizePage() {
   const [match, params] = useRoute('/tours/:id/optimize');
