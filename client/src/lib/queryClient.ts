@@ -9,20 +9,24 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
 // Cache response times to detect slow endpoints
 const endpointTimes: Record<string, number> = {};
 
-// Create optimized query client with better defaults
+// Create a new query client that ignores previous cache
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 0, // Force fresh data fetching
       retry: 1,
-      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-      refetchOnWindowFocus: false, // Don't refetch when window regains focus by default
-      refetchOnReconnect: true, // Refetch when connection is restored
-      gcTime: 1000 * 60 * 30, // Keep unused data in cache for 30 minutes (formerly cacheTime)
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+      gcTime: 1000 * 60 * 10, // Shorter cache time (10 minutes)
+      // Add a timestamp to queryKey to force cache invalidation on reload 
+      queryKeyHashFn: (queryKey: any) => {
+        // Force a cache reset by appending current timestamp
+        const timestamp = Date.now();
+        return JSON.stringify([...queryKey, { cacheBuster: timestamp }]);
+      }
     },
     mutations: {
       retry: 1,
-      retryDelay: 1000,
     },
   },
 });
