@@ -23,26 +23,30 @@ export const genreEnum = pgEnum("genre", [
 export const venues = pgTable("venues", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  address: text("address").notNull(),
   city: text("city").notNull(),
-  state: text("state").notNull(),
-  zipCode: text("zip_code").notNull(),
-  country: text("country").notNull(),
-  capacity: integer("capacity").notNull(),
+  region: text("region"), // State/province/region from Bandsintown
+  country: text("country").default('US'),
   latitude: real("latitude"),
   longitude: real("longitude"),
+  streetAddress: text("street_address"),
+  postalCode: text("postal_code"),
+  timezone: text("timezone"),
+  capacity: integer("capacity"),
+  description: text("description"),
+  bandsintownId: text("bandsintown_id").unique(),
+  bandsintownUrl: text("bandsintown_url"),
+  website: text("website"),
+  phoneNumber: text("phone_number"),
+  imageUrl: text("image_url"),
+  metroArea: text("metro_area"),
+  publicTransport: text("public_transport"),
+  parkingInfo: text("parking_info"),
+  ageRestriction: text("age_restriction"),
+  wheelchairAccessible: boolean("wheelchair_accessible"),
+  foodBeverage: boolean("food_beverage"),
   contactEmail: text("contact_email"),
   contactPhone: text("contact_phone"),
-  website: text("website"),
-  description: text("description"),
-  imageUrl: text("image_url"),
-  bandsintownId: text("bandsintown_id").unique(),
-  region: text("region"), // Bandsintown sometimes uses region instead of state
-  timezone: text("timezone"),
-  streetAddress: text("street_address"), // More detailed address field
-  postalCode: text("postal_code"), // International postal code format
-  metroArea: text("metro_area"), // Metropolitan area
-  url: text("url"), // Bandsintown venue URL
+  lastUpdated: timestamp("last_updated"),
   ownerId: integer("owner_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
