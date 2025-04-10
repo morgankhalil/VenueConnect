@@ -314,11 +314,23 @@ export async function updateTourVenue(tourId: number, venueId: number, updates: 
  * @returns A promise that resolves to the optimized route
  */
 export async function optimizeTourRoute(tourId: number, preferences?: any) {
-  return apiRequest(`/api/tour/tours/${tourId}/optimize`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: preferences ? JSON.stringify({ preferences }) : undefined
-  });
+  try {
+    const response = await fetch(`/api/tour/tours/${tourId}/optimize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: preferences ? JSON.stringify({ preferences }) : undefined
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to optimize tour');
+    }
+    
+    return await response.json();
+  } catch (error: any) {
+    console.error('Tour optimization error:', error);
+    throw error;
+  }
 }
 
 /**
@@ -328,11 +340,23 @@ export async function optimizeTourRoute(tourId: number, preferences?: any) {
  * @returns A promise that resolves when the changes are applied
  */
 export async function applyTourOptimization(tourId: number, optimizationData: any) {
-  return apiRequest(`/api/tour/tours/${tourId}/apply-optimization`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ optimizationData })
-  });
+  try {
+    const response = await fetch(`/api/tour/tours/${tourId}/apply-optimization`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ optimizationData })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to apply tour optimization');
+    }
+    
+    return await response.json();
+  } catch (error: any) {
+    console.error('Tour optimization apply error:', error);
+    throw error;
+  }
 }
 
 /**
