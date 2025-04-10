@@ -66,8 +66,6 @@ type TourDetailProps = {
 export function TourDetail({ tourId }: TourDetailProps) {
   const [_, navigate] = useLocation();
   const { toast } = useToast();
-  const [showOptimizeDialog, setShowOptimizeDialog] = useState(false);
-  const [optimizing, setOptimizing] = useState(false);
   
   // Fetch tour details
   const { 
@@ -100,7 +98,7 @@ export function TourDetail({ tourId }: TourDetailProps) {
     },
   });
   
-  // Tour optimization mutation
+  // Tour optimization mutation (for direct optimization via API)
   const optimizeMutation = useMutation({
     mutationFn: () => optimizeTourRoute(Number(tourId)),
     onSuccess: (data) => {
@@ -109,7 +107,6 @@ export function TourDetail({ tourId }: TourDetailProps) {
         description: `Tour route optimized with score: ${data.optimizationScore.toFixed(2)}`,
       });
       refetch();
-      setShowOptimizeDialog(false);
     },
     onError: () => {
       toast({
@@ -118,15 +115,7 @@ export function TourDetail({ tourId }: TourDetailProps) {
         variant: 'destructive',
       });
     },
-    onSettled: () => {
-      setOptimizing(false);
-    },
   });
-  
-  const handleOptimize = () => {
-    setOptimizing(true);
-    optimizeMutation.mutate();
-  };
   
   const handleStatusChange = (status: string) => {
     updateStatusMutation.mutate(status);
@@ -179,14 +168,15 @@ export function TourDetail({ tourId }: TourDetailProps) {
               </div>
             </div>
             <div className="flex space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowOptimizeDialog(true)}
-              >
-                <Truck className="mr-2 h-4 w-4" />
-                Optimize
-              </Button>
+              <Link href={`/tours/${tourId}/optimize`}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                >
+                  <Truck className="mr-2 h-4 w-4" />
+                  Optimize
+                </Button>
+              </Link>
               <Link href={`/tours/${tourId}/edit`}>
                 <Button size="sm">
                   <PenLine className="mr-2 h-4 w-4" />
@@ -487,58 +477,7 @@ export function TourDetail({ tourId }: TourDetailProps) {
         </TabsContent>
       </Tabs>
       
-      {/* Optimize Tour Dialog */}
-      <Dialog open={showOptimizeDialog} onOpenChange={setShowOptimizeDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Optimize Tour Route</DialogTitle>
-            <DialogDescription>
-              Optimize the tour route based on venue locations and your preferences.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4">
-            <p className="mb-4">
-              The optimization will:
-            </p>
-            <ul className="space-y-2 mb-4">
-              <li className="flex items-start">
-                <Check className="h-5 w-5 mr-2 text-green-500 shrink-0" />
-                <span>Calculate the most efficient route between venues with dates</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="h-5 w-5 mr-2 text-green-500 shrink-0" />
-                <span>Suggest potential venues to fill gaps in the tour</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="h-5 w-5 mr-2 text-green-500 shrink-0" />
-                <span>Estimate travel times and distances</span>
-              </li>
-              <li className="flex items-start">
-                <Clock className="h-5 w-5 mr-2 text-amber-500 shrink-0" />
-                <span>You need at least 2 venues with dates (confirmed, booked, or planning)</span>
-              </li>
-            </ul>
-          </div>
-          
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowOptimizeDialog(false)}
-              disabled={optimizing}
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleOptimize}
-              disabled={optimizing}
-            >
-              {optimizing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Optimize Tour
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
     </div>
   );
 }
