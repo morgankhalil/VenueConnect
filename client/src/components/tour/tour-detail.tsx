@@ -353,125 +353,412 @@ export function TourDetail({ tourId }: TourDetailProps) {
       </Card>
       
       {/* Tour Optimization Results Card (displayed when optimization is complete) */}
-      {showOptimizationResults && optimizationResult && (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>
-                <Truck className="inline-block mr-2 h-5 w-5" />
-                Tour Optimization Results
-              </CardTitle>
-              <Badge variant="outline" className="bg-primary/10">
-                Score: {optimizationResult.optimizationScore.toFixed(2)}/100
-              </Badge>
-            </div>
-            <CardDescription>
-              Route optimization completed with {optimizationResult.fixedPoints?.length || 0} fixed venues 
-              and {optimizationResult.potentialFillVenues?.filter((v: any) => !v.isFixed)?.length || 0} suggested venues
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="map">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="map">
-                  <Map className="mr-2 h-4 w-4" />
-                  Route Map
-                </TabsTrigger>
-                <TabsTrigger value="suggested-venues">
-                  <Building className="mr-2 h-4 w-4" />
-                  Suggested Venues
-                </TabsTrigger>
-                <TabsTrigger value="stats">
-                  <BarChart3 className="mr-2 h-4 w-4" />
-                  Optimization Stats
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="map" className="mt-4">
-                {mapEvents.length > 0 ? (
-                  <div>
-                    <div className="mb-4">
-                      <p className="text-sm text-muted-foreground">
-                        See the optimized tour map with confirmed venues (green markers) and suggested venues (amber markers)
-                        that could fill gaps in your schedule.
-                      </p>
-                    </div>
-                    <div className="bg-muted rounded-md h-[400px] overflow-hidden">
-                      <VenueMap 
-                        events={mapEvents}
-                        height={400}
-                        showLegend={true}
-                        showRoute={true}
+      <Tabs defaultValue="map" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="map">
+            <Map className="mr-2 h-4 w-4" />
+            Interactive Map
+          </TabsTrigger>
+          <TabsTrigger value="venues">
+            <MapPin className="mr-2 h-4 w-4" />
+            Venue List
+          </TabsTrigger>
+          <TabsTrigger value="suggestions">
+            <Building className="mr-2 h-4 w-4" />
+            Venue Suggestions
+          </TabsTrigger>
+          <TabsTrigger value="stats">
+            <BarChart3 className="mr-2 h-4 w-4" />
+            Statistics
+          </TabsTrigger>
+        </TabsList>
+        
+        {/* Interactive Map Tab - The central view for all venue data */}
+        <TabsContent value="map" className="pt-4">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle className="flex items-center">
+                    <Map className="mr-2 h-5 w-5" />
+                    Tour Route Map
+                    {optimizationResult && (
+                      <Badge variant="outline" className="ml-3 bg-primary/10">
+                        Score: {optimizationResult.optimizationScore.toFixed(2)}/100
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    {optimizationResult 
+                      ? `Optimized route with ${optimizationResult.fixedPoints?.length || 0} confirmed and 
+                         ${optimizationResult.potentialFillVenues?.filter((v: any) => !v.isFixed)?.length || 0} potential venues`
+                      : `View your tour route with ${tour.venues?.length || 0} venues`}
+                  </CardDescription>
+                </div>
+                
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleOptimize}
+                    disabled={!hasEnoughVenuesWithDates || optimizeMutation.isPending}
+                  >
+                    {optimizeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Truck className="mr-2 h-4 w-4" />
+                    {optimizationResult ? 'Re-Optimize' : 'Optimize Route'}
+                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                        <Building className="mr-2 h-4 w-4" />
+                        Add Venue
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[625px]">
+                      <DialogHeader>
+                        <DialogTitle>Add Venue to Tour</DialogTitle>
+                        <DialogDescription>
+                          Select a venue and configure its position in the tour.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <TourVenueForm 
+                        tourId={Number(tourId)} 
+                        onSuccess={() => {
+                          refetch();
+                        }} 
                       />
-                    </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              {mapEvents.length > 0 ? (
+                <div className="relative">
+                  <div className="h-[500px] overflow-hidden">
+                    <VenueMap 
+                      events={mapEvents}
+                      height={500}
+                      showLegend={true}
+                      showRoute={true}
+                      onMarkerClick={(event) => {
+                        // When a venue is clicked on the map, you could:
+                        // 1. Highlight the venue in the list
+                        // 2. Show a detail panel with venue info
+                        // 3. Allow adding the venue if it's a suggestion
+                        console.log('Clicked venue:', event);
+                        
+                        // For now, just show a toast with the venue info
+                        toast({
+                          title: event.venue,
+                          description: `Status: ${getStatusInfo(event.status || 'confirmed').displayName}${event.date ? ` • Date: ${formatDate(event.date)}` : ''}`,
+                        });
+                      }}
+                    />
                   </div>
-                ) : (
-                  <div className="p-8 text-center bg-muted rounded-md">
-                    <Map className="h-10 w-10 mx-auto mb-3 text-muted-foreground/60" />
-                    <p className="text-muted-foreground">
-                      No venue locations available to display
-                    </p>
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="suggested-venues" className="mt-4">
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    These venues could be added to your tour to fill gaps in your schedule
-                  </p>
                   
-                  {optimizationResult.potentialFillVenues && 
-                   optimizationResult.potentialFillVenues
+                  {/* Floating Stats Card */}
+                  {optimizationResult && (
+                    <div className="absolute bottom-4 right-4 bg-white/90 p-3 rounded-md shadow-md border max-w-xs">
+                      <h4 className="font-medium text-sm mb-2 flex items-center">
+                        <Truck className="mr-2 h-4 w-4 text-primary" />
+                        Route Optimization
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <div className="text-muted-foreground">Distance</div>
+                          <div className="font-medium">{Math.round(optimizationResult.totalDistance)} km</div>
+                        </div>
+                        <div>
+                          <div className="text-muted-foreground">Travel Time</div>
+                          <div className="font-medium">{Math.round(optimizationResult.totalTravelTime / 60)} hours</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-32 text-center bg-muted">
+                  <Map className="h-12 w-12 mx-auto mb-3 text-muted-foreground/60" />
+                  <p className="text-muted-foreground mb-3">
+                    No venue locations available to display
+                  </p>
+                  {!hasEnoughVenuesWithDates ? (
+                    <p className="text-sm text-amber-500 mb-4">
+                      You need at least 2 venues with dates to optimize.
+                    </p>
+                  ) : null}
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Building className="mr-2 h-4 w-4" />
+                        Add Your First Venue
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[625px]">
+                      <DialogHeader>
+                        <DialogTitle>Add Venue to Tour</DialogTitle>
+                        <DialogDescription>
+                          Select a venue and configure its position in the tour.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <TourVenueForm 
+                        tourId={Number(tourId)} 
+                        onSuccess={() => {
+                          refetch();
+                        }} 
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Venue List Tab */}
+        <TabsContent value="venues" className="pt-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-center">
+                <CardTitle>Tour Venues</CardTitle>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="sm">
+                      Add Venue
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[625px]">
+                    <DialogHeader>
+                      <DialogTitle>Add Venue to Tour</DialogTitle>
+                      <DialogDescription>
+                        Select a venue and configure its position in the tour.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <TourVenueForm 
+                      tourId={Number(tourId)} 
+                      onSuccess={() => {
+                        refetch();
+                      }} 
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
+              <CardDescription>
+                Manage venues included in this tour
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {tour.venues && tour.venues.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Sequence</TableHead>
+                      <TableHead>Venue</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Travel</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tour.venues
+                      .sort((a, b) => (a.tourVenue.sequence || 999) - (b.tourVenue.sequence || 999))
+                      .map(venueData => (
+                        <TableRow key={venueData.tourVenue.id}>
+                          <TableCell>
+                            {venueData.tourVenue.sequence !== null 
+                              ? venueData.tourVenue.sequence
+                              : '-'}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {venueData.venue?.name || 'Unknown Venue'}
+                          </TableCell>
+                          <TableCell>
+                            {venueData.tourVenue.date 
+                              ? formatDate(venueData.tourVenue.date)
+                              : '-'}
+                          </TableCell>
+                          <TableCell>
+                            {venueData.venue ? (
+                              <>
+                                {venueData.venue.city}
+                                {venueData.venue.region ? `, ${venueData.venue.region}` : ''}
+                              </>
+                            ) : '-'}
+                          </TableCell>
+                          <TableCell>
+                            <VenueStatusBadge status={venueData.tourVenue.status || 'pending'} />
+                          </TableCell>
+                          <TableCell>
+                            {venueData.tourVenue.travelDistanceFromPrevious ? (
+                              <span className="text-sm">
+                                {Math.round(venueData.tourVenue.travelDistanceFromPrevious)} km
+                                {venueData.tourVenue.travelTimeFromPrevious && (
+                                  <span className="text-muted-foreground ml-2">
+                                    (~{Math.round(venueData.tourVenue.travelTimeFromPrevious / 60)} hrs)
+                                  </span>
+                                )}
+                              </span>
+                            ) : '-'}
+                          </TableCell>
+                          <TableCell>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button size="sm" variant="ghost">
+                                  <PenLine className="h-4 w-4 mr-1" />
+                                  Edit
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Update Venue Details</DialogTitle>
+                                  <DialogDescription>
+                                    Update status, date, and other details for this venue.
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <UpdateVenueForm 
+                                  tourId={Number(tourId)} 
+                                  venueData={venueData} 
+                                  onSuccess={() => refetch()} 
+                                />
+                              </DialogContent>
+                            </Dialog>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-muted-foreground mb-4">No venues added to this tour yet</div>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button>Add Your First Venue</Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[625px]">
+                      <DialogHeader>
+                        <DialogTitle>Add Venue to Tour</DialogTitle>
+                        <DialogDescription>
+                          Select a venue and configure its position in the tour.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <TourVenueForm 
+                        tourId={Number(tourId)} 
+                        onSuccess={() => {
+                          refetch();
+                        }} 
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Venue Suggestions Tab */}
+        <TabsContent value="suggestions" className="pt-4">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle className="flex items-center">
+                    <Building className="mr-2 h-5 w-5" />
+                    Venue Suggestions
+                  </CardTitle>
+                  <CardDescription>
+                    Potential venues that could fill gaps in your tour schedule
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOptimize}
+                  disabled={!hasEnoughVenuesWithDates || optimizeMutation.isPending}
+                >
+                  {optimizeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <Truck className="mr-2 h-4 w-4" />
+                  {optimizationResult ? 'Re-Run Suggestions' : 'Generate Suggestions'}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {optimizationResult && optimizationResult.potentialFillVenues ? (
+                <div className="space-y-4">
+                  {optimizationResult.potentialFillVenues
                     .filter((item: any) => 
                       item.venue && 
                       !optimizationResult.fixedPoints.some((p: any) => p.id === item.venue.id)
                     )
                     .length > 0 ? (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {optimizationResult.potentialFillVenues
                         .filter((item: any) => 
                           item.venue && 
                           !optimizationResult.fixedPoints.some((p: any) => p.id === item.venue.id)
                         )
                         .map((item: any, index: number) => (
-                          <div key={index} className="flex items-center p-3 bg-blue-50 border border-blue-100 rounded-md">
-                            <div className="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-600 rounded-full mr-3">
-                              <span className="font-medium text-sm">{index + 1}</span>
+                          <div key={index} className="flex items-center p-4 bg-card border rounded-md hover:border-primary/50 transition-colors">
+                            <div className="w-10 h-10 flex items-center justify-center rounded-full mr-4"
+                                style={{
+                                  backgroundColor: item.detourRatio && item.detourRatio < 1.2 
+                                    ? 'rgba(16, 185, 129, 0.1)' 
+                                    : item.detourRatio && item.detourRatio < 1.5 
+                                      ? 'rgba(245, 158, 11, 0.1)' 
+                                      : 'rgba(239, 68, 68, 0.1)',
+                                  color: item.detourRatio && item.detourRatio < 1.2 
+                                    ? 'rgb(16, 185, 129)' 
+                                    : item.detourRatio && item.detourRatio < 1.5 
+                                      ? 'rgb(245, 158, 11)' 
+                                      : 'rgb(239, 68, 68)'
+                                }}>
+                              <span className="font-medium">{index + 1}</span>
                             </div>
                             <div className="flex-1">
-                              <div className="font-medium">{item.venue.name}</div>
-                              <div className="text-sm text-muted-foreground flex items-center">
-                                <MapPin className="h-3 w-3 mr-1" />
-                                {item.venue.city || 'Location data unavailable'}
-                                {item.venue.region ? `, ${item.venue.region}` : ''}
+                              <div className="font-medium text-lg">{item.venue.name}</div>
+                              <div className="flex flex-wrap gap-2 mt-1">
+                                <div className="text-sm text-muted-foreground flex items-center">
+                                  <MapPin className="h-3 w-3 mr-1" />
+                                  {item.venue.city || 'Location data unavailable'}
+                                  {item.venue.region ? `, ${item.venue.region}` : ''}
+                                </div>
+                                {item.suggestedDate && (
+                                  <Badge variant="outline" className="bg-background">
+                                    <Calendar className="h-3.5 w-3.5 mr-1" />
+                                    {formatDate(item.suggestedDate)}
+                                  </Badge>
+                                )}
+                                {item.detourRatio && (
+                                  <Badge variant="outline" 
+                                    className="bg-background"
+                                    style={{
+                                      borderColor: item.detourRatio && item.detourRatio < 1.2 
+                                        ? 'rgba(16, 185, 129, 0.5)' 
+                                        : item.detourRatio && item.detourRatio < 1.5 
+                                          ? 'rgba(245, 158, 11, 0.5)' 
+                                          : 'rgba(239, 68, 68, 0.5)',
+                                    }}
+                                  >
+                                    <Route className="h-3.5 w-3.5 mr-1" />
+                                    {Math.round((item.detourRatio - 1) * 100)}% deviation
+                                  </Badge>
+                                )}
+                                <Badge 
+                                  style={{
+                                    backgroundColor: item.status ? getStatusInfo(item.status).color : getStatusInfo('suggested').color,
+                                    color: 'white'
+                                  }}
+                                >
+                                  {item.status ? STATUS_DISPLAY_NAMES[item.status] : 'Suggested'}
+                                </Badge>
                               </div>
                             </div>
-                            {item.suggestedDate && (
-                              <Badge variant="outline" className="bg-white">
-                                <Calendar className="h-3.5 w-3.5 mr-1" />
-                                {formatDate(item.suggestedDate)}
-                              </Badge>
-                            )}
-                            <Badge 
-                              className="ml-2" 
-                              style={{
-                                backgroundColor: item.status ? getStatusInfo(item.status).color : getStatusInfo('suggested').color,
-                                color: 'white'
-                              }}
-                            >
-                              {item.status ? STATUS_DISPLAY_NAMES[item.status] : 'Suggested'}
-                            </Badge>
                             <Dialog>
                               <DialogTrigger asChild>
                                 <Button 
                                   size="sm" 
-                                  variant="outline" 
                                   className="ml-2"
-                                  style={{
-                                    borderColor: `${getStatusInfo(item.status || 'suggested').color}30`,
-                                    color: getStatusInfo(item.status || 'suggested').color
-                                  }}
                                 >
                                   Add to Tour
                                 </Button>
@@ -641,7 +928,7 @@ export function TourDetail({ tourId }: TourDetailProps) {
                                         
                                         toast({
                                           title: "Success",
-                                          description: `Added ${item.venue.name} to your tour with ${item.status || 'suggested'} status.`,
+                                          description: `Added ${item.venue.name} to your tour.`,
                                         });
                                         
                                         // Close dialog and refresh data
@@ -674,276 +961,37 @@ export function TourDetail({ tourId }: TourDetailProps) {
                       }
                     </div>
                   ) : (
-                    <div className="p-6 text-center bg-muted rounded-md">
+                    <div className="p-8 text-center bg-muted rounded-md">
+                      <Building className="h-12 w-12 mx-auto mb-3 text-muted-foreground/60" />
                       <p className="text-muted-foreground">
                         No venue suggestions available for this tour
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Try optimizing the tour to see venue suggestions
                       </p>
                     </div>
                   )}
                 </div>
-              </TabsContent>
-              
-              <TabsContent value="stats" className="mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-muted/50 p-4 rounded-lg">
-                    <h3 className="font-medium text-sm mb-2 text-muted-foreground">Total Distance</h3>
-                    <p className="font-medium text-xl">
-                      {Math.round(optimizationResult.totalDistance)} km
+              ) : (
+                <div className="p-12 text-center bg-muted rounded-md">
+                  <Building className="h-12 w-12 mx-auto mb-3 text-muted-foreground/60" />
+                  <p className="text-muted-foreground mb-4">
+                    Generate venue suggestions to find potential venues that fit your tour schedule
+                  </p>
+                  {!hasEnoughVenuesWithDates ? (
+                    <p className="text-sm text-amber-500 mb-4">
+                      You need at least 2 venues with dates to generate suggestions.
                     </p>
-                    {tour.estimatedTravelDistance && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {optimizationResult.totalDistance < tour.estimatedTravelDistance ? (
-                          <span className="text-green-600">
-                            {Math.round((1 - optimizationResult.totalDistance / tour.estimatedTravelDistance) * 100)}% reduction
-                          </span>
-                        ) : (
-                          <span>No change</span>
-                        )}
-                      </p>
-                    )}
-                  </div>
-                  <div className="bg-muted/50 p-4 rounded-lg">
-                    <h3 className="font-medium text-sm mb-2 text-muted-foreground">Total Travel Time</h3>
-                    <p className="font-medium text-xl">
-                      {Math.round(optimizationResult.totalTravelTime / 60)} hours
-                    </p>
-                    {tour.estimatedTravelTime && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {optimizationResult.totalTravelTime < tour.estimatedTravelTime ? (
-                          <span className="text-green-600">
-                            {Math.round((1 - optimizationResult.totalTravelTime / tour.estimatedTravelTime) * 100)}% reduction
-                          </span>
-                        ) : (
-                          <span>No change</span>
-                        )}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-          <CardFooter className="bg-muted/30">
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="mr-2"
-              onClick={() => setShowOptimizationResults(false)}
-            >
-              Hide Optimization Results
-            </Button>
-            <Button
-              variant="default" 
-              size="sm"
-              onClick={handleOptimize}
-              disabled={optimizeMutation.isPending}
-            >
-              {optimizeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Re-optimize Tour
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
-      
-      <Tabs defaultValue="venues">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="venues">
-            <MapPin className="mr-2 h-4 w-4" />
-            Venues
-          </TabsTrigger>
-          <TabsTrigger value="route">
-            <Map className="mr-2 h-4 w-4" />
-            Route Map
-          </TabsTrigger>
-          <TabsTrigger value="stats">
-            <BarChart3 className="mr-2 h-4 w-4" />
-            Statistics
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="venues" className="pt-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-center">
-                <CardTitle>Tour Venues</CardTitle>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size="sm">
-                      Add Venue
+                  ) : (
+                    <Button 
+                      onClick={handleOptimize}
+                      disabled={optimizeMutation.isPending}
+                    >
+                      {optimizeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      <Building className="mr-2 h-4 w-4" />
+                      Generate Venue Suggestions
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[625px]">
-                    <DialogHeader>
-                      <DialogTitle>Add Venue to Tour</DialogTitle>
-                      <DialogDescription>
-                        Select a venue and configure its position in the tour.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <TourVenueForm 
-                      tourId={Number(tourId)} 
-                      onSuccess={() => {
-                        refetch();
-                      }} 
-                    />
-                  </DialogContent>
-                </Dialog>
-              </div>
-              <CardDescription>
-                Manage venues included in this tour
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {tour.venues && tour.venues.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Sequence</TableHead>
-                      <TableHead>Venue</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Travel</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {tour.venues
-                      .sort((a, b) => (a.tourVenue.sequence || 999) - (b.tourVenue.sequence || 999))
-                      .map(venueData => (
-                        <TableRow key={venueData.tourVenue.id}>
-                          <TableCell>
-                            {venueData.tourVenue.sequence !== null 
-                              ? venueData.tourVenue.sequence
-                              : '-'}
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {venueData.venue?.name || 'Unknown Venue'}
-                          </TableCell>
-                          <TableCell>
-                            {venueData.tourVenue.date 
-                              ? formatDate(venueData.tourVenue.date)
-                              : '-'}
-                          </TableCell>
-                          <TableCell>
-                            {venueData.venue ? (
-                              <>
-                                {venueData.venue.city}
-                                {venueData.venue.region ? `, ${venueData.venue.region}` : ''}
-                              </>
-                            ) : '-'}
-                          </TableCell>
-                          <TableCell>
-                            <VenueStatusBadge status={venueData.tourVenue.status || 'pending'} />
-                          </TableCell>
-                          <TableCell>
-                            {venueData.tourVenue.travelDistanceFromPrevious ? (
-                              <span className="text-sm">
-                                {Math.round(venueData.tourVenue.travelDistanceFromPrevious)} km
-                                {venueData.tourVenue.travelTimeFromPrevious && (
-                                  <span className="text-muted-foreground ml-2">
-                                    (~{Math.round(venueData.tourVenue.travelTimeFromPrevious / 60)} hrs)
-                                  </span>
-                                )}
-                              </span>
-                            ) : '-'}
-                          </TableCell>
-                          <TableCell>
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button size="sm" variant="ghost">
-                                  <PenLine className="h-4 w-4 mr-1" />
-                                  Edit
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Update Venue Details</DialogTitle>
-                                  <DialogDescription>
-                                    Update status, date, and other details for this venue.
-                                  </DialogDescription>
-                                </DialogHeader>
-                                <UpdateVenueForm 
-                                  tourId={Number(tourId)} 
-                                  venueData={venueData} 
-                                  onSuccess={() => refetch()} 
-                                />
-                              </DialogContent>
-                            </Dialog>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="text-muted-foreground mb-4">No venues added to this tour yet</div>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button>Add Your First Venue</Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[625px]">
-                      <DialogHeader>
-                        <DialogTitle>Add Venue to Tour</DialogTitle>
-                        <DialogDescription>
-                          Select a venue and configure its position in the tour.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <TourVenueForm 
-                        tourId={Number(tourId)} 
-                        onSuccess={() => {
-                          refetch();
-                        }} 
-                      />
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="route" className="pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tour Route Map</CardTitle>
-              <CardDescription>
-                Visualize your tour route and venue locations
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {mapEvents.length > 0 ? (
-                <div className="bg-muted rounded-md h-[400px] overflow-hidden">
-                  <VenueMap 
-                    events={mapEvents}
-                    height={400}
-                    showLegend={true}
-                    showRoute={true}
-                  />
-                </div>
-              ) : (
-                <div className="bg-muted h-[400px] rounded-md flex justify-center items-center">
-                  <div className="text-center">
-                    <p className="text-muted-foreground mb-2">
-                      No map data available.
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Try optimizing the tour to see venue locations on a map.
-                    </p>
-                    {!hasEnoughVenuesWithDates ? (
-                      <p className="text-sm text-amber-500 mt-2">
-                        You need at least 2 venues with dates to optimize.
-                      </p>
-                    ) : (
-                      <Button 
-                        className="mt-4"
-                        onClick={handleOptimize}
-                        disabled={optimizeMutation.isPending}
-                      >
-                        {optimizeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        <Truck className="mr-2 h-4 w-4" />
-                        Optimize Tour Route
-                      </Button>
-                    )}
-                  </div>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -953,52 +1001,140 @@ export function TourDetail({ tourId }: TourDetailProps) {
         <TabsContent value="stats" className="pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Tour Statistics</CardTitle>
+              <CardTitle className="flex items-center">
+                <BarChart3 className="mr-2 h-5 w-5" />
+                Tour Analytics
+              </CardTitle>
               <CardDescription>
-                Key metrics and optimization data for your tour
+                Key metrics and optimization insights for your tour
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <h3 className="font-medium text-sm mb-2 text-muted-foreground">Total Distance</h3>
-                  <p className="font-medium text-xl">
-                    {tour.estimatedTravelDistance ? (
-                      `${Math.round(tour.estimatedTravelDistance)} km`
-                    ) : (
-                      'Not calculated'
-                    )}
-                  </p>
+              <div className="space-y-6">
+                {/* Tour Overview Stats */}
+                <div>
+                  <h3 className="font-medium text-sm mb-3 text-muted-foreground">Tour Overview</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium text-sm mb-2 text-muted-foreground">Total Distance</h4>
+                      <p className="font-medium text-xl">
+                        {tour.estimatedTravelDistance ? (
+                          `${Math.round(tour.estimatedTravelDistance)} km`
+                        ) : 'Not calculated'}
+                      </p>
+                      {optimizationResult && optimizationResult.totalDistance && tour.estimatedTravelDistance && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {optimizationResult.totalDistance < tour.estimatedTravelDistance ? (
+                            <span className="text-green-600 flex items-center">
+                              <ArrowRight className="h-3 w-3 mr-1 rotate-45" />
+                              {Math.round((1 - optimizationResult.totalDistance / tour.estimatedTravelDistance) * 100)}% reduction possible
+                            </span>
+                          ) : (
+                            <span>Optimal route</span>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium text-sm mb-2 text-muted-foreground">Travel Time</h4>
+                      <p className="font-medium text-xl">
+                        {tour.estimatedTravelTime ? (
+                          `${Math.round(tour.estimatedTravelTime / 60)} hours`
+                        ) : 'Not calculated'}
+                      </p>
+                      {optimizationResult && optimizationResult.totalTravelTime && tour.estimatedTravelTime && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {optimizationResult.totalTravelTime < tour.estimatedTravelTime ? (
+                            <span className="text-green-600 flex items-center">
+                              <ArrowRight className="h-3 w-3 mr-1 rotate-45" />
+                              {Math.round((1 - optimizationResult.totalTravelTime / tour.estimatedTravelTime) * 100)}% reduction possible
+                            </span>
+                          ) : (
+                            <span>Optimal timing</span>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium text-sm mb-2 text-muted-foreground">Optimization Score</h4>
+                      <p className="font-medium text-xl">
+                        {tour.optimizationScore ? (
+                          <span className="flex items-center">
+                            {tour.optimizationScore}/100
+                            <span 
+                              className="ml-2 w-3 h-3 rounded-full"
+                              style={{
+                                backgroundColor: tour.optimizationScore > 80 
+                                  ? 'rgb(16, 185, 129)' 
+                                  : tour.optimizationScore > 60 
+                                    ? 'rgb(245, 158, 11)'
+                                    : 'rgb(239, 68, 68)'
+                              }}
+                            />
+                          </span>
+                        ) : 'Not optimized'}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {tour.optimizationScore ? (
+                          tour.optimizationScore > 80 
+                            ? 'Excellent route efficiency' 
+                            : tour.optimizationScore > 60 
+                              ? 'Good route with minor gaps'
+                              : 'Route has significant gaps'
+                        ) : 'Run optimization to calculate score'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <h3 className="font-medium text-sm mb-2 text-muted-foreground">Total Travel Time</h3>
-                  <p className="font-medium text-xl">
-                    {tour.estimatedTravelTime ? (
-                      `${Math.round(tour.estimatedTravelTime / 60)} hours`
-                    ) : (
-                      'Not calculated'
-                    )}
-                  </p>
-                </div>
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <h3 className="font-medium text-sm mb-2 text-muted-foreground">Optimization Score</h3>
-                  <p className="font-medium text-xl">
-                    {tour.optimizationScore ? (
-                      `${tour.optimizationScore.toFixed(2)} / 100`
-                    ) : (
-                      'Not optimized'
-                    )}
-                  </p>
-                </div>
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <h3 className="font-medium text-sm mb-2 text-muted-foreground">Booking Rate</h3>
-                  <p className="font-medium text-xl">
-                    {tour.venues && tour.venues.length > 0 ? (
-                      `${Math.round((tour.venues.filter(v => v.tourVenue.status === 'confirmed').length / tour.venues.length) * 100)}%`
-                    ) : (
-                      '0%'
-                    )}
-                  </p>
+                
+                {/* Status Breakdown */}
+                {tour.venues && tour.venues.length > 0 ? (
+                  <div>
+                    <h3 className="font-medium text-sm mb-3 text-muted-foreground">Status Breakdown</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {Object.entries(
+                        tour.venues.reduce((acc: {[key: string]: number}, venue) => {
+                          const status = venue.tourVenue.status || 'unknown';
+                          acc[status] = (acc[status] || 0) + 1;
+                          return acc;
+                        }, {})
+                      ).sort((a, b) => b[1] - a[1]) // Sort by count descending
+                        .map(([status, count]) => (
+                        <div key={status} className="bg-muted/30 p-3 rounded-md flex items-center">
+                          <div 
+                            className="w-10 h-10 rounded-full mr-3 flex items-center justify-center text-white"
+                            style={{
+                              backgroundColor: getStatusInfo(status).color
+                            }}
+                          >
+                            <span className="font-bold">{count}</span>
+                          </div>
+                          <div>
+                            <p className="font-medium">{STATUS_DISPLAY_NAMES[status] || status}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {Math.round(count / tour.venues.length * 100)}% of venues
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                
+                {/* Action buttons */}
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleOptimize}
+                    disabled={!hasEnoughVenuesWithDates || optimizeMutation.isPending}
+                  >
+                    {optimizeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Truck className="mr-2 h-4 w-4" />
+                    Run Optimization
+                  </Button>
                 </div>
               </div>
               
