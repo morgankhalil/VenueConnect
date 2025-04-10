@@ -34,6 +34,12 @@ export default function VenueNetwork() {
       setCurrentVenueId(195);
     }
   }, [user?.venueId]);
+  
+  // Force a refetch of the user data when this page mounts to ensure we have the current venue ID
+  useEffect(() => {
+    // Refetch the current user to ensure we have the latest venue ID
+    queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+  }, [queryClient]);
 
   // Ensure the venue network graph is refetched when the user changes 
   const { data: networkData, isLoading: isLoadingNetwork, refetch: refetchNetwork } = useQuery({
