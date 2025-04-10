@@ -143,6 +143,14 @@ async function seed(filter: VenueFilter = { minCapacity: 500, maxCapacity: 5000 
     console.log('Starting database seeding...');
     console.log('Using venue filter:', filter);
     
+    // Validate filter parameters
+    if (filter.minCapacity && filter.minCapacity < 0) {
+      throw new Error('Minimum capacity cannot be negative');
+    }
+    if (filter.maxCapacity && filter.maxCapacity < filter.minCapacity) {
+      throw new Error('Maximum capacity must be greater than minimum capacity');
+    }
+    
     await clearDatabase();
     const manager = await createVenueManager();
     
