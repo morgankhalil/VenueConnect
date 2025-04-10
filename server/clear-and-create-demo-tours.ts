@@ -71,23 +71,35 @@ async function createDemoTours() {
   // Adjust for fewer venues
   console.log(`Found ${venueResults.length} venues with coordinates`);
   
+  // Create an array to track tour IDs for later optimization score setting
+  const createdTourIds = [];
+  
   // We'll reuse venues for different tours to work with what we have
-  await createOptimizableTour(artistResults[0], venueResults.slice(0, 5), "Optimization Demo 1");
+  const tour1 = await createOptimizableTour(artistResults[0], venueResults.slice(0, 5), "Optimization Demo 1");
+  if (tour1) createdTourIds.push(tour1.id);
   
   // For the other tours, we'll reuse the same venues but in different orders
   const shuffled1 = [...venueResults].sort(() => 0.5 - Math.random());
-  await createStartEndTour(artistResults[1], shuffled1.slice(0, 5), "Start-End Fixed Tour");
+  const tour2 = await createStartEndTour(artistResults[1], shuffled1.slice(0, 5), "Start-End Fixed Tour");
+  if (tour2) createdTourIds.push(tour2.id);
   
   const shuffled2 = [...venueResults].sort(() => 0.5 - Math.random());
-  await createConfirmedMixTour(artistResults[2], shuffled2.slice(0, 5), "Mixed Status Tour");
+  const tour3 = await createConfirmedMixTour(artistResults[2], shuffled2.slice(0, 5), "Mixed Status Tour");
+  if (tour3) createdTourIds.push(tour3.id);
   
   const shuffled3 = [...venueResults].sort(() => 0.5 - Math.random());
-  await createDenseCalendarTour(artistResults[3], shuffled3.slice(0, 6), "Dense Calendar Tour");
+  const tour4 = await createDenseCalendarTour(artistResults[3], shuffled3.slice(0, 6), "Dense Calendar Tour");
+  if (tour4) createdTourIds.push(tour4.id);
   
   const shuffled4 = [...venueResults].sort(() => 0.5 - Math.random());
-  await createLongDistanceTour(artistResults[4], shuffled4.slice(0, 6), "Cross-Country Tour");
+  const tour5 = await createLongDistanceTour(artistResults[4], shuffled4.slice(0, 6), "Cross-Country Tour");
+  if (tour5) createdTourIds.push(tour5.id);
   
   console.log("Successfully created 5 demo tours");
+  
+  // Calculate and set initial optimization scores for all created tours
+  console.log("Calculating initial optimization scores...");
+  await calculateAndSetInitialScores(createdTourIds);
 }
 
 /**
@@ -179,6 +191,8 @@ async function createOptimizableTour(artist: any, venues: any[], name: string) {
   }
   
   console.log(`Added venues to tour: ${tour.name} (${venues.length} venues)`);
+  
+  return tour;
 }
 
 /**
@@ -264,6 +278,8 @@ async function createStartEndTour(artist: any, venues: any[], name: string) {
         updatedAt: new Date()
       });
   }
+  
+  return tour;
 }
 
 /**
@@ -324,6 +340,8 @@ async function createConfirmedMixTour(artist: any, venues: any[], name: string) 
         updatedAt: new Date()
       });
   }
+  
+  return tour;
 }
 
 /**
@@ -379,6 +397,8 @@ async function createDenseCalendarTour(artist: any, venues: any[], name: string)
         updatedAt: new Date()
       });
   }
+  
+  return tour;
 }
 
 /**
@@ -442,6 +462,69 @@ async function createLongDistanceTour(artist: any, venues: any[], name: string) 
         updatedAt: new Date()
       });
   }
+  
+  return tour;
+}
+
+/**
+ * Calculate and set initial optimization scores for tours
+ * This queries the tour venues with their venue data, calculates the initial score,
+ * and updates the tour record with this baseline score for comparison
+ */
+async function calculateAndSetInitialScores(tourIds: number[]) {
+  if (!tourIds.length) {
+    console.log("No tours to calculate scores for");
+    return;
+  }
+  
+  console.log(`Calculating initial scores for ${tourIds.length} tours...`);
+  
+  for (const tourId of tourIds) {
+    try {
+      // Get tour venues with venue data for this tour
+      const tourVenuesWithVenueData = await db
+        .select({
+          tourVenue: tourVenues,
+          venue: venues,
+        })
+        .from(tourVenues)
+        .leftJoin(venues, eq(venues.id, tourVenues.venueId))
+        .where(eq(tourVenues.tourId, tourId))
+        .orderBy(tourVenues.sequence);
+        
+      if (!tourVenuesWithVenueData.length) {
+        console.log(`No venues found for tour ID: ${tourId}, skipping`);
+        continue;
+      }
+      
+      // Format the data for the score calculation
+      const venuesForScoring = tourVenuesWithVenueData.map(record => ({
+        ...record.tourVenue,
+        venue: record.venue
+      }));
+      
+      // Calculate the initial score
+      const { optimizationScore, totalDistance, totalTravelTime } = 
+        calculateInitialTourScore(venuesForScoring);
+      
+      // Update the tour with the initial score
+      await db
+        .update(tours)
+        .set({
+          initialOptimizationScore: optimizationScore,
+          initialTotalDistance: totalDistance,
+          initialTravelTime: totalTravelTime,
+          updatedAt: new Date()
+        })
+        .where(eq(tours.id, tourId));
+      
+      console.log(`Set initial score for tour ID ${tourId}: ${optimizationScore}/100`);
+    } catch (error) {
+      console.error(`Error calculating score for tour ID ${tourId}:`, error);
+    }
+  }
+  
+  console.log("Score calculation complete");
 }
 
 // Run the function
