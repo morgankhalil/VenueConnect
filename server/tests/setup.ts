@@ -1,14 +1,17 @@
 
 import { jest } from '@jest/globals';
-import { db } from '../db';
 
-// Mock database operations
+// Mock environment variables
+process.env.BANDSINTOWN_API_KEY = 'test-key';
+process.env.VENUE_WEBHOOK_SECRET = 'test-secret';
+
+// Mock database
 jest.mock('../db', () => ({
   db: {
-    insert: jest.fn(),
-    select: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn()
+    insert: jest.fn().mockResolvedValue([{}]),
+    select: jest.fn().mockResolvedValue([]),
+    update: jest.fn().mockResolvedValue([{}]),
+    delete: jest.fn().mockResolvedValue([{}])
   }
 }));
 
@@ -19,5 +22,5 @@ beforeAll(() => {
 
 // Cleanup after tests
 afterAll(() => {
-  // Add any global test cleanup here
+  jest.clearAllMocks();
 });
