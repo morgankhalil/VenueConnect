@@ -29,6 +29,7 @@ export default function TourOptimizePage() {
   const [_, navigate] = useLocation();
   const { toast } = useToast();
   const [optimizationResult, setOptimizationResult] = useState<any>(null);
+  const [mapEvents, setMapEvents] = useState<MapEvent[]>([]);
   
   // Get tour data
   const { 
@@ -41,6 +42,51 @@ export default function TourOptimizePage() {
     queryFn: () => getTour(Number(params?.id)),
     enabled: !!params?.id,
   });
+  
+  // Prepare map data when optimization results are available
+  useEffect(() => {
+    if (optimizationResult && optimizationResult.tourVenues) {
+      // Get fixed venues from the tour
+      const fixedVenues: MapEvent[] = optimizationResult.tourVenues
+        .filter((venue: OptimizationVenue) => venue.venue && venue.latitude && venue.longitude)
+        .map((venue: OptimizationVenue, index: number) => ({
+          id: venue.id,
+          venue: venue.venue?.name || `Venue ${venue.id}`,
+          latitude: venue.latitude,
+          longitude: venue.longitude,
+          date: venue.date || undefined,
+          isCurrentVenue: false,
+          isRoutingOpportunity: false,
+          status: venue.status || 'confirmed',
+          venue_id: venue.venue?.id
+        }));
+      
+      // Get suggested venues from the potential fill venues
+      const suggestedVenues: MapEvent[] = optimizationResult.potentialFillVenues
+        ? optimizationResult.potentialFillVenues
+            .filter((venue: any) => 
+              venue.venue && 
+              venue.venue.latitude && 
+              venue.venue.longitude && 
+              (!venue.isFixed || venue.status === 'suggested')
+            )
+            .map((venue: any) => ({
+              id: venue.venue.id,
+              venue: venue.venue.name || `Venue ${venue.venue.id}`,
+              latitude: venue.venue.latitude,
+              longitude: venue.venue.longitude,
+              date: venue.date || undefined,
+              isCurrentVenue: false,
+              isRoutingOpportunity: true, // Mark suggested venues as routing opportunities for the map
+              status: 'suggested',
+              venue_id: venue.venue.id
+            }))
+        : [];
+      
+      // Combine and set all map events
+      setMapEvents([...fixedVenues, ...suggestedVenues]);
+    }
+  }, [optimizationResult]);
   
   // Optimize tour mutation
   const optimizeMutation = useMutation({
@@ -199,10 +245,14 @@ export default function TourOptimizePage() {
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="route">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="route">
                     <Route className="mr-2 h-4 w-4" />
                     Optimized Route
+                  </TabsTrigger>
+                  <TabsTrigger value="map">
+                    <MapIcon className="mr-2 h-4 w-4" />
+                    Tour Map
                   </TabsTrigger>
                   <TabsTrigger value="suggestions">
                     <Building className="mr-2 h-4 w-4" />
@@ -258,6 +308,51 @@ export default function TourOptimizePage() {
                   </div>
                 </TabsContent>
                 
+                <TabsContent value="map" className="mt-4">
+                  <div className="space-y-4">
+                    <h3 className="font-medium">Tour Map with Venue Locations</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Visualize your tour route and suggested venues on the map. 
+                      Blue markers indicate suggested venues that could fill gaps in your tour schedule.
+                    </p>
+                    
+                    {mapEvents.length > 0 ? (
+                      <Card>
+                        <CardContent className="p-2">
+                          <VenueMap 
+                            events={mapEvents} 
+                            height={500}
+                            showLegend={true}
+                            showRoute={true}
+                          />
+                        </CardContent>
+                        <CardFooter className="bg-muted/30 p-4 text-sm flex justify-between items-center">
+                          <div className="flex space-x-4">
+                            <div className="flex items-center">
+                              <span className="w-3 h-3 bg-green-500 rounded-full inline-block mr-1"></span>
+                              <span>Confirmed/Booked/Planning Venues</span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="w-3 h-3 bg-amber-500 rounded-full inline-block mr-1"></span>
+                              <span>Suggested Venues</span>
+                            </div>
+                          </div>
+                          <span className="text-muted-foreground">
+                            {mapEvents.length} venues shown
+                          </span>
+                        </CardFooter>
+                      </Card>
+                    ) : (
+                      <div className="bg-muted/30 p-8 rounded-md text-center">
+                        <MapIcon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                        <p className="text-muted-foreground">
+                          No venue locations available to display.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+                
                 <TabsContent value="suggestions" className="mt-4">
                   <div className="space-y-4">
                     <h3 className="font-medium">Suggested Venues for Tour</h3>
@@ -280,26 +375,26 @@ export default function TourOptimizePage() {
                               {optimizationResult.potentialFillVenues
                                 .filter((venue: any) => !venue.isFixed || venue.status === 'suggested')
                                 .map((venue: any, index: number) => (
-                                <div key={index} className="flex items-center p-3 bg-muted/30 rounded-md">
-                                  <div className="w-8 h-8 flex items-center justify-center bg-primary/10 rounded-full mr-3">
+                                <div key={index} className="flex items-center p-3 bg-blue-50 border border-blue-200 rounded-md">
+                                  <div className="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-700 rounded-full mr-3">
                                     <span className="font-medium text-sm">{index + 1}</span>
                                   </div>
                                   <div className="flex-1">
-                                    <div className="font-medium">{venue.venue?.name}</div>
-                                    <div className="text-sm text-muted-foreground flex items-center">
+                                    <div className="font-medium text-blue-800">{venue.venue?.name}</div>
+                                    <div className="text-sm text-blue-600 flex items-center">
                                       <MapPin className="h-3 w-3 mr-1" />
                                       {venue.venue?.city || 'Location data unavailable'}
                                       {venue.venue?.region ? `, ${venue.venue?.region}` : ''}
                                     </div>
                                   </div>
                                   {venue.date && (
-                                    <Badge variant="outline">
+                                    <Badge variant="outline" className="bg-white">
                                       <Calendar className="h-3.5 w-3.5 mr-1" />
                                       {formatDate(venue.date)}
                                     </Badge>
                                   )}
-                                  <Badge className="ml-2 bg-blue-500">Suggested</Badge>
-                                  <Button size="sm" variant="outline" className="ml-2">
+                                  <Badge className="ml-2 bg-blue-500 hover:bg-blue-600">Suggested</Badge>
+                                  <Button size="sm" variant="outline" className="ml-2 border-blue-300 hover:bg-blue-100 hover:text-blue-800">
                                     Add to Tour
                                   </Button>
                                 </div>
