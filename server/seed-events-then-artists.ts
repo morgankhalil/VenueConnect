@@ -74,15 +74,15 @@ async function fetchVenueEvents(venueName: string, venueId: string): Promise<Ban
   }
 
   console.log(`Fetching events for venue: ${venueName} (${venueId})`);
-  
+
   try {
     // Fetch events for the specific venue
     const apiEndpoint = `https://rest.bandsintown.com/venues/${venueId}/events`;
-    
+
     const response = await axios.get(apiEndpoint, {
-      params: { app_id: apiKey },
       headers: { 
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'x-api-key': apiKey
       }
     });
 
@@ -123,7 +123,7 @@ async function processEvents(venueDbId: number, events: BandsInTownEvent[]): Pro
     if (!processedArtists.has(artistName)) {
       // Check if artist already exists
       let artist = await db.select().from(artists).where(eq(artists.name, artistName)).limit(1);
-      
+
       if (!artist.length) {
         // Create new artist
         const [newArtist] = await db.insert(artists).values({
@@ -137,14 +137,14 @@ async function processEvents(venueDbId: number, events: BandsInTownEvent[]): Pro
           bandsintownId: eventData.artist.id,
           description: `Artist from Bandsintown: ${artistName}`
         }).returning();
-        
+
         artist = [newArtist];
         artistsAdded++;
         console.log(`Added new artist: ${artistName}`);
       }
 
       processedArtists.add(artistName);
-      
+
       // Process datetime
       const eventDate = new Date(eventData.datetime);
       const dateString = eventDate.toISOString().split('T')[0];
@@ -210,7 +210,7 @@ async function seedEventsAndArtists() {
     }
 
     console.log('Starting Bandsintown events and artists seeding...');
-    
+
     // Get all venues from database
     const venueList = await db.select().from(venues);
     console.log(`Found ${venueList.length} venues in database`);
@@ -236,7 +236,7 @@ async function seedEventsAndArtists() {
       try {
         // Fetch events for this venue
         const venueEvents = await fetchVenueEvents(venue.name, bandsintownId);
-        
+
         if (venueEvents.length === 0) {
           console.log(`No events found for venue: ${venue.name}`);
           continue;
@@ -244,11 +244,11 @@ async function seedEventsAndArtists() {
 
         // Process and save the events and artists
         const { eventsAdded, artistsAdded } = await processEvents(venue.id, venueEvents);
-        
+
         results.processedVenues++;
         results.totalEvents += eventsAdded;
         results.totalArtists += artistsAdded;
-        
+
         console.log(`Processed ${venue.name}: added ${eventsAdded} events and ${artistsAdded} artists`);
       } catch (error) {
         console.error(`Error processing venue ${venue.name}:`, error);

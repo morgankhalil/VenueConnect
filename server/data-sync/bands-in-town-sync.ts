@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { db } from '../db';
 import { events, artists, venues } from '../../shared/schema';
@@ -12,11 +11,9 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
 
   try {
     const response = await axios.get(`https://rest.bandsintown.com/artists/${encodeURIComponent(artistName)}/events`, {
-      params: { 
-        app_id: apiKey
-      },
       headers: {
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'x-api-key': apiKey
       }
     });
 
@@ -41,11 +38,11 @@ export async function syncVenueEventsFromBandsInTown(venueId: string, venueName:
 
     const response = await axios.get(`https://rest.bandsintown.com/events/search`, {
       params: { 
-        app_id: apiKey,
         venue_id: venueId
       },
       headers: {
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'x-api-key': apiKey
       }
     });
 
