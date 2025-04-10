@@ -1,0 +1,114 @@
+Database connection initialized
+Starting event sync from Bandsintown...
+Found 8 venues to sync events for
+Syncing events for artist: The Black Keys
+Fetching artist data for 'The Black Keys'...
+Making request to https://rest.bandsintown.com/artists/The%20Black%20Keys with app_id parameter
+Successfully retrieved data for artist The Black Keys
+Found artist 'The Black Keys' on Bandsintown
+Added new artist: The Black Keys
+Fetching events for artist 'The Black Keys'...
+Making request to https://rest.bandsintown.com/artists/The%20Black%20Keys/events with app_id parameter
+Successfully retrieved 0 events for The Black Keys
+Retrieved 0 events for artist 'The Black Keys'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: Tame Impala
+Fetching artist data for 'Tame Impala'...
+Making request to https://rest.bandsintown.com/artists/Tame%20Impala with app_id parameter
+Successfully retrieved data for artist Tame Impala
+Found artist 'Tame Impala' on Bandsintown
+Added new artist: Tame Impala
+Fetching events for artist 'Tame Impala'...
+Making request to https://rest.bandsintown.com/artists/Tame%20Impala/events with app_id parameter
+Successfully retrieved 0 events for Tame Impala
+Retrieved 0 events for artist 'Tame Impala'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: Arctic Monkeys
+Fetching artist data for 'Arctic Monkeys'...
+Making request to https://rest.bandsintown.com/artists/Arctic%20Monkeys with app_id parameter
+Successfully retrieved data for artist Arctic Monkeys
+Found artist 'Arctic Monkeys' on Bandsintown
+Added new artist: Arctic Monkeys
+Fetching events for artist 'Arctic Monkeys'...
+Making request to https://rest.bandsintown.com/artists/Arctic%20Monkeys/events with app_id parameter
+Successfully retrieved 0 events for Arctic Monkeys
+Retrieved 0 events for artist 'Arctic Monkeys'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: The Strokes
+Fetching artist data for 'The Strokes'...
+Making request to https://rest.bandsintown.com/artists/The%20Strokes with app_id parameter
+Successfully retrieved data for artist The Strokes
+Found artist 'The Strokes' on Bandsintown
+Added new artist: The Strokes
+Fetching events for artist 'The Strokes'...
+Making request to https://rest.bandsintown.com/artists/The%20Strokes/events with app_id parameter
+Successfully retrieved 0 events for The Strokes
+Retrieved 0 events for artist 'The Strokes'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: LCD Soundsystem
+Fetching artist data for 'LCD Soundsystem'...
+Making request to https://rest.bandsintown.com/artists/LCD%20Soundsystem with app_id parameter
+Successfully retrieved data for artist LCD Soundsystem
+Found artist 'LCD Soundsystem' on Bandsintown
+Added new artist: LCD Soundsystem
+Fetching events for artist 'LCD Soundsystem'...
+Making request to https://rest.bandsintown.com/artists/LCD%20Soundsystem/events with app_id parameter
+Successfully retrieved 0 events for LCD Soundsystem
+Retrieved 0 events for artist 'LCD Soundsystem'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: Vampire Weekend
+Fetching artist data for 'Vampire Weekend'...
+Making request to https://rest.bandsintown.com/artists/Vampire%20Weekend with app_id parameter
+Successfully retrieved data for artist Vampire Weekend
+Found artist 'Vampire Weekend' on Bandsintown
+Added new artist: Vampire Weekend
+Fetching events for artist 'Vampire Weekend'...
+Making request to https://rest.bandsintown.com/artists/Vampire%20Weekend/events with app_id parameter
+Successfully retrieved 0 events for Vampire Weekend
+Retrieved 0 events for artist 'Vampire Weekend'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: MGMT
+Fetching artist data for 'MGMT'...
+Making request to https://rest.bandsintown.com/artists/MGMT with app_id parameter
+Successfully retrieved data for artist MGMT
+Found artist 'MGMT' on Bandsintown
+Added new artist: MGMT
+Fetching events for artist 'MGMT'...
+Making request to https://rest.bandsintown.com/artists/MGMT/events with app_id parameter
+Successfully retrieved 0 events for MGMT
+Retrieved 0 events for artist 'MGMT'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: Beach House
+Fetching artist data for 'Beach House'...
+Making request to https://rest.bandsintown.com/artists/Beach%20House with app_id parameter
+Successfully retrieved data for artist Beach House
+Found artist 'Beach House' on Bandsintown
+Added new artist: Beach House
+Fetching events for artist 'Beach House'...
+Making request to https://rest.bandsintown.com/artists/Beach%20House/events with app_id parameter
+Successfully retrieved 0 events for Beach House
+Retrieved 0 events for artist 'Beach House'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: The War on Drugs
+Fetching artist data for 'The War on Drugs'...
+Making request to https://rest.bandsintown.com/artists/The%20War%20on%20Drugs with app_id parameter
+Successfully retrieved data for artist The War on Drugs
+Found artist 'The War on Drugs' on Bandsintown
+Added new artist: The War on Drugs
+Fetching events for artist 'The War on Drugs'...
+Making request to https://rest.bandsintown.com/artists/The%20War%20on%20Drugs/events with app_id parameter
+Successfully retrieved 0 events for The War on Drugs
+Retrieved 0 events for artist 'The War on Drugs'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: Fleet Foxes
+Fetching artist data for 'Fleet Foxes'...
+Making request to https://rest.bandsintown.com/artists/Fleet%20Foxes with app_id parameter
+Successfully retrieved data for artist Fleet Foxes
+Found artist 'Fleet Foxes' on Bandsintown
+Added new artist: Fleet Foxes
+Fetching events for artist 'Fleet Foxes'...
+Making request to https://rest.bandsintown.com/artists/Fleet%20Foxes/events with app_id parameter
+Successfully retrieved 0 events for Fleet Foxes
+Retrieved 0 events for artist 'Fleet Foxes'
+Sync completed: processed 0 events, added/updated 0
+Event sync completed
