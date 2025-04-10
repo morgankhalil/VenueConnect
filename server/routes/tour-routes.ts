@@ -1019,4 +1019,133 @@ router.get('/artists/:id/tour-stats', async (req, res) => {
   }
 });
 
+/**
+ * Create a demo tour for optimization testing
+ */
+router.post('/tours/create-demo', async (req, res) => {
+  try {
+    // Find an artist to use for the tour
+    const artistResult = await db
+      .select()
+      .from(artists)
+      .limit(1);
+    
+    if (!artistResult.length) {
+      return res.status(404).json({ error: "No artists found in database" });
+    }
+    
+    const artist = artistResult[0];
+    
+    // Get existing venues with coordinates
+    const venueResults = await db
+      .select()
+      .from(venues)
+      .where(
+        isNotNull(venues.latitude)
+      )
+      .limit(10);
+    
+    if (venueResults.length < 5) {
+      return res.status(404).json({ error: "Not enough venues with coordinates in database" });
+    }
+    
+    // Create a new tour
+    const tourName = `Optimization Demo Tour ${new Date().toISOString().split('T')[0]}`;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() + 60); // Start 60 days from now
+    
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 30); // 30-day tour
+    
+    const tourResult = await db
+      .insert(tours)
+      .values({
+        name: tourName,
+        artistId: artist.id,
+        status: 'planning',
+        description: 'A demo tour created to showcase the tour optimization features',
+        startDate,
+        endDate,
+        totalBudget: 200000,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    
+    if (!tourResult.length) {
+      return res.status(500).json({ error: "Failed to create tour" });
+    }
+    
+    const tour = tourResult[0];
+    
+    // Create two fixed (confirmed) venues at the start and end
+    // We'll pick venues that are geographically distant to make optimization interesting
+    const firstVenue = venueResults[0];
+    const lastVenue = venueResults[venueResults.length - 1];
+    
+    // First venue - beginning of tour
+    const firstVenueDate = new Date(startDate);
+    firstVenueDate.setDate(firstVenueDate.getDate() + 3); // 3 days after start
+    
+    await db
+      .insert(tourVenues)
+      .values({
+        tourId: tour.id,
+        venueId: firstVenue.id,
+        status: 'confirmed', // This is fixed and won't be moved by optimizer
+        date: firstVenueDate,
+        sequence: 1,
+        notes: 'Opening venue for the tour',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+    
+    // Last venue - end of tour
+    const lastVenueDate = new Date(startDate);
+    lastVenueDate.setDate(lastVenueDate.getDate() + 27); // 27 days after start (3 days before end)
+    
+    await db
+      .insert(tourVenues)
+      .values({
+        tourId: tour.id,
+        venueId: lastVenue.id,
+        status: 'confirmed', // This is fixed and won't be moved by optimizer
+        date: lastVenueDate,
+        sequence: 10, // Higher sequence number
+        notes: 'Closing venue for the tour',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+    
+    // Add a couple of proposed venues in the middle without specific dates
+    // These will be rescheduled by the optimizer
+    for (let i = 1; i <= 3; i++) {
+      const venue = venueResults[i];
+      
+      await db
+        .insert(tourVenues)
+        .values({
+          tourId: tour.id,
+          venueId: venue.id,
+          status: 'proposed', // Proposed status allows the optimizer to suggest dates
+          sequence: i + 1, // Sequence between first and last
+          notes: 'Proposed venue for optimization',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+    }
+    
+    // Return the created tour
+    res.status(201).json({ 
+      id: tour.id,
+      message: "Demo tour created successfully",
+      redirectUrl: `/tours/${tour.id}/optimize`
+    });
+    
+  } catch (error) {
+    console.error("Error creating demo tour:", error);
+    res.status(500).json({ error: "Failed to create demo tour" });
+  }
+});
+
 export default router;

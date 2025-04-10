@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Link } from 'wouter';
-import { getTours } from '@/lib/api';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Link, useLocation } from 'wouter';
+import { getTours, apiRequest } from '@/lib/api';
 import {
   Table,
   TableBody,
@@ -28,15 +28,49 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { formatDate } from '@/lib/utils';
-import { Loader2, MapPin, Calendar, User } from 'lucide-react';
+import { Loader2, MapPin, Calendar, User, Sparkles } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 export function TourList() {
   const [filterStatus, setFilterStatus] = useState<string | undefined>(undefined);
+  const [_, navigate] = useLocation();
   
   const { data: tours, isLoading, error } = useQuery({
     queryKey: ['/api/tour/tours', filterStatus],
     queryFn: () => getTours({ status: filterStatus }),
   });
+  
+  // Mutation for creating a demo tour
+  const createDemoTourMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('/api/tour/tours/create-demo', 'POST');
+      return response;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Demo Tour Created",
+        description: "A new demo tour has been created with venues ready for optimization.",
+      });
+      
+      // Navigate to the optimization page for the new tour
+      if (data && data.redirectUrl) {
+        navigate(data.redirectUrl);
+      } else if (data && data.id) {
+        navigate(`/tours/${data.id}/optimize`);
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create demo tour. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const handleCreateDemoTour = () => {
+    createDemoTourMutation.mutate();
+  };
   
   const handleStatusChange = (value: string) => {
     setFilterStatus(value === 'all' ? undefined : value);
@@ -72,7 +106,7 @@ export function TourList() {
             <CardTitle>Tours</CardTitle>
             <CardDescription>Manage your tours and optimize routes</CardDescription>
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-2">
             <Select onValueChange={handleStatusChange} defaultValue="all">
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Filter by status" />
@@ -86,6 +120,17 @@ export function TourList() {
                 <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select>
+            
+            <Button 
+              variant="outline" 
+              onClick={handleCreateDemoTour}
+              disabled={createDemoTourMutation.isPending}
+              className="flex items-center"
+            >
+              <Sparkles className="mr-1 h-4 w-4" />
+              {createDemoTourMutation.isPending ? 'Creating...' : 'Create Demo Tour'}
+            </Button>
+            
             <Link href="/tours/new">
               <Button>Create Tour</Button>
             </Link>
