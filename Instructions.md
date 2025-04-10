@@ -1,78 +1,72 @@
 
-# Bandsintown API Integration Issue
+# Venue Data Seeding and Sync Implementation Plan
 
-## Current Problem
-- Getting 403 Forbidden response from Bandsintown API
-- This indicates an authentication issue with the API key
+## Current Issues
+1. Multiple redundant seeding scripts with overlapping functionality
+2. Inconsistent error handling across scripts
+3. No clear separation between initial seeding and ongoing sync
+4. Foreign key constraint violations during seeding
+5. Hard-coded venue IDs scattered across files
 
-## Diagnosis
-1. The API calls are failing with a 403 status code
-2. This typically means either:
-   - The API key is not set
-   - The API key is invalid
-   - The API key doesn't have sufficient permissions
+## Proposed Architecture
 
-## Solution Steps
+### 1. Core Seeding Module (server/core/seed-manager.ts)
+- Single source of truth for initial data seeding
+- Clear table dependencies and order
+- Configurable filters for venues (capacity, location)
+- Proper foreign key handling
 
-1. First, verify the API key is set:
-   - Check if BANDSINTOWN_API_KEY exists in your environment variables
-   - You can do this through the Replit Secrets tool (lock icon in sidebar)
+### 2. Sync Module (server/core/sync-manager.ts)
+- Handles ongoing data synchronization
+- Rate limiting for API calls
+- Proper error handling and logging
+- Retry mechanisms for failed syncs
 
-2. If the key is not set:
-   - Go to the Replit Secrets tool
-   - Add a new secret with key "BANDSINTOWN_API_KEY"
-   - Get your API key from Bandsintown's developer portal
-   - Paste your API key as the value
+### 3. Implementation Steps
 
-3. If the key is set but still getting 403:
-   - Verify the API key is valid on Bandsintown's developer portal
-   - Check if your API key has the correct permissions
-   - Try generating a new API key if needed
+1. Consolidate Existing Scripts:
+- Merge functionality from:
+  - seed.ts
+  - seed-events.ts
+  - seed-bandsintown.ts
+  - seed-venues-from-bandsintown.ts
+  - seed-events-then-artists.ts
 
-4. After setting up the API key:
-   - Restart the server
-   - Try running the venue sync again
+2. Create Clear Data Flow:
+```
+Initial Seed:
+Venues -> Artists -> Events -> Venue Network
 
-## Testing
-Once the API key is properly configured, run:
-```bash
-npx tsx server/seed-venues-from-bandsintown.ts
+Ongoing Sync:
+┌─ Venue Updates
+├─ Artist Updates
+└─ Event Updates
 ```
 
-This should now successfully connect to the Bandsintown API without the 403 error.
+3. Add Proper Validation:
+- Validate venue data before insertion
+- Check for existing records
+- Handle API rate limits
+- Proper error handling
 
-# PredictHQ Integration Plan
+4. Implement Retry Logic:
+- Exponential backoff for API calls
+- Skip failed items and continue processing
+- Log failures for manual review
 
-## Current Codebase Analysis
+## Table Clearing Order
+1. events
+2. tourVenues
+3. tours
+4. venueNetwork
+5. artists
+6. venues
+7. users
 
-### Relevant Files
-1. `server/data-sync/event-provider.ts` - Contains the EventProvider interface
-2. `server/data-sync/predict-hq-provider.ts` - New PredictHQ implementation
-3. `server/data-sync/bands-in-town-sync.ts` - Existing Bandsintown integration
+## API Integration
+- Move API keys to environment variables
+- Implement proper rate limiting
+- Add request caching
+- Error handling with retries
 
-### Integration Status
-- Basic PredictHQ provider implementation is in place
-- Need to implement data mapping and sync logic
-
-## Implementation Plan
-
-### 1. Data Mapping Tasks
-- Map PredictHQ event fields to our database schema
-- Handle venue matching and creation
-- Add support for PredictHQ-specific fields
-
-### 2. Sync Runner Updates
-- Update sync-runner.ts to support both providers
-- Add provider selection logic
-- Implement rate limiting for free trial limitations
-
-### 3. Testing Plan
-1. Test venue search functionality
-2. Test event fetching with pagination
-3. Verify data mapping accuracy
-4. Test error handling and retry logic
-
-### 4. Migration Strategy
-1. Run both providers in parallel initially
-2. Validate data quality from PredictHQ
-3. Gradually transition to PredictHQ as primary source
+Would you like me to start implementing any specific part of this plan?
