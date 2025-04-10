@@ -234,8 +234,10 @@ async function seedEventsAndArtists() {
       }
 
       try {
-        // Fetch events for this venue
+        console.log(`Attempting to fetch events for ${venue.name} with ID ${bandsintownId}...`);
         const venueEvents = await fetchVenueEvents(venue.name, bandsintownId);
+        
+        console.log(`API Response for ${venue.name}:`, JSON.stringify(venueEvents, null, 2));
 
         if (venueEvents.length === 0) {
           console.log(`No events found for venue: ${venue.name}`);
