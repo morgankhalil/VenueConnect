@@ -277,10 +277,15 @@ router.post('/tours/:tourId/venues', async (req, res) => {
     }
     
     // Validate request body
-    const validatedData = insertTourVenueSchema.parse({
+    let validatedData = insertTourVenueSchema.parse({
       ...req.body,
       tourId
     });
+    
+    // Ensure status is standardized if present
+    if (validatedData.status) {
+      validatedData.status = normalizeStatus(validatedData.status);
+    }
     
     // Calculate travel distance from previous venue if sequence is provided
     if (validatedData.sequence !== undefined) {
@@ -443,7 +448,11 @@ router.patch('/tours/:tourId/venues/:venueId', async (req, res) => {
     
     // Prepare update data
     const updateData: Record<string, any> = {};
-    if (validatedData.status !== undefined) updateData.status = validatedData.status;
+    if (validatedData.status !== undefined) {
+      // Ensure status is standardized
+      updateData.status = normalizeStatus(validatedData.status);
+      updateData.statusUpdatedAt = new Date();
+    }
     if (validatedData.date !== undefined) updateData.date = validatedData.date;
     if (validatedData.sequence !== undefined) updateData.sequence = validatedData.sequence;
     if (validatedData.notes !== undefined) updateData.notes = validatedData.notes;
