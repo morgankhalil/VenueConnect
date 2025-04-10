@@ -9,7 +9,7 @@ export interface MapEvent {
   longitude: number;
   isCurrentVenue?: boolean;
   isRoutingOpportunity?: boolean;
-  status?: string;
+  status: string;
   venue_id?: number;
 }
 

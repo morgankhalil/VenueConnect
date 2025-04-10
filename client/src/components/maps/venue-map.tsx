@@ -51,12 +51,21 @@ export function VenueMap({
 }: VenueMapProps) {
   
   // Create custom marker icons based on status
-  const createMarkerIcon = (status: 'confirmed' | 'hold' | 'potential', index: number) => {
-    const backgroundColor = 
-      status === 'confirmed' ? '#10B981' : // Green for confirmed
-      status === 'hold' ? '#F59E0B' :      // Amber for holds
-      '#9CA3AF';                           // Gray for potential venue
-      
+  const createMarkerIcon = (status: string, index: number) => {
+    // Determine background color based on status
+    let backgroundColor = '#9CA3AF'; // Default gray
+    
+    // Status-based colors
+    if (status === 'confirmed') {
+      backgroundColor = '#10B981'; // Green for confirmed
+    } else if (status === 'suggested' || status === 'hold') {
+      backgroundColor = '#F59E0B'; // Amber for suggestions or holds
+    } else if (status === 'booked') {
+      backgroundColor = '#3B82F6'; // Blue for booked
+    } else if (status === 'planning') {
+      backgroundColor = '#8B5CF6'; // Purple for planning
+    }
+    
     // Create a custom HTML element for the marker
     return new DivIcon({
       className: '',
@@ -111,10 +120,11 @@ export function VenueMap({
       >
         {/* Add markers for each venue/stop */}
         {sortedEvents.map((event, idx) => {
+          // Use the event's status if available, otherwise determine from properties
           const markerStatus = 
-            event.isCurrentVenue ? 'potential' : 
-            event.isRoutingOpportunity ? 'hold' : 
-            'confirmed';
+            (event.isCurrentVenue ? 'potential' : 
+             event.isRoutingOpportunity ? 'suggested' : 
+             event.status || 'confirmed');
             
           const icon = createMarkerIcon(markerStatus, idx);
           
@@ -130,7 +140,7 @@ export function VenueMap({
               <Popup>
                 <div className="font-sans">
                   <div className="font-semibold text-base mb-1">{event.venue}</div>
-                  <div className="text-sm mb-1">{event.artist}</div>
+                  {event.artist && <div className="text-sm mb-1">{event.artist}</div>}
                   
                   {event.date && (
                     <div className="text-xs text-gray-500 mb-2">
@@ -145,11 +155,16 @@ export function VenueMap({
                     <span className={`
                       inline-block px-2 py-0.5 rounded-full text-xs font-medium
                       ${markerStatus === 'confirmed' ? 'bg-green-100 text-green-800' : 
-                        markerStatus === 'hold' ? 'bg-amber-100 text-amber-800' : 
+                        markerStatus === 'suggested' || markerStatus === 'hold' ? 'bg-amber-100 text-amber-800' : 
+                        markerStatus === 'booked' ? 'bg-blue-100 text-blue-800' :
+                        markerStatus === 'planning' ? 'bg-purple-100 text-purple-800' :
                         'bg-gray-100 text-gray-800'}
                     `}>
                       {markerStatus === 'confirmed' ? 'Confirmed' : 
+                       markerStatus === 'suggested' ? 'Suggested' :
                        markerStatus === 'hold' ? 'On Hold' : 
+                       markerStatus === 'booked' ? 'Booked' :
+                       markerStatus === 'planning' ? 'Planning' :
                        'Potential'}
                     </span>
                   </div>
@@ -177,7 +192,15 @@ export function VenueMap({
           </div>
           <div className="flex items-center mb-1">
             <span className="w-3 h-3 bg-amber-500 rounded-full inline-block mr-1"></span>
-            <span className="text-gray-700">On Hold</span>
+            <span className="text-gray-700">Suggested</span>
+          </div>
+          <div className="flex items-center mb-1">
+            <span className="w-3 h-3 bg-blue-500 rounded-full inline-block mr-1"></span>
+            <span className="text-gray-700">Booked</span>
+          </div>
+          <div className="flex items-center mb-1">
+            <span className="w-3 h-3 bg-purple-500 rounded-full inline-block mr-1"></span>
+            <span className="text-gray-700">Planning</span>
           </div>
           <div className="flex items-center">
             <span className="w-3 h-3 bg-gray-400 rounded-full inline-block mr-1"></span>
