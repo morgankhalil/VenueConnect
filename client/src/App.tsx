@@ -17,6 +17,12 @@ import MapTest from "@/pages/map-test";
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
+// Tour management pages
+import Tours from "@/pages/tours";
+import TourDetail from "@/pages/tour-detail";
+import NewTour from "@/pages/tour-new";
+import EditTour from "@/pages/tour-edit";
+import OptimizeTour from "@/pages/tour-optimize";
 
 function Router() {
   return (
@@ -33,6 +39,14 @@ function Router() {
       <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/auth/login" component={Login} />
       <Route path="/auth/register" component={Register} />
+      
+      {/* Tour management routes */}
+      <Route path="/tours" component={Tours} />
+      <Route path="/tours/new" component={NewTour} />
+      <Route path="/tours/:id/edit" component={EditTour} />
+      <Route path="/tours/:id/optimize" component={OptimizeTour} />
+      <Route path="/tours/:id" component={TourDetail} />
+      
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
