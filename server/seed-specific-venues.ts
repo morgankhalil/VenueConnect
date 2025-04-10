@@ -11,11 +11,23 @@ import { eq, or, sql, and, desc } from 'drizzle-orm';
  */
 
 // Array of venue names to include in the tours
-// Update this array with the specific venues you want to use
+// These are specific venues that will be included in the generated tours
 const TARGET_VENUES = [
+  // East Coast Tour
   'The Bowery Ballroom',
-  'The 9:30 Club'
-  // Add more venues here as needed
+  'Brooklyn Steel',
+  'The 9:30 Club',
+  
+  // Midwest/Central Tour  
+  'First Avenue',
+  'The Ryman Auditorium',
+  'Lincoln Hall',
+  
+  // West Coast Tour
+  'The Troubadour',
+  'The Fillmore',
+  'The Independent',
+  'Red Rocks Amphitheatre'
 ];
 
 // Artist names to create if they don't exist
@@ -174,12 +186,17 @@ async function createToursWithSpecificVenues(artistIds: number[], venueList: any
       }
     }
     
+    // Format dates as strings in YYYY-MM-DD format
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+    const updatedAtStr = new Date().toISOString();
+    
     // Insert the tour
     const [newTour] = await db.insert(tours).values({
       name: tourName,
       artistId: artistId,
-      startDate: startDate,
-      endDate: endDate,
+      startDate: startDateStr,
+      endDate: endDateStr,
       status: 'planning',
       description: `${artist[0].name} tour featuring shows at selected venues`,
       totalBudget: 50000 + Math.random() * 150000,
@@ -189,7 +206,8 @@ async function createToursWithSpecificVenues(artistIds: number[], venueList: any
       initialOptimizationScore: 50, // Mediocre score to start with
       initialTotalDistance: totalDistance,
       initialTravelTime: totalTime,
-      optimizationScore: 50 // Will be improved through optimization
+      optimizationScore: 50, // Will be improved through optimization
+      updatedAt: updatedAtStr
     }).returning();
     
     console.log(`Created tour: ${newTour.name} (ID: ${newTour.id})`);
@@ -232,17 +250,21 @@ async function createToursWithSpecificVenues(artistIds: number[], venueList: any
         status = ['potential', 'contacted', 'negotiating', 'hold3', 'hold4'][Math.floor(Math.random() * 5)];
       }
       
+      // Format date for database
+      const venueDateStr = currentDate.toISOString().split('T')[0];
+      const statusUpdatedAtStr = new Date().toISOString();
+      
       // Insert the tour venue
       await db.insert(tourVenues).values({
         tourId: newTour.id,
         venueId: venue.id,
-        date: currentDate,
+        date: venueDateStr,
         status: status,
         sequence: j + 1,
         travelDistanceFromPrevious: travelDistance,
         travelTimeFromPrevious: travelTime,
         notes: `Show at ${venue.name}`,
-        statusUpdatedAt: new Date()
+        statusUpdatedAt: statusUpdatedAtStr
       });
       
       console.log(`  Added venue: ${venue.name} (${currentDate.toISOString().split('T')[0]}, Status: ${status})`);
