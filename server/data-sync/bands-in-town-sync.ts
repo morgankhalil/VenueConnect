@@ -39,12 +39,13 @@ export async function syncVenueEventsFromBandsInTown(venueId: string, venueName:
       .set({ bandsintownId: venueId })
       .where(eq(venues.name, venueName));
 
-    const response = await axios.get(`https://rest.bandsintown.com/v3.0/venues/${venueId}/events`, {
+    const response = await axios.get(`https://rest.bandsintown.com/venues/${venueId}/events`, {
       params: { 
         app_id: apiKey
       },
       headers: {
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
       }
     });
 
