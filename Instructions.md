@@ -40,3 +40,39 @@ npx tsx server/seed-venues-from-bandsintown.ts
 ```
 
 This should now successfully connect to the Bandsintown API without the 403 error.
+
+# PredictHQ Integration Plan
+
+## Current Codebase Analysis
+
+### Relevant Files
+1. `server/data-sync/event-provider.ts` - Contains the EventProvider interface
+2. `server/data-sync/predict-hq-provider.ts` - New PredictHQ implementation
+3. `server/data-sync/bands-in-town-sync.ts` - Existing Bandsintown integration
+
+### Integration Status
+- Basic PredictHQ provider implementation is in place
+- Need to implement data mapping and sync logic
+
+## Implementation Plan
+
+### 1. Data Mapping Tasks
+- Map PredictHQ event fields to our database schema
+- Handle venue matching and creation
+- Add support for PredictHQ-specific fields
+
+### 2. Sync Runner Updates
+- Update sync-runner.ts to support both providers
+- Add provider selection logic
+- Implement rate limiting for free trial limitations
+
+### 3. Testing Plan
+1. Test venue search functionality
+2. Test event fetching with pagination
+3. Verify data mapping accuracy
+4. Test error handling and retry logic
+
+### 4. Migration Strategy
+1. Run both providers in parallel initially
+2. Validate data quality from PredictHQ
+3. Gradually transition to PredictHQ as primary source
