@@ -35,6 +35,11 @@ async function seedTestUsers() {
       venueId: firstVenue.id // Assign to specific venue
     }).returning();
 
+    // Ensure venue manager is explicitly linked to venue
+    await db.update(users)
+      .set({ venueId: firstVenue.id })
+      .where(eq(users.id, venueManager.id));
+
     console.log('Created venue manager:', venueManager);
     console.log(`Assigned venue ${firstVenue.name} (ID: ${firstVenue.id}) to venue manager`);
 
