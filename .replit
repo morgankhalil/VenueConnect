@@ -7,7 +7,7 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["sh", "-c", "npm start"]
+run = ["sh", "-c", "tsx server/webhooks/daily-sync.ts"]
 build = ["sh", "-c", "npm run build"]
 
 [[ports]]
