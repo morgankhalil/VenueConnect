@@ -9,7 +9,10 @@ import {
   getStatusInfo, 
   getStatusBadgeVariant, 
   STATUS_DISPLAY_NAMES,
-  isPriorityHold
+  isPriorityHold,
+  PLANNING_STATUSES,
+  CONTACT_STATUSES,
+  PRIORITY_HOLD_STATUSES
 } from '@/lib/tour-status';
 import { UpdateVenueForm } from './update-venue-form';
 import {
@@ -53,7 +56,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -487,25 +492,126 @@ export function TourDetail({ tourId }: TourDetailProps) {
                                     </Badge>
                                   </div>
                                   <div className="space-y-2">
-                                    <p className="text-sm font-medium">Recommended Priority</p>
+                                    <p className="text-sm font-medium">Route Fit Analysis</p>
                                     <div className="flex space-x-2">
-                                      {item.status ? (
-                                        <Badge
-                                          style={{
-                                            backgroundColor: getStatusInfo(item.status).color,
-                                            color: 'white'
-                                          }}
-                                        >
-                                          {STATUS_DISPLAY_NAMES[item.status]}
-                                        </Badge>
-                                      ) : (
-                                        <Badge className="bg-blue-500">Suggested</Badge>
-                                      )}
                                       {item.detourRatio && (
                                         <Badge variant="outline" className="text-xs">
                                           {Math.round((item.detourRatio - 1) * 100)}% route deviation
                                         </Badge>
                                       )}
+                                      <Badge variant="outline" 
+                                        className="text-xs"
+                                        style={{
+                                          backgroundColor: item.detourRatio && item.detourRatio < 1.2 
+                                            ? 'rgba(16, 185, 129, 0.1)' 
+                                            : item.detourRatio && item.detourRatio < 1.5 
+                                              ? 'rgba(245, 158, 11, 0.1)' 
+                                              : 'rgba(239, 68, 68, 0.1)',
+                                          color: item.detourRatio && item.detourRatio < 1.2 
+                                            ? 'rgb(16, 185, 129)' 
+                                            : item.detourRatio && item.detourRatio < 1.5 
+                                              ? 'rgb(245, 158, 11)' 
+                                              : 'rgb(239, 68, 68)'
+                                        }}
+                                      >
+                                        {item.detourRatio && item.detourRatio < 1.2 
+                                          ? 'Excellent fit' 
+                                          : item.detourRatio && item.detourRatio < 1.5 
+                                            ? 'Good fit' 
+                                            : 'Significant detour'}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <p className="text-sm font-medium">Choose Priority Status</p>
+                                    <div className="grid grid-cols-2 gap-2">
+                                      {/* First suggest appropriate priority based on detour ratio */}
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          const statusField = document.getElementById(`status-${item.venue.id}`) as HTMLInputElement;
+                                          if (statusField) {
+                                            // Set suggested status based on detour ratio
+                                            if (item.detourRatio && item.detourRatio < 1.1) {
+                                              statusField.value = 'hold1'; // Excellent fit = highest priority
+                                            } else if (item.detourRatio && item.detourRatio < 1.3) {
+                                              statusField.value = 'hold2'; // Good fit = medium-high priority
+                                            } else if (item.detourRatio && item.detourRatio < 1.5) {
+                                              statusField.value = 'hold3'; // Moderate fit = medium priority
+                                            } else {
+                                              statusField.value = 'hold4'; // Poor fit = low priority
+                                            }
+                                          }
+                                        }}
+                                        style={{
+                                          borderColor: item.detourRatio && item.detourRatio < 1.2 
+                                            ? 'rgba(16, 185, 129, 0.3)' 
+                                            : item.detourRatio && item.detourRatio < 1.5 
+                                              ? 'rgba(245, 158, 11, 0.3)' 
+                                              : 'rgba(239, 68, 68, 0.3)',
+                                          color: item.detourRatio && item.detourRatio < 1.2 
+                                            ? 'rgb(16, 185, 129)' 
+                                            : item.detourRatio && item.detourRatio < 1.5 
+                                              ? 'rgb(245, 158, 11)' 
+                                              : 'rgb(239, 68, 68)'
+                                        }}
+                                      >
+                                        Recommended Priority
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          const statusField = document.getElementById(`status-${item.venue.id}`) as HTMLInputElement;
+                                          if (statusField) {
+                                            statusField.value = 'suggested';
+                                          }
+                                        }}
+                                      >
+                                        Just Suggest
+                                      </Button>
+                                    </div>
+                                    <div className="pt-2">
+                                      <Select
+                                        defaultValue={item.status || 'suggested'}
+                                        onValueChange={(value) => {
+                                          const statusField = document.getElementById(`status-${item.venue.id}`) as HTMLInputElement;
+                                          if (statusField) {
+                                            statusField.value = value;
+                                          }
+                                        }}
+                                      >
+                                        <SelectTrigger id={`status-${item.venue.id}`}>
+                                          <SelectValue placeholder="Select status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectGroup>
+                                            <SelectLabel>Planning</SelectLabel>
+                                            {PLANNING_STATUSES.map(status => (
+                                              <SelectItem key={status} value={status}>
+                                                {STATUS_DISPLAY_NAMES[status]}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectGroup>
+                                          <SelectGroup>
+                                            <SelectLabel>Contact Phase</SelectLabel>
+                                            {CONTACT_STATUSES.map(status => (
+                                              <SelectItem key={status} value={status}>
+                                                {STATUS_DISPLAY_NAMES[status]}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectGroup>
+                                          <SelectGroup>
+                                            <SelectLabel>Priority Holds</SelectLabel>
+                                            {PRIORITY_HOLD_STATUSES.map(status => (
+                                              <SelectItem key={status} value={status}>
+                                                {STATUS_DISPLAY_NAMES[status]}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectGroup>
+                                        </SelectContent>
+                                      </Select>
                                     </div>
                                   </div>
                                 </div>
@@ -522,7 +628,8 @@ export function TourDetail({ tourId }: TourDetailProps) {
                                           body: JSON.stringify({
                                             tourId: Number(tourId),
                                             venueId: item.venue.id,
-                                            status: item.status || 'suggested',
+                                            // Get the current status from the select input
+                                            status: (document.getElementById(`status-${item.venue.id}`) as HTMLInputElement)?.value || item.status || 'suggested',
                                             date: item.suggestedDate,
                                             notes: `Added from tour optimization suggestions. Route deviation: ${item.detourRatio ? Math.round((item.detourRatio - 1) * 100) + '%' : 'unknown'}`
                                           }),
