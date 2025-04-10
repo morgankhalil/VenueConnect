@@ -13,16 +13,16 @@ async function seedEvents() {
 
     // Get some popular artists to sync (you can modify this list)
     const popularArtists = [
-      'The Black Keys',
-      'Tame Impala',
-      'Arctic Monkeys',
-      'The Strokes',
-      'LCD Soundsystem',
-      'Vampire Weekend',
-      'MGMT',
-      'Beach House',
-      'The War on Drugs',
-      'Fleet Foxes'
+      'Taylor Swift',
+      'Ed Sheeran',
+      'The Weeknd',
+      'Coldplay',
+      'Bad Bunny',
+      'Post Malone',
+      'Imagine Dragons',
+      'Bruno Mars',
+      'Harry Styles',
+      'Beyoncé'
     ];
 
     // Sync events for each artist
