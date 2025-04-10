@@ -355,16 +355,50 @@ export function optimizeTourRoute(
     venue.sequence = index + 1; // Sequences start at 1
   });
   
-  // Calculate optimization score (higher is better)
-  // More sophisticated version considering gap filling quality
+  // Calculate optimization score with enhanced prioritization
   const baseScore = 100;
   const distancePenalty = Math.min(20, result.totalDistance / 100);
   const timePenalty = Math.min(20, result.totalTravelTime / 500);
   
-  // Reward for filling gaps appropriately
-  const gapFillingBonus = Math.min(10, result.tourVenues.filter(v => !v.isFixed).length * 2);
+  // Enhanced gap filling analysis
+  const filledGaps = result.tourVenues.filter(v => !v.isFixed && v.gapFilling);
+  const gapFillingQuality = filledGaps.reduce((score, venue) => {
+    // Better score for venues with lower detour ratios
+    return score + (venue.detourRatio ? Math.max(0, 5 - (venue.detourRatio - 1) * 10) : 0);
+  }, 0);
   
-  result.optimizationScore = Math.round(baseScore - distancePenalty - timePenalty + gapFillingBonus);
+  const gapFillingBonus = Math.min(15, gapFillingQuality);
+  
+  // Geographic clustering bonus
+  const clusterBonus = Math.min(10, result.tourVenues.reduce((bonus, venue, i, arr) => {
+    if (i === 0 || i === arr.length - 1) return bonus;
+    const prev = arr[i - 1];
+    const next = arr[i + 1];
+    
+    if (venue.venue && prev.venue && next.venue) {
+      const distanceToPrev = calculateDistance(
+        Number(venue.venue.latitude),
+        Number(venue.venue.longitude),
+        Number(prev.venue.latitude),
+        Number(prev.venue.longitude)
+      );
+      
+      const distanceToNext = calculateDistance(
+        Number(venue.venue.latitude),
+        Number(venue.venue.longitude),
+        Number(next.venue.latitude),
+        Number(next.venue.longitude)
+      );
+      
+      // Add bonus for venues close to their neighbors
+      if (distanceToPrev < 500 && distanceToNext < 500) {
+        return bonus + 2;
+      }
+    }
+    return bonus;
+  }, 0));
+  
+  result.optimizationScore = Math.round(baseScore - distancePenalty - timePenalty + gapFillingBonus + clusterBonus);
   
   // Cap score at reasonable bounds
   result.optimizationScore = Math.max(0, Math.min(100, result.optimizationScore));

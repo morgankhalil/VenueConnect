@@ -43,9 +43,43 @@ export function calculateInitialTourScore(
   let schedulePenalty = 0;
   let routePenalty = 0;
   
+  // Calculate geographic density score
+  let densityScore = 0;
+  if (venuesWithCoordinates.length > 2) {
+    for (let i = 1; i < venuesWithCoordinates.length - 1; i++) {
+      const prev = venuesWithCoordinates[i - 1];
+      const curr = venuesWithCoordinates[i];
+      const next = venuesWithCoordinates[i + 1];
+      
+      if (prev.venue && curr.venue && next.venue) {
+        const distanceToPrev = calculateDistance(
+          Number(curr.venue.latitude),
+          Number(curr.venue.longitude),
+          Number(prev.venue.latitude),
+          Number(prev.venue.longitude)
+        );
+        
+        const distanceToNext = calculateDistance(
+          Number(curr.venue.latitude),
+          Number(curr.venue.longitude),
+          Number(next.venue.latitude),
+          Number(next.venue.longitude)
+        );
+        
+        // Reward venues that are close to their neighbors
+        if (distanceToPrev < 500 && distanceToNext < 500) {
+          densityScore += 5;
+        }
+      }
+    }
+  }
+  
   // Count venues with no dates (lack of planning penalty)
   const venuesWithoutDates = tourVenues.filter(tv => !tv.date).length;
   const dateGapPenalty = Math.min(15, venuesWithoutDates * 3);
+  
+  // Apply density bonus to final score calculation
+  const densityBonus = Math.min(20, densityScore);
   
   // Process consecutive pairs to calculate distance and travel time
   for (let i = 0; i < venuesWithCoordinates.length - 1; i++) {
