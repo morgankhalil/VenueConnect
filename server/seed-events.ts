@@ -11,18 +11,18 @@ async function seedEvents() {
     const venueList = await db.select().from(venues);
     console.log(`Found ${venueList.length} venues to sync events for`);
 
-    // Get some popular artists to sync (you can modify this list)
+    // Common artists that tour at venues of this size
     const popularArtists = [
-      'Taylor Swift',
-      'Ed Sheeran',
-      'The Weeknd',
-      'Coldplay',
-      'Bad Bunny',
-      'Post Malone',
-      'Imagine Dragons',
-      'Bruno Mars',
-      'Harry Styles',
-      'Beyoncé'
+      'Modest Mouse',
+      'The National',
+      'Spoon',
+      'Future Islands',
+      'Japanese Breakfast',
+      'Car Seat Headrest',
+      'Kurt Vile',
+      'Angel Olsen',
+      'Big Thief',
+      'Parquet Courts'
     ];
 
     // Sync events for each artist
