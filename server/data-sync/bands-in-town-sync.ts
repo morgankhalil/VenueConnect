@@ -3,12 +3,43 @@ import { db } from '../db';
 import { venues } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
 import { EventProvider, SyncOptions } from './event-provider';
+import { eq } from 'drizzle-orm';
 
 export class BandsInTownProvider implements EventProvider {
   private apiKey: string;
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
+  }
+}
+
+export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius: number = 250, limit: number = 100) {
+  const apiKey = process.env.BANDSINTOWN_API_KEY;
+  if (!apiKey) {
+    throw new Error('Bandsintown API key is not configured');
+  }
+
+  // Get source venue details
+  const sourceVenue = await db.select().from(venues).where(eq(venues.id, sourceVenueId)).limit(1);
+  if (!sourceVenue.length) {
+    throw new Error(`Source venue with ID ${sourceVenueId} not found`);
+  }
+
+  try {
+    const response = await axios.get(`https://rest.bandsintown.com/venues/search`, {
+      params: {
+        query: sourceVenue[0].name,
+        location: `${sourceVenue[0].latitude},${sourceVenue[0].longitude}`,
+        radius: radius,
+        limit: limit,
+        app_id: apiKey
+      }
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching venues:', error);
+    throw error;
   }
 }
 
