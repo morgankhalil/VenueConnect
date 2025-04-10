@@ -275,9 +275,18 @@ export class SeedManager {
       this.logger.log('Starting seed process...');
       await this.clearDatabase();
 
-      const seededVenues = [];
-      const failedVenues = [];
-      let totalEvents = 0;
+      const stats = {
+        seededVenues: [],
+        failedVenues: [],
+        totalEvents: 0,
+        invalidData: 0,
+        duplicates: 0,
+        errors: {
+          api: 0,
+          database: 0,
+          validation: 0
+        }
+      };
 
       // 1. Seed Venues
       for (const venue of venueData) {
@@ -319,13 +328,21 @@ export class SeedManager {
       }
 
       this.logger.log('\nSeeding completed with summary:', 'info');
-      this.logger.log(`- Venues seeded successfully: ${seededVenues.length}`, 'info');
-      this.logger.log(`- Failed venues: ${failedVenues.length}`, 'info');
-      this.logger.log(`- Total events created: ${totalEvents}`, 'info');
+      this.logger.log(`- Venues seeded successfully: ${stats.seededVenues.length}`, 'info');
+      this.logger.log(`- Failed venues: ${stats.failedVenues.length}`, 'info');
+      this.logger.log(`- Invalid data entries: ${stats.invalidData}`, 'info');
+      this.logger.log(`- Duplicate venues skipped: ${stats.duplicates}`, 'info');
+      this.logger.log(`- Total events created: ${stats.totalEvents}`, 'info');
+      this.logger.log('\nErrors:', 'info');
+      this.logger.log(`- API errors: ${stats.errors.api}`, 'info');
+      this.logger.log(`- Database errors: ${stats.errors.database}`, 'info');
+      this.logger.log(`- Validation errors: ${stats.errors.validation}`, 'info');
 
-      if (failedVenues.length > 0) {
-        this.logger.log(`Failed venues: ${failedVenues.join(', ')}`, 'warning');
+      if (stats.failedVenues.length > 0) {
+        this.logger.log(`Failed venues: ${stats.failedVenues.join(', ')}`, 'warning');
       }
+
+      return stats;
 
     } catch (error) {
       this.logger.log('Seeding process failed:', 'error');
