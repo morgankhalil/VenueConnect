@@ -49,7 +49,7 @@ export function VenueSelector() {
     
     setIsLoading(true);
     try {
-      await apiRequest(`/api/user/select-venue/${venueId}`);
+      await apiRequest(`/api/select-venue/${venueId}`);
       
       // Invalidate queries to refresh data across the application
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
