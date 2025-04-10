@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
-import { getTour, optimizeTourRoute, updateTour } from '@/lib/api';
+import { getTour, optimizeTourRoute, updateTour, applyOptimizedTour } from '@/lib/api'; // Added applyOptimizedTour
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { VenueStatusBadge } from './venue-status-badge';
@@ -58,7 +58,9 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
   const [mapEvents, setMapEvents] = useState<MapEvent[]>([]);
   const [selectedVenue, setSelectedVenue] = useState<MapEvent | null>(null);
   const [showAllVenues, setShowAllVenues] = useState(true);
-  
+  const [showOptimizer, setShowOptimizer] = useState(false);
+  const [optimizing, setOptimizing] = useState(false);
+
   // Fetch tour details
   const { 
     data: tour, 
@@ -69,7 +71,7 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
     queryKey: ['/api/tour/tours', tourId],
     queryFn: () => getTour(Number(tourId)),
   });
-  
+
   // Create map events from tour venues (even without optimization)
   useEffect(() => {
     if (tour?.venues) {
@@ -87,13 +89,13 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
           venue_id: v.venue.id,
           sequence: v.tourVenue.sequence || index
         }));
-      
+
       if (venues.length > 0) {
         setMapEvents(venues);
       }
     }
   }, [tour]);
-  
+
   // Prepare map data when optimization results are available
   useEffect(() => {
     if (optimizationResult) {
@@ -105,7 +107,7 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
               // Find the matching venue from the tour data
               const matchingVenue = tour?.venues?.find(v => v.venue?.id === point.id)?.venue;
               const sequence = point.sequence !== undefined ? point.sequence : index;
-              
+
               return {
                 id: point.id,
                 venue: matchingVenue?.name || `Venue ${point.id}`,
@@ -120,7 +122,7 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
               };
             })
         : [];
-      
+
       // Get suggested venues from the potential fill venues
       const suggestedVenues: MapEvent[] = optimizationResult.potentialFillVenues
         ? optimizationResult.potentialFillVenues
@@ -136,7 +138,7 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
               const sequence = item.suggestedSequence !== undefined ? 
                 item.suggestedSequence : 
                 (fixedVenues.length + index);
-                
+
               return {
                 id: item.venue.id,
                 venue: item.venue.name || `Venue ${item.venue.id}`,
@@ -152,10 +154,10 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
               };
             })
         : [];
-      
+
       // Combine and set all map events
       const allEvents = [...fixedVenues, ...suggestedVenues];
-      
+
       // Sort events by sequence to ensure markers are numbered correctly
       allEvents.sort((a, b) => {
         if (a.sequence !== undefined && b.sequence !== undefined) {
@@ -163,11 +165,11 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
         }
         return 0;
       });
-      
+
       setMapEvents(allEvents);
     }
   }, [optimizationResult, tour]);
-  
+
   // Update tour status mutation
   const updateStatusMutation = useMutation({
     mutationFn: (status: string) => 
@@ -187,7 +189,7 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
       });
     },
   });
-  
+
   // Tour optimization mutation (for direct optimization via API)
   const optimizeMutation = useMutation({
     mutationFn: () => optimizeTourRoute(Number(tourId)),
@@ -207,15 +209,35 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
       });
     },
   });
-  
+
+  //Mutation to apply the optimized tour
+  const applyMutation = useMutation({
+    mutationFn: () => applyOptimizedTour(Number(tourId), optimizationResult),
+    onSuccess: () => {
+      toast({
+        title: 'Tour Updated',
+        description: 'Tour has been updated with optimized route.',
+      });
+      refetch();
+    },
+    onError: (err) => {
+      console.error("Error applying optimized tour:", err);
+      toast({
+        title: 'Error Applying Changes',
+        description: 'Failed to apply optimized tour. Please try again later.',
+        variant: 'destructive',
+      });
+    }
+  });
+
   const handleStatusChange = (status: string) => {
     updateStatusMutation.mutate(status);
   };
-  
+
   // Check if the tour has enough venues for optimization
   // For optimization, we can work with any venues regardless of dates or status
   const hasEnoughVenuesForOptimization = (tour?.venues?.length || 0) >= 2;
-  
+
   // Filtered venues based on toggle
   const filteredVenues = useMemo(() => {
     if (showAllVenues) {
@@ -227,10 +249,10 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
       );
     }
   }, [mapEvents, showAllVenues]);
-  
+
   const handleVenueClick = (venue: MapEvent) => {
     setSelectedVenue(venue);
-    
+
     // If you want to highlight the venue on the map, you could do that here
     // For now, just show a toast with the venue info
     toast({
@@ -238,7 +260,7 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
       description: `Status: ${getStatusInfo(venue.status || 'confirmed').displayName}${venue.date ? ` • Date: ${formatDate(venue.date)}` : ''}`,
     });
   };
-  
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-60">
@@ -246,7 +268,7 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
       </div>
     );
   }
-  
+
   if (error || !tour) {
     return (
       <Card>
@@ -263,20 +285,20 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
       </Card>
     );
   }
-  
+
   // Calculate improvements if optimization data is available
   const distanceImprovement = optimizationResult && tour.estimatedTravelDistance ? 
     calculateImprovement(tour.estimatedTravelDistance, optimizationResult.totalDistance) : 
     undefined;
-    
+
   const timeImprovement = optimizationResult && tour.estimatedTravelTime ? 
     calculateImprovement(tour.estimatedTravelTime, optimizationResult.totalTravelTime) : 
     undefined;
-    
+
   const scoreImprovement = optimizationResult && tour.optimizationScore ? 
     Math.round(optimizationResult.optimizationScore - tour.optimizationScore) : 
     undefined;
-  
+
   return (
     <div className="space-y-6">
       {/* Tour Details Card */}
@@ -300,18 +322,17 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
               </div>
             </div>
             <div className="flex space-x-2">
-              <Link href={`/tours/${tourId}/optimize`}>
-                <Button 
-                  size="sm"
-                  variant="default"
-                  className="bg-gradient-to-r from-primary to-primary/80"
-                  disabled={!hasEnoughVenuesForOptimization}
-                >
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Tour Optimizer
-                </Button>
-              </Link>
-              
+              <Button
+                variant="default"
+                size="sm"
+                className="bg-gradient-to-r from-primary to-primary/80"
+                onClick={() => setShowOptimizer(true)}
+                disabled={!hasEnoughVenuesForOptimization}
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                Optimize Tour
+              </Button>
+
               <Link href={`/tours/${tourId}/edit`}>
                 <Button size="sm" variant="outline">
                   <PenLine className="mr-2 h-4 w-4" />
@@ -346,7 +367,7 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
               </p>
             </div>
           </div>
-          
+
           {/* Description */}
           <div className="space-y-2 mb-6">
             <h3 className="font-medium">Description</h3>
@@ -354,7 +375,7 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
               {tour.description || 'No description provided.'}
             </p>
           </div>
-          
+
           {/* Tour Status */}
           <div className="space-y-2 mb-6">
             <div className="flex justify-between items-center">
@@ -377,7 +398,7 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
               </Select>
             </div>
           </div>
-          
+
           {/* Statistics Section */}
           <div className="mt-6">
             <h3 className="font-medium mb-3">Tour Statistics</h3>
@@ -401,7 +422,7 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Map and Venue List Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Map Section: 2/3 width on large screens */}
@@ -426,19 +447,18 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
                       : `View your tour route with ${tour.venues?.length || 0} venues`}
                   </CardDescription>
                 </div>
-                
+
                 <div className="flex space-x-2">
-                  <Link href={`/tours/${tourId}/optimize`}>
-                    <Button 
-                      size="sm"
-                      variant="default"
-                      disabled={!hasEnoughVenuesForOptimization}
-                      className="bg-gradient-to-r from-primary to-primary/80"
-                    >
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Tour Optimizer
-                    </Button>
-                  </Link>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="bg-gradient-to-r from-primary to-primary/80"
+                    onClick={() => setShowOptimizer(true)}
+                    disabled={!hasEnoughVenuesForOptimization}
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Optimize Tour
+                  </Button>
                 </div>
               </div>
             </CardHeader>
@@ -548,6 +568,89 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
           </Card>
         </div>
       </div>
+      <Dialog open={showOptimizer} onOpenChange={setShowOptimizer}>
+                <DialogContent className="sm:max-w-[600px]">
+                  <DialogHeader>
+                    <DialogTitle>Tour Optimization</DialogTitle>
+                  </DialogHeader>
+
+                  {!optimizationResult ? (
+                    <div className="space-y-4 py-4">
+                      <p className="text-sm text-muted-foreground">
+                        Optimize your tour route to minimize travel time and maximize efficiency
+                      </p>
+                      <Button 
+                        onClick={() => {
+                          setOptimizing(true);
+                          optimizeMutation.mutate();
+                        }}
+                        disabled={optimizing}
+                        className="w-full"
+                      >
+                        {optimizing ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Optimizing...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="mr-2 h-4 w-4" />
+                            Start Optimization
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-6 py-4">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="bg-muted p-4 rounded-lg">
+                          <h4 className="font-medium text-sm mb-2">Score</h4>
+                          <p className="text-2xl font-bold">{optimizationResult.optimizationScore}</p>
+                        </div>
+                        <div className="bg-muted p-4 rounded-lg">
+                          <h4 className="font-medium text-sm mb-2">Distance</h4>
+                          <p className="text-2xl font-bold">{Math.round(optimizationResult.totalDistance)} km</p>
+                        </div>
+                        <div className="bg-muted p-4 rounded-lg">
+                          <h4 className="font-medium text-sm mb-2">Time</h4>
+                          <p className="text-2xl font-bold">{Math.round(optimizationResult.totalTravelTime / 60)} hrs</p>
+                        </div>
+                      </div>
+
+                      {optimizationResult.potentialFillVenues?.length > 0 && (
+                        <div className="space-y-2">
+                          <h4 className="font-medium">Recommended Venues</h4>
+                          <div className="space-y-2">
+                            {optimizationResult.potentialFillVenues.map((venue: any) => (
+                              <div key={venue.venue.id} className="flex justify-between items-center bg-muted p-2 rounded">
+                                <span>{venue.venue.name}</span>
+                                <span className="text-sm text-muted-foreground">
+                                  {new Date(venue.suggestedDate).toLocaleDateString()}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex justify-end space-x-2">
+                        <Button variant="outline" onClick={() => {
+                          setShowOptimizer(false);
+                          setOptimizationResult(null);
+                        }}>
+                          Cancel
+                        </Button>
+                        <Button onClick={() => {
+                          applyMutation.mutate();
+                          setShowOptimizer(false);
+                        }}>
+                          Apply Changes
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
     </div>
   );
 }
@@ -555,7 +658,7 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
 // Helper function to determine tour status badge variant
 function getTourStatusVariant(status?: string) {
   if (!status) return 'outline';
-  
+
   switch (status.toLowerCase()) {
     case 'planning':
       return 'outline';
