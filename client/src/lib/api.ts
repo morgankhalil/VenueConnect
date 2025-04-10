@@ -218,6 +218,15 @@ export async function getTour(tourId: number) {
 }
 
 /**
+ * Alias for getTour to maintain compatibility with new components
+ * @param tourId The ID of the tour to get
+ * @returns A promise that resolves to the tour
+ */
+export async function getTourById(tourId: number) {
+  return getTour(tourId);
+}
+
+/**
  * Create a new tour
  * @param tour The tour details
  * @returns A promise that resolves when the tour is created
