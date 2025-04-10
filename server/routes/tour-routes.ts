@@ -24,7 +24,7 @@ import { and, eq, gte, lte, desc, or, sql, notInArray, isNotNull } from 'drizzle
 const router = Router();
 
 /**
- * Get all tours
+ * Get all tours with artist details
  */
 router.get('/tours', async (req, res) => {
   try {
@@ -54,16 +54,36 @@ router.get('/tours', async (req, res) => {
       filters.push(sql`${tours.endDate} <= ${endDateStr}`);
     }
     
-    // Execute query with filters
+    // Execute query with join to get artist names
+    const toursQuery = db
+      .select({
+        id: tours.id,
+        name: tours.name,
+        artistId: tours.artistId,
+        artistName: artists.name,  // Include artist name
+        startDate: tours.startDate,
+        endDate: tours.endDate,
+        status: tours.status,
+        description: tours.description,
+        totalBudget: tours.totalBudget,
+        estimatedTravelDistance: tours.estimatedTravelDistance,
+        estimatedTravelTime: tours.estimatedTravelTime,
+        initialOptimizationScore: tours.initialOptimizationScore,
+        initialTotalDistance: tours.initialTotalDistance,
+        initialTravelTime: tours.initialTravelTime,
+        optimizationScore: tours.optimizationScore,
+        createdAt: tours.createdAt,
+        updatedAt: tours.updatedAt
+      })
+      .from(tours)
+      .leftJoin(artists, eq(tours.artistId, artists.id));
+    
+    // Apply filters if needed
     const result = filters.length > 0
-      ? await db
-          .select()
-          .from(tours)
+      ? await toursQuery
           .where(and(...filters))
           .orderBy(desc(tours.startDate))
-      : await db
-          .select()
-          .from(tours)
+      : await toursQuery
           .orderBy(desc(tours.startDate));
     
     res.json(result);

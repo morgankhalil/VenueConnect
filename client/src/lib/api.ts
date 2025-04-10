@@ -205,7 +205,7 @@ export async function getTours(filters?: {
   if (filters?.endDate) queryParams.append('endDate', filters.endDate);
   
   const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-  return apiRequest(`/api/tour/tours${queryString}`);
+  return apiRequest(`/api/tours${queryString}`);
 }
 
 /**

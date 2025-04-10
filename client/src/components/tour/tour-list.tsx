@@ -36,7 +36,7 @@ export function TourList() {
   const [_, navigate] = useLocation();
   
   const { data: tours, isLoading, error } = useQuery({
-    queryKey: ['/api/tour/tours', filterStatus],
+    queryKey: ['/api/tours', filterStatus],
     queryFn: () => getTours({ status: filterStatus }),
   });
   

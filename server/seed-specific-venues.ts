@@ -189,7 +189,7 @@ async function createToursWithSpecificVenues(artistIds: number[], venueList: any
     // Format dates as strings in YYYY-MM-DD format
     const startDateStr = startDate.toISOString().split('T')[0];
     const endDateStr = endDate.toISOString().split('T')[0];
-    const updatedAtStr = new Date().toISOString();
+    // Don't use updatedAt as it causes timestamp issues
     
     // Insert the tour
     const [newTour] = await db.insert(tours).values({
@@ -206,8 +206,7 @@ async function createToursWithSpecificVenues(artistIds: number[], venueList: any
       initialOptimizationScore: 50, // Mediocre score to start with
       initialTotalDistance: totalDistance,
       initialTravelTime: totalTime,
-      optimizationScore: 50, // Will be improved through optimization
-      updatedAt: updatedAtStr
+      optimizationScore: 50 // Will be improved through optimization
     }).returning();
     
     console.log(`Created tour: ${newTour.name} (ID: ${newTour.id})`);
@@ -252,7 +251,6 @@ async function createToursWithSpecificVenues(artistIds: number[], venueList: any
       
       // Format date for database
       const venueDateStr = currentDate.toISOString().split('T')[0];
-      const statusUpdatedAtStr = new Date().toISOString();
       
       // Insert the tour venue
       await db.insert(tourVenues).values({
@@ -263,8 +261,8 @@ async function createToursWithSpecificVenues(artistIds: number[], venueList: any
         sequence: j + 1,
         travelDistanceFromPrevious: travelDistance,
         travelTimeFromPrevious: travelTime,
-        notes: `Show at ${venue.name}`,
-        statusUpdatedAt: statusUpdatedAtStr
+        notes: `Show at ${venue.name}`
+        // Omit statusUpdatedAt to let database handle it
       });
       
       console.log(`  Added venue: ${venue.name} (${currentDate.toISOString().split('T')[0]}, Status: ${status})`);
