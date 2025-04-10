@@ -96,10 +96,17 @@ async function fetchVenueEvents(venueName: string, venueId: string): Promise<Ban
     const eventsData = response.data;
     console.log(`Retrieved ${eventsData.length} events for venue ${venueName}`);
     return eventsData;
-  } catch (error) {
-    console.error(`Error fetching events for venue ${venueName}:`, error);
-    return [];
-  }
+  } catch (error: any) {
+      console.error(`Error fetching events for venue ${venueName}:`);
+      if (error.response) {
+        console.error('Status:', error.response.status);
+        console.error('Error Data:', error.response.data);
+        console.error('Headers:', error.response.headers);
+      } else {
+        console.error('Error:', error.message);
+      }
+      return [];
+    }
 }
 
 /**
@@ -238,7 +245,7 @@ async function seedEventsAndArtists() {
       try {
         console.log(`Attempting to fetch events for ${venue.name} with ID ${bandsintownId}...`);
         const venueEvents = await fetchVenueEvents(venue.name, bandsintownId);
-        
+
         console.log(`API Response for ${venue.name}:`, JSON.stringify(venueEvents, null, 2));
 
         if (venueEvents.length === 0) {
