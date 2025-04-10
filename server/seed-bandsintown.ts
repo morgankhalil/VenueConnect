@@ -4,7 +4,7 @@ import { venues, artists, events, venueNetwork } from '../shared/schema';
 import { 
   syncVenuesFromBandsInTown,
   syncArtistEventsFromBandsInTown,
-  syncVenueEventsFromBandsInTown
+  syncVenueFromBandsInTown
 } from './data-sync/bands-in-town-sync';
 
 // Load environment variables
@@ -52,7 +52,7 @@ interface Options {
 
 function parseArgs(): Options {
   const args = process.argv.slice(2);
-  
+
   // Default options
   const options: Options = {
     operation: 'all',
@@ -60,26 +60,26 @@ function parseArgs(): Options {
     limit: 100,
     reset: false
   };
-  
+
   // Parse operation
   if (args[0] && ['all', 'venues', 'artists', 'events'].includes(args[0])) {
     options.operation = args[0] as Options['operation'];
   }
-  
+
   // Parse named options
   for (let i = 1; i < args.length; i++) {
     const arg = args[i];
-    
+
     if (arg === '--reset') {
       options.reset = true;
       continue;
     }
-    
+
     // Parse --option=value style args
     const match = arg.match(/^--([^=]+)=(.+)$/);
     if (match) {
       const [_, key, value] = match;
-      
+
       switch (key) {
         case 'source-venue':
           options.sourceVenue = parseInt(value);
@@ -96,7 +96,7 @@ function parseArgs(): Options {
       }
     }
   }
-  
+
   return options;
 }
 
@@ -109,22 +109,22 @@ async function resetData(tables: string[]) {
   // Clear tours first to remove foreign key constraints
   await db.delete(tours);
   console.log('Tours table cleared');
-  
+
   if (tables.includes('events')) {
     await db.delete(events);
     console.log('Events table cleared');
   }
-  
+
   if (tables.includes('artists')) {
     await db.delete(artists);
     console.log('Artists table cleared');
   }
-  
+
   if (tables.includes('venueNetwork')) {
     await db.delete(venueNetwork);
     console.log('Venue network table cleared');
   }
-  
+
   if (tables.includes('venues')) {
     // Keep at least one venue as a starting point
     const firstVenue = await db.select().from(venues).limit(1);
@@ -145,7 +145,7 @@ async function seedVenues(sourceVenueId: number, radius: number, limit: number) 
   console.log(`Source Venue ID: ${sourceVenueId}`);
   console.log(`Search Radius: ${radius} miles`);
   console.log(`Venue Limit: ${limit}`);
-  
+
   try {
     const addedVenues = await syncVenuesFromBandsInTown(sourceVenueId, radius, limit);
     console.log(`Added ${addedVenues.length} venues from Bandsintown`);
@@ -162,12 +162,12 @@ async function seedVenues(sourceVenueId: number, radius: number, limit: number) 
 async function seedArtists(artistNames: string[]) {
   console.log(`\nSeeding artists from Bandsintown...`);
   console.log(`Artists to sync: ${artistNames.join(', ')}`);
-  
+
   const results = {
     successful: [] as string[],
     failed: [] as {name: string, error: string}[]
   };
-  
+
   for (const artistName of artistNames) {
     try {
       console.log(`Syncing artist: ${artistName}`);
@@ -182,11 +182,11 @@ async function seedArtists(artistNames: string[]) {
       });
     }
   }
-  
+
   console.log(`\nArtist sync results:`);
   console.log(`- Successful: ${results.successful.length}`);
   console.log(`- Failed: ${results.failed.length}`);
-  
+
   return results;
 }
 
@@ -195,11 +195,11 @@ async function seedArtists(artistNames: string[]) {
  */
 async function seedEvents() {
   console.log(`\nSeeding events for existing venues from Bandsintown...`);
-  
+
   // Get all venues with Bandsintown IDs
   const allVenues = await db.select().from(venues);
   console.log(`Found ${allVenues.length} venues to check for events`);
-  
+
   // Known Bandsintown venue IDs (could be expanded)
   const venueIds: Record<string, string> = {
     'The Bug Jar': '10068739-the-bug-jar',
@@ -211,24 +211,25 @@ async function seedEvents() {
     'The Ryman Auditorium': '1941-ryman-auditorium',
     'House of Blues': '1941-house-of-blues-chicago'
   };
-  
+
   let totalEventsCreated = 0;
   const processedVenues: Record<string, number> = {};
-  
+
   // Process each venue
   for (const venue of allVenues) {
     // Try to find a Bandsintown ID for this venue
     const venueId = venueIds[venue.name];
-    
+
     if (!venueId) {
       console.log(`No Bandsintown ID found for venue: ${venue.name}`);
       continue;
     }
-    
+
     console.log(`Processing venue: ${venue.name} (${venueId})`);
-    
+
     try {
-      const eventCount = await syncVenueEventsFromBandsInTown(venueId);
+      const venueData = await syncVenueFromBandsInTown(venueId, venue.name);
+      const eventCount = venueData ? venueData.events.length : 0;
       console.log(`Created ${eventCount} events for ${venue.name}`);
       totalEventsCreated += eventCount;
       processedVenues[venue.name] = eventCount;
@@ -236,11 +237,11 @@ async function seedEvents() {
       console.error(`Error syncing events for ${venue.name}:`, error);
     }
   }
-  
+
   console.log(`\nEvent seeding completed`);
   console.log(`- Total events created: ${totalEventsCreated}`);
   console.log(`- Venues processed: ${Object.keys(processedVenues).length}`);
-  
+
   return {
     totalEvents: totalEventsCreated,
     venueResults: processedVenues
@@ -259,13 +260,13 @@ async function main() {
       console.error('Please set the BANDSINTOWN_API_KEY before running this script.');
       process.exit(1);
     }
-    
+
     // Parse command line options
     const options = parseArgs();
     console.log('Bandsintown Data Seed Tool');
     console.log('========================');
     console.log('Options:', JSON.stringify(options, null, 2));
-    
+
     // Reset data if requested
     if (options.reset) {
       const tablesToReset = [];
@@ -275,10 +276,10 @@ async function main() {
         tablesToReset.push('venueNetwork');
         tablesToReset.push('venues');
       }
-      
+
       await resetData(tablesToReset);
     }
-    
+
     // Find a source venue if not specified
     let sourceVenueId = options.sourceVenue;
     if (!sourceVenueId) {
@@ -289,7 +290,7 @@ async function main() {
       sourceVenueId = firstVenue[0].id;
       console.log(`Using venue ID ${sourceVenueId} (${firstVenue[0].name}) as source venue`);
     }
-    
+
     // Find artists to seed if none specified
     let artistsToSync = options.artists || [];
     if (!artistsToSync.length && ['all', 'artists'].includes(options.operation)) {
@@ -304,20 +305,20 @@ async function main() {
         console.log(`No artists found. Using default artist list: ${artistsToSync.join(', ')}`);
       }
     }
-    
+
     // Run seed operations based on selected operation
     if (['all', 'venues'].includes(options.operation)) {
       await seedVenues(sourceVenueId, options.radius, options.limit);
     }
-    
+
     if (['all', 'artists'].includes(options.operation)) {
       await seedArtists(artistsToSync);
     }
-    
+
     if (['all', 'events'].includes(options.operation)) {
       await seedEvents();
     }
-    
+
     console.log('\nBandsintown seed process completed successfully!');
     process.exit(0);
   } catch (error) {
