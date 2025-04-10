@@ -175,16 +175,16 @@ async function createOptimizableTour(artist: any, venues: any[], name: string) {
       updatedAt: new Date()
     });
   
-  // Add proposed venues in between
+  // Add potential venues in between (using the new simplified status system)
   for (let i = 1; i <= Math.min(3, venues.length - 2); i++) {
     await db
       .insert(tourVenues)
       .values({
         tourId: tour.id,
         venueId: venues[i].id,
-        status: 'proposed',
+        status: 'potential',
         sequence: i + 1,
-        notes: 'Proposed venue for optimization',
+        notes: 'Potential venue for optimization',
         createdAt: new Date(),
         updatedAt: new Date()
       });
@@ -264,16 +264,16 @@ async function createStartEndTour(artist: any, venues: any[], name: string) {
       updatedAt: new Date()
     });
   
-  // Multiple proposed venues without dates
+  // Multiple potential venues without dates (using the new simplified status system)
   for (let i = 1; i < Math.min(4, venues.length - 1); i++) {
     await db
       .insert(tourVenues)
       .values({
         tourId: tour.id,
         venueId: venues[i].id,
-        status: 'proposed',
+        status: 'potential',
         sequence: i + 2,
-        notes: 'Proposed venue',
+        notes: 'Potential venue',
         createdAt: new Date(),
         updatedAt: new Date()
       });
@@ -314,13 +314,13 @@ async function createConfirmedMixTour(artist: any, venues: any[], name: string) 
   const tour = tourResult[0];
   console.log(`Created tour: ${tour.name} (ID: ${tour.id})`);
   
-  // Different statuses for venues
+  // Different statuses for venues (using simplified status system)
   const statusConfigurations = [
     { status: 'confirmed', date: new Date(startDate.getTime() + 5 * 24 * 60 * 60 * 1000) },
-    { status: 'booked', date: new Date(startDate.getTime() + 15 * 24 * 60 * 60 * 1000) },
-    { status: 'proposed', date: null },
+    { status: 'hold', date: new Date(startDate.getTime() + 15 * 24 * 60 * 60 * 1000) },
+    { status: 'potential', date: null },
     { status: 'confirmed', date: new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000) },
-    { status: 'proposed', date: null }
+    { status: 'potential', date: null }
   ];
   
   // Add venues with different statuses
@@ -381,7 +381,7 @@ async function createDenseCalendarTour(artist: any, venues: any[], name: string)
     const venueDate = new Date(startDate);
     venueDate.setDate(venueDate.getDate() + (i * 3)); // Every 3 days
     
-    const status = i % 2 === 0 ? 'confirmed' : 'proposed';
+    const status = i % 2 === 0 ? 'confirmed' : 'potential';
     const date = status === 'confirmed' ? venueDate : null;
     
     await db
@@ -440,8 +440,8 @@ async function createLongDistanceTour(artist: any, venues: any[], name: string) 
   for (let i = 0; i < venueIndices.length; i++) {
     const venue = venues[venueIndices[i]];
     
-    // Every other venue is confirmed with a date
-    const status = i % 2 === 0 ? 'confirmed' : 'proposed';
+    // Every other venue is confirmed with a date (using simplified status system)
+    const status = i % 2 === 0 ? 'confirmed' : 'potential';
     let date = null;
     
     if (status === 'confirmed') {
