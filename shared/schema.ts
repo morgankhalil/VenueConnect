@@ -369,6 +369,11 @@ export const tours = pgTable("tours", {
   totalBudget: real("total_budget"),
   estimatedTravelDistance: real("estimated_travel_distance"),
   estimatedTravelTime: integer("estimated_travel_time_minutes"),
+  // Initial score metrics (before optimization)
+  initialOptimizationScore: integer("initial_optimization_score"),
+  initialTotalDistance: real("initial_total_distance"),
+  initialTravelTime: integer("initial_travel_time_minutes"),
+  // Final optimization score (after optimization)
   optimizationScore: integer("optimization_score"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at"),
