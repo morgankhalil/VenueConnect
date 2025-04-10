@@ -2,6 +2,14 @@ import axios from 'axios';
 import { db } from '../db';
 import { venues } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
+import { EventProvider, SyncOptions } from './event-provider';
+
+export class BandsInTownProvider implements EventProvider {
+  private apiKey: string;
+
+  constructor(apiKey: string) {
+    this.apiKey = apiKey;
+  }
 
 export async function syncArtistEventsFromBandsInTown(artistName: string) {
   const apiKey = process.env.BANDSINTOWN_API_KEY;
