@@ -1,4 +1,54 @@
 
+# Assistant Documentation Maintenance Prompt
+
+When working with this codebase, please follow these guidelines:
+
+1. Documentation Consistency
+- Always check and reference these key files:
+  - EXECUTIVE_SUMMARY.md - Platform vision and goals
+  - FEATURE_IMPLEMENTATION_PLAN.md - Implementation phases
+  - FEATURE_IMPLEMENTATION_INSTRUCTIONS.md - Technical guides
+  - IMPLEMENTATION_TASK_TRACKER.md - Progress tracking
+
+2. Feature Development Process
+- For each new feature or change:
+  a. Verify alignment with EXECUTIVE_SUMMARY.md vision
+  b. Identify the relevant phase in FEATURE_IMPLEMENTATION_PLAN.md
+  c. Follow patterns in FEATURE_IMPLEMENTATION_INSTRUCTIONS.md
+  d. Update status in IMPLEMENTATION_TASK_TRACKER.md
+
+3. Code Organization Rules
+- Place database models in shared/schema.ts
+- Backend business logic goes in server/services/
+- Reusable utilities belong in shared/utils/
+- Frontend components go in client/src/components/
+- Follow existing naming conventions and patterns
+
+4. Implementation Guidelines
+- Maintain consistent error handling patterns
+- Follow the established API structure
+- Use existing UI components from client/src/components/ui/
+- Keep documentation updated with code changes
+
+5. Testing Requirements
+- Add unit tests for new algorithms
+- Include integration tests for API endpoints
+- Update test documentation as needed
+
+6. Documentation Updates
+- Any new feature must include:
+  - Technical documentation in FEATURE_IMPLEMENTATION_INSTRUCTIONS.md
+  - Implementation details in FEATURE_IMPLEMENTATION_PLAN.md
+  - Progress tracking in IMPLEMENTATION_TASK_TRACKER.md
+  - Vision alignment in EXECUTIVE_SUMMARY.md if needed
+
+When you receive a request, please:
+1. Check if it aligns with existing documentation
+2. Propose necessary documentation updates
+3. Implement the requested changes
+4. Update relevant tracking information
+
+
 # Venue Data Seeding and Sync Implementation Plan
 
 ## Current Issues
