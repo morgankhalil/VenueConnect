@@ -770,12 +770,20 @@ export function UnifiedTourOptimizer({ tourId, onSuccess, initialTab = 'preferen
                         <Sparkles className="h-6 w-6 text-primary mr-2" />
                         <CardTitle>Optimization Results</CardTitle>
                       </div>
-                      <Badge className={
-                        optimizeMutation.data.optimizationScore > 80 ? 'bg-green-500' : 
-                        optimizeMutation.data.optimizationScore > 60 ? 'bg-amber-500' : 'bg-red-500'
-                      }>
-                        Score: {Math.round(optimizeMutation.data.optimizationScore)}/100
-                      </Badge>
+                      <div className="flex items-center space-x-2">
+                        {tourData?.initialOptimizationScore && (
+                          <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+                            Before: {Math.round(tourData.initialOptimizationScore)}/100
+                          </Badge>
+                        )}
+                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                        <Badge className={
+                          optimizeMutation.data.optimizationScore > 80 ? 'bg-green-500' : 
+                          optimizeMutation.data.optimizationScore > 60 ? 'bg-amber-500' : 'bg-red-500'
+                        }>
+                          After: {Math.round(optimizeMutation.data.optimizationScore)}/100
+                        </Badge>
+                      </div>
                     </div>
                     <CardDescription>
                       {optimizeMutation.data.optimizationScore > 80 
@@ -793,10 +801,13 @@ export function UnifiedTourOptimizer({ tourId, onSuccess, initialTab = 'preferen
                         <div className="text-2xl font-bold">
                           {Math.round(optimizeMutation.data.totalDistance)} km
                         </div>
-                        {optimizeMutation.data.totalDistance && optimizeMutation.data.originalDistance && (
+                        {tourData?.initialTotalDistance && (
                           <div className="text-sm text-green-500 flex items-center">
                             <ArrowRight className="h-3 w-3 mr-1 rotate-45" />
-                            {Math.round((1 - optimizeMutation.data.totalDistance / optimizeMutation.data.originalDistance) * 100)}% reduction
+                            Before: {Math.round(tourData.initialTotalDistance)} km
+                            <span className="ml-2">
+                              ({Math.round((1 - optimizeMutation.data.totalDistance / tourData.initialTotalDistance) * 100)}% reduction)
+                            </span>
                           </div>
                         )}
                       </div>
@@ -805,6 +816,12 @@ export function UnifiedTourOptimizer({ tourId, onSuccess, initialTab = 'preferen
                         <div className="text-2xl font-bold">
                           {Math.round(optimizeMutation.data.totalTravelTime / 60)} hrs
                         </div>
+                        {tourData?.initialTravelTimeMinutes && (
+                          <div className="text-sm text-green-500 flex items-center">
+                            <ArrowRight className="h-3 w-3 mr-1 rotate-45" />
+                            Before: {Math.round(tourData.initialTravelTimeMinutes / 60)} hrs
+                          </div>
+                        )}
                       </div>
                       <div className="bg-muted/30 p-4 rounded-md">
                         <div className="text-sm text-muted-foreground">Suggestions</div>
@@ -866,6 +883,20 @@ export function UnifiedTourOptimizer({ tourId, onSuccess, initialTab = 'preferen
                             </p>
                           </div>
                         </div>
+                        
+                        {tourData?.initialOptimizationScore && (
+                          <div className="flex items-start">
+                            <Lightbulb className="h-5 w-5 mr-2 text-amber-500 mt-0.5" />
+                            <div>
+                              <p className="text-sm">
+                                <strong>Overall Improvement:</strong> Your tour optimization score has increased from 
+                                {Math.round(tourData.initialOptimizationScore)}/100 to {Math.round(optimizeMutation.data.optimizationScore)}/100, 
+                                representing a {Math.round(optimizeMutation.data.optimizationScore - tourData.initialOptimizationScore)} point improvement 
+                                in overall tour efficiency.
+                              </p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
