@@ -69,7 +69,7 @@ import { formatDate, formatCurrency } from '@/lib/utils';
 import { 
   CalendarDays, Info, Map, MapPin, Loader2, PenLine, Truck, BarChart3, 
   ArrowRight, Check, Ban, Clock, Route, Calendar, Building, ChevronRight,
-  Wand2
+  Wand2, Sparkles
 } from 'lucide-react';
 import { MapEvent } from '@/types';
 import { VenueMap } from '@/components/maps/venue-map';
