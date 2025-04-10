@@ -23,9 +23,13 @@ router.get('/user', (req, res) => {
  */
 router.get('/user/available-venues', isAuthenticated, async (req, res) => {
   try {
+    if (!req.session.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    
     const { role, venueId } = req.session.user;
     
-    let availableVenues = [];
+    let availableVenues: any[] = [];
     
     // Admin can see all venues
     if (role === 'admin') {

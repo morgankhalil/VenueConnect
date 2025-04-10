@@ -41,11 +41,23 @@ export function hasPermission(permission: string) {
     
     const { role } = req.session.user;
     
-    // Get permissions for the user's role, defaulting to basic user permissions
-    const userPermissions = rolePermissions[role as keyof typeof rolePermissions] || rolePermissions.user;
+    // Admin has all permissions
+    if (role === 'admin') {
+      return next();
+    }
     
-    // Check if user has the required permission
-    if (userPermissions[permission as keyof typeof userPermissions]) {
+    // For the other roles, check based on the role and permission
+    // This is a simplified version - in a real app you would check against a database or more complete mapping
+    if (
+      // Venue managers can manage venues, tours, and view analytics
+      (role === 'venue_manager' && ['canManageVenues', 'canManageTours', 'canViewAnalytics', 'canSendMessages'].includes(permission)) ||
+      // Artist managers can manage artists, tours, and view analytics
+      (role === 'artist_manager' && ['canManageArtists', 'canManageTours', 'canViewAnalytics', 'canSendMessages'].includes(permission)) ||
+      // Booking agents can manage tours and view analytics
+      (role === 'booking_agent' && ['canManageTours', 'canViewAnalytics', 'canSendMessages'].includes(permission)) ||
+      // Staff can send messages
+      (role === 'staff' && ['canSendMessages'].includes(permission))
+    ) {
       return next();
     }
     

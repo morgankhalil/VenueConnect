@@ -9,77 +9,57 @@ interface PermissionGateProps {
 }
 
 /**
- * Component that conditionally renders children based on user permissions
+ * PermissionGate - A component that conditionally renders its children based on user permissions
  * 
- * @example
- * <PermissionGate permission="canManageUsers">
- *   <UserManagementPanel />
- * </PermissionGate>
+ * @param permission - The required permission to render children
+ * @param children - Content to render if user has the permission
+ * @param fallback - Optional content to render if user doesn't have the permission
  */
-export function PermissionGate({ 
-  permission, 
-  children, 
-  fallback = null 
-}: PermissionGateProps) {
-  const { hasPermission } = useAuth();
+export function PermissionGate({ permission, children, fallback = null }: PermissionGateProps) {
+  const { hasPermission, isLoading } = useAuth();
   
+  // While authentication is loading, render nothing
+  if (isLoading) {
+    return null;
+  }
+  
+  // If user has the permission, render children
   if (hasPermission(permission)) {
     return <>{children}</>;
   }
   
+  // Otherwise render fallback (if provided)
   return <>{fallback}</>;
 }
 
-/**
- * Component that renders children only if user has access to a specific venue
- */
-export function VenueAccessGate({ 
-  venueId, 
-  children, 
-  fallback = null 
-}: { 
-  venueId: number; 
-  children: React.ReactNode; 
+interface RoleGateProps {
+  roles: string | string[];
+  children: React.ReactNode;
   fallback?: React.ReactNode;
-}) {
-  const { user } = useAuth();
-  
-  // Admin can access any venue
-  if (user?.role === 'admin') {
-    return <>{children}</>;
-  }
-  
-  // Other roles can only access their assigned venue
-  if (user?.venueId === venueId) {
-    return <>{children}</>;
-  }
-  
-  return <>{fallback}</>;
 }
 
 /**
- * Component that renders children only if user has a specific role
+ * RoleGate - A component that conditionally renders its children based on user role
+ * 
+ * @param roles - The required role(s) to render children
+ * @param children - Content to render if user has the role
+ * @param fallback - Optional content to render if user doesn't have the role
  */
-export function RoleGate({ 
-  role, 
-  children, 
-  fallback = null 
-}: { 
-  role: string | string[]; 
-  children: React.ReactNode; 
-  fallback?: React.ReactNode;
-}) {
-  const { user } = useAuth();
+export function RoleGate({ roles, children, fallback = null }: RoleGateProps) {
+  const { user, isLoading } = useAuth();
   
-  if (!user) {
-    return <>{fallback}</>;
+  // While authentication is loading, render nothing
+  if (isLoading) {
+    return null;
   }
   
-  const allowedRoles = Array.isArray(role) ? role : [role];
+  const allowedRoles = Array.isArray(roles) ? roles : [roles];
   
-  if (allowedRoles.includes(user.role)) {
+  // If user has one of the allowed roles, render children
+  if (user && allowedRoles.includes(user.role)) {
     return <>{children}</>;
   }
   
+  // Otherwise render fallback (if provided)
   return <>{fallback}</>;
 }

@@ -1,24 +1,28 @@
 /**
- * User role definitions and permission checks
+ * User type with role information
  */
-
-export type UserRole = 
-  | 'admin'               // Full system access
-  | 'venue_manager'       // Can manage venue details, events, and bookings
-  | 'artist_manager'      // Can manage artist profiles and tour schedules
-  | 'booking_agent'       // Can create and manage bookings across venues
-  | 'staff'               // Limited venue or artist access
-  | 'user';               // Basic access
-
 export interface User {
   id: number;
   name: string;
-  role: UserRole;
+  role: string;
   venueId: number | null;
 }
 
 /**
- * Define permissions for each role
+ * Permission type enum representing available permissions in the system
+ */
+export type Permission = 
+  | 'canManageUsers'
+  | 'canManageVenues'
+  | 'canManageArtists'
+  | 'canManageTours'
+  | 'canViewAnalytics'
+  | 'canSendMessages'
+  | 'canViewAllVenueData'
+  | 'canCreateWebhooks';
+
+/**
+ * Map roles to their corresponding permissions
  */
 export const rolePermissions = {
   admin: {
@@ -83,30 +87,59 @@ export const rolePermissions = {
   }
 };
 
-export type Permission = keyof typeof rolePermissions.admin;
-
 /**
  * Check if a user has a specific permission
+ * 
+ * @param user The user to check
+ * @param permission The permission to check for
+ * @returns boolean indicating whether the user has the permission
  */
-export function hasPermission(user: User | null | undefined, permission: Permission): boolean {
-  if (!user) return false;
+export function hasPermission(user: User | null, permission: Permission): boolean {
+  if (!user) {
+    return false;
+  }
   
-  const role = user.role as UserRole;
-  // Default to user permissions if role is not defined in permissions
-  const rolePermission = rolePermissions[role] || rolePermissions.user;
+  // Get permissions for the user's role
+  const userRole = user.role as keyof typeof rolePermissions;
+  const permissionSet = rolePermissions[userRole] || rolePermissions.user;
   
-  return !!rolePermission[permission];
+  return !!permissionSet[permission];
 }
 
 /**
- * Check if a user has access to view data for a specific venue
+ * Check if a user has a specific role
+ * 
+ * @param user The user to check
+ * @param roles The role(s) to check for
+ * @returns boolean indicating whether the user has any of the specified roles
  */
-export function hasVenueAccess(user: User | null | undefined, venueId: number): boolean {
-  if (!user) return false;
+export function hasRole(user: User | null, roles: string | string[]): boolean {
+  if (!user) {
+    return false;
+  }
+  
+  const allowedRoles = Array.isArray(roles) ? roles : [roles];
+  
+  return allowedRoles.includes(user.role);
+}
+
+/**
+ * Check if a user has access to a specific venue
+ * 
+ * @param user The user to check
+ * @param venueId The venue ID to check access for
+ * @returns boolean indicating whether the user has access to the venue
+ */
+export function hasVenueAccess(user: User | null, venueId: number): boolean {
+  if (!user) {
+    return false;
+  }
   
   // Admin can access any venue
-  if (user.role === 'admin') return true;
+  if (user.role === 'admin') {
+    return true;
+  }
   
-  // User must have a venue assigned and it must match the requested venue
+  // Check if user's venue matches the requested venue
   return user.venueId === venueId;
 }
