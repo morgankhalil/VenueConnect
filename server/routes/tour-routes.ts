@@ -21,6 +21,31 @@ import {
 } from '../../shared/schema';
 import { and, eq, gte, lte, desc, or, sql, notInArray, isNotNull } from 'drizzle-orm';
 
+/**
+ * Normalize venue status to one of the standardized values
+ * @param status Original status string
+ * @returns Normalized status from the set: 'confirmed', 'potential', 'hold', 'cancelled'
+ */
+function normalizeStatus(status: string): string {
+  const normalizedStatus = status.toLowerCase();
+  
+  // Map legacy statuses to the new simplified system
+  if (normalizedStatus.startsWith('hold') || 
+      normalizedStatus === 'contacted' || 
+      normalizedStatus === 'negotiating') {
+    return 'hold';
+  } else if (normalizedStatus === 'suggested') {
+    return 'potential';
+  } else if (normalizedStatus === 'confirmed') {
+    return 'confirmed';
+  } else if (normalizedStatus === 'cancelled') {
+    return 'cancelled';
+  }
+  
+  // Default to 'potential' for any unknown status
+  return 'potential';
+}
+
 const router = Router();
 
 /**
