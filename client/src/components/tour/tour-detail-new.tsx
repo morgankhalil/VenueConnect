@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
-import { getTour, optimizeTourRoute, updateTour, applyOptimizedTour } from '@/lib/api'; // Added applyOptimizedTour
+import { getTour, optimizeTourRoute, updateTour, applyTourOptimization } from '@/lib/api';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { VenueStatusBadge } from './venue-status-badge';

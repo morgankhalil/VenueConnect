@@ -5,6 +5,8 @@ import { Header } from "./header";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { X, Mic2 } from "lucide-react";
+import { useTheme } from "@/components/ui/theme-provider";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
