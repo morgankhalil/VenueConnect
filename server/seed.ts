@@ -34,7 +34,10 @@ interface VenueFilter {
 
 async function clearDatabase() {
   console.log('Clearing existing data...');
+  // Clear tables in order of dependencies
   await db.delete(events);
+  await db.delete(tourVenues);
+  await db.delete(tours);
   await db.delete(venueNetwork);
   await db.delete(artists);
   await db.delete(venues);
