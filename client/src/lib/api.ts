@@ -214,7 +214,7 @@ export async function getTours(filters?: {
  * @returns A promise that resolves to the tour
  */
 export async function getTour(tourId: number) {
-  return apiRequest(`/api/tour/tours/${tourId}`);
+  return apiRequest(`/api/tours/${tourId}`);
 }
 
 /**
@@ -240,7 +240,7 @@ export async function createTour(tour: {
   endDate?: string;
   totalBudget?: number;
 }) {
-  return apiRequest('/api/tour/tours', {
+  return apiRequest('/api/tours', {
     method: 'POST',
     body: JSON.stringify(tour),
     headers: { 'Content-Type': 'application/json' }
@@ -261,7 +261,7 @@ export async function updateTour(tourId: number, updates: {
   endDate?: string;
   totalBudget?: number;
 }) {
-  return apiRequest(`/api/tour/tours/${tourId}`, {
+  return apiRequest(`/api/tours/${tourId}`, {
     method: 'PATCH',
     body: JSON.stringify(updates),
     headers: { 'Content-Type': 'application/json' }
@@ -281,7 +281,7 @@ export async function addVenueToTour(tourId: number, venue: {
   sequence?: number;
   notes?: string;
 }) {
-  return apiRequest(`/api/tour/tours/${tourId}/venues`, {
+  return apiRequest(`/api/tours/${tourId}/venues`, {
     method: 'POST',
     body: JSON.stringify(venue),
     headers: { 'Content-Type': 'application/json' }
@@ -301,7 +301,7 @@ export async function updateTourVenue(tourId: number, venueId: number, updates: 
   sequence?: number;
   notes?: string;
 }) {
-  return apiRequest(`/api/tour/tours/${tourId}/venues/${venueId}`, {
+  return apiRequest(`/api/tours/${tourId}/venues/${venueId}`, {
     method: 'PATCH',
     body: JSON.stringify(updates),
     headers: { 'Content-Type': 'application/json' }
@@ -318,7 +318,7 @@ export async function updateTourVenue(tourId: number, venueId: number, updates: 
  */
 export async function optimizeTourRoute(tourId: number, preferences?: any) {
   try {
-    const response = await fetch(`/api/tour/tours/${tourId}/optimize`, {
+    const response = await fetch(`/api/tours/${tourId}/optimize`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: preferences ? JSON.stringify({ preferences }) : undefined
@@ -344,7 +344,7 @@ export async function optimizeTourRoute(tourId: number, preferences?: any) {
  */
 export async function applyTourOptimization(tourId: number, optimizationData: any) {
   try {
-    const response = await fetch(`/api/tour/tours/${tourId}/apply-optimization`, {
+    const response = await fetch(`/api/tours/${tourId}/apply-optimization`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ optimizationData })

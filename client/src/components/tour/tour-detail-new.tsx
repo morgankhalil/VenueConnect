@@ -68,7 +68,7 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
     error,
     refetch 
   } = useQuery({
-    queryKey: ['/api/tour/tours', tourId],
+    queryKey: ['/api/tours', tourId],
     queryFn: () => getTour(Number(tourId)),
   });
 

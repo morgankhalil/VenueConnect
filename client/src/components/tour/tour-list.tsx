@@ -44,7 +44,7 @@ export function TourList() {
   const createDemoTourMutation = useMutation({
     mutationFn: async () => {
       // Fix for the request method
-      const response = await fetch('/api/tour/tours/create-demo', {
+      const response = await fetch('/api/tours/create-demo', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

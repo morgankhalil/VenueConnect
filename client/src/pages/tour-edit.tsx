@@ -13,7 +13,7 @@ export default function EditTourPage() {
   
   // Get tour data for pre-filling the form
   const { data: tour, isLoading, error } = useQuery({
-    queryKey: ['/api/tour/tours', params?.id],
+    queryKey: ['/api/tours', params?.id],
     queryFn: () => getTour(Number(params?.id)),
     enabled: !!params?.id,
   });
