@@ -7,6 +7,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { X, Mic2 } from "lucide-react";
 import { useTheme } from "@/components/ui/theme-provider";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/context/auth-context";
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -77,20 +78,13 @@ export function MainLayout({ children }: MainLayoutProps) {
     // Implement search functionality
   };
 
+  const { logout } = useAuth();
+  
   const handleLogout = async () => {
     try {
-      // Call the logout endpoint
-      await fetch('/api/auth/logout', { 
-        method: 'POST',
-        credentials: 'include'
-      });
-
+      await logout();
       // Clear any cached data in React Query
       queryClient.clear();
-
-      // Navigate to the login page instead of reloading
-      navigate('/auth/login');
-
       console.log("Logout completed");
     } catch (error) {
       console.error("Error logging out:", error);
