@@ -36,9 +36,11 @@ export async function apiRequest(
     throw new Error(`API error: ${response.status}`);
   }
 
-  // Parse JSON response
+  // Parse and pretty print JSON response
   try {
-    return await response.json();
+    const data = await response.json();
+    console.log('API Response:', JSON.stringify(data, null, 2));
+    return data;
   } catch (error) {
     console.error('Error parsing JSON response:', error);
     return { success: false, message: 'Invalid response format' };
