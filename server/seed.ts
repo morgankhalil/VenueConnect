@@ -1,13 +1,19 @@
-
 import { db } from './db';
 import { users, venues, venueNetwork, tourVenues } from '../shared/schema';
+//Added import statements for events, tours and artists tables
+import { events, tours, artists } from '../shared/schema';
 
 async function seed() {
   try {
     // Clear all existing data in correct order
     console.log('Clearing existing data...');
+    // First clear junction tables and dependent tables
     await db.delete(venueNetwork);
-    await db.delete(tourVenues); // Delete tour_venues first
+    await db.delete(tourVenues);
+    await db.delete(events);
+    await db.delete(tours);
+    await db.delete(artists);
+    // Then clear main tables
     await db.delete(venues);
     await db.delete(users);
     console.log('Database cleared successfully');
