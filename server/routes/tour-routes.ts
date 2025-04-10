@@ -354,6 +354,118 @@ router.patch('/tours/:id', async (req, res) => {
 });
 
 /**
+ * Update a tour venue
+ */
+router.patch('/tours/:tourId/venues/:venueId', async (req, res) => {
+  try {
+    const tourId = Number(req.params.tourId);
+    const venueId = Number(req.params.venueId);
+    
+    // Validate tour exists
+    const tourResult = await db
+      .select()
+      .from(tours)
+      .where(eq(tours.id, tourId))
+      .limit(1);
+    
+    if (!tourResult.length) {
+      return res.status(404).json({ error: "Tour not found" });
+    }
+    
+    // Validate tour venue exists
+    const tourVenueResult = await db
+      .select()
+      .from(tourVenues)
+      .where(and(
+        eq(tourVenues.id, venueId),
+        eq(tourVenues.tourId, tourId)
+      ))
+      .limit(1);
+    
+    if (!tourVenueResult.length) {
+      return res.status(404).json({ error: "Tour venue not found" });
+    }
+    
+    // Validate request body
+    const validatedData = z.object({
+      status: z.string().optional(),
+      date: z.string().transform(s => new Date(s)).optional(),
+      sequence: z.number().optional(),
+      notes: z.string().optional(),
+    }).parse(req.body);
+    
+    // Prepare update data
+    const updateData: Record<string, any> = {};
+    if (validatedData.status !== undefined) updateData.status = validatedData.status;
+    if (validatedData.date !== undefined) updateData.date = validatedData.date;
+    if (validatedData.sequence !== undefined) updateData.sequence = validatedData.sequence;
+    if (validatedData.notes !== undefined) updateData.notes = validatedData.notes;
+    
+    // If sequence is updated, we may need to recalculate travel distances
+    if (validatedData.sequence !== undefined && validatedData.sequence > 1) {
+      const previousVenueResult = await db
+        .select({
+          tourVenue: tourVenues,
+          venue: venues
+        })
+        .from(tourVenues)
+        .leftJoin(venues, eq(tourVenues.venueId, venues.id))
+        .where(and(
+          eq(tourVenues.tourId, tourId),
+          eq(tourVenues.sequence, validatedData.sequence - 1)
+        ))
+        .limit(1);
+      
+      const currentVenueData = await db
+        .select({
+          tourVenue: tourVenues,
+          venue: venues
+        })
+        .from(tourVenues)
+        .leftJoin(venues, eq(tourVenues.venueId, venues.id))
+        .where(eq(tourVenues.id, venueId))
+        .limit(1);
+      
+      if (previousVenueResult.length && currentVenueData.length) {
+        const prevVenue = previousVenueResult[0].venue;
+        const currVenue = currentVenueData[0].venue;
+        
+        if (prevVenue && currVenue && 
+            prevVenue.latitude && prevVenue.longitude && 
+            currVenue.latitude && currVenue.longitude) {
+          const distance = calculateDistance(
+            Number(prevVenue.latitude),
+            Number(prevVenue.longitude),
+            Number(currVenue.latitude),
+            Number(currVenue.longitude)
+          );
+          
+          updateData.travelDistanceFromPrevious = distance;
+          updateData.travelTimeFromPrevious = estimateTravelTime(distance);
+        }
+      }
+    }
+    
+    // Update the tour venue
+    const result = await db
+      .update(tourVenues)
+      .set(updateData)
+      .where(eq(tourVenues.id, venueId))
+      .returning();
+    
+    res.json(result[0]);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const validationError = fromZodError(error);
+      return res.status(400).json({ error: validationError.message });
+    }
+    
+    console.error("Error updating tour venue:", error);
+    res.status(500).json({ error: "Failed to update tour venue" });
+  }
+});
+
+/**
  * Optimize a tour route
  */
 router.post('/tours/:id/optimize', async (req, res) => {

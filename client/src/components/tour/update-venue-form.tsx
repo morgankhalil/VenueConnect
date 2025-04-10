@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/api';
+import { updateTourVenue } from '@/lib/api';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -77,11 +77,7 @@ export function UpdateVenueForm({ tourId, venueData, onSuccess }: UpdateVenueFor
         date: data.date ? format(data.date, 'yyyy-MM-dd') : undefined,
       };
       
-      return apiRequest(`/api/tour/tours/${tourId}/venues/${venueData.tourVenue.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(formattedData),
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return updateTourVenue(tourId, venueData.tourVenue.id, formattedData);
     },
     onSuccess: () => {
       toast({

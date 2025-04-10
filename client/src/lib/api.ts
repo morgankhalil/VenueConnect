@@ -280,6 +280,26 @@ export async function addVenueToTour(tourId: number, venue: {
 }
 
 /**
+ * Update a venue in a tour
+ * @param tourId The ID of the tour
+ * @param venueId The ID of the tour venue to update
+ * @param updates The venue updates
+ * @returns A promise that resolves when the venue is updated
+ */
+export async function updateTourVenue(tourId: number, venueId: number, updates: {
+  status?: string;
+  date?: string;
+  sequence?: number;
+  notes?: string;
+}) {
+  return apiRequest(`/api/tour/tours/${tourId}/venues/${venueId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+/**
  * Optimize a tour route
  * @param tourId The ID of the tour to optimize
  * @returns A promise that resolves to the optimized route
