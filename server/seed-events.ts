@@ -40,7 +40,7 @@ async function seedEvents() {
       console.log(`Processing venue: ${venue.name} (${venueId})`);
 
       try {
-        const eventCount = await syncVenueEventsFromBandsInTown(venueId);
+        const eventCount = await syncVenueEventsFromBandsInTown(venueId, venue.name);
         console.log(`Created ${eventCount} events for ${venue.name}`);
         totalEventsCreated += eventCount;
       } catch (error) {
