@@ -217,6 +217,8 @@ router.post('/tours', async (req, res) => {
 router.post('/tours/:tourId/venues', async (req, res) => {
   try {
     const tourId = Number(req.params.tourId);
+    // Invalidate optimization cache when venues change
+    optimizationCache.invalidate(tourId);
     
     // Validate tour exists
     const tourResult = await db
@@ -468,10 +470,18 @@ router.patch('/tours/:tourId/venues/:venueId', async (req, res) => {
 /**
  * Optimize a tour route
  */
+import { optimizationCache } from '../cache/optimization-cache';
+
 router.post('/tours/:id/optimize', async (req, res) => {
   try {
     const tourId = Number(req.params.id);
     const wizardPreferences = req.body?.preferences || null;
+    
+    // Check cache first
+    const cachedResult = optimizationCache.get(tourId, wizardPreferences);
+    if (cachedResult) {
+      return res.json(cachedResult);
+    }
     
     // Validate tour exists
     const tourResult = await db
@@ -608,8 +618,7 @@ router.post('/tours/:id/optimize', async (req, res) => {
       })
       .where(eq(tours.id, tourId));
     
-    // Return the optimized route
-    res.json({
+    const result = {
       tourId,
       optimizationScore: optimizedRoute.optimizationScore,
       totalDistance: optimizedRoute.totalDistance,
@@ -617,7 +626,13 @@ router.post('/tours/:id/optimize', async (req, res) => {
       fixedPoints: allTourPoints,
       potentialFillVenues: optimizedRoute.tourVenues,
       gaps: optimizedRoute.gaps
-    });
+    };
+
+    // Store in cache
+    optimizationCache.set(tourId, wizardPreferences, result);
+
+    // Return the optimized route
+    res.json(result);
   } catch (error) {
     console.error("Error optimizing tour:", error);
     res.status(500).json({ error: "Failed to optimize tour" });
