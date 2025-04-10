@@ -22,7 +22,8 @@ export default function VenueNetwork() {
   });
   
   // Use the user's ID as venue ID since the API returns venue ID as user.id
-  const currentVenueId = user?.id || 18;
+  // Fallback to a known venue ID (195 is The Middle East in Cambridge)
+  const currentVenueId = user?.id || 195;
 
   const { data: networkData, isLoading: isLoadingNetwork } = useQuery({
     queryKey: ['/api/venue-network/graph', currentVenueId],
