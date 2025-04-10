@@ -54,16 +54,9 @@ export function VenueSelector() {
       // Invalidate queries to refresh data across the application
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       
-      // Invalidate venue-specific queries
-      if (user?.venueId) {
-        queryClient.invalidateQueries({ 
-          queryKey: ['/api/venue-network/graph', user.venueId] 
-        });
-      }
-      
-      // Invalidate queries for the newly selected venue
+      // Invalidate all venue network data to ensure it gets freshly loaded
       queryClient.invalidateQueries({ 
-        queryKey: ['/api/venue-network/graph', venueId] 
+        queryKey: ['/api/venue-network/graph']
       });
       
       // Also invalidate general venue data and settings

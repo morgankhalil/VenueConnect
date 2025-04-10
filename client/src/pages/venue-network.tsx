@@ -25,12 +25,14 @@ export default function VenueNetwork() {
   // Fallback to a known venue ID (195 is The Middle East in Cambridge)
   const currentVenueId = user?.venueId || 195;
 
-  const { data: networkData, isLoading: isLoadingNetwork } = useQuery({
+  // Ensure the venue network graph is refetched when the user changes 
+  const { data: networkData, isLoading: isLoadingNetwork, refetch: refetchNetwork } = useQuery({
     queryKey: ['/api/venue-network/graph', currentVenueId],
     queryFn: async () => {
       const data = await getVenueNetworkGraph(currentVenueId);
       return data;
-    }
+    },
+    enabled: !!currentVenueId // Only fetch when we have a venue ID
   });
 
   const createConnectionMutation = useMutation({
