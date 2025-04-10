@@ -19,7 +19,7 @@ import {
   insertArtistTourPreferencesSchema,
   insertVenueTourPreferencesSchema
 } from '../../shared/schema';
-import { and, eq, gte, lte, desc, or, sql } from 'drizzle-orm';
+import { and, eq, gte, lte, desc, or, sql, notInArray, isNotNull } from 'drizzle-orm';
 
 const router = Router();
 
@@ -506,9 +506,9 @@ router.post('/tours/:id/optimize', async (req, res) => {
     
     // Create optimization constraints from preferences
     const constraints = {
-      maxTravelDistancePerDay: preferences?.maxTravelDistancePerDay,
-      minDaysBetweenShows: preferences?.minDaysBetweenShows,
-      maxDaysBetweenShows: preferences?.maxDaysBetweenShows,
+      maxTravelDistancePerDay: preferences?.maxTravelDistancePerDay ?? undefined,
+      minDaysBetweenShows: preferences?.minDaysBetweenShows ?? undefined,
+      maxDaysBetweenShows: preferences?.maxDaysBetweenShows ?? undefined,
       avoidDates: preferences?.avoidDates as string[] | undefined,
       requiredDaysOff: preferences?.requiredDayOff as string[] | undefined,
       preferredRegions: preferences?.preferredRegions as string[] | undefined
@@ -532,20 +532,30 @@ router.post('/tours/:id/optimize', async (req, res) => {
       });
     }
     
-    // Get potential venues for filling gaps
-    // For now, we'll use all venues that aren't already part of the tour
-    const existingVenueIds = tourVenuesResult.map(tv => tv.venue.id);
-    
-    const potentialVenuesResult = await db
+    // Get potential venues with coordinates
+    // We'll get all venues with coordinates and then filter out the existing ones in JavaScript
+    // This avoids SQL syntax issues with the NOT IN clause
+    const allVenuesWithCoordinates = await db
       .select()
       .from(venues)
       .where(
         and(
-          sql`${venues.id} NOT IN (${existingVenueIds.join(',')})`,
           sql`${venues.latitude} IS NOT NULL`,
           sql`${venues.longitude} IS NOT NULL`
         )
       );
+    
+    // Extract venue IDs that are part of this tour
+    const existingVenueIds = new Set(
+      tourVenuesResult
+        .filter(tv => tv.venue && tv.venue.id)
+        .map(tv => tv.venue.id)
+    );
+    
+    // Filter out venues that are already part of the tour
+    const potentialVenuesResult = allVenuesWithCoordinates.filter(
+      venue => !existingVenueIds.has(venue.id)
+    );
     
     // Run the optimization algorithm
     const optimizedRoute = optimizeTourRoute(
