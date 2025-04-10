@@ -110,6 +110,7 @@ export async function getTourGroups() {
  * @returns A promise that resolves to dashboard statistics data
  */
 export async function getStatsData() {
+  // Optimize the stats endpoint which is used on the dashboard
   return apiRequest('/api/dashboard/stats');
 }
 
