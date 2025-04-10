@@ -34,15 +34,7 @@ export function Sidebar({
 }: SidebarProps) {
   const [location] = useLocation();
 
-  const navigation = [
-    { name: "Dashboard", href: "/", icon: LayoutDashboard },
-    { name: "Calendar", href: "/calendar", icon: Calendar },
-    { name: "Discover", href: "/discover", icon: Compass },
-    { name: "Tours", href: "/tours", icon: Truck },
-    { name: "Venue Network", href: "/venue-network", icon: Network },
-    { name: "Messages", href: "/messages", icon: MessageSquare },
-    { name: "Settings", href: "/settings", icon: Settings },
-  ];
+  const navigation = navigationConfig;
 
   return (
     <aside className="hidden md:flex md:flex-shrink-0">
