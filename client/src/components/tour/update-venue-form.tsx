@@ -34,11 +34,16 @@ import {
 import { format } from 'date-fns';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { 
+  TOUR_VENUE_STATUSES, 
+  STATUS_DISPLAY_NAMES, 
+  STATUS_DESCRIPTIONS 
+} from '@/lib/tour-status';
 
 // Form schema for validating tour venue updates
 const updateVenueFormSchema = z.object({
   date: z.date().optional(),
-  status: z.string().default('pending'),
+  status: z.string().default('potential'),
   sequence: z.coerce.number().optional(),
   notes: z.string().optional(),
 });
@@ -61,7 +66,29 @@ export function UpdateVenueForm({ tourId, venueData, onSuccess }: UpdateVenueFor
   const form = useForm<UpdateVenueFormValues>({
     resolver: zodResolver(updateVenueFormSchema),
     defaultValues: {
-      status: venueData.tourVenue.status || 'pending',
+      // Map legacy statuses to new simplified system
+      status: venueData.tourVenue.status ? 
+        ((status) => {
+          // Map legacy statuses to the new simplified system
+          const normalizedStatus = status.toLowerCase();
+          if (normalizedStatus.startsWith('hold') || 
+              normalizedStatus === 'contacted' || 
+              normalizedStatus === 'negotiating' ||
+              normalizedStatus === 'pending' || 
+              normalizedStatus === 'tentative' ||
+              normalizedStatus === 'requested') {
+            return 'hold';
+          } else if (normalizedStatus === 'suggested' || 
+                     normalizedStatus === 'proposed') {
+            return 'potential';
+          } else if (normalizedStatus === 'confirmed') {
+            return 'confirmed';
+          } else if (normalizedStatus === 'cancelled') {
+            return 'cancelled';
+          }
+          return 'potential'; // Default for unknown statuses
+        })(venueData.tourVenue.status)
+        : 'potential',
       sequence: venueData.tourVenue.sequence || undefined,
       date: defaultDate,
       notes: venueData.tourVenue.notes || '',
@@ -170,12 +197,24 @@ export function UpdateVenueForm({ tourId, venueData, onSuccess }: UpdateVenueFor
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="proposed">Proposed</SelectItem>
-                    <SelectItem value="requested">Requested</SelectItem>
-                    <SelectItem value="tentative">Tentative</SelectItem>
-                    <SelectItem value="confirmed">Confirmed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectGroup>
+                      <SelectLabel>Venue Status</SelectLabel>
+                      {TOUR_VENUE_STATUSES.map((status) => (
+                        <SelectItem 
+                          key={status} 
+                          value={status}
+                          title={STATUS_DESCRIPTIONS[status]}
+                          className={`${
+                            status === 'confirmed' ? 'text-green-700' :
+                            status === 'hold' ? 'text-amber-700' :
+                            status === 'potential' ? 'text-orange-700' :
+                            status === 'cancelled' ? 'text-red-700' : ''
+                          }`}
+                        >
+                          {STATUS_DISPLAY_NAMES[status]}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
                 <FormDescription>

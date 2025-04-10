@@ -165,7 +165,7 @@ export function TourDetailMap({ tour, userVenueId, onClose }: TourDetailMapProps
         
         // Get color from status utility
         const statusInfo = getStatusInfo(status);
-        let markerColor = statusInfo.color;
+        let markerColor = statusInfo.color; // This will use our updated colors from the utility
         
         // Create marker element
         const el = document.createElement('div');
@@ -212,14 +212,17 @@ export function TourDetailMap({ tour, userVenueId, onClose }: TourDetailMapProps
                   border-radius: 9999px;
                   font-size: 11px;
                   font-weight: 500;
-                  background-color: ${status === 'confirmed' ? '#DCFCE7' : 
+                  background-color: ${
+                    status === 'confirmed' ? '#DCFCE7' : 
                     status === 'hold' ? '#FEF3C7' : 
-                    '#F3F4F6'
+                    status === 'cancelled' ? '#FEE2E2' :
+                    '#FFEDD5' /* potential - orange */
                   };
                   color: ${
                     status === 'confirmed' ? '#059669' : 
                     status === 'hold' ? '#D97706' : 
-                    '#4B5563'
+                    status === 'cancelled' ? '#B91C1C' :
+                    '#C2410C' /* potential - orange */
                   };"
                 >
                   ${statusInfo.displayName}
