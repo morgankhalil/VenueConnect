@@ -18,23 +18,26 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
 
-  // Get user data from API with faster loading
+  // Get user data from API with optimized loading and caching
   const { data: user, isLoading: isLoadingUser, error: userError } = useQuery({
     queryKey: ['/api/user'],
     queryFn: () => apiRequest('/api/user'),
     retry: 1,
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: Infinity, // Keep user data permanently fresh during session
     // Load from cache immediately while fetching new data in background
-    refetchOnMount: true
+    refetchOnMount: "always", // Always fetch on first mount
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnReconnect: false // Don't refetch on reconnect
   });
 
-  // Get connected venues from API
+  // Get connected venues from API with optimized dependencies
   const { data: connectedVenues = [] } = useQuery({
     queryKey: ['/api/venues/connected'],
     queryFn: () => apiRequest('/api/venues/connected'),
     initialData: [],
     enabled: !!user, // Only fetch when user is available
-    staleTime: 1000 * 60 * 5 // Cache for 5 minutes
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    refetchOnWindowFocus: false // Don't refetch when window regains focus
   });
 
   // Default user if still loading, to prevent blocking the UI

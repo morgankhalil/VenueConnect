@@ -9,20 +9,33 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
 // Cache response times to detect slow endpoints
 const endpointTimes: Record<string, number> = {};
 
-// Create a new query client that ignores previous cache
+// Create a new query client that balances fresh data with performance
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 0, // Force fresh data fetching
+      staleTime: 1000 * 30, // Consider data fresh for 30 seconds
       retry: 1,
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
-      gcTime: 1000 * 60 * 10, // Shorter cache time (10 minutes)
-      // Add a timestamp to queryKey to force cache invalidation on reload 
+      gcTime: 1000 * 60 * 10, // Cache for 10 minutes
+      // Add a one-time cache buster that doesn't change during a session
       queryKeyHashFn: (queryKey: any) => {
-        // Force a cache reset by appending current timestamp
-        const timestamp = Date.now();
-        return JSON.stringify([...queryKey, { cacheBuster: timestamp }]);
+        // Special case for user data - use fixed key to prevent multiple calls
+        if (Array.isArray(queryKey) && queryKey[0] === '/api/user') {
+          return JSON.stringify(queryKey);
+        }
+        
+        // For other queries, create a session-based cache buster
+        // This uses a timestamp that's fixed for the session but changes on refresh
+        const sessionTimestamp = window.sessionStorage.getItem('cacheBuster') || 
+                                 String(Date.now());
+        
+        // Store timestamp in session storage if not already there
+        if (!window.sessionStorage.getItem('cacheBuster')) {
+          window.sessionStorage.setItem('cacheBuster', sessionTimestamp);
+        }
+        
+        return JSON.stringify([...queryKey, { sessionBuster: sessionTimestamp }]);
       }
     },
     mutations: {
