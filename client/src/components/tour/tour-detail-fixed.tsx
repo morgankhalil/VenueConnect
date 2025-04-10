@@ -408,26 +408,15 @@ export function TourDetail({ tourId }: TourDetailProps) {
                 </div>
                 
                 <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleOptimize}
-                    disabled={!hasEnoughVenuesWithDates || optimizeMutation.isPending}
-                  >
-                    {optimizeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    <Truck className="mr-2 h-4 w-4" />
-                    {optimizationResult ? 'Re-Optimize' : 'Quick Optimize'}
-                  </Button>
-                  
-                  <Link href={`/tours/${tourId}/wizard`}>
+                  <Link href={`/tours/${tourId}/optimize`}>
                     <Button 
                       size="sm"
-                      variant="outline"
-                      className="border-primary/50 bg-primary/5 hover:bg-primary/10"
+                      variant="default"
                       disabled={!hasEnoughVenuesWithDates}
+                      className="bg-gradient-to-r from-primary to-primary/80"
                     >
-                      <Wand2 className="mr-2 h-4 w-4" />
-                      AI Wizard
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Tour Optimizer
                     </Button>
                   </Link>
                   <Dialog>
@@ -696,26 +685,15 @@ export function TourDetail({ tourId }: TourDetailProps) {
                   </CardDescription>
                 </div>
                 <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleOptimize}
-                    disabled={!hasEnoughVenuesWithDates || optimizeMutation.isPending}
-                  >
-                    {optimizeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    <Truck className="mr-2 h-4 w-4" />
-                    {optimizationResult ? 'Re-Run Suggestions' : 'Generate Suggestions'}
-                  </Button>
-                  
-                  <Link href={`/tours/${tourId}/wizard`}>
+                  <Link href={`/tours/${tourId}/optimize`}>
                     <Button 
                       size="sm"
-                      variant="outline"
-                      className="border-primary/50 bg-primary/5 hover:bg-primary/10"
+                      variant="default"
                       disabled={!hasEnoughVenuesWithDates}
+                      className="bg-gradient-to-r from-primary to-primary/80"
                     >
-                      <Wand2 className="mr-2 h-4 w-4" />
-                      AI Wizard
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Tour Optimizer
                     </Button>
                   </Link>
                 </div>
