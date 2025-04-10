@@ -12,8 +12,12 @@ import {
   Users,
   PlusCircle,
   Mic2,
-  Truck
+  Truck,
+  ChevronDown
 } from "lucide-react";
+import { VenueSelector } from "@/components/venue-selector";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 interface SidebarProps {
   userName: string;
@@ -78,6 +82,16 @@ export function Sidebar({
                 <p className="text-base font-medium text-black dark:text-white">{userName}</p>
                 <p className="text-sm text-[hsl(var(--custom-grey-medium))]">{venueName}</p>
               </div>
+            </div>
+          </div>
+          
+          {/* Venue Selector */}
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-black dark:text-white px-4 mb-2">
+              Selected Venue
+            </h3>
+            <div className="px-2">
+              <VenueSelector />
             </div>
           </div>
           
