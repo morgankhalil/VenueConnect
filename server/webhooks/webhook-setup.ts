@@ -39,22 +39,21 @@ export async function registerBandsintownWebhook(
     // Headers with API key
     const headers = {
       'Authorization': `Bearer ${apiKey}`,
-
-// Set up daily sync webhook
-await db.insert(webhookConfigurations).values({
-  name: 'Daily Data Sync',
-  type: 'scheduled_sync',
-  description: 'Automatically syncs venue and artist data daily',
-  callbackUrl: '/api/webhooks/daily-sync',
-  isEnabled: true,
-  configOptions: JSON.stringify({
-    schedule: '0 0 * * *' // Run at midnight every day
-  })
-}).onConflictDoNothing();
-
       'Content-Type': 'application/json',
       'Accept': 'application/json'
     };
+
+    // Set up daily sync webhook
+    await db.insert(webhookConfigurations).values({
+      name: 'Daily Data Sync',
+      type: 'scheduled_sync',
+      description: 'Automatically syncs venue and artist data daily',
+      callbackUrl: '/api/webhooks/daily-sync',
+      isEnabled: true,
+      configOptions: JSON.stringify({
+        schedule: '0 0 * * *' // Run at midnight every day
+      })
+    }).onConflictDoNothing();
 
     // Make registration request
     // In a real implementation, you would use the actual Bandsintown endpoint
