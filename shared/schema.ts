@@ -19,39 +19,70 @@ export const genreEnum = pgEnum("genre", [
   "rock", "indie", "hip_hop", "electronic", "pop", "folk", "metal", "jazz", "blues", "world", "classical", "country", "other"
 ]);
 
+// Market category enum
+export const marketCategoryEnum = pgEnum("market_category", [
+  "primary", "secondary", "tertiary"
+]);
+
+// Venue type enum
+export const venueTypeEnum = pgEnum("venue_type", [
+  "club", "bar", "theater", "coffeehouse", "diy_space", "art_gallery", "college_venue", "community_center", "record_store"
+]);
+
+// Venue capacity category enum
+export const capacityCategoryEnum = pgEnum("capacity_category", [
+  "tiny", "small", "medium", "large"
+]);
+
 // Venues table
 export const venues = pgTable("venues", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   city: text("city").notNull(),
-  region: text("region"), // State/province/region from Bandsintown
+  region: text("region"), // State/province/region
   country: text("country").default('US'),
   latitude: real("latitude"),
   longitude: real("longitude"),
-  // Temporarily commented out until database migration is complete
-  // streetAddress: text("street_address"),
-  // postalCode: text("postal_code"),
-  // timezone: text("timezone"),
+  // Geographic categorization
+  marketCategory: marketCategoryEnum("market_category"), // primary, secondary, tertiary
+  
+  // Venue details
+  venueType: venueTypeEnum("venue_type"), // club, bar, theater, etc.
   capacity: integer("capacity"),
-  description: text("description"),
-  bandsintownId: text("bandsintown_id").unique(),
-  website: text("website"),
-  // Temporarily commented out until database migration is complete
-  // phoneNumber: text("phone_number"),
+  capacityCategory: capacityCategoryEnum("capacity_category"), // tiny, small, medium, large
+  
+  // Genre specialization
+  primaryGenre: genreEnum("primary_genre"),
+  secondaryGenres: genreEnum("secondary_genres").array(),
+  
+  // Booking details for indie venues
+  bookingContactName: text("booking_contact_name"),
+  bookingEmail: text("booking_email"),
   contactPhone: text("contact_phone"),
-  imageUrl: text("image_url"),
-  // metroArea: text("metro_area"),
-  // Temporarily commented out until database migration is complete
-  // publicTransport: text("public_transport"),
-  // parkingInfo: text("parking_info"),
-  // Temporarily commented out until database migration is complete
-  // ageRestriction: text("age_restriction"),
-  // wheelchairAccessible: boolean("wheelchair_accessible"),
-  // foodBeverage: boolean("food_beverage"),
   contactEmail: text("contact_email"),
-  // lastUpdated: timestamp("last_updated"),
+  typicalBookingLeadTime: integer("typical_booking_lead_time_days"), // How many days in advance they typically book
+  paymentStructure: text("payment_structure"), // guarantee, door split, etc.
+  soundSystem: text("sound_system"), // Description of sound system quality
+  
+  // Local support for touring artists
+  localAccommodation: boolean("local_accommodation"), // Whether they offer crash spots
+  localPromotion: boolean("local_promotion"), // Whether they help with promotion
+  
+  // Additional venue information
+  description: text("description"),
+  ageRestriction: text("age_restriction"), // All-ages, 18+, 21+
+  websiteUrl: text("website_url"),
+  imageUrl: text("image_url"),
+  socialMediaLinks: jsonb("social_media_links"),
+  
+  // External IDs for future synchronization
+  bandsintownId: text("bandsintown_id").unique(),
+  songkickId: text("songkick_id").unique(),
+  
+  // Ownership and tracking
   ownerId: integer("owner_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at"),
 });
 
 // Artists table
