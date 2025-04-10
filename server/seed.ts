@@ -113,16 +113,16 @@ async function seed() {
         ownerId: venueManager.id
       },
       {
-        name: 'The Crocodile',
-        address: '2200 2nd Ave',
-        city: 'Seattle',
-        state: 'WA',
-        zipCode: '98121',
+        name: 'The Bug Jar',
+        address: '219 Monroe Ave',
+        city: 'Rochester',
+        state: 'NY',
+        zipCode: '14607',
         country: 'USA',
-        capacity: 500,
-        latitude: 47.6145,
-        longitude: -122.3437,
-        description: 'Historic Seattle venue known for grunge scene',
+        capacity: 400,
+        latitude: 43.1497,
+        longitude: -77.5916,
+        description: 'Intimate Rochester venue known for indie and punk shows',
         ownerId: venueManager.id
       }
     ];

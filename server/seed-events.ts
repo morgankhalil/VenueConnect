@@ -16,14 +16,14 @@ async function seedEvents() {
 
     // Known Bandsintown venue IDs
     const venueIds = {
-      'The Bug Jar': '10068739-the-bug-jar',
+      'The Bug Jar': '2069739-the-bug-jar',
       'The Bowery Ballroom': '1847-the-bowery-ballroom',
       'The 9:30 Club': '209-9-30-club',
       'The Troubadour': '1941-the-troubadour',
-      'The Fillmore': '1941-the-fillmore',
+      'The Fillmore': '1155-the-fillmore',
       'Red Rocks Amphitheatre': '598-red-rocks-amphitheatre',
-      'The Ryman Auditorium': '1941-ryman-auditorium',
-      'House of Blues': '1941-house-of-blues-chicago'
+      'The Ryman Auditorium': '897-ryman-auditorium',
+      'House of Blues': '1847-house-of-blues-chicago'
     };
 
     let totalEventsCreated = 0;
