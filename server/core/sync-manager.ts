@@ -32,9 +32,13 @@ export class SyncManager {
 
   private async makeApiRequest<T>(url: string): Promise<T> {
     try {
+      this.logger.log(`Making API request to: ${url}`, 'info');
       const response = await axios.get(url, {
         params: { app_id: this.apiKey },
-        headers: { 'Accept': 'application/json' }
+        headers: { 
+          'Accept': 'application/json',
+          'User-Agent': 'VenueNetwork/1.0'
+        }
       });
       await setTimeout(this.rateLimitDelay);
       return response.data;
@@ -50,7 +54,7 @@ export class SyncManager {
 
   async syncVenue(venueId: string) {
     try {
-      console.log(`Syncing venue ${venueId}...`);
+      this.logger.log(`Starting sync for venue ${venueId}`, 'info');
       const data = await this.makeApiRequest(
         `https://rest.bandsintown.com/venues/${venueId}/events`
       );

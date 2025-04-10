@@ -83,9 +83,10 @@ export function validateWebhookSignature(
 export async function processBandsintownEventWebhook(
   payload: BandsintownEventWebhook
 ): Promise<void> {
+  const logger = new SyncLogger('BandsintownWebhook');
   try {
     const { event_type, data } = payload;
-    console.log(`Processing Bandsintown webhook: ${event_type}`);
+    logger.log(`Processing Bandsintown webhook: ${event_type}`, 'info');
 
     // Get or create artist
     let artist = await db.select().from(artists).where(eq(artists.name, data.artist.name)).limit(1);
@@ -238,11 +239,14 @@ export function webhookMiddleware() {
   return async (req: Request, res: Response, next: NextFunction) => {
     const logger = new SyncLogger('WebhookHandler');
     try {
+      logger.log('Received webhook request', 'info');
+      
       // Get webhook secret from environment variables
       const webhookSecret = process.env.BANDSINTOWN_WEBHOOK_SECRET || '';
 
       // Validate webhook signature if a secret is configured
       if (webhookSecret && !validateWebhookSignature(req, webhookSecret)) {
+        logger.log('Invalid webhook signature', 'error');
         return res.status(401).json({ error: 'Invalid webhook signature' });
       }
 
