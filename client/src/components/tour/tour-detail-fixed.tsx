@@ -240,8 +240,9 @@ export function TourDetail({ tourId }: TourDetailProps) {
   const hasEnoughVenuesForOptimization = (tour?.venues?.length || 0) >= 2;
   
   // But we can still filter to see which ones have confirmed dates 
+  // Using new simplified status system where only 'confirmed' is considered fixed
   const venuesWithDates = tour?.venues?.filter(v => 
-    (v.tourVenue.status === 'confirmed' || v.tourVenue.status === 'booked' || v.tourVenue.status === 'planning') && 
+    (v.tourVenue.status === 'confirmed') && 
     v.tourVenue.date
   ) || [];
   
