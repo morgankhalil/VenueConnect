@@ -124,22 +124,22 @@ async function createDemoTour() {
         .values({
           tourId: tour.id,
           venueId: venue.id,
-          status: 'proposed', // Proposed status allows the optimizer to suggest dates
+          status: 'potential', // Potential status allows the optimizer to suggest dates
           sequence: i + 1, // Sequence between first and last
-          notes: 'Proposed venue for optimization',
+          notes: 'Potential venue for optimization',
           createdAt: new Date(),
           updatedAt: new Date()
         });
       
-      console.log(`Added proposed venue: ${venue.name} (without date)`);
+      console.log(`Added potential venue: ${venue.name} (without date)`);
     }
     
     console.log("\nDEMO TOUR CREATED SUCCESSFULLY");
     console.log("---------------------------");
     console.log(`Tour ID: ${tour.id}`);
     console.log(`Tour Name: ${tour.name}`);
-    console.log(`Tour has 2 confirmed venues (start/end) and 3 proposed venues without dates.`);
-    console.log(`You can now optimize this tour to see how the algorithm suggests dates for the proposed venues.`);
+    console.log(`Tour has 2 confirmed venues (start/end) and 3 potential venues without dates.`);
+    console.log(`You can now optimize this tour to see how the algorithm suggests dates for the potential venues.`);
     console.log(`Visit: /tours/${tour.id}/optimize to try it out!`);
     
   } catch (error) {
