@@ -287,7 +287,7 @@ export function TourDetail({ tourId }: TourDetailProps) {
                 Quick Optimize
               </Button>
               
-              <Link href={`/tours/${tourId}/optimize`}>
+              <Link href={`/tours/${tourId}/wizard`}>
                 <Button 
                   size="sm"
                   variant="outline"

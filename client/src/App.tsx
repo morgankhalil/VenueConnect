@@ -23,6 +23,7 @@ import TourDetail from "@/pages/tour-detail";
 import NewTour from "@/pages/tour-new";
 import EditTour from "@/pages/tour-edit";
 import OptimizeTour from "@/pages/tour-optimize";
+import TourWizard from "@/pages/tour-wizard";
 
 function Router() {
   return (
@@ -45,6 +46,7 @@ function Router() {
       <Route path="/tours/new" component={NewTour} />
       <Route path="/tours/:id/edit" component={EditTour} />
       <Route path="/tours/:id/optimize" component={OptimizeTour} />
+      <Route path="/tours/:id/wizard" component={TourWizard} />
       <Route path="/tours/:id" component={TourDetail} />
       
       {/* Fallback to 404 */}
