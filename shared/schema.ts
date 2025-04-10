@@ -16,7 +16,9 @@ export const users = pgTable("users", {
 
 // Genres enum
 export const genreEnum = pgEnum("genre", [
-  "rock", "indie", "hip_hop", "electronic", "pop", "folk", "metal", "jazz", "blues", "world", "classical", "country", "other"
+  "rock", "indie", "hip_hop", "electronic", "pop", "folk", "metal", "jazz", "blues", 
+  "world", "classical", "country", "punk", "experimental", "alternative", "rnb", "soul",
+  "reggae", "ambient", "techno", "house", "disco", "funk", "country", "other"
 ]);
 
 // Market category enum
