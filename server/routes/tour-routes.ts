@@ -103,6 +103,11 @@ router.get('/venue-network/graph/:id', async (req, res) => {
       const isConnected = connectedVenueIds.has(venue.id);
       const connectionInfo = isConnected ? connectedVenueIds.get(venue.id) : null;
       
+      // Explicitly log the current venue ID for debugging
+      if (venue.id === venueId) {
+        console.log(`Setting venue ${venue.id} (${venue.name}) as current venue`);
+      }
+      
       return {
         id: venue.id,
         name: venue.name,

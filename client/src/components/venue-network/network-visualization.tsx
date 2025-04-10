@@ -78,7 +78,17 @@ export function NetworkVisualization({
     );
   }
 
+  // Find the current venue and log it for debugging
   const currentVenue = data.nodes.find(n => n.isCurrentVenue);
+  
+  if (currentVenue) {
+    console.log(`Current venue in map: ${currentVenue.id} - ${currentVenue.name}`);
+  } else {
+    console.log('No current venue found in the data');
+    console.log('Venues in data:', data.nodes.map(n => `${n.id} - ${n.name} - isCurrent: ${n.isCurrentVenue}`).join(', '));
+  }
+  
+  // Set map center based on current venue, or default to US center
   const mapCenter = currentVenue 
     ? [currentVenue.latitude, currentVenue.longitude] 
     : [39.5, -98.5];
