@@ -5,6 +5,7 @@ import session from "express-session";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { users, venues } from "../shared/schema";
+import path from "path";
 
 // Define session user for TypeScript
 declare module 'express-session' {
@@ -22,8 +23,8 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Health check endpoint for Replit Deployments
-app.get('/', (_, res) => {
+// Health check endpoint for Replit Deployments - moved to /api/health to avoid conflicting with frontend routes
+app.get('/api/health', (_, res) => {
   res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
