@@ -12,6 +12,7 @@ import {
   artists, 
   artistTourPreferences,
   venueTourPreferences,
+  venueNetwork,
   insertTourSchema,
   insertTourVenueSchema,
   insertTourGapSchema,
