@@ -147,12 +147,25 @@ export function UnifiedTourOptimizer({ tourId, onSuccess, initialTab = 'preferen
       setProcessingStatus('Optimization complete!');
     },
     onError: (error: any) => {
+      console.error('Optimization error:', error);
+      
+      // Generic error message as fallback
+      let errorMessage = 'Failed to optimize tour. Please try again.';
+      
+      // Handle specific error cases with more helpful messages
+      if (error?.message?.includes('at least 2 venues with dates')) {
+        errorMessage = 'This tour needs at least 2 venues with confirmed dates to be optimized. Please add dates to your tour venues first.';
+      }
+      
       toast({
         title: 'Optimization Failed',
-        description: error?.message || 'Failed to optimize tour. Ensure you have at least 2 venues with dates.',
+        description: error?.message || errorMessage,
         variant: 'destructive',
+        duration: 6000, // Show longer for error messages
       });
+      
       setProgress(0);
+      setActiveTab('preferences'); // Return to preferences tab
     },
   });
   
@@ -281,6 +294,23 @@ export function UnifiedTourOptimizer({ tourId, onSuccess, initialTab = 'preferen
         
         {/* Preferences Tab */}
         <TabsContent value="preferences" className="space-y-6">
+          {!hasEnoughVenuesWithDates && (
+            <Card className="border-amber-200 bg-amber-50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center">
+                  <AlertTriangle className="h-5 w-5 text-amber-500 mr-2" />
+                  Important: Not enough tour dates
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm">
+                  This tour needs at least 2 venues with specific dates to be optimized. 
+                  Please add at least 2 confirmed dates to your tour schedule before running the optimizer.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="md:col-span-2">
               <CardHeader>
