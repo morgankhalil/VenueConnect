@@ -68,7 +68,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { 
   CalendarDays, Info, Map, MapPin, Loader2, PenLine, Truck, BarChart3, 
-  ArrowRight, Check, Ban, Clock, Route, Calendar, Building, ChevronRight
+  ArrowRight, Check, Ban, Clock, Route, Calendar, Building, ChevronRight,
+  Wand2
 } from 'lucide-react';
 import { MapEvent } from '@/types';
 import { VenueMap } from '@/components/maps/venue-map';
@@ -415,8 +416,20 @@ export function TourDetail({ tourId }: TourDetailProps) {
                   >
                     {optimizeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     <Truck className="mr-2 h-4 w-4" />
-                    {optimizationResult ? 'Re-Optimize' : 'Optimize Route'}
+                    {optimizationResult ? 'Re-Optimize' : 'Quick Optimize'}
                   </Button>
+                  
+                  <Link href={`/tours/${tourId}/optimize`}>
+                    <Button 
+                      size="sm"
+                      variant="outline"
+                      className="border-primary/50 bg-primary/5 hover:bg-primary/10"
+                      disabled={!hasEnoughVenuesWithDates}
+                    >
+                      <Wand2 className="mr-2 h-4 w-4" />
+                      AI Wizard
+                    </Button>
+                  </Link>
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button size="sm">
@@ -682,16 +695,30 @@ export function TourDetail({ tourId }: TourDetailProps) {
                     Potential venues that could fill gaps in your tour schedule
                   </CardDescription>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleOptimize}
-                  disabled={!hasEnoughVenuesWithDates || optimizeMutation.isPending}
-                >
-                  {optimizeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  <Truck className="mr-2 h-4 w-4" />
-                  {optimizationResult ? 'Re-Run Suggestions' : 'Generate Suggestions'}
-                </Button>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleOptimize}
+                    disabled={!hasEnoughVenuesWithDates || optimizeMutation.isPending}
+                  >
+                    {optimizeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Truck className="mr-2 h-4 w-4" />
+                    {optimizationResult ? 'Re-Run Suggestions' : 'Generate Suggestions'}
+                  </Button>
+                  
+                  <Link href={`/tours/${tourId}/optimize`}>
+                    <Button 
+                      size="sm"
+                      variant="outline"
+                      className="border-primary/50 bg-primary/5 hover:bg-primary/10"
+                      disabled={!hasEnoughVenuesWithDates}
+                    >
+                      <Wand2 className="mr-2 h-4 w-4" />
+                      AI Wizard
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
