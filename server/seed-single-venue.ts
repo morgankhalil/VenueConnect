@@ -67,12 +67,11 @@ async function seedSingleVenue() {
     console.log(`API Endpoint: ${apiEndpoint}`);
     
     try {
-      // Use simpler authentication with just the app_id parameter
-      console.log('Trying authentication with app_id parameter...');
+      // Try the app_id method as per Bandsintown documentation
+      console.log('Trying app_id authentication method...');
       
-      // Bandsintown API primarily authenticates using the app_id parameter
-      const response = await axios.get(apiEndpoint, {
-        params: { app_id: apiKey },
+      // Use the app_id parameter which is the standard method for Bandsintown
+      const response = await axios.get(`${apiEndpoint}?app_id=${apiKey}`, {
         headers: { 
           'Accept': 'application/json'
         }
