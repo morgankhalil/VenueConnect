@@ -5,8 +5,16 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatDate(dateInput: string | Date) {
+export function formatDate(dateInput: string | Date | null | undefined) {
+  if (!dateInput) return 'No date';
+  
   const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+  
+  // Check if date is valid
+  if (isNaN(date.getTime())) {
+    return 'Invalid date';
+  }
+  
   return date.toLocaleDateString('en-US', { 
     year: 'numeric', 
     month: 'short', 

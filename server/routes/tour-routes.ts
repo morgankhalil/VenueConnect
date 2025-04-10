@@ -741,11 +741,18 @@ router.post('/tours/:id/apply-optimization', async (req, res) => {
         // Update existing tour venue if it's not confirmed
         if (existingTourVenue.tourVenue.status !== 'confirmed') {
           console.log(`Updating venue ${venueId} with sequence ${sequenceNum}`);
+          // Map venue.status to our standardized statuses if provided
+          const standardizedStatus = venue.status ? 
+            normalizeStatus(venue.status) : 
+            existingTourVenue.tourVenue.status;
+          
           await db
             .update(tourVenues)
             .set({
               date: venue.suggestedDate ? new Date(venue.suggestedDate) : existingTourVenue.tourVenue.date,
+              status: standardizedStatus,
               sequence: sequenceNum, // Use the calculated sequence
+              statusUpdatedAt: new Date(), // Track status update time
               updatedAt: new Date()
             })
             .where(and(

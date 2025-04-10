@@ -289,14 +289,14 @@ export function optimizeTourRoute(
             
             // Determine priority level based on how good this venue is
             // Lower detour ratio = higher priority
-            let priority = 'potential'; // Default status under new simplified system
+            let priority = 'potential'; // Default status is 'potential'
             
             // Calculate a deviation score - how much does this add to the route?
             // 0 = perfect (right on the route), higher numbers = worse
             const deviationScore = Math.max(0, detourRatio - 1) * 100; // percentage of added distance
             
             // Determine status based on venue quality and fit
-            // Using the new simplified status system: potential, hold, confirmed, cancelled
+            // Using only the standardized status values: 'confirmed', 'potential', 'hold', 'cancelled'
             if (deviationScore < 20) {
               // Very good option (less than 20% deviation) - high priority
               priority = 'hold'; 
