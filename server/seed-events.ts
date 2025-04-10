@@ -7,16 +7,25 @@ async function seedEvents() {
   try {
     console.log('Starting event sync from Bandsintown...');
 
-    // Test with some popular artists that are likely to have events
-    const testArtists = [
-      'Coldplay',
-      'Taylor Swift',
-      'The Killers',
-      'Ed Sheeran',
-      'Foo Fighters'
+    // Get our existing venues
+    const venueResults = await db.select().from(venues);
+    console.log(`Found ${venueResults.length} venues to sync events for`);
+
+    // Artists that commonly play at indie/rock venues like our seeded ones
+    const venueAppropriateArtists = [
+      'The National',
+      'Japanese Breakfast', 
+      'Mitski',
+      'Big Thief',
+      'Lucy Dacus',
+      'Parquet Courts',
+      'Kurt Vile',
+      'Real Estate',
+      'Beach House',
+      'Angel Olsen'
     ];
 
-    for (const artistName of testArtists) {
+    for (const artistName of venueAppropriateArtists) {
       console.log(`Syncing events for artist: ${artistName}`);
       try {
         await syncArtistEventsFromBandsInTown(artistName);
