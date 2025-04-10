@@ -209,7 +209,6 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
     nextYear.setFullYear(today.getFullYear() + 1);
     
     // Get events from today and next 2 years
-    const today = new Date();
     const twoYearsFromNow = new Date();
     twoYearsFromNow.setFullYear(today.getFullYear() + 2);
     
