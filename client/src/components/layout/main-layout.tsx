@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { X } from "lucide-react";
+import { X, Mic2 } from "lucide-react";
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -15,8 +15,19 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
+
+  // Handle scroll effects for header
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Get user data from API with optimized loading and caching
   const { data: user, isLoading: isLoadingUser, error: userError } = useQuery({
@@ -83,7 +94,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
       {/* Desktop Sidebar */}
       <Sidebar
         userName={userToDisplay.name}
@@ -94,42 +105,85 @@ export function MainLayout({ children }: MainLayoutProps) {
 
       {/* Mobile Sidebar */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetContent side="left" className="p-0 w-72 sm:w-64 border-r shadow-lg">
-          <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="text-lg font-semibold">Menu</h2>
+        <SheetContent side="left" className="p-0 w-80 sm:w-72 border-r shadow-lg">
+          <div className="flex items-center justify-between p-5 border-b border-gray-200/50 dark:border-gray-800/50">
+            <h2 className="text-xl font-heading font-bold text-primary flex items-center">
+              <Mic2 className="mr-2 h-6 w-6" />
+              VenueConnect
+            </h2>
             <Button 
               variant="ghost" 
               size="icon" 
+              className="rounded-full"
               onClick={() => setMobileMenuOpen(false)}
             >
               <X className="h-5 w-5" />
             </Button>
           </div>
-          <nav className="space-y-1 p-4">
-            {[
-              { name: "Dashboard", href: "/" },
-              { name: "Calendar", href: "/calendar" },
-              { name: "Discover", href: "/discover" },
-              { name: "Venue Network", href: "/venue-network" },
-              { name: "Messages", href: "/messages" },
-              { name: "Settings", href: "/settings" },
-            ].map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.name}
-              </a>
-            ))}
-          </nav>
-          <Sidebar
-            userName={userToDisplay.name}
-            venueName={userToDisplay.venueName}
-            userAvatar={userToDisplay.avatar}
-            connectedVenues={connectedVenues}
-          />
+          
+          <div className="px-4 py-4">
+            <div className="flex items-center p-3 mb-6 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10">
+              <div className="flex-shrink-0 h-12 w-12">
+                {userToDisplay.avatar ? (
+                  <img 
+                    className="h-12 w-12 rounded-full object-cover ring-2 ring-white/30 dark:ring-black/20" 
+                    src={userToDisplay.avatar} 
+                    alt={userToDisplay.name} 
+                  />
+                ) : (
+                  <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center ring-2 ring-white/30 dark:ring-black/20">
+                    <span className="text-primary-foreground font-semibold text-lg">
+                      {userToDisplay.name.charAt(0)}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div className="ml-4">
+                <p className="text-base font-medium">{userToDisplay.name}</p>
+                <p className="text-sm text-muted-foreground">{userToDisplay.venueName}</p>
+              </div>
+            </div>
+            
+            <nav className="space-y-1.5">
+              {[
+                { name: "Dashboard", href: "/" },
+                { name: "Calendar", href: "/calendar" },
+                { name: "Discover", href: "/discover" },
+                { name: "Venue Network", href: "/venue-network" },
+                { name: "Messages", href: "/messages" },
+                { name: "Settings", href: "/settings" },
+              ].map((item) => {
+                const [location] = useLocation();
+                const isActive = item.href === "/" 
+                  ? location === "/" 
+                  : location.startsWith(item.href);
+                
+                return (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    className={`
+                      block px-4 py-2.5 rounded-lg text-base font-medium transition-colors
+                      ${isActive 
+                        ? 'bg-primary text-primary-foreground dark:bg-primary/90'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                      }
+                    `}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.history.pushState({}, "", item.href);
+                      // Trigger wouter's location detection
+                      const navEvent = new PopStateEvent('popstate');
+                      window.dispatchEvent(navEvent);
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    {item.name}
+                  </a>
+                );
+              })}
+            </nav>
+          </div>
         </SheetContent>
       </Sheet>
 
@@ -146,7 +200,9 @@ export function MainLayout({ children }: MainLayoutProps) {
 
         {/* Page Content */}
         <main className="flex-1 relative overflow-y-auto focus:outline-none">
-          {children}
+          <div className="fade-in slide-up pb-6">
+            {children}
+          </div>
         </main>
       </div>
     </div>
