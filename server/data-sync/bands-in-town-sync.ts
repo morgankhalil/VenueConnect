@@ -390,6 +390,83 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
  * Synchronizes venue data from BandsInTown API
  * This is designed to be run as a scheduled task, not user-initiated
  */
+export async function syncVenueEventsFromBandsInTown(venueId: string) {
+  try {
+    const apiKey = process.env.BANDSINTOWN_API_KEY;
+    if (!apiKey) {
+      throw new Error('Bandsintown API key is not configured');
+    }
+
+    // Fetch events for the specific venue
+    const apiEndpoint = `https://rest.bandsintown.com/venues/${venueId}/events`;
+    
+    console.log(`Fetching events for venue ID ${venueId}...`);
+    
+    const response = await axios.get(apiEndpoint, {
+      params: { app_id: apiKey },
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (!response.data || !Array.isArray(response.data)) {
+      throw new Error('Invalid response from Bandsintown API');
+    }
+
+    const eventsData = response.data;
+    console.log(`Retrieved ${eventsData.length} events for venue ID ${venueId}`);
+
+    // Process each event
+    for (const eventData of eventsData) {
+      // Get or create the artist
+      let artist = await db.select().from(artists).where(eq(artists.name, eventData.artist.name)).limit(1);
+      
+      if (!artist.length) {
+        const [newArtist] = await db.insert(artists).values({
+          name: eventData.artist.name,
+          genres: ['rock'], // Default genre
+          imageUrl: eventData.artist.image_url,
+          websiteUrl: eventData.artist.url,
+          bandsintownId: eventData.artist.id,
+          popularity: 50 // Default popularity
+        }).returning();
+        artist = [newArtist];
+      }
+
+      // Process datetime
+      const eventDate = new Date(eventData.datetime);
+      const dateString = eventDate.toISOString().split('T')[0];
+      const timeString = eventDate.toTimeString().split(' ')[0].substring(0, 5);
+
+      // Create or update the event
+      const existingEvent = await db.select()
+        .from(events)
+        .where(
+          and(
+            eq(events.artistId, artist[0].id),
+            eq(events.date, dateString)
+          )
+        ).limit(1);
+
+      if (existingEvent.length === 0) {
+        await db.insert(events).values({
+          artistId: artist[0].id,
+          venueId: parseInt(venueId),
+          date: dateString,
+          startTime: timeString,
+          status: eventData.status || 'confirmed',
+          ticketUrl: eventData.offers?.[0]?.url,
+          sourceId: eventData.id,
+          sourceName: 'bandsintown'
+        });
+      }
+    }
+
+    return eventsData.length;
+  } catch (error) {
+    console.error('Error syncing venue events:', error);
+    throw error;
+  }
+}
+
 export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 250, limit = 10) {
   // Input validation
   if (!sourceVenueId || isNaN(sourceVenueId) || sourceVenueId <= 0) {
