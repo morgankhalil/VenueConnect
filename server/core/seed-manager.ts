@@ -45,15 +45,6 @@ export class SeedManager {
     this.apiKey = apiKey;
   }
 
-  async clearDatabase() {
-    console.log('Clearing database in correct order...');
-    await db.delete(events);
-    await db.delete(venueNetwork);
-    await db.delete(artists);
-    await db.delete(venues);
-    console.log('Database cleared');
-  }
-
   private async makeApiRequest<T>(url: string): Promise<T> {
     try {
       const response = await axios.get(url, {
@@ -62,10 +53,24 @@ export class SeedManager {
       });
       await setTimeout(this.rateLimitDelay); // Rate limiting
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
+      if (error.response?.status === 429) {
+        console.log('Rate limited, waiting 5 seconds...');
+        await setTimeout(5000);
+        return this.makeApiRequest(url);
+      }
       console.error(`API request failed for ${url}:`, error);
       throw error;
     }
+  }
+
+  async clearDatabase() {
+    console.log('Clearing database in correct order...');
+    await db.delete(events);
+    await db.delete(venueNetwork); 
+    await db.delete(artists);
+    await db.delete(venues);
+    console.log('Database cleared');
   }
 
   async seedVenue(venueId: string): Promise<any> {
@@ -75,6 +80,17 @@ export class SeedManager {
         `https://rest.bandsintown.com/venues/${venueId}`
       );
       
+      // Check if venue exists
+      const existingVenue = await db.select()
+        .from(venues)
+        .where(eq(venues.bandsintownId, venueId))
+        .limit(1);
+
+      if (existingVenue.length) {
+        console.log(`Venue ${data.name} already exists, skipping...`);
+        return existingVenue[0];
+      }
+
       const [venue] = await db.insert(venues).values({
         name: data.name,
         city: data.city,
@@ -86,6 +102,7 @@ export class SeedManager {
       }).returning();
 
       this.stats.venues++;
+      console.log(`Added venue: ${data.name}`);
       return venue;
     } catch (error) {
       console.error(`Failed to seed venue ${venueId}:`, error);
@@ -100,9 +117,43 @@ export class SeedManager {
     );
   }
 
+  async seedEvent(venue: any, eventData: EventData): Promise<void> {
+    try {
+      const eventDate = new Date(eventData.datetime);
+      const artist = await this.seedArtist(eventData.artist);
+      
+      // Check if event exists
+      const existingEvent = await db.select()
+        .from(events)
+        .where(eq(events.sourceId, eventData.sourceId))
+        .limit(1);
+
+      if (existingEvent.length) {
+        console.log(`Event already exists for ${artist.name} at ${venue.name}, skipping...`);
+        return;
+      }
+
+      await db.insert(events).values({
+        artistId: artist.id,
+        venueId: venue.id,
+        date: eventDate.toISOString().split('T')[0],
+        startTime: eventDate.toTimeString().split(' ')[0].substring(0, 5),
+        status: eventData.status || 'confirmed',
+        sourceId: eventData.sourceId,
+        sourceName: 'bandsintown'
+      });
+
+      this.stats.events++;
+      console.log(`Added event: ${artist.name} at ${venue.name}`);
+    } catch (error) {
+      console.error(`Failed to seed event:`, error);
+      throw error;
+    }
+  }
+
   async seedArtist(artistData: ArtistData): Promise<any> {
     try {
-      // Check if artist already exists
+      // Check if artist exists
       const existingArtist = await db.select()
         .from(artists)
         .where(eq(artists.bandsintownId, artistData.bandsintownId))
@@ -118,30 +169,10 @@ export class SeedManager {
       }).returning();
 
       this.stats.artists++;
+      console.log(`Added artist: ${artistData.name}`);
       return artist;
     } catch (error) {
       console.error(`Failed to seed artist ${artistData.name}:`, error);
-      throw error;
-    }
-  }
-
-  async seedEvent(venue: any, eventData: EventData, artist: any): Promise<void> {
-    try {
-      const eventDate = new Date(eventData.datetime);
-      
-      await db.insert(events).values({
-        artistId: artist.id,
-        venueId: venue.id,
-        date: eventDate.toISOString().split('T')[0],
-        startTime: eventDate.toTimeString().split(' ')[0].substring(0, 5),
-        status: eventData.status || 'confirmed',
-        sourceId: eventData.sourceId,
-        sourceName: 'bandsintown'
-      });
-
-      this.stats.events++;
-    } catch (error) {
-      console.error(`Failed to seed event:`, error);
       throw error;
     }
   }
@@ -190,22 +221,14 @@ export class SeedManager {
         const venue = await this.seedVenue(venueId);
         seededVenues.push(venue);
         
-        // 2. Get Venue Events
+        // 2. Get Venue Events and create them (which will create artists)
         const events = await this.getVenueEvents(venueId);
-        
-        // 3. Process Events and Artists
         for (const eventData of events) {
-          if (!eventData.artist) continue;
-          
-          // 4. Seed Artist from Event
-          const artist = await this.seedArtist(eventData.artist);
-          
-          // 5. Create Event
-          await this.seedEvent(venue, eventData, artist);
+          await this.seedEvent(venue, eventData);
         }
       }
 
-      // 6. Create Venue Network
+      // 3. Create Venue Network after all venues are seeded
       await this.createVenueNetwork(seededVenues);
 
       console.log('\nSeeding completed successfully!');
