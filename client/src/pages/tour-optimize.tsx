@@ -258,44 +258,83 @@ export default function TourOptimizePage() {
                 
                 <TabsContent value="suggestions" className="mt-4">
                   <div className="space-y-4">
-                    <h3 className="font-medium">Suggested Venues for Gaps</h3>
-                    {optimizationResult.gaps && optimizationResult.gaps.length > 0 ? (
+                    <h3 className="font-medium">Suggested Venues for Tour</h3>
+                    
+                    {/* Filter for suggested venues from the potential fill venues */}
+                    {optimizationResult.potentialFillVenues && 
+                     optimizationResult.potentialFillVenues.filter((v: any) => 
+                      !v.isFixed || v.status === 'suggested'
+                     ).length > 0 ? (
                       <div className="space-y-4">
-                        {optimizationResult.gaps.map((gap: any, index: number) => (
-                          <Card key={index}>
-                            <CardHeader className="pb-2">
-                              <CardTitle className="text-base">Gap {index + 1}</CardTitle>
-                              <CardDescription>
-                                {gap.previousVenue} to {gap.nextVenue}
-                              </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="space-y-2">
-                                {gap.suggestions?.map((suggestion: any, sIndex: number) => (
-                                  <div key={sIndex} className="flex items-center p-2 border rounded-md">
-                                    <div className="flex-1">
-                                      <div className="font-medium">{suggestion.venue.name}</div>
-                                      <div className="text-sm text-muted-foreground">
-                                        {suggestion.venue.city}
-                                        {suggestion.venue.region ? `, ${suggestion.venue.region}` : ''}
-                                      </div>
-                                    </div>
-                                    <div className="text-sm">
-                                      {Math.round(suggestion.suggestion.score * 100)}% match
-                                    </div>
-                                    <Button size="sm" variant="outline" className="ml-2">
-                                      Add
-                                    </Button>
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-base">Potential Venues</CardTitle>
+                            <CardDescription>
+                              Venues that could fill gaps in your tour schedule
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-2">
+                              {optimizationResult.potentialFillVenues
+                                .filter((venue: any) => !venue.isFixed || venue.status === 'suggested')
+                                .map((venue: any, index: number) => (
+                                <div key={index} className="flex items-center p-3 bg-muted/30 rounded-md">
+                                  <div className="w-8 h-8 flex items-center justify-center bg-primary/10 rounded-full mr-3">
+                                    <span className="font-medium text-sm">{index + 1}</span>
                                   </div>
-                                ))}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
+                                  <div className="flex-1">
+                                    <div className="font-medium">{venue.venue?.name}</div>
+                                    <div className="text-sm text-muted-foreground flex items-center">
+                                      <MapPin className="h-3 w-3 mr-1" />
+                                      {venue.venue?.city || 'Location data unavailable'}
+                                      {venue.venue?.region ? `, ${venue.venue?.region}` : ''}
+                                    </div>
+                                  </div>
+                                  {venue.date && (
+                                    <Badge variant="outline">
+                                      <Calendar className="h-3.5 w-3.5 mr-1" />
+                                      {formatDate(venue.date)}
+                                    </Badge>
+                                  )}
+                                  <Badge className="ml-2 bg-blue-500">Suggested</Badge>
+                                  <Button size="sm" variant="outline" className="ml-2">
+                                    Add to Tour
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
                       </div>
                     ) : (
                       <div className="text-center py-8 text-muted-foreground">
-                        No gaps detected in the optimized route
+                        No venue suggestions available for this tour
+                      </div>
+                    )}
+                    
+                    {/* Still show gaps if they exist */}
+                    {optimizationResult.gaps && optimizationResult.gaps.length > 0 && (
+                      <div className="mt-6">
+                        <h3 className="font-medium mb-4">Detected Tour Gaps</h3>
+                        <div className="space-y-4">
+                          {optimizationResult.gaps.map((gap: any, index: number) => (
+                            <Card key={index}>
+                              <CardHeader className="pb-2">
+                                <CardTitle className="text-base">Gap {index + 1}</CardTitle>
+                                <CardDescription>
+                                  {gap.startVenueId} to {gap.endVenueId}
+                                </CardDescription>
+                              </CardHeader>
+                              <CardContent>
+                                <div className="text-sm">
+                                  <p><strong>Days between:</strong> {gap.daysBetween}</p>
+                                  <p><strong>Start date:</strong> {formatDate(gap.startDate)}</p>
+                                  <p><strong>End date:</strong> {formatDate(gap.endDate)}</p>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
