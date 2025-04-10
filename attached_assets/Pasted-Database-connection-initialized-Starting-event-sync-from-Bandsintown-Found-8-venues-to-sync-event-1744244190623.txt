@@ -1,0 +1,124 @@
+Database connection initialized
+Starting event sync from Bandsintown...
+Found 8 venues to sync events for
+Syncing events for artist: Modest Mouse
+Fetching artist data for 'Modest Mouse'...
+Making request to https://rest.bandsintown.com/artists/Modest%20Mouse with app_id parameter
+Successfully retrieved data for artist Modest Mouse
+Found artist 'Modest Mouse' on Bandsintown
+Added new artist: Modest Mouse
+Fetching events for artist 'Modest Mouse'...
+Making request to https://rest.bandsintown.com/artists/Modest%20Mouse/events with app_id parameter
+Raw API response: []
+Successfully retrieved 0 events for Modest Mouse
+Retrieved 0 events for artist 'Modest Mouse'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: The National
+Fetching artist data for 'The National'...
+Making request to https://rest.bandsintown.com/artists/The%20National with app_id parameter
+Successfully retrieved data for artist The National
+Found artist 'The National' on Bandsintown
+Added new artist: The National
+Fetching events for artist 'The National'...
+Making request to https://rest.bandsintown.com/artists/The%20National/events with app_id parameter
+Raw API response: []
+Successfully retrieved 0 events for The National
+Retrieved 0 events for artist 'The National'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: Spoon
+Fetching artist data for 'Spoon'...
+Making request to https://rest.bandsintown.com/artists/Spoon with app_id parameter
+Successfully retrieved data for artist Spoon
+Found artist 'Spoon' on Bandsintown
+Added new artist: Spoon
+Fetching events for artist 'Spoon'...
+Making request to https://rest.bandsintown.com/artists/Spoon/events with app_id parameter
+Raw API response: []
+Successfully retrieved 0 events for Spoon
+Retrieved 0 events for artist 'Spoon'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: Future Islands
+Fetching artist data for 'Future Islands'...
+Making request to https://rest.bandsintown.com/artists/Future%20Islands with app_id parameter
+Successfully retrieved data for artist Future Islands
+Found artist 'Future Islands' on Bandsintown
+Added new artist: Future Islands
+Fetching events for artist 'Future Islands'...
+Making request to https://rest.bandsintown.com/artists/Future%20Islands/events with app_id parameter
+Raw API response: []
+Successfully retrieved 0 events for Future Islands
+Retrieved 0 events for artist 'Future Islands'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: Japanese Breakfast
+Fetching artist data for 'Japanese Breakfast'...
+Making request to https://rest.bandsintown.com/artists/Japanese%20Breakfast with app_id parameter
+Successfully retrieved data for artist Japanese Breakfast
+Found artist 'Japanese Breakfast' on Bandsintown
+Artist 'Japanese Breakfast' already exists in database
+Fetching events for artist 'Japanese Breakfast'...
+Making request to https://rest.bandsintown.com/artists/Japanese%20Breakfast/events with app_id parameter
+Raw API response: []
+Successfully retrieved 0 events for Japanese Breakfast
+Retrieved 0 events for artist 'Japanese Breakfast'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: Car Seat Headrest
+Fetching artist data for 'Car Seat Headrest'...
+Making request to https://rest.bandsintown.com/artists/Car%20Seat%20Headrest with app_id parameter
+Successfully retrieved data for artist Car Seat Headrest
+Found artist 'Car Seat Headrest' on Bandsintown
+Added new artist: Car Seat Headrest
+Fetching events for artist 'Car Seat Headrest'...
+Making request to https://rest.bandsintown.com/artists/Car%20Seat%20Headrest/events with app_id parameter
+Raw API response: []
+Successfully retrieved 0 events for Car Seat Headrest
+Retrieved 0 events for artist 'Car Seat Headrest'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: Kurt Vile
+Fetching artist data for 'Kurt Vile'...
+Making request to https://rest.bandsintown.com/artists/Kurt%20Vile with app_id parameter
+Successfully retrieved data for artist Kurt Vile
+Found artist 'Kurt Vile' on Bandsintown
+Artist 'Kurt Vile' already exists in database
+Fetching events for artist 'Kurt Vile'...
+Making request to https://rest.bandsintown.com/artists/Kurt%20Vile/events with app_id parameter
+Raw API response: []
+Successfully retrieved 0 events for Kurt Vile
+Retrieved 0 events for artist 'Kurt Vile'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: Angel Olsen
+Fetching artist data for 'Angel Olsen'...
+Making request to https://rest.bandsintown.com/artists/Angel%20Olsen with app_id parameter
+Successfully retrieved data for artist Angel Olsen
+Found artist 'Angel Olsen' on Bandsintown
+Artist 'Angel Olsen' already exists in database
+Fetching events for artist 'Angel Olsen'...
+Making request to https://rest.bandsintown.com/artists/Angel%20Olsen/events with app_id parameter
+Raw API response: []
+Successfully retrieved 0 events for Angel Olsen
+Retrieved 0 events for artist 'Angel Olsen'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: Big Thief
+Fetching artist data for 'Big Thief'...
+Making request to https://rest.bandsintown.com/artists/Big%20Thief with app_id parameter
+Successfully retrieved data for artist Big Thief
+Found artist 'Big Thief' on Bandsintown
+Artist 'Big Thief' already exists in database
+Fetching events for artist 'Big Thief'...
+Making request to https://rest.bandsintown.com/artists/Big%20Thief/events with app_id parameter
+Raw API response: []
+Successfully retrieved 0 events for Big Thief
+Retrieved 0 events for artist 'Big Thief'
+Sync completed: processed 0 events, added/updated 0
+Syncing events for artist: Parquet Courts
+Fetching artist data for 'Parquet Courts'...
+Making request to https://rest.bandsintown.com/artists/Parquet%20Courts with app_id parameter
+Successfully retrieved data for artist Parquet Courts
+Found artist 'Parquet Courts' on Bandsintown
+Artist 'Parquet Courts' already exists in database
+Fetching events for artist 'Parquet Courts'...
+Making request to https://rest.bandsintown.com/artists/Parquet%20Courts/events with app_id parameter
+Raw API response: []
+Successfully retrieved 0 events for Parquet Courts
+Retrieved 0 events for artist 'Parquet Courts'
+Sync completed: processed 0 events, added/updated 0
+Event sync completed
