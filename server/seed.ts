@@ -1,11 +1,13 @@
+
 import { db } from './db';
-import { users, venues, venueNetwork } from '../shared/schema';
+import { users, venues, venueNetwork, tourVenues } from '../shared/schema';
 
 async function seed() {
   try {
-    // Clear all existing data
+    // Clear all existing data in correct order
     console.log('Clearing existing data...');
     await db.delete(venueNetwork);
+    await db.delete(tourVenues); // Delete tour_venues first
     await db.delete(venues);
     await db.delete(users);
     console.log('Database cleared successfully');
