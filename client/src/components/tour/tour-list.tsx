@@ -43,8 +43,19 @@ export function TourList() {
   // Mutation for creating a demo tour
   const createDemoTourMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('/api/tour/tours/create-demo', 'POST');
-      return response;
+      // Fix for the request method
+      const response = await fetch('/api/tour/tours/create-demo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create demo tour');
+      }
+      
+      return response.json();
     },
     onSuccess: (data) => {
       toast({
