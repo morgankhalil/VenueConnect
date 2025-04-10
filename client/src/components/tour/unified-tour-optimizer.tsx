@@ -857,7 +857,7 @@ export function UnifiedTourOptimizer({ tourId, onSuccess, initialTab = 'preferen
                               });
                               
                               // Redirect to tour details page to show the updated schedule
-                              window.location.href = `/tour/${tourId}`;
+                              window.location.href = `/tours/${tourId}`;
                             })
                             .catch((error) => {
                               toast({
