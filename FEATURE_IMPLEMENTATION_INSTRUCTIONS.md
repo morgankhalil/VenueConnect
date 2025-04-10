@@ -88,6 +88,153 @@ export function RouteOptimizer({ tourId }: { tourId: string }) {
 }
 ```
 
+### AI-Powered Route Optimization Wizard
+```tsx
+// New component: client/src/components/tour/optimization-wizard.tsx
+import { useState } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { optimizeTourRoute } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle,
+  Button, Badge, Dialog, DialogContent, DialogHeader, DialogTitle,
+  Select, SelectContent, SelectItem, Input, Label, Checkbox, Textarea,
+  Tabs, TabsContent, TabsList, TabsTrigger, Progress, Separator,
+  Switch, ScrollArea
+} from '@/components/ui'; // Import UI components
+
+// Multi-step wizard implementation
+export function OptimizationWizard({ tourId, onComplete, onCancel }) {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [preferences, setPreferences] = useState({
+    optimizationGoal: 'balance',
+    preferredRegions: [],
+    minDaysBetweenShows: 1,
+    maxDaysBetweenShows: 5,
+    maxTravelDistancePerDay: 500,
+    requiredDaysOff: [],
+    avoidCities: [],
+    focusOnArtistFanbase: true,
+    prioritizeVenueSize: 'any'
+  });
+  
+  // Steps implementation
+  const WelcomeStep = () => {
+    // Display welcome message and optimization goals selection
+  };
+  
+  const PreferencesStep = () => {
+    // Collect user preferences and constraints
+  };
+  
+  const ProcessingStep = () => {
+    // Show optimization in progress with progress indicators
+  };
+  
+  const ResultsStep = () => {
+    // Display optimization results with recommendations
+  };
+  
+  // Step navigation logic
+  const handleNext = () => {
+    // Logic to move to next step or start optimization
+  };
+  
+  const handleBack = () => {
+    // Logic to move to previous step
+  };
+}
+
+// Dialog wrapper for wizard
+export function OptimizationWizardDialog({ tourId, onComplete }) {
+  const [open, setOpen] = useState(false);
+  
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>AI Optimization Wizard</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl">
+        <OptimizationWizard 
+          tourId={tourId}
+          onComplete={(result) => {
+            onComplete(result);
+            setOpen(false);
+          }}
+          onCancel={() => setOpen(false)}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
+```
+
+### API Endpoints for Wizard
+```typescript
+// Add to server/routes.ts or extend existing optimization endpoint
+router.post("/api/tours/:tourId/optimize-with-preferences", async (req, res) => {
+  const { tourId } = req.params;
+  const { 
+    optimizationGoal,
+    preferredRegions,
+    minDaysBetweenShows,
+    maxDaysBetweenShows,
+    maxTravelDistancePerDay,
+    requiredDaysOff,
+    avoidCities,
+    focusOnArtistFanbase,
+    prioritizeVenueSize
+  } = req.body;
+  
+  try {
+    // 1. Fetch tour details and venues
+    // 2. Apply user preferences to optimization algorithm
+    // 3. Generate venue suggestions based on preferences
+    // 4. Calculate optimization scores and metrics
+    // 5. Return detailed optimization results
+    
+    res.json({
+      optimizationScore: 85,
+      totalDistance: 1200,
+      originalDistance: 1500,
+      gaps: [], // Identified schedule gaps
+      potentialFillVenues: [], // Suggested venues
+      recommendations: [] // Specific improvement recommendations
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to optimize tour with preferences" });
+  }
+});
+```
+
+### Integration with Tour Detail Page
+```tsx
+// Update client/src/pages/tour-detail.tsx (or tour-detail-fixed.tsx)
+import { OptimizationWizardDialog } from '@/components/tour/optimization-wizard';
+
+// Add to tour detail page component
+function TourDetailPage() {
+  // Existing implementation
+  
+  const handleOptimizationComplete = (result) => {
+    // Handle optimization results
+    // Update tour data
+    // Show success message
+  };
+  
+  return (
+    // Existing JSX
+    <div className="flex justify-end mb-4">
+      <OptimizationWizardDialog 
+        tourId={tourId} 
+        onComplete={handleOptimizationComplete} 
+      />
+    </div>
+    // Rest of component
+  );
+}
+```
+
 ## 2. Artist Matching System
 
 ### Database Schema Updates

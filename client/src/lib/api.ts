@@ -304,10 +304,11 @@ export async function updateTourVenue(tourId: number, venueId: number, updates: 
  * @param tourId The ID of the tour to optimize
  * @returns A promise that resolves to the optimized route
  */
-export async function optimizeTourRoute(tourId: number) {
+export async function optimizeTourRoute(tourId: number, preferences?: any) {
   return apiRequest(`/api/tour/tours/${tourId}/optimize`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json' },
+    body: preferences ? JSON.stringify({ preferences }) : undefined
   });
 }
 
