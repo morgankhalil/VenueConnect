@@ -164,9 +164,9 @@ export function optimizeTourRoute(
     throw new Error("At least 2 points are required for tour optimization");
   }
   
-  // Separate confirmed venues (fixed) from planning/booked venues (can be adjusted)
-  const fixedPoints = tourPoints.filter(point => point.isFixed);
-  const adjustablePoints = tourPoints.filter(point => !point.isFixed);
+  // Separate confirmed venues (fixed and cannot be moved) from other venues (can be adjusted)
+  const fixedPoints = tourPoints.filter(point => point.status === 'confirmed');
+  const adjustablePoints = tourPoints.filter(point => point.status !== 'confirmed');
   
   // Sort all points by date if provided
   const sortedPoints = [...tourPoints].sort((a, b) => {
@@ -206,7 +206,7 @@ export function optimizeTourRoute(
           createdAt: null,
         },
         date: point.date,
-        isFixed: point.isFixed,
+        isFixed: point.status === 'confirmed', // Only confirmed venues are fixed
         status: point.status || 'confirmed'
       });
     }
