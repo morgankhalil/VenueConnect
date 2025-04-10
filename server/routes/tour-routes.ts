@@ -625,6 +625,99 @@ router.post('/tours/:id/optimize', async (req, res) => {
 });
 
 /**
+ * Apply optimized tour route
+ */
+router.post('/tours/:id/apply-optimization', async (req, res) => {
+  try {
+    const tourId = Number(req.params.id);
+    const { optimizationData } = req.body;
+    
+    if (!optimizationData) {
+      return res.status(400).json({ error: "Optimization data is required" });
+    }
+    
+    // Verify the tour exists
+    const tourResult = await db
+      .select()
+      .from(tours)
+      .where(eq(tours.id, tourId))
+      .limit(1);
+    
+    if (!tourResult.length) {
+      return res.status(404).json({ error: "Tour not found" });
+    }
+    
+    // Get existing tour venues
+    const existingTourVenues = await db
+      .select()
+      .from(tourVenues)
+      .where(eq(tourVenues.tourId, tourId));
+    
+    // Update or create tour venues from optimized data
+    for (const venue of optimizationData.potentialFillVenues || []) {
+      if (!venue.venue || !venue.venue.id) continue;
+      
+      const venueId = venue.venue.id;
+      const existingTourVenue = existingTourVenues.find(tv => tv.venueId === venueId);
+      
+      if (existingTourVenue) {
+        // Update existing tour venue if it's not confirmed
+        if (existingTourVenue.status !== 'confirmed') {
+          await db
+            .update(tourVenues)
+            .set({
+              date: venue.suggestedDate ? new Date(venue.suggestedDate) : existingTourVenue.date,
+              sequence: venue.sequence || existingTourVenue.sequence,
+              updatedAt: new Date()
+            })
+            .where(and(
+              eq(tourVenues.tourId, tourId),
+              eq(tourVenues.venueId, venueId)
+            ));
+        }
+      } else if (venue.gapFilling && venue.suggestedDate) {
+        // Add new venue if it's a gap filler
+        await db
+          .insert(tourVenues)
+          .values({
+            tourId,
+            venueId,
+            status: 'proposed',
+            date: new Date(venue.suggestedDate),
+            sequence: venue.sequence || 0,
+            notes: 'Added via tour optimization',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+      }
+    }
+    
+    // Update tour with optimization metrics
+    await db
+      .update(tours)
+      .set({
+        estimatedTravelDistance: optimizationData.totalDistance,
+        estimatedTravelTime: optimizationData.totalTravelTime,
+        optimizationScore: optimizationData.optimizationScore,
+        updatedAt: new Date()
+      })
+      .where(eq(tours.id, tourId));
+    
+    // Return success response with tour data
+    const updatedTour = await db
+      .select()
+      .from(tours)
+      .where(eq(tours.id, tourId))
+      .limit(1);
+    
+    res.json(updatedTour[0]);
+  } catch (error) {
+    console.error("Error applying tour optimization:", error);
+    res.status(500).json({ error: "Failed to apply tour optimization" });
+  }
+});
+
+/**
  * Get artist tour preferences
  */
 router.get('/artists/:id/tour-preferences', async (req, res) => {

@@ -322,6 +322,20 @@ export async function optimizeTourRoute(tourId: number, preferences?: any) {
 }
 
 /**
+ * Apply optimized tour route changes
+ * @param tourId The ID of the tour to update
+ * @param optimizationData The optimization results to apply
+ * @returns A promise that resolves when the changes are applied
+ */
+export async function applyTourOptimization(tourId: number, optimizationData: any) {
+  return apiRequest(`/api/tour/tours/${tourId}/apply-optimization`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ optimizationData })
+  });
+}
+
+/**
  * Get artist tour preferences
  * @param artistId The ID of the artist to get preferences for
  * @returns A promise that resolves to the artist tour preferences

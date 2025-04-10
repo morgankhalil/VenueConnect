@@ -3,6 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import {
   optimizeTourRoute,
+  applyTourOptimization,
   getTourById,
 } from '@/lib/api';
 
