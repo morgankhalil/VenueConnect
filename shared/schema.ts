@@ -374,16 +374,33 @@ export const tours = pgTable("tours", {
   updatedAt: timestamp("updated_at"),
 });
 
+// Create enum for tour venue status
+export const tourVenueStatusEnum = pgEnum("tour_venue_status", [
+  "potential",    // Manually added to tour but no contact made
+  "suggested",    // Suggested by optimization engine
+  "contacted",    // Initial outreach made to venue
+  "negotiating",  // Active discussions about booking
+  "hold1",        // Priority 1 Hold (Highest priority artist/band)
+  "hold2",        // Priority 2 Hold (High priority artist/band)
+  "hold3",        // Priority 3 Hold (Medium priority artist/band)
+  "hold4",        // Priority 4 Hold (Lower priority artist/band)
+  "confirmed",    // Booking is fully confirmed
+  "cancelled"     // No longer part of the tour
+]);
+
 export const tourVenues = pgTable("tour_venues", {
   id: serial("id").primaryKey(),
   tourId: integer("tour_id").references(() => tours.id).notNull(),
   venueId: integer("venue_id").references(() => venues.id).notNull(),
   date: date("date"),
-  status: text("status").default("proposed"), // proposed, requested, confirmed, cancelled
+  // Using text instead of the enum for now to maintain compatibility with existing data
+  // Can be migrated to use the enum in a future update
+  status: text("status").default("potential"), // See tourVenueStatusEnum for valid values
   sequence: integer("sequence"), // Order in the tour
   travelDistanceFromPrevious: real("travel_distance_from_previous"),
   travelTimeFromPrevious: integer("travel_time_from_previous"), // in minutes
   notes: text("notes"),
+  statusUpdatedAt: timestamp("status_updated_at"), // Track when status changes
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -512,6 +529,7 @@ export const insertTourSchema = createInsertSchema(tours).omit({
 export const insertTourVenueSchema = createInsertSchema(tourVenues).omit({
   id: true,
   createdAt: true,
+  statusUpdatedAt: true,
 });
 
 export const insertTourGapSchema = createInsertSchema(tourGaps).omit({

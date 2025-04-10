@@ -4,6 +4,12 @@ import { Link, useLocation } from 'wouter';
 import { getTour, optimizeTourRoute, updateTour } from '@/lib/api';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  getStatusInfo, 
+  getStatusBadgeVariant, 
+  STATUS_DISPLAY_NAMES,
+  isPriorityHold
+} from '@/lib/tour-status';
 import { UpdateVenueForm } from './update-venue-form';
 import {
   Card,
@@ -798,26 +804,34 @@ export function TourDetail({ tourId }: TourDetailProps) {
 }
 
 function VenueStatusBadge({ status }: { status: string }) {
-  let variant: 'default' | 'secondary' | 'destructive' | 'outline' = 'outline';
+  const normalizedStatus = status.toLowerCase();
+  const statusInfo = getStatusInfo(normalizedStatus);
   
-  switch (status) {
-    case 'confirmed':
-      variant = 'default';
-      break;
-    case 'tentative':
-    case 'booked':
-      variant = 'secondary';
-      break;
-    case 'cancelled':
-      variant = 'destructive';
-      break;
-    case 'suggested':
-      return <Badge className="bg-blue-500 hover:bg-blue-600 text-white">{status}</Badge>;
-    default:
-      variant = 'outline';
+  // For custom colored badges (suggested, contacted, holds)
+  if (normalizedStatus === 'suggested' || 
+      normalizedStatus === 'contacted' || 
+      normalizedStatus === 'negotiating' ||
+      isPriorityHold(normalizedStatus)) {
+    return (
+      <Badge 
+        className={`${statusInfo.cssClass} text-white`}
+        title={statusInfo.description}
+      >
+        {statusInfo.displayName}
+      </Badge>
+    );
   }
   
-  return <Badge variant={variant}>{status}</Badge>;
+  // For standard badge variants
+  const variant = getStatusBadgeVariant(normalizedStatus);
+  return (
+    <Badge 
+      variant={variant}
+      title={statusInfo.description}
+    >
+      {statusInfo.displayName}
+    </Badge>
+  );
 }
 
 function getTourStatusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
