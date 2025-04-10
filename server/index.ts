@@ -22,9 +22,9 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Add health check endpoint
+// Health check endpoint for Replit Deployments
 app.get('/', (_, res) => {
-  res.status(200).send('OK');
+  res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
 // Set up session middleware
