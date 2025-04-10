@@ -5,13 +5,14 @@ import { eq } from 'drizzle-orm';
 
 async function seedTestUsers() {
   try {
-    // Create super admin
+    // Create super admin user
     const [superAdmin] = await db.insert(users).values({
       username: 'superadmin',
-      password: 'admin123', // In production, this should be hashed
+      password: 'admin123',
       name: 'Super Admin',
       email: 'admin@venues.com',
-      role: 'super_admin'
+      role: 'super_admin',
+      venueId: null // Super admin can access all venues
     }).returning();
 
     console.log('Created super admin:', superAdmin);
@@ -27,16 +28,12 @@ async function seedTestUsers() {
     // Create venue manager
     const [venueManager] = await db.insert(users).values({
       username: 'venuemanager',
-      password: 'venue123', // In production, this should be hashed
+      password: 'venue123',
       name: 'Venue Manager',
       email: 'manager@venues.com',
-      role: 'venue_manager'
+      role: 'venue_manager',
+      venueId: firstVenue.id // Assign to specific venue
     }).returning();
-
-    // Assign venue to manager
-    await db.update(users)
-      .set({ venueId: firstVenue.id })
-      .where(eq(users.id, venueManager.id));
 
     console.log('Created venue manager:', venueManager);
     console.log(`Assigned venue ${firstVenue.name} (ID: ${firstVenue.id}) to venue manager`);
@@ -46,4 +43,4 @@ async function seedTestUsers() {
   }
 }
 
-seedTestUsers();
+seedTestUsers().then(() => process.exit(0));
