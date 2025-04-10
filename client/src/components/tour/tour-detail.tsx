@@ -509,13 +509,54 @@ export function TourDetail({ tourId }: TourDetailProps) {
                                   </div>
                                 </div>
                                 <DialogFooter>
-                                  <Button onClick={() => {
-                                    // TODO: Implement adding the venue to tour with appropriate status
-                                    // This would call an API endpoint to add the venue
-                                    // For now we'll just close the dialog
-                                    console.log('Adding venue with status:', item.status || 'suggested');
-                                  }}>
-                                    Add to Tour
+                                  <Button 
+                                    onClick={async () => {
+                                      try {
+                                        // Call API to add venue to tour with the suggested status
+                                        const response = await fetch(`/api/tour/tours/${tourId}/venues`, {
+                                          method: 'POST',
+                                          headers: {
+                                            'Content-Type': 'application/json',
+                                          },
+                                          body: JSON.stringify({
+                                            tourId: Number(tourId),
+                                            venueId: item.venue.id,
+                                            status: item.status || 'suggested',
+                                            date: item.suggestedDate,
+                                            notes: `Added from tour optimization suggestions. Route deviation: ${item.detourRatio ? Math.round((item.detourRatio - 1) * 100) + '%' : 'unknown'}`
+                                          }),
+                                        });
+                                        
+                                        if (!response.ok) {
+                                          throw new Error('Failed to add venue to tour');
+                                        }
+                                        
+                                        toast({
+                                          title: "Success",
+                                          description: `Added ${item.venue.name} to your tour with ${item.status || 'suggested'} status.`,
+                                        });
+                                        
+                                        // Close dialog and refresh data
+                                        refetch();
+                                      } catch (error) {
+                                        console.error('Error adding venue to tour:', error);
+                                        toast({
+                                          title: "Error",
+                                          description: "Failed to add venue to tour.",
+                                          variant: "destructive",
+                                        });
+                                      }
+                                    }}
+                                    disabled={optimizeMutation.isPending}
+                                  >
+                                    {optimizeMutation.isPending ? (
+                                      <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                                        Processing...
+                                      </>
+                                    ) : (
+                                      'Add to Tour'
+                                    )}
                                   </Button>
                                 </DialogFooter>
                               </DialogContent>

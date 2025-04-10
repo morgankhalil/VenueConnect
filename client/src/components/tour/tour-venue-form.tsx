@@ -47,6 +47,9 @@ import { Textarea } from "@/components/ui/textarea";
 // Extend the tour venue schema for form validation
 const tourVenueFormSchema = insertTourVenueSchema.extend({
   date: z.date().optional(),
+  // Ensure notes and status can't be null
+  notes: z.string().optional().default(''),
+  status: z.string().default('potential'),
 });
 
 // Form data type
@@ -83,7 +86,7 @@ export function TourVenueForm({
       status: initialData.status || "potential",
       date: initialData.date ? new Date(initialData.date) : undefined,
       notes: initialData.notes || "",
-      sequence: initialData.sequence || null,
+      sequence: initialData.sequence !== undefined ? initialData.sequence : null,
     },
   });
 
