@@ -1,11 +1,15 @@
 
 import { Router } from 'express';
+import { createServer } from 'http';
 import tourRoutes from './routes/tour-routes';
 import userRoutes from './routes/user-routes';
 import authRoutes from './routes/auth-routes';
 import { type Express } from 'express';
+import { type Server } from 'http';
 
-export function registerRoutes(app: Express) {
+export function registerRoutes(app: Express): Server {
+  // Create HTTP server
+  const server = createServer(app);
   // Register routes
   app.use('/api', tourRoutes);
   app.use('/api', userRoutes);
@@ -46,5 +50,5 @@ export function registerRoutes(app: Express) {
     });
   });
   
-  return app;
+  return server;
 }

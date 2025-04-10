@@ -3,14 +3,31 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// Users table (existing)
+// User role enum
+export const userRoleEnum = pgEnum("user_role", [
+  "admin",               // Full system access
+  "venue_manager",       // Can manage venue details, events, and bookings
+  "artist_manager",      // Can manage artist profiles and tour schedules
+  "booking_agent",       // Can create and manage bookings across venues
+  "staff",               // Limited venue or artist access
+  "user"                 // Basic access
+]);
+
+// Users table with enhanced roles
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   name: text("name"),
   email: text("email").notNull().unique(),
-  role: text("role").default("user"),
+  role: text("role").default("user"),  // Using text for backward compatibility
+  // The following fields enhance the user profile
+  venueId: integer("venue_id").references(() => venues.id),
+  artistId: integer("artist_id").references(() => artists.id),
+  contactPhone: text("contact_phone"),
+  profileImageUrl: text("profile_image_url"),
+  bio: text("bio"),
+  lastLogin: timestamp("last_login"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

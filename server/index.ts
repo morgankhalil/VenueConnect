@@ -6,6 +6,7 @@ import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { users, venues } from "../shared/schema";
 import path from "path";
+import { Server } from "http";
 
 // Define session user for TypeScript
 declare module 'express-session' {
