@@ -12,10 +12,11 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
 
   try {
     const response = await axios.get(`https://rest.bandsintown.com/artists/${encodeURIComponent(artistName)}/events`, {
-      params: { app_id: apiKey },
+      params: { 
+        app_id: apiKey
+      },
       headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Accept': 'application/json'
       }
     });
 
@@ -34,10 +35,11 @@ export async function syncVenueEventsFromBandsInTown(venueId: string) {
 
   try {
     const response = await axios.get(`https://rest.bandsintown.com/venues/${venueId}/events`, {
-      params: { app_id: apiKey },
+      params: { 
+        app_id: apiKey
+      },
       headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Accept': 'application/json'
       }
     });
 
