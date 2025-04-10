@@ -80,13 +80,14 @@ export async function syncArtistFromBandsInTown(artistName: string) {
 
     try {
       console.log(`Making request to ${apiEndpoint} with app_id parameter`);
+      console.log('With params:', params);
       const response = await axios.get(apiEndpoint, { 
         params,
         headers: {
           'Accept': 'application/json'
         }
       });
-
+      console.log('API Response:', JSON.stringify(response.data));
       if (response.data) {
         artistData = response.data;
         console.log(`Successfully retrieved data for artist ${artistName}`);
@@ -105,8 +106,9 @@ export async function syncArtistFromBandsInTown(artistName: string) {
       try {
         console.log("Trying alternative API request format...");
         const altEndpoint = `https://rest.bandsintown.com/artists/${encodedArtistName}?app_id=${encodeURIComponent(apiKey)}`;
+        console.log(`Making request to ${altEndpoint}`);
         const response = await axios.get(altEndpoint);
-
+        console.log('API Response:', JSON.stringify(response.data));
         if (response.data) {
           artistData = response.data;
           console.log(`Successfully retrieved artist data with alternative method`);
@@ -131,6 +133,7 @@ export async function syncArtistFromBandsInTown(artistName: string) {
     console.log(`Found artist '${artistData.name}' on Bandsintown`);
 
     // Check if artist already exists in our database
+    console.log(`Checking database for existing artist '${artistData.name}'`);
     const existingArtists = await db.select()
       .from(artists)
       .where(eq(artists.name, artistData.name))
@@ -152,6 +155,7 @@ export async function syncArtistFromBandsInTown(artistName: string) {
     }
 
     // Insert new artist
+    console.log(`Inserting new artist '${artistData.name}' into database`);
     const newArtists = await db.insert(artists).values({
       name: artistData.name,
       bandsintownId: artistData.id,
@@ -193,6 +197,7 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
     }
 
     // First, make sure we have the artist in our database
+    console.log(`Fetching artist '${artistName}' from database`);
     const artist = await syncArtistFromBandsInTown(artistName);
     if (!artist) {
       throw new Error(`Failed to find or create artist '${artistName}'`);
@@ -207,11 +212,11 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
     const today = new Date();
     const nextYear = new Date();
     nextYear.setFullYear(today.getFullYear() + 1);
-    
+
     // Get events from today and next 2 years
     const twoYearsFromNow = new Date();
     twoYearsFromNow.setFullYear(today.getFullYear() + 2);
-    
+
     const params: Record<string, any> = {
       app_id: apiKey,
       date: `${today.toISOString().split('T')[0]},${twoYearsFromNow.toISOString().split('T')[0]}`
@@ -224,14 +229,14 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
 
     try {
       console.log(`Making request to ${apiEndpoint} with app_id parameter`);
+      console.log('With params:', params);
       const response = await axios.get(apiEndpoint, { 
         params,
         headers: {
           'Accept': 'application/json'
         }
       });
-
-      console.log('Raw API response:', JSON.stringify(response.data, null, 2));
+      console.log('API Response:', JSON.stringify(response.data, null, 2));
       if (response.data && Array.isArray(response.data)) {
         eventsData = response.data;
         console.log(`Successfully retrieved ${eventsData.length} events for ${artistName}`);
@@ -251,8 +256,9 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
       try {
         console.log("Trying alternative API request format...");
         const altEndpoint = `https://rest.bandsintown.com/artists/${encodedArtistName}/events?app_id=${encodeURIComponent(apiKey)}`;
+        console.log(`Making request to ${altEndpoint}`);
         const response = await axios.get(altEndpoint);
-
+        console.log('API Response:', JSON.stringify(response.data, null, 2));
         if (response.data && Array.isArray(response.data)) {
           eventsData = response.data;
           console.log(`Successfully retrieved ${eventsData.length} events with alternative method`);
@@ -275,6 +281,7 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
     const addedEvents: any[] = [];
 
     for (const eventData of eventsData) {
+      console.log(`Processing event: `, eventData);
       if (!eventData.venue || !eventData.datetime) {
         console.log('Skipping event with missing venue or datetime');
         continue;
@@ -296,6 +303,7 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
         venueId = existingVenues[0].id;
       } else {
         // Need to create the venue
+        console.log(`Creating new venue: ${eventData.venue.name}`);
         const newVenues = await db.insert(venues).values({
           name: eventData.venue.name,
           city: eventData.venue.city,
@@ -324,6 +332,7 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
       const timeString = eventDate.toTimeString().split(' ')[0].substring(0, 5);
 
       // Check if event already exists
+      console.log(`Checking database for existing event: ${artist.name} at ${eventData.venue.name} on ${dateString}`);
       const existingEvents = await db.select()
         .from(events)
         .where(
@@ -350,6 +359,7 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
         addedEvents.push({...existingEvents[0]});
       } else {
         // Create new event
+        console.log(`Creating new event: ${artist.name} at ${eventData.venue.name} on ${dateString}`);
         const newEvents = await db.insert(events).values({
           artistId: artist.id,
           venueId: venueId,
@@ -402,6 +412,7 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
     }
 
     // Get the source venue's details to determine search area
+    console.log(`Fetching source venue (ID: ${sourceVenueId}) from database`);
     const sourceVenue = await db.select()
       .from(venues)
       .where(eq(venues.id, sourceVenueId))
@@ -418,6 +429,7 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
     }
 
     // Get recent events at the source venue to find artists
+    console.log(`Fetching recent events for venue ${sourceVenue[0].name} from database`);
     const recentEvents = await db
       .select()
       .from(events)
@@ -431,6 +443,7 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
     const artistIds = recentEvents.map(e => e.artistId);
 
     // Get artist details for these events
+    console.log(`Fetching artists (IDs: ${artistIds}) from database`);
     const venueArtists = await db
       .select()
       .from(artists)
@@ -448,11 +461,13 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
       console.log(`Querying BandsInTown API for ${artist.name} events near ${sourceVenue[0].name}`);
 
       try {
+        console.log(`Making request to ${apiEndpoint} with app_id parameter`);
+        console.log('With params:', { app_id: apiKey });
         const response = await axios.get(apiEndpoint, {
           params: { app_id: apiKey },
           headers: { 'Accept': 'application/json' }
         });
-
+        console.log('API Response:', JSON.stringify(response.data, null, 2));
         if (response.data && Array.isArray(response.data)) {
           eventsData.push(...response.data);
         }
@@ -497,6 +512,7 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
     // Process each unique venue
     for (const venueData of uniqueVenues) {
       // Check if venue already exists in our database
+      console.log(`Checking database for existing venue: ${venueData.name}`);
       const existingVenue = await db.select()
         .from(venues)
         .where(
@@ -563,6 +579,7 @@ export async function syncVenuesFromBandsInTown(sourceVenueId: number, radius = 
 
       try {
         // Insert the new venue
+        console.log(`Inserting new venue '${sanitizedName}' into database`);
         const [newVenue] = await db.insert(venues).values(insertData).returning();
         if (newVenue) {
           addedVenues.push(newVenue);
