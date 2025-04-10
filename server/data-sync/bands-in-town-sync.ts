@@ -44,8 +44,7 @@ export async function syncVenueEventsFromBandsInTown(venueId: string, venueName:
         app_id: apiKey
       },
       headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Accept': 'application/json'
       }
     });
 
