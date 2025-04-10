@@ -14,10 +14,13 @@ async function main() {
     const venues = await db.select().from(tourVenues);
     console.log(`Found ${venues.length} tour venue records to update`);
     
-    // Status mappings from old to new
+    // Status mappings from old to new simplified system
+    // Using only: potential, hold, confirmed, cancelled
     const statusMappings: Record<string, string> = {
-      'proposed': 'suggested',
-      'requested': 'contacted',
+      'proposed': 'potential',
+      'suggested': 'potential',
+      'requested': 'hold',
+      'contacted': 'hold',
       'pending': 'potential',
       'confirmed': 'confirmed',
       'cancelled': 'cancelled'
@@ -25,7 +28,7 @@ async function main() {
     
     // Update each venue status based on the mapping
     for (const venue of venues) {
-      const oldStatus = venue.status || 'pending';
+      const oldStatus = venue.status || 'potential';
       const newStatus = statusMappings[oldStatus] || 'potential';
       
       // Only update if there's a change needed

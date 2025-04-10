@@ -115,14 +115,15 @@ async function seedTours() {
         }
         
         // Different statuses for venues to show different states
+        // Using simplified status system: potential, hold, confirmed, cancelled
         // For the first tour, make at least the first two venues confirmed to enable optimization testing
-        let status = 'proposed';
+        let status = 'potential';
         if (newTour.id === 1) {
           // For the first tour, ensure at least 2 confirmed venues
-          status = i < 2 ? 'confirmed' : ['proposed', 'requested', 'confirmed'][Math.floor(Math.random() * 3)];
+          status = i < 2 ? 'confirmed' : ['potential', 'hold', 'confirmed'][Math.floor(Math.random() * 3)];
         } else {
           // For other tours, random distribution but more confirmed for early shows
-          status = ['proposed', 'requested', 'confirmed'][Math.floor(Math.random() * (i < 2 ? 3 : 2))];
+          status = ['potential', 'hold', 'confirmed'][Math.floor(Math.random() * (i < 2 ? 3 : 2))];
         }
         
         await db.insert(tourVenues).values({
@@ -133,7 +134,7 @@ async function seedTours() {
           sequence: i + 1,
           travelDistanceFromPrevious: travelDistance,
           travelTimeFromPrevious: travelTime,
-          notes: `${status === 'confirmed' ? 'Confirmed' : 'Pending'} show at ${venue.name}`
+          notes: `${status === 'confirmed' ? 'Confirmed' : status === 'hold' ? 'On hold' : status === 'cancelled' ? 'Cancelled' : 'Potential'} show at ${venue.name}`
         });
         
         console.log(`  Added venue: ${venue.name} (${showDate.toISOString().split('T')[0]})`);
