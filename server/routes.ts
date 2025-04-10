@@ -24,12 +24,23 @@ export function registerRoutes(app: Express) {
     }
     
     const venueId = Number(req.params.id);
+    console.log(`Changing user's venue from ${req.session.user.venueId} to ${venueId}`);
+    
+    // Update venueId in session
     req.session.user.venueId = venueId;
     
-    res.json({ 
-      success: true, 
-      message: `Now viewing as venue ID: ${venueId}`,
-      user: req.session.user
+    // Force session save to ensure it persists immediately
+    req.session.save((err) => {
+      if (err) {
+        console.error("Error saving session:", err);
+        return res.status(500).json({ error: "Failed to update venue selection" });
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `Now viewing as venue ID: ${venueId}`,
+        user: req.session.user
+      });
     });
   });
   

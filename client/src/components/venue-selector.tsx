@@ -55,8 +55,13 @@ export function VenueSelector() {
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       
       // Invalidate all venue network data to ensure it gets freshly loaded
+      // We need to invalidate all venue network graph queries regardless of venue ID
       queryClient.invalidateQueries({ 
-        queryKey: ['/api/venue-network/graph']
+        predicate: (query) => {
+          const queryKey = query.queryKey;
+          return Array.isArray(queryKey) && 
+                 queryKey[0] === '/api/venue-network/graph';
+        }
       });
       
       // Also invalidate general venue data and settings
