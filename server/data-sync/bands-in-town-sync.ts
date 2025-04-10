@@ -10,6 +10,7 @@ export class BandsInTownProvider implements EventProvider {
   constructor(apiKey: string) {
     this.apiKey = apiKey;
   }
+}
 
 export async function syncArtistEventsFromBandsInTown(artistName: string) {
   const apiKey = process.env.BANDSINTOWN_API_KEY;
