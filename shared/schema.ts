@@ -36,6 +36,7 @@ export const venues = pgTable("venues", {
   bandsintownId: text("bandsintown_id").unique(),
   website: text("website"),
   phoneNumber: text("phone_number"),
+  contactPhone: text("contact_phone"),
   imageUrl: text("image_url"),
   metroArea: text("metro_area"),
   publicTransport: text("public_transport"),
