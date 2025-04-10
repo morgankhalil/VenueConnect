@@ -540,10 +540,10 @@ router.post('/tours/:id/optimize', async (req, res) => {
         status: 'confirmed' as string
       }));
       
-    // Include booked and planning venues as semi-fixed points (can be optimized but are part of the tour)
+    // Include hold and potential venues as semi-fixed points that can be moved
     const plannedPoints = tourVenuesResult
       .filter(tv => 
-        (tv.tourVenue.status === 'booked' || tv.tourVenue.status === 'planning') && 
+        (tv.tourVenue.status === 'hold' || tv.tourVenue.status === 'potential') && 
         tv.tourVenue.date !== null
       )
       .map(tv => ({
@@ -552,7 +552,7 @@ router.post('/tours/:id/optimize', async (req, res) => {
         longitude: Number(tv.venue.longitude),
         date: tv.tourVenue.date ? new Date(tv.tourVenue.date) : null,
         isFixed: false,
-        status: tv.tourVenue.status || 'planning'
+        status: tv.tourVenue.status || 'potential'
       }));
     
     // Combine all points, with at least 2 points total
@@ -561,7 +561,7 @@ router.post('/tours/:id/optimize', async (req, res) => {
     // We need at least 2 points with dates for optimization
     if (allTourPoints.length < 2) {
       return res.status(400).json({ 
-        error: "Tour optimization requires at least 2 venues with dates (confirmed, booked, or in planning)" 
+        error: "Tour optimization requires at least 2 venues with dates (confirmed, hold, or potential)" 
       });
     }
     
@@ -726,7 +726,7 @@ router.post('/tours/:id/apply-optimization', async (req, res) => {
           .values({
             tourId,
             venueId,
-            status: 'proposed',
+            status: 'potential',
             date: new Date(venue.suggestedDate),
             sequence: sequenceNum, // Use the calculated sequence
             notes: 'Added via tour optimization',
@@ -1127,7 +1127,7 @@ router.post('/tours/create-demo', async (req, res) => {
         .values({
           tourId: tour.id,
           venueId: venue.id,
-          status: 'proposed', // Proposed status allows the optimizer to suggest dates
+          status: 'potential', // Potential status allows the optimizer to suggest dates
           sequence: i + 1, // Sequence between first and last
           notes: 'Proposed venue for optimization',
           createdAt: new Date(),
