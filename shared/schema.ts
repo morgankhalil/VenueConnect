@@ -357,3 +357,199 @@ export const insertWebhookConfigurationSchema = createInsertSchema(webhookConfig
 export type WebhookConfiguration = typeof webhookConfigurations.$inferSelect;
 export type InsertWebhookConfiguration = z.infer<typeof insertWebhookConfigurationSchema>;
 
+// Tour optimization tables
+export const tours = pgTable("tours", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  artistId: integer("artist_id").references(() => artists.id).notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  status: text("status").default("planning"), // planning, booking, confirmed, completed, cancelled
+  description: text("description"),
+  totalBudget: real("total_budget"),
+  estimatedTravelDistance: real("estimated_travel_distance"),
+  estimatedTravelTime: integer("estimated_travel_time_minutes"),
+  optimizationScore: integer("optimization_score"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at"),
+});
+
+export const tourVenues = pgTable("tour_venues", {
+  id: serial("id").primaryKey(),
+  tourId: integer("tour_id").references(() => tours.id).notNull(),
+  venueId: integer("venue_id").references(() => venues.id).notNull(),
+  date: date("date"),
+  status: text("status").default("proposed"), // proposed, requested, confirmed, cancelled
+  sequence: integer("sequence"), // Order in the tour
+  travelDistanceFromPrevious: real("travel_distance_from_previous"),
+  travelTimeFromPrevious: integer("travel_time_from_previous"), // in minutes
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const tourGaps = pgTable("tour_gaps", {
+  id: serial("id").primaryKey(),
+  tourId: integer("tour_id").references(() => tours.id).notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  previousVenueId: integer("previous_venue_id").references(() => venues.id),
+  nextVenueId: integer("next_venue_id").references(() => venues.id),
+  locationLatitude: real("location_latitude"),
+  locationLongitude: real("location_longitude"),
+  maxTravelDistance: real("max_travel_distance"),
+  status: text("status").default("open"), // open, filled, skipped
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const tourGapSuggestions = pgTable("tour_gap_suggestions", {
+  id: serial("id").primaryKey(),
+  gapId: integer("gap_id").references(() => tourGaps.id).notNull(),
+  venueId: integer("venue_id").references(() => venues.id).notNull(),
+  suggestedDate: date("suggested_date").notNull(),
+  matchScore: integer("match_score").default(50),
+  travelDistanceFromPrevious: real("travel_distance_from_previous"),
+  travelDistanceToNext: real("travel_distance_to_next"),
+  status: text("status").default("suggested"), // suggested, accepted, rejected
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const artistTourPreferences = pgTable("artist_tour_preferences", {
+  id: serial("id").primaryKey(),
+  artistId: integer("artist_id").references(() => artists.id).notNull(),
+  preferredRegions: text("preferred_regions").array(),
+  preferredVenueTypes: text("preferred_venue_types").array(),
+  preferredVenueCapacity: jsonb("preferred_venue_capacity"), // { min, max }
+  maxTravelDistancePerDay: real("max_travel_distance_per_day"),
+  minDaysBetweenShows: integer("min_days_between_shows").default(0),
+  maxDaysBetweenShows: integer("max_days_between_shows"),
+  avoidDates: jsonb("avoid_dates").array(),
+  requiredDayOff: text("required_day_off").array(), // e.g., ["Sunday", "Monday"]
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at"),
+});
+
+export const venueTourPreferences = pgTable("venue_tour_preferences", {
+  id: serial("id").primaryKey(),
+  venueId: integer("venue_id").references(() => venues.id).notNull(),
+  preferredGenres: genreEnum("preferred_genres").array(),
+  availableDates: jsonb("available_dates").array(),
+  minimumArtistPopularity: integer("minimum_artist_popularity"),
+  preferredNoticeTime: integer("preferred_notice_time_days"),
+  openToCollaboration: boolean("open_to_collaboration").default(true),
+  participationRadius: real("participation_radius"), // max distance in km for tour collaboration
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at"),
+});
+
+// Relations for tour optimization
+export const toursRelations = relations(tours, ({ one, many }) => ({
+  artist: one(artists, {
+    fields: [tours.artistId],
+    references: [artists.id],
+  }),
+  venues: many(tourVenues),
+  gaps: many(tourGaps),
+}));
+
+export const tourVenuesRelations = relations(tourVenues, ({ one }) => ({
+  tour: one(tours, {
+    fields: [tourVenues.tourId],
+    references: [tours.id],
+  }),
+  venue: one(venues, {
+    fields: [tourVenues.venueId],
+    references: [venues.id],
+  }),
+}));
+
+export const tourGapsRelations = relations(tourGaps, ({ one, many }) => ({
+  tour: one(tours, {
+    fields: [tourGaps.tourId],
+    references: [tours.id],
+  }),
+  previousVenue: one(venues, {
+    fields: [tourGaps.previousVenueId],
+    references: [venues.id],
+  }),
+  nextVenue: one(venues, {
+    fields: [tourGaps.nextVenueId],
+    references: [venues.id],
+  }),
+  suggestions: many(tourGapSuggestions),
+}));
+
+export const tourGapSuggestionsRelations = relations(tourGapSuggestions, ({ one }) => ({
+  gap: one(tourGaps, {
+    fields: [tourGapSuggestions.gapId],
+    references: [tourGaps.id],
+  }),
+  venue: one(venues, {
+    fields: [tourGapSuggestions.venueId],
+    references: [venues.id],
+  }),
+}));
+
+export const artistTourPreferencesRelations = relations(artistTourPreferences, ({ one }) => ({
+  artist: one(artists, {
+    fields: [artistTourPreferences.artistId],
+    references: [artists.id],
+  }),
+}));
+
+export const venueTourPreferencesRelations = relations(venueTourPreferences, ({ one }) => ({
+  venue: one(venues, {
+    fields: [venueTourPreferences.venueId],
+    references: [venues.id],
+  }),
+}));
+
+// Insert schemas for tour optimization
+export const insertTourSchema = createInsertSchema(tours).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertTourVenueSchema = createInsertSchema(tourVenues).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertTourGapSchema = createInsertSchema(tourGaps).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertTourGapSuggestionSchema = createInsertSchema(tourGapSuggestions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertArtistTourPreferencesSchema = createInsertSchema(artistTourPreferences).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertVenueTourPreferencesSchema = createInsertSchema(venueTourPreferences).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types for tour optimization
+export type Tour = typeof tours.$inferSelect;
+export type InsertTour = z.infer<typeof insertTourSchema>;
+
+export type TourVenue = typeof tourVenues.$inferSelect;
+export type InsertTourVenue = z.infer<typeof insertTourVenueSchema>;
+
+export type TourGap = typeof tourGaps.$inferSelect;
+export type InsertTourGap = z.infer<typeof insertTourGapSchema>;
+
+export type TourGapSuggestion = typeof tourGapSuggestions.$inferSelect;
+export type InsertTourGapSuggestion = z.infer<typeof insertTourGapSuggestionSchema>;
+
+export type ArtistTourPreferences = typeof artistTourPreferences.$inferSelect;
+export type InsertArtistTourPreferences = z.infer<typeof insertArtistTourPreferencesSchema>;
+
+export type VenueTourPreferences = typeof venueTourPreferences.$inferSelect;
+export type InsertVenueTourPreferences = z.infer<typeof insertVenueTourPreferencesSchema>;
+
