@@ -44,7 +44,19 @@ export async function registerBandsintownWebhook(
     };
 
     // Set up daily sync webhook
-    await db.insert(webhookConfigurations).values({
+    // Set up daily sync webhook
+await db.insert(webhookConfigurations).values({
+  name: 'Daily Data Sync',
+  type: 'scheduled_sync',
+  description: 'Automatically syncs venue and artist data daily',
+  callbackUrl: '/api/webhooks/daily-sync',
+  isEnabled: true,
+  configOptions: JSON.stringify({
+    schedule: '0 0 * * *' // Run at midnight every day
+  })
+}).onConflictDoNothing();
+
+await db.insert(webhookConfigurations).values({
       name: 'Daily Data Sync',
       type: 'scheduled_sync',
       description: 'Automatically syncs venue and artist data daily',
