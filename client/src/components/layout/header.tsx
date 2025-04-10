@@ -55,11 +55,11 @@ export function Header({
   const userInitial = userName ? userName.charAt(0).toUpperCase() : "U";
 
   return (
-    <header className="sticky top-0 z-30 w-full transition-all duration-300 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-800/50">
+    <header className="sticky top-0 z-30 w-full transition-all duration-300 bg-white dark:bg-black backdrop-blur-md border-b border-gray-300 dark:border-gray-800">
       {/* Loading indicator */}
       {isLoading && (
-        <div className="absolute top-0 left-0 w-full h-0.5 bg-primary/10 overflow-hidden">
-          <div className="h-full bg-primary animate-pulse rounded-r-full" style={{ width: '30%' }}></div>
+        <div className="absolute top-0 left-0 w-full h-0.5 bg-[hsl(var(--custom-grey-light))] overflow-hidden">
+          <div className="h-full bg-[hsl(var(--custom-grey-dark))] animate-pulse rounded-r-full" style={{ width: '30%' }}></div>
         </div>
       )}
 
@@ -67,7 +67,7 @@ export function Header({
         <div className="flex items-center">
           <button
             type="button"
-            className="md:hidden -ml-1 mr-2 p-1.5 rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+            className="md:hidden -ml-1 mr-2 p-1.5 rounded text-[hsl(var(--custom-grey-medium))] hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-900 focus:outline-none focus:ring-1 focus:ring-[hsl(var(--custom-grey-light))] dark:focus:ring-[hsl(var(--custom-grey-dark))] transition-colors"
             onClick={onMobileMenuToggle}
             aria-label="Open menu"
           >
@@ -75,9 +75,8 @@ export function Header({
           </button>
 
           <div className="hidden md:block mr-6">
-            <h2 className="text-xl font-medium tracking-tight dark:text-white fade-in">
-              Welcome back, <span className="text-primary font-semibold">{userName.split(' ')[0]}</span>
-              <span className="text-accent ml-1">!</span>
+            <h2 className="text-xl font-medium tracking-tight text-black dark:text-white fade-in">
+              Welcome back, <span className="font-semibold">{userName.split(' ')[0]}</span>
             </h2>
           </div>
 
@@ -85,13 +84,13 @@ export function Header({
             className="max-w-md w-full"
             onSubmit={handleSearchSubmit}
           >
-            <div className="relative text-gray-400 focus-within:text-gray-600 dark:focus-within:text-gray-400">
+            <div className="relative text-[hsl(var(--custom-grey-medium))] focus-within:text-black dark:focus-within:text-white">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <SearchIcon className="h-4 w-4" />
               </div>
               <Input
                 id="search"
-                className="block w-full pl-10 pr-3 py-2 text-sm border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-primary/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                className="block w-full pl-10 pr-3 py-2 text-sm border-gray-300 dark:border-gray-700 focus:ring-1 focus:ring-[hsl(var(--custom-grey-medium))] placeholder:text-[hsl(var(--custom-grey-medium))]"
                 placeholder="Search artists, venues, or events..."
                 type="search"
                 value={searchQuery}
@@ -107,16 +106,16 @@ export function Header({
           <Button 
             variant="ghost" 
             size="icon"
-            className="relative rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+            className="relative rounded hover:bg-gray-100 dark:hover:bg-gray-900 text-[hsl(var(--custom-grey-medium))] hover:text-black dark:hover:text-white"
           >
             <Bell className="h-5 w-5" />
-            <Badge className="absolute top-0 right-0 h-2 w-2 p-0 bg-accent border-white dark:border-gray-900 pulse-accent" variant="secondary" />
+            <Badge className="absolute top-0 right-0 h-2 w-2 p-0 bg-[hsl(var(--custom-grey-dark))] border-white dark:border-black" variant="secondary" />
           </Button>
 
           <Button 
             variant="ghost" 
             size="icon"
-            className="rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+            className="rounded hover:bg-gray-100 dark:hover:bg-gray-900 text-[hsl(var(--custom-grey-medium))] hover:text-black dark:hover:text-white"
             onClick={() => navigate("/help")}
           >
             <HelpCircle className="h-5 w-5" />
@@ -126,51 +125,51 @@ export function Header({
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
-                className="gap-2 ml-2 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center text-sm rounded-full focus:ring-2 focus:ring-primary/20 focus:ring-offset-0"
+                className="gap-2 ml-2 hover:bg-gray-100 dark:hover:bg-gray-900 flex items-center text-sm rounded focus:ring-1 focus:ring-[hsl(var(--custom-grey-medium))]"
               >
-                <Avatar className="h-8 w-8 ring-2 ring-gray-100 dark:ring-gray-800">
+                <Avatar className="h-8 w-8 ring-1 ring-[hsl(var(--custom-grey-light))] dark:ring-[hsl(var(--custom-grey-dark))]">
                   <AvatarImage src={userAvatar} alt={userName} />
-                  <AvatarFallback className="bg-primary text-primary-foreground">{userInitial}</AvatarFallback>
+                  <AvatarFallback className="bg-[hsl(var(--custom-grey-medium))] text-white">{userInitial}</AvatarFallback>
                 </Avatar>
-                <span className="hidden sm:inline-block font-medium">{userName.split(' ')[0]}</span>
-                <ChevronDown className="h-4 w-4 text-gray-400" />
+                <span className="hidden sm:inline-block font-medium text-black dark:text-white">{userName.split(' ')[0]}</span>
+                <ChevronDown className="h-4 w-4 text-[hsl(var(--custom-grey-medium))]" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 mt-1 p-1">
+            <DropdownMenuContent align="end" className="w-56 mt-1 p-1 bg-white dark:bg-black border border-gray-300 dark:border-gray-700">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">{userName}</p>
-                  <p className="text-xs text-muted-foreground">Admin</p>
+                  <p className="text-sm font-medium text-black dark:text-white">{userName}</p>
+                  <p className="text-xs text-[hsl(var(--custom-grey-medium))]">Admin</p>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-800" />
               <DropdownMenuItem 
-                className="cursor-pointer py-2"
+                className="cursor-pointer py-2 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900"
                 onClick={() => navigate("/profile")}
               >
-                <User className="mr-2 h-4 w-4" />
+                <User className="mr-2 h-4 w-4 text-[hsl(var(--custom-grey-medium))]" />
                 <span>Profile</span>
               </DropdownMenuItem>
               <DropdownMenuItem 
-                className="cursor-pointer py-2"
+                className="cursor-pointer py-2 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900"
                 onClick={() => navigate("/settings")}
               >
-                <SettingsIcon className="mr-2 h-4 w-4" />
+                <SettingsIcon className="mr-2 h-4 w-4 text-[hsl(var(--custom-grey-medium))]" />
                 <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuItem 
-                className="cursor-pointer py-2"
+                className="cursor-pointer py-2 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900"
                 onClick={() => navigate("/billing")}
               >
-                <CreditCard className="mr-2 h-4 w-4" />
+                <CreditCard className="mr-2 h-4 w-4 text-[hsl(var(--custom-grey-medium))]" />
                 <span>Billing</span>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-800" />
               <DropdownMenuItem 
-                className="cursor-pointer py-2 text-destructive focus:text-destructive" 
+                className="cursor-pointer py-2 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900" 
                 onClick={onLogout}
               >
-                <LogOut className="mr-2 h-4 w-4" />
+                <LogOut className="mr-2 h-4 w-4 text-[hsl(var(--custom-grey-medium))]" />
                 <span>Logout</span>
               </DropdownMenuItem>
             </DropdownMenuContent>

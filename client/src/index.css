@@ -29,15 +29,30 @@
 
 @layer base {
   :root {
-    --accent: 180 100% 50%; /* Pure Cyan */
-    --accent-foreground: 0 0% 0%;
-    --accent-hover: 185 100% 45%;
+    /* Grey scale accent colors */
+    --accent: 0 0% 50%; /* Grey Accent */
+    --accent-foreground: 0 0% 100%;
+    --accent-hover: 0 0% 60%;
+    
+    /* Custom colors for black & grey & white theme */
+    --custom-black: 0 0% 0%;
+    --custom-white: 0 0% 100%;
+    --custom-grey-dark: 0 0% 25%;
+    --custom-grey-medium: 0 0% 50%;
+    --custom-grey-light: 0 0% 75%;
   }
 
   .dark {
-    --accent: 180 100% 50%;
-    --accent-foreground: 0 0% 0%;
-    --accent-hover: 185 100% 45%;
+    --accent: 0 0% 55%; 
+    --accent-foreground: 0 0% 100%;
+    --accent-hover: 0 0% 65%;
+    
+    /* Custom colors for dark mode */
+    --custom-black: 0 0% 0%;
+    --custom-white: 0 0% 95%;
+    --custom-grey-dark: 0 0% 20%;
+    --custom-grey-medium: 0 0% 45%;
+    --custom-grey-light: 0 0% 65%;
   }
 
   * {
@@ -45,7 +60,7 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-white dark:bg-black text-black dark:text-white antialiased;
     font-family: 'Afacad', sans-serif;
   }
 

@@ -44,11 +44,11 @@ export function Sidebar({
 
   return (
     <aside className="hidden md:flex md:flex-shrink-0">
-      <div className="flex flex-col w-64 border-r border-gray-200/50 dark:border-gray-800/50 pt-5 pb-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
+      <div className="flex flex-col w-64 border-r border-gray-300 dark:border-gray-800 pt-5 pb-4 bg-white dark:bg-black backdrop-blur-sm">
         {/* App Logo */}
         <div className="flex items-center flex-shrink-0 px-6">
-          <h1 className="text-2xl font-heading font-bold text-primary flex items-center">
-            <Mic2 className="mr-2 h-7 w-7" />
+          <h1 className="text-2xl font-heading font-bold text-black dark:text-white flex items-center">
+            <Mic2 className="mr-2 h-7 w-7 text-[hsl(var(--custom-grey-medium))]" />
             VenueConnect
           </h1>
         </div>
@@ -56,25 +56,25 @@ export function Sidebar({
         <div className="mt-8 flex-1 flex flex-col overflow-y-auto px-4">
           {/* User Profile */}
           <div className="mb-8">
-            <div className="flex items-center p-3 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10">
+            <div className="flex items-center p-3 rounded-lg border border-[hsl(var(--custom-grey-light))] dark:border-[hsl(var(--custom-grey-dark))] bg-white dark:bg-black">
               <div className="flex-shrink-0 h-12 w-12">
                 {userAvatar ? (
                   <img 
-                    className="h-12 w-12 rounded-full object-cover ring-2 ring-white/30 dark:ring-black/20" 
+                    className="h-12 w-12 rounded-full object-cover ring-1 ring-[hsl(var(--custom-grey-medium))]" 
                     src={userAvatar} 
                     alt={userName} 
                   />
                 ) : (
-                  <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center ring-2 ring-white/30 dark:ring-black/20">
-                    <span className="text-primary-foreground font-semibold text-lg">
+                  <div className="h-12 w-12 rounded-full bg-[hsl(var(--custom-grey-medium))] flex items-center justify-center">
+                    <span className="text-white font-semibold text-lg">
                       {userName.charAt(0)}
                     </span>
                   </div>
                 )}
               </div>
               <div className="ml-4">
-                <p className="text-base font-medium">{userName}</p>
-                <p className="text-sm text-muted-foreground">{venueName}</p>
+                <p className="text-base font-medium text-black dark:text-white">{userName}</p>
+                <p className="text-sm text-[hsl(var(--custom-grey-medium))]">{venueName}</p>
               </div>
             </div>
           </div>
@@ -93,10 +93,10 @@ export function Sidebar({
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "group flex items-center px-4 py-2.5 text-base font-medium rounded-lg transition-all duration-200 hover-lift",
+                    "group flex items-center px-4 py-2.5 text-base font-medium rounded transition-all duration-200",
                     isActive
-                      ? "bg-primary text-primary-foreground dark:bg-primary/90"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      ? "bg-[hsl(var(--custom-grey-light))] dark:bg-[hsl(var(--custom-grey-dark))] text-black dark:text-white"
+                      : "text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900"
                   )}
                   onClick={(e) => {
                     e.preventDefault();
@@ -110,8 +110,8 @@ export function Sidebar({
                     className={cn(
                       "mr-3 flex-shrink-0 h-5 w-5",
                       isActive
-                        ? "text-primary-foreground"
-                        : "text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300"
+                        ? "text-black dark:text-white"
+                        : "text-[hsl(var(--custom-grey-medium))] group-hover:text-black dark:group-hover:text-white"
                     )}
                   />
                   {item.name}
@@ -123,10 +123,10 @@ export function Sidebar({
           {/* Venue Network Connections */}
           <div className="mt-10">
             <div className="flex items-center justify-between mb-4 px-4">
-              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+              <h3 className="text-sm font-semibold text-black dark:text-white">
                 Venue Network
               </h3>
-              <button className="text-accent hover:text-primary transition-colors">
+              <button className="text-[hsl(var(--custom-grey-medium))] hover:text-black dark:hover:text-white transition-colors">
                 <PlusCircle className="h-5 w-5" />
               </button>
             </div>
@@ -137,7 +137,7 @@ export function Sidebar({
                   <a
                     key={venue.id}
                     href={`/venues/${venue.id}`}
-                    className="group flex items-center px-4 py-2 text-sm rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    className="group flex items-center px-4 py-2 text-sm rounded text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors"
                     onClick={(e) => {
                       e.preventDefault();
                       window.history.pushState({}, "", `/venues/${venue.id}`);
@@ -150,17 +150,17 @@ export function Sidebar({
                       className={cn(
                         "w-2.5 h-2.5 mr-3 rounded-full",
                         venue.isOnline 
-                          ? "bg-accent pulse-accent" 
-                          : "bg-gray-400"
+                          ? "bg-[hsl(var(--custom-grey-medium))]" 
+                          : "bg-[hsl(var(--custom-grey-light))]"
                       )}
                     />
                     <span className="truncate">{venue.name}</span>
                   </a>
                 ))
               ) : (
-                <div className="px-4 py-3 rounded-lg bg-muted/50 text-center border border-accent/20">
-                  <Users className="h-5 w-5 mx-auto mb-2 text-accent" />
-                  <p className="text-sm text-muted-foreground">
+                <div className="px-4 py-3 rounded bg-white dark:bg-black text-center border border-[hsl(var(--custom-grey-light))] dark:border-[hsl(var(--custom-grey-dark))]">
+                  <Users className="h-5 w-5 mx-auto mb-2 text-[hsl(var(--custom-grey-medium))]" />
+                  <p className="text-sm text-[hsl(var(--custom-grey-medium))]">
                     No connected venues yet
                   </p>
                 </div>
