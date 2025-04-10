@@ -29,7 +29,7 @@ import { Home, ChevronRight, Music } from 'lucide-react';
  * 
  * Provides a full-screen experience for the unified tour optimizer
  */
-export default function TourOptimizePage() {
+export default function OptimizeTour() {
   const { tourId } = useParams();
   
   // Fetch tour data
