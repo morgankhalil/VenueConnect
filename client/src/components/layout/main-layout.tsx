@@ -149,6 +149,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                 { name: "Dashboard", href: "/" },
                 { name: "Calendar", href: "/calendar" },
                 { name: "Discover", href: "/discover" },
+                { name: "Tours", href: "/tours" },
                 { name: "Venue Network", href: "/venue-network" },
                 { name: "Messages", href: "/messages" },
                 { name: "Settings", href: "/settings" },
