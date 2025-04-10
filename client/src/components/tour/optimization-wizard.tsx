@@ -195,6 +195,13 @@ function WelcomeStep({ onNext, preferences, setPreferences }: StepProps) {
             <div className="flex items-start">
               <CheckCircle2 className="h-5 w-5 mr-2 text-green-500 mt-0.5" />
               <div>
+                <h4 className="font-medium">Preserve confirmed dates</h4>
+                <p className="text-sm text-muted-foreground">Confirmed venues won't be rescheduled or moved</p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <CheckCircle2 className="h-5 w-5 mr-2 text-green-500 mt-0.5" />
+              <div>
                 <h4 className="font-medium">Balanced routing</h4>
                 <p className="text-sm text-muted-foreground">Distribute travel time evenly to prevent burnout</p>
               </div>
@@ -464,9 +471,11 @@ function ProcessingStep({ optimizationResult, isLoading, tourId }: StepProps) {
             setStatus('Finalizing optimization...');
           } else if (newProgress > 75) {
             setStatus('Calculating venue scores...');
-          } else if (newProgress > 50) {
+          } else if (newProgress > 60) {
+            setStatus('Preserving confirmed venues...');
+          } else if (newProgress > 40) {
             setStatus('Analyzing route options...');
-          } else if (newProgress > 25) {
+          } else if (newProgress > 20) {
             setStatus('Identifying venue opportunities...');
           } else if (newProgress > 10) {
             setStatus('Processing tour constraints...');
@@ -534,7 +543,7 @@ function ProcessingStep({ optimizationResult, isLoading, tourId }: StepProps) {
                 <div className={`w-5 h-5 rounded-full flex items-center justify-center mr-2 ${progress > 30 ? 'bg-primary' : 'bg-muted'}`}>
                   {progress > 30 ? <CheckCircle2 className="h-3 w-3 text-primary-foreground" /> : <span className="text-xs">2</span>}
                 </div>
-                <span className={progress > 30 ? 'text-foreground' : 'text-muted-foreground'}>Optimizing travel routes and distances</span>
+                <span className={progress > 30 ? 'text-foreground' : 'text-muted-foreground'}>Preserving confirmed tour dates and venues</span>
               </div>
               <div className="flex items-center">
                 <div className={`w-5 h-5 rounded-full flex items-center justify-center mr-2 ${progress > 50 ? 'bg-primary' : 'bg-muted'}`}>
@@ -677,6 +686,16 @@ function ResultsStep({ onNext, tourId, optimizationResult }: StepProps) {
                 <p className="text-sm">
                   <strong>Venue Suggestions:</strong> Based on your preferences, we've identified {optimizationResult?.potentialFillVenues?.length || 0} high-potential 
                   venues that fit well with your tour routing and artist profile.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start">
+              <Lightbulb className="h-5 w-5 mr-2 text-amber-500 mt-0.5" />
+              <div>
+                <p className="text-sm">
+                  <strong>Confirmed Venues:</strong> We've preserved all your confirmed venues and tour dates while optimizing the routing 
+                  for other venues and suggesting potential new stops.
                 </p>
               </div>
             </div>
