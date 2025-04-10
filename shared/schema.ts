@@ -13,6 +13,70 @@ export const userRoleEnum = pgEnum("user_role", [
   "user"                 // Basic access
 ]);
 
+// Define permissions for each role
+export const rolePermissions = {
+  admin: {
+    canManageUsers: true,
+    canManageVenues: true,
+    canManageArtists: true,
+    canManageTours: true,
+    canViewAnalytics: true,
+    canSendMessages: true,
+    canViewAllVenueData: true,
+    canCreateWebhooks: true,
+  },
+  venue_manager: {
+    canManageUsers: false,
+    canManageVenues: true,
+    canManageArtists: false,
+    canManageTours: true,
+    canViewAnalytics: true,
+    canSendMessages: true,
+    canViewAllVenueData: false,
+    canCreateWebhooks: true,
+  },
+  artist_manager: {
+    canManageUsers: false,
+    canManageVenues: false,
+    canManageArtists: true,
+    canManageTours: true,
+    canViewAnalytics: true,
+    canSendMessages: true,
+    canViewAllVenueData: false,
+    canCreateWebhooks: true,
+  },
+  booking_agent: {
+    canManageUsers: false,
+    canManageVenues: false,
+    canManageArtists: false,
+    canManageTours: true,
+    canViewAnalytics: true,
+    canSendMessages: true,
+    canViewAllVenueData: false,
+    canCreateWebhooks: false,
+  },
+  staff: {
+    canManageUsers: false,
+    canManageVenues: false,
+    canManageArtists: false,
+    canManageTours: false,
+    canViewAnalytics: false,
+    canSendMessages: true,
+    canViewAllVenueData: false,
+    canCreateWebhooks: false,
+  },
+  user: {
+    canManageUsers: false,
+    canManageVenues: false,
+    canManageArtists: false,
+    canManageTours: false,
+    canViewAnalytics: false,
+    canSendMessages: false,
+    canViewAllVenueData: false,
+    canCreateWebhooks: false,
+  }
+};
+
 // Users table with enhanced roles
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),

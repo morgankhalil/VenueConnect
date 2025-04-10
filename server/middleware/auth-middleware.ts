@@ -1,96 +1,113 @@
 import { Request, Response, NextFunction } from 'express';
 
-/**
- * Middleware to check if a user is authenticated
- */
-export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.session.user) {
-    return res.status(401).json({ error: "Authentication required" });
+interface SessionUser {
+  id: number;
+  name: string;
+  role: string;
+  venueId: number | null;
+}
+
+// Define session user for Express
+declare module 'express-session' {
+  interface SessionData {
+    user: SessionUser;
   }
-  next();
-};
+}
 
 /**
- * Middleware to check if a user has admin role
+ * Middleware to check if user is authenticated
  */
-export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.session.user) {
-    return res.status(401).json({ error: "Authentication required" });
-  }
-  
-  if (req.session.user.role !== 'admin') {
-    return res.status(403).json({ error: "Admin privileges required" });
-  }
-  
-  next();
-};
-
-/**
- * Middleware to check if a user has venue manager role
- */
-export const requireVenueManager = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.session.user) {
-    return res.status(401).json({ error: "Authentication required" });
-  }
-  
-  if (req.session.user.role !== 'venue_manager' && req.session.user.role !== 'admin') {
-    return res.status(403).json({ error: "Venue manager privileges required" });
-  }
-  
-  next();
-};
-
-/**
- * Middleware to check if a user has artist role
- */
-export const requireArtist = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.session.user) {
-    return res.status(401).json({ error: "Authentication required" });
-  }
-  
-  if (req.session.user.role !== 'artist' && req.session.user.role !== 'admin') {
-    return res.status(403).json({ error: "Artist privileges required" });
-  }
-  
-  next();
-};
-
-/**
- * Middleware to check if a user has a venue assigned
- */
-export const requireVenue = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.session.user) {
-    return res.status(401).json({ error: "Authentication required" });
-  }
-  
-  if (!req.session.user.venueId) {
-    return res.status(403).json({ error: "No venue assigned to user" });
-  }
-  
-  next();
-};
-
-/**
- * Middleware to check if a user has access to a specific venue
- * Use this for routes with venue ID parameters
- */
-export const requireVenueAccess = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.session.user) {
-    return res.status(401).json({ error: "Authentication required" });
-  }
-  
-  // Admin can access any venue
-  if (req.session.user.role === 'admin') {
+export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+  if (req.session && req.session.user) {
     return next();
   }
   
-  // Get venue ID from request parameters
-  const venueId = Number(req.params.venueId);
+  return res.status(401).json({
+    error: 'Authentication required'
+  });
+}
+
+/**
+ * Middleware to check if user has a specific permission
+ * @param permission The permission to check
+ */
+export function hasPermission(permission: string) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.session || !req.session.user) {
+      return res.status(401).json({
+        error: 'Authentication required'
+      });
+    }
+    
+    const { role } = req.session.user;
+    
+    // Get permissions for the user's role, defaulting to basic user permissions
+    const userPermissions = rolePermissions[role as keyof typeof rolePermissions] || rolePermissions.user;
+    
+    // Check if user has the required permission
+    if (userPermissions[permission as keyof typeof userPermissions]) {
+      return next();
+    }
+    
+    return res.status(403).json({
+      error: 'Permission denied'
+    });
+  };
+}
+
+/**
+ * Middleware to check if user has access to a specific venue
+ * @param paramName The parameter name containing the venue ID (defaults to 'venueId')
+ */
+export function hasVenueAccess(paramName: string = 'venueId') {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.session || !req.session.user) {
+      return res.status(401).json({
+        error: 'Authentication required'
+      });
+    }
+    
+    const { role, venueId } = req.session.user;
+    const requestedVenueId = Number(req.params[paramName]);
+    
+    // Admin can access any venue
+    if (role === 'admin') {
+      return next();
+    }
+    
+    // Check if user's venue matches the requested venue
+    if (venueId === requestedVenueId) {
+      return next();
+    }
+    
+    return res.status(403).json({
+      error: 'You do not have access to this venue'
+    });
+  };
+}
+
+/**
+ * Middleware to check if user has a specific role
+ * @param roles Array of allowed roles
+ */
+export function hasRole(roles: string | string[]) {
+  const allowedRoles = Array.isArray(roles) ? roles : [roles];
   
-  // Check if user has access to this venue
-  if (req.session.user.venueId !== venueId) {
-    return res.status(403).json({ error: "No access to specified venue" });
-  }
-  
-  next();
-};
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.session || !req.session.user) {
+      return res.status(401).json({
+        error: 'Authentication required'
+      });
+    }
+    
+    const { role } = req.session.user;
+    
+    if (allowedRoles.includes(role)) {
+      return next();
+    }
+    
+    return res.status(403).json({
+      error: 'Role required'
+    });
+  };
+}

@@ -1,125 +1,87 @@
-import { Router } from 'express';
+import express from 'express';
 import { db } from '../db';
 import { users, venues } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
-import { z } from 'zod';
-import { fromZodError } from 'zod-validation-error';
+import { isAuthenticated, hasPermission } from '../middleware/auth-middleware';
 
-const router = Router();
+const router = express.Router();
 
 /**
- * Get the currently logged in user
+ * Get current user information
  */
-router.get('/user', async (req, res) => {
+router.get('/user', (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  
+  return res.json(req.session.user);
+});
+
+/**
+ * Get available venues for the current user
+ * Returns all venues for admin users, only assigned venue for other users
+ */
+router.get('/user/available-venues', isAuthenticated, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: "Not authenticated" });
+    const { role, venueId } = req.session.user;
+    
+    let availableVenues = [];
+    
+    // Admin can see all venues
+    if (role === 'admin') {
+      availableVenues = await db.query.venues.findMany({
+        columns: {
+          id: true,
+          name: true,
+          city: true,
+          region: true
+        },
+        orderBy: venues.name
+      });
+    } 
+    // Other users can only see their assigned venue(s)
+    else if (venueId) {
+      availableVenues = await db.query.venues.findMany({
+        where: eq(venues.id, venueId),
+        columns: {
+          id: true,
+          name: true,
+          city: true,
+          region: true
+        }
+      });
     }
     
-    const user = req.session.user;
-    
-    // If the user has a venue ID, fetch the venue details
-    if (user.venueId) {
-      const venueResult = await db
-        .select()
-        .from(venues)
-        .where(eq(venues.id, user.venueId))
-        .limit(1);
-      
-      if (venueResult.length) {
-        return res.json({
-          ...user,
-          venue: venueResult[0]
-        });
-      }
-    }
-    
-    return res.json(user);
+    return res.json(availableVenues);
   } catch (error) {
-    console.error("Error fetching user:", error);
-    res.status(500).json({ error: "Failed to fetch user details" });
+    console.error('Error fetching available venues:', error);
+    return res.status(500).json({ error: 'Failed to load available venues' });
   }
 });
 
 /**
- * Set the user's current venue
+ * User management endpoints - requires admin permission
  */
-router.post('/user/venue', async (req, res) => {
+router.get('/users', isAuthenticated, hasPermission('canManageUsers'), async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: "Not authenticated" });
-    }
-    
-    // Validate request body
-    const validatedData = z.object({
-      venueId: z.number()
-    }).parse(req.body);
-    
-    // Check if venue exists and isn't already assigned
-    const venueResult = await db
-      .select()
-      .from(venues)
-      .where(eq(venues.id, validatedData.venueId))
-      .limit(1);
-
-    // Check if venue is already assigned to another user
-    const existingAssignment = await db
-      .select()
-      .from(users)
-      .where(eq(users.venueId, validatedData.venueId))
-      .limit(1);
-
-    if (existingAssignment.length && existingAssignment[0].id !== req.session.user.id) {
-      return res.status(400).json({ error: "Venue is already assigned to another user" });
-    }
-    
-    if (!venueResult.length) {
-      return res.status(404).json({ error: "Venue not found" });
-    }
-    
-    // Update user's venue ID in session
-    req.session.user.venueId = validatedData.venueId;
-    
-    // Update user's venue ID in database if needed
-    if (req.session.user.id) {
-      await db
-        .update(users)
-        .set({
-          venueId: validatedData.venueId,
-        })
-        .where(eq(users.id, req.session.user.id));
-    }
-    
-    res.json({ 
-      ...req.session.user,
-      venue: venueResult[0]
+    const allUsers = await db.query.users.findMany({
+      columns: {
+        id: true,
+        username: true,
+        name: true,
+        email: true,
+        role: true,
+        venueId: true,
+        profileImageUrl: true,
+        lastLogin: true
+      },
+      orderBy: users.name
     });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const validationError = fromZodError(error);
-      return res.status(400).json({ error: validationError.message });
-    }
     
-    console.error("Error updating user venue:", error);
-    res.status(500).json({ error: "Failed to update user venue" });
-  }
-});
-
-/**
- * Get available venues for the user to select
- */
-router.get('/user/available-venues', async (req, res) => {
-  try {
-    // Get all venues
-    const venueResult = await db
-      .select()
-      .from(venues)
-      .orderBy(venues.name);
-    
-    res.json(venueResult);
+    return res.json(allUsers);
   } catch (error) {
-    console.error("Error fetching available venues:", error);
-    res.status(500).json({ error: "Failed to fetch available venues" });
+    console.error('Error fetching users:', error);
+    return res.status(500).json({ error: 'Failed to load users' });
   }
 });
 

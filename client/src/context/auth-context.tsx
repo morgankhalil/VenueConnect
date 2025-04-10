@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useLocation, useRoute } from 'wouter';
+import { useLocation } from 'wouter';
 import { User, hasPermission, Permission } from '@/lib/permissions';
-import { apiRequest } from '@/lib/queryClient';
+import axios from 'axios';
 import { toast } from '@/hooks/use-toast';
 
 interface AuthContextType {
@@ -18,14 +18,31 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Helper function for API requests
+const apiCall = async (url: string, options: { method: string; data?: any }) => {
+  try {
+    const { method, data } = options;
+    const response = method === 'GET' 
+      ? await axios.get(url)
+      : await axios.post(url, data);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.message || 'API request failed');
+    }
+    throw error;
+  }
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [, setLocation] = useLocation();
   const [currentVenueId, setCurrentVenueId] = useState<number | null>(null);
   
   // Get current user information
-  const { data: user, isLoading, refetch } = useQuery<User>({
+  const { data: user, isLoading, refetch } = useQuery<User | null>({
     queryKey: ['/api/user'],
     retry: false,
+    initialData: null,
   });
   
   // Set the current venue ID when user data is loaded
@@ -38,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: async (credentials: { username: string; password: string }) => {
-      return apiRequest('/api/auth/login', {
+      return apiCall('/api/auth/login', {
         method: 'POST',
         data: credentials,
       });
@@ -63,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Logout mutation
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('/api/auth/logout', {
+      return apiCall('/api/auth/logout', {
         method: 'POST',
       });
     },
@@ -87,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Switch venue mutation
   const switchVenueMutation = useMutation({
     mutationFn: async (venueId: number) => {
-      return apiRequest(`/api/select-venue/${venueId}`, {
+      return apiCall(`/api/select-venue/${venueId}`, {
         method: 'GET',
       });
     },
@@ -130,7 +147,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return hasPermission(user, permission);
   };
   
-  const value = {
+  // Create the context value object
+  const contextValue: AuthContextType = {
     user,
     isLoading: isLoading || loginMutation.isPending || logoutMutation.isPending,
     isAuthenticated: !!user,
@@ -141,7 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     switchVenue,
   };
   
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
