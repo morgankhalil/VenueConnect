@@ -1,3 +1,4 @@
+
 import { db } from './db';
 import { venues, events, artists } from '../shared/schema';
 import { syncArtistEventsFromBandsInTown } from './data-sync/bands-in-town-sync';
@@ -6,18 +7,21 @@ async function seedEvents() {
   try {
     console.log('Starting event sync from Bandsintown...');
 
-    // Get all venues to find events
-    const venueList = await db.select().from(venues);
-    console.log(`Found ${venueList.length} venues to sync events for`);
+    // Test with some popular artists that are likely to have events
+    const testArtists = [
+      'Coldplay',
+      'Taylor Swift',
+      'The Killers',
+      'Ed Sheeran',
+      'Foo Fighters'
+    ];
 
-    // For each venue, sync events for artists playing there
-    for (const venue of venueList) {
-      console.log(`Syncing events for venue: ${venue.name}`);
+    for (const artistName of testArtists) {
+      console.log(`Syncing events for artist: ${artistName}`);
       try {
-        // Query artists and events will be implemented later
-        console.log(`No recent events found for venue ${venue.name}`);
+        await syncArtistEventsFromBandsInTown(artistName);
       } catch (error) {
-        console.error(`Error syncing events for venue ${venue.name}:`, error);
+        console.error(`Error syncing events for artist ${artistName}:`, error);
       }
     }
 
