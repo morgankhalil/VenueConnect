@@ -39,42 +39,61 @@ app.use(session({
   }
 }));
 
-// Mock authentication middleware - in a real app, this would be handled by a proper auth system
+// Authentication middleware for auth routes bypass
 app.use(async (req, res, next) => {
+  // Skip for auth-related routes (login, register, etc.)
+  if (req.path.startsWith('/api/auth/') && !req.path.includes('/api/auth/check')) {
+    return next();
+  }
+  
   // Skip for static assets and non-API routes
   if (!req.path.startsWith('/api') || req.path.startsWith('/api/webhooks')) {
     return next();
   }
   
+  // If user is already authenticated, proceed
+  if (req.session && req.session.user) {
+    return next();
+  }
+  
+  // Skip authentication for demo purposes if needed
+  // Comment this section out to enforce proper authentication
   try {
-    // Get the first venue and its owner
-    const venue = await db.query.venues.findFirst({
-      with: {
-        owner: true
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("Creating demo user session for development");
+      
+      // Get the first venue and its owner
+      const venue = await db.query.venues.findFirst({
+        with: {
+          owner: true
+        }
+      });
+      
+      if (venue && venue.owner) {
+        // Set the user in session
+        req.session.user = {
+          id: venue.owner.id,
+          name: venue.owner.name || venue.owner.username || "Demo User",
+          role: venue.owner.role || "venue_manager",
+          venueId: venue.id
+        };
+      } else {
+        // Fallback to a demo user if no venue/owner exists
+        req.session.user = {
+          id: 1,
+          name: "Demo User",
+          role: "admin", // Give admin role for easy access to features
+          venueId: null
+        };
       }
-    });
-    
-    if (venue && venue.owner) {
-      // Set the user in session
-      req.session.user = {
-        id: venue.owner.id,
-        name: venue.owner.name || venue.owner.username || "User",
-        role: venue.owner.role || "user",
-        venueId: venue.id
-      };
+      return next();
     } else {
-      // Fallback to a demo user if no venue/owner exists
-      req.session.user = {
-        id: 1,
-        name: "Demo User",
-        role: "user",
-        venueId: null
-      };
+      // In production, enforce authentication
+      return res.status(401).json({ error: "Authentication required" });
     }
-    next();
   } catch (error) {
     console.error("Error in auth middleware:", error);
-    next();
+    return res.status(500).json({ error: "Authentication error" });
   }
 });
 

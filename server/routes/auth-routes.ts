@@ -64,7 +64,8 @@ router.post('/auth/login', async (req, res) => {
       .where(eq(venues.ownerId, user[0].id))
       .limit(1);
     
-    if (userVenues.length) {
+    // Set the venueId in the session user object
+    if (userVenues.length && req.session && req.session.user) {
       req.session.user.venueId = userVenues[0].id;
     }
     
@@ -75,13 +76,16 @@ router.post('/auth/login', async (req, res) => {
         return res.status(500).json({ error: "Login successful but failed to save session" });
       }
       
+      // Type assertion for TypeScript to recognize the user object
+      const sessionUser = req.session.user!;
+      
       res.json({
         success: true, 
         user: {
-          id: req.session.user.id,
-          name: req.session.user.name,
-          role: req.session.user.role,
-          venueId: req.session.user.venueId
+          id: sessionUser.id,
+          name: sessionUser.name,
+          role: sessionUser.role,
+          venueId: sessionUser.venueId
         }
       });
     });
@@ -100,21 +104,25 @@ router.post('/auth/login', async (req, res) => {
  * Handle user logout
  */
 router.post('/auth/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      console.error("Error destroying session:", err);
-      return res.status(500).json({ error: "Failed to logout properly" });
-    }
-    
+  if (req.session) {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Error destroying session:", err);
+        return res.status(500).json({ error: "Failed to logout properly" });
+      }
+      
+      res.json({ success: true, message: "Logged out successfully" });
+    });
+  } else {
     res.json({ success: true, message: "Logged out successfully" });
-  });
+  }
 });
 
 /**
  * Check if user is authenticated
  */
 router.get('/auth/check', (req, res) => {
-  if (req.session.user) {
+  if (req.session && req.session.user) {
     res.json({ 
       authenticated: true, 
       user: req.session.user 
