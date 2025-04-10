@@ -386,9 +386,13 @@ export function TourDetailMap({ tour, userVenueId, onClose }: TourDetailMapProps
                     <span className="w-3 h-3 bg-amber-500 rounded-full inline-block mr-1"></span>
                     <span className="text-gray-700">On Hold</span>
                   </div>
-                  <div className="flex items-center">
-                    <span className="w-3 h-3 bg-gray-400 rounded-full inline-block mr-1"></span>
+                  <div className="flex items-center mb-1">
+                    <span className="w-3 h-3 bg-orange-500 rounded-full inline-block mr-1"></span>
                     <span className="text-gray-700">Potential</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="w-3 h-3 bg-red-500 rounded-full inline-block mr-1"></span>
+                    <span className="text-gray-700">Cancelled</span>
                   </div>
                 </div>
               </>
@@ -433,7 +437,7 @@ export function TourDetailMap({ tour, userVenueId, onClose }: TourDetailMapProps
                         <div className="mt-0.5">
                           <div className={`
                             w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium
-                            ${event.isCurrentVenue ? 'bg-gray-100 text-gray-700' :
+                            ${event.isCurrentVenue ? 'bg-orange-100 text-orange-700' :
                               event.isRoutingOpportunity ? 'bg-amber-100 text-amber-700' :
                               'bg-green-100 text-green-700'}
                           `}>
@@ -510,8 +514,10 @@ export function TourDetailMap({ tour, userVenueId, onClose }: TourDetailMapProps
                 {selectedEvent && (
                   <>
                     <Badge variant={
-                      selectedEvent.isCurrentVenue ? 'secondary' :
-                      selectedEvent.isRoutingOpportunity ? 'outline' : 'default'
+                      selectedEvent.isCurrentVenue ? 'outline' :
+                      selectedEvent.isRoutingOpportunity ? 'secondary' : 'default'
+                    } className={
+                      selectedEvent.isCurrentVenue ? 'border-orange-200 bg-orange-100 text-orange-800' : ''
                     }>
                       {selectedEvent.isCurrentVenue ? 'Potential' : 
                        selectedEvent.isRoutingOpportunity ? 'On Hold' : 'Confirmed'}

@@ -31,18 +31,18 @@ export const STATUS_DESCRIPTIONS: Record<string, string> = {
 
 // Color mappings for status visualization
 export const STATUS_COLORS: Record<string, string> = {
-  'potential': '#9CA3AF', // Gray
-  'hold': '#F59E0B',     // Amber
+  'potential': '#F97316', // Orange
+  'hold': '#F59E0B',      // Yellow/Amber
   'confirmed': '#10B981', // Green
-  'cancelled': '#6B7280'  // Gray
+  'cancelled': '#EF4444'  // Red
 };
 
 // CSS classes for status indicators
 export const STATUS_CLASSES: Record<string, string> = {
-  'potential': 'bg-gray-100 text-gray-800 border-gray-200',
+  'potential': 'bg-orange-100 text-orange-800 border-orange-200',
   'hold': 'bg-amber-100 text-amber-800 border-amber-200',
   'confirmed': 'bg-green-100 text-green-800 border-green-200',
-  'cancelled': 'bg-gray-100 text-gray-500 border-gray-200'
+  'cancelled': 'bg-red-100 text-red-800 border-red-200'
 };
 
 /**
@@ -89,6 +89,11 @@ export function isPriorityHold(status: string): boolean {
 
 /**
  * Get a status badge variant based on status
+ * Returns the appropriate shadcn/ui badge variant based on status:
+ * - confirmed = default (green)
+ * - cancelled = destructive (red)
+ * - hold = secondary (yellow/amber accent)
+ * - potential = outline with orange styling (applied in component)
  */
 export function getStatusBadgeVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   const normalizedStatus = getStatusInfo(status).code;
@@ -98,8 +103,10 @@ export function getStatusBadgeVariant(status: string): 'default' | 'secondary' |
   } else if (normalizedStatus === 'cancelled') {
     return 'destructive'; // red
   } else if (normalizedStatus === 'hold') {
-    return 'secondary'; // gray/neutral
+    return 'secondary'; // yellow/amber
+  } else if (normalizedStatus === 'potential') {
+    return 'outline'; // will be styled with orange
   }
   
-  return 'outline'; // transparent with border
+  return 'outline'; // fallback
 }
