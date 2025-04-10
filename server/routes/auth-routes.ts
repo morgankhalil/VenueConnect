@@ -43,6 +43,10 @@ router.post('/login', async (req, res) => {
       venueId: user.venueId
     };
     
+    // Clear the loggedOut flag
+    // @ts-ignore
+    req.session.loggedOut = false;
+    
     return res.json({
       success: true,
       user: req.session.user
@@ -60,19 +64,35 @@ router.post('/login', async (req, res) => {
  * Destroys the session and clears user information
  */
 router.post('/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({
-        error: 'Failed to logout'
+  // In development mode, just set a flag to prevent auto-login
+  if (process.env.NODE_ENV !== 'production') {
+    if (req.session) {
+      // @ts-ignore - Add a logout flag to the session
+      req.session.loggedOut = true;
+      // Also clear the user info
+      req.session.user = undefined;
+      
+      return res.json({
+        success: true,
+        message: 'Logged out successfully'
       });
     }
-    
-    res.clearCookie('connect.sid');
-    return res.json({
-      success: true,
-      message: 'Logged out successfully'
+  } else {
+    // In production mode, destroy the session
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({
+          error: 'Failed to logout'
+        });
+      }
+      
+      res.clearCookie('connect.sid');
+      return res.json({
+        success: true,
+        message: 'Logged out successfully'
+      });
     });
-  });
+  }
 });
 
 /**

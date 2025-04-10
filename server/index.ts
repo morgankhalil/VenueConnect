@@ -61,6 +61,12 @@ app.use(async (req, res, next) => {
   // Comment this section out to enforce proper authentication
   try {
     if (process.env.NODE_ENV !== 'production') {
+      // Check if user has explicitly logged out
+      // @ts-ignore - Access the logout flag
+      if (req.session.loggedOut) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
       console.log("Creating demo user session for development");
       
       // Try to find a venue with ID 1 (simplest approach)
