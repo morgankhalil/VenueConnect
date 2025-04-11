@@ -198,14 +198,16 @@ export function UnifiedTourOptimizer({ tourId, onApplyChanges }: UnifiedTourOpti
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Sparkles className="h-5 w-5 text-primary" />
-            Tour Optimization
+            Tour Optimization Engine
           </DialogTitle>
           <DialogDescription className="text-base">
-            Optimize your tour routing, scheduling, and venue selection to save time and travel distance.
+            Our unified optimizer intelligently routes your tour to minimize travel time, increase efficiency, and 
+            suggest optimal venue scheduling.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mb-4">
+        <div className="mt-2 mb-4 p-4 bg-muted/50 rounded-lg border border-border">
+          <h3 className="text-sm font-medium mb-2">Optimization Method</h3>
           <RadioGroup 
             defaultValue="auto" 
             value={optimizationMethod}
@@ -234,6 +236,9 @@ export function UnifiedTourOptimizer({ tourId, onApplyChanges }: UnifiedTourOpti
               </Label>
             </div>
           </RadioGroup>
+          <p className="text-xs text-muted-foreground mt-2">
+            Auto method uses AI when available and falls back to standard optimization if needed.
+          </p>
         </div>
 
         {isLoading ? (

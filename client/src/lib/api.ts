@@ -71,26 +71,17 @@ export async function createVenueConnection(data: { sourceVenueId: number; targe
   });
 }
 
-// Get AI optimization suggestions
+// Note: AI optimization functions have been consolidated into the unified optimizer API
+// These functions are kept for backwards compatibility but are deprecated
 export async function getAIOptimizationSuggestions(tourId: number) {
-  return apiRequest(`/api/ai-optimization/suggest`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ tourId }),
-  });
+  console.warn('getAIOptimizationSuggestions is deprecated, use getUnifiedOptimization with method="ai" instead');
+  return getUnifiedOptimization(tourId, 'ai');
 }
 
-// Apply AI optimization
+// Apply AI optimization (deprecated)
 export async function applyAIOptimization(tourId: number, optimizedSequence: number[], suggestedDates: Record<string, string>) {
-  return apiRequest(`/api/ai-optimization/apply`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ tourId, optimizedSequence, suggestedDates }),
-  });
+  console.warn('applyAIOptimization is deprecated, use applyUnifiedOptimization instead');
+  return applyUnifiedOptimization(tourId, optimizedSequence, suggestedDates);
 }
 
 // Get unified optimization suggestions
