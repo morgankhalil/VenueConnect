@@ -55,12 +55,12 @@ router.post('/', async (req, res) => {
       });
     }
     
-    // Set the user in session
+    // Set the user in session - ensure property names match between client and server
     const sessionUser = {
       id: user.id,
       name: user.name || user.username,
       role: user.role,
-      venueId: user.venue_id // Use venue_id from database
+      venueId: user.venue_id // Convert venue_id from database to venueId for frontend consistency
     };
     
     console.log('Setting user session with data:', JSON.stringify(sessionUser));

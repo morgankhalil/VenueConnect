@@ -47,13 +47,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     queryKey: ['/api/users/me'],
     queryFn: async () => {
       try {
-        console.log("Fetching current user data...");
-        const response = await apiCall('/api/users/me', {
-          method: 'GET'
+        // Use axios directly to simplify debugging
+        const response = await axios.get('/api/users/me', { 
+          withCredentials: true 
         });
-        console.log("Current user response:", response);
-        return response;
+        console.log("Current user response:", response.data);
+        return response.data;
       } catch (error) {
+        // If we get a 401 error, it means we're not authenticated
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          console.log("User not authenticated");
+          return null;
+        }
         console.error("Error fetching current user:", error);
         return null;
       }
