@@ -16,6 +16,7 @@ import VenueDetails from "@/pages/venue-details";
 import EventDetails from "@/pages/event-details";
 import MapTest from "@/pages/map-test";
 import NotFound from "@/pages/not-found";
+import Documentation from "@/pages/documentation";
 import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
 // Tour management pages
