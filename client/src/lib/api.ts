@@ -159,6 +159,36 @@ export async function getMessages() {
  */
 
 /**
+ * AI Optimization endpoints
+ */
+
+/**
+ * Request AI optimization suggestions for a tour
+ */
+export async function getAIOptimizationSuggestions(tourId: number) {
+  return request('/api/ai-optimization/suggest', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ tourId })
+  });
+}
+
+/**
+ * Apply AI optimization suggestions to a tour
+ */
+export async function applyAIOptimization(tourId: number, optimizedSequence: number[], suggestedDates: Record<string, string>) {
+  return request('/api/ai-optimization/apply', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ tourId, optimizedSequence, suggestedDates })
+  });
+}
+
+/**
  * Check if the Bandsintown API key is valid
  */
 export async function checkBandsintownApiKeyStatus() {
