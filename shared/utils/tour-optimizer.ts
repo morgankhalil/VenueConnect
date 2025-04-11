@@ -67,16 +67,25 @@ export interface OptimizedRoute {
  * @param lon2 Longitude of second point
  * @returns Distance in kilometers
  */
-export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  if (!lat1 || !lon1 || !lat2 || !lon2) {
+export function calculateDistance(lat1: number | null, lon1: number | null, lat2: number | null, lon2: number | null): number {
+  // Enhanced null checking - if any coordinate is null, NaN, or undefined, return 0
+  if (lat1 === null || lon1 === null || lat2 === null || lon2 === null || 
+      isNaN(Number(lat1)) || isNaN(Number(lon1)) || isNaN(Number(lat2)) || isNaN(Number(lon2))) {
+    console.log('Invalid coordinates detected in calculateDistance, returning 0');
     return 0;
   }
   
+  // Convert to numbers (in case they're string representations)
+  const numLat1 = Number(lat1);
+  const numLon1 = Number(lon1);
+  const numLat2 = Number(lat2);
+  const numLon2 = Number(lon2);
+  
   // Convert latitude and longitude from degrees to radians
-  const radLat1 = (Math.PI * lat1) / 180;
-  const radLon1 = (Math.PI * lon1) / 180;
-  const radLat2 = (Math.PI * lat2) / 180;
-  const radLon2 = (Math.PI * lon2) / 180;
+  const radLat1 = (Math.PI * numLat1) / 180;
+  const radLon1 = (Math.PI * numLon1) / 180;
+  const radLat2 = (Math.PI * numLat2) / 180;
+  const radLon2 = (Math.PI * numLon2) / 180;
   
   // Haversine formula
   const dLat = radLat2 - radLat1;

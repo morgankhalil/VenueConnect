@@ -218,7 +218,9 @@ export async function getOptimizationOptions(tourId: number) {
  * Generate an optimized route for a tour
  */
 export async function optimizeTourRoute(tourId: number, preferences: any) {
-  return request(`/api/tour-optimization/tours/${tourId}/optimize`, {
+  // The server-side route is mounted at /api/tour-optimization
+  // The endpoint is defined as /:id/optimize in tour-routes.ts
+  return request(`/api/tour-optimization/${tourId}/optimize`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -231,7 +233,9 @@ export async function optimizeTourRoute(tourId: number, preferences: any) {
  * Apply optimized tour changes
  */
 export async function applyTourOptimization(tourId: number, optimizationData: any) {
-  return request(`/api/tour-optimization/tours/${tourId}/apply`, {
+  // The server-side route is mounted at /api/tour-optimization
+  // The endpoint is defined as /:id/apply-optimization in tour-routes.ts
+  return request(`/api/tour-optimization/${tourId}/apply-optimization`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
