@@ -60,13 +60,13 @@ async function createAiOptimizationDemoTour() {
   
   // Get venues or create them if needed
   const venueData = [
-    { name: "West Coast Venue", city: "Los Angeles", region: "CA", country: "USA", latitude: 34.0522, longitude: -118.2437, marketCategory: "primary" as const, capacity: 1200, venueType: "medium" as const},
-    { name: "Midwest Venue", city: "Chicago", region: "IL", country: "USA", latitude: 41.8781, longitude: -87.6298, marketCategory: "primary" as const, capacity: 800, venueType: "medium" as const },
-    { name: "East Coast Venue", city: "New York", region: "NY", country: "USA", latitude: 40.7128, longitude: -74.0060, marketCategory: "primary" as const, capacity: 1500, venueType: "medium" as const },
-    { name: "Southern Venue", city: "Austin", region: "TX", country: "USA", latitude: 30.2672, longitude: -97.7431, marketCategory: "secondary" as const, capacity: 600, venueType: "small" as const },
-    { name: "Northwest Venue", city: "Seattle", region: "WA", country: "USA", latitude: 47.6062, longitude: -122.3321, marketCategory: "secondary" as const, capacity: 750, venueType: "small" as const },
-    { name: "Southeast Venue", city: "Atlanta", region: "GA", country: "USA", latitude: 33.7490, longitude: -84.3880, marketCategory: "secondary" as const, capacity: 850, venueType: "medium" as const },
-    { name: "Northeast Venue", city: "Boston", region: "MA", country: "USA", latitude: 42.3601, longitude: -71.0589, marketCategory: "secondary" as const, capacity: 700, venueType: "small" as const },
+    { name: "West Coast Venue", city: "Los Angeles", region: "CA", country: "USA", latitude: 34.0522, longitude: -118.2437, marketCategory: "primary" as const, capacity: 1200, venueType: "club" as const, capacityCategory: "medium" as const},
+    { name: "Midwest Venue", city: "Chicago", region: "IL", country: "USA", latitude: 41.8781, longitude: -87.6298, marketCategory: "primary" as const, capacity: 800, venueType: "club" as const, capacityCategory: "medium" as const },
+    { name: "East Coast Venue", city: "New York", region: "NY", country: "USA", latitude: 40.7128, longitude: -74.0060, marketCategory: "primary" as const, capacity: 1500, venueType: "theater" as const, capacityCategory: "large" as const },
+    { name: "Southern Venue", city: "Austin", region: "TX", country: "USA", latitude: 30.2672, longitude: -97.7431, marketCategory: "secondary" as const, capacity: 600, venueType: "bar" as const, capacityCategory: "small" as const },
+    { name: "Northwest Venue", city: "Seattle", region: "WA", country: "USA", latitude: 47.6062, longitude: -122.3321, marketCategory: "secondary" as const, capacity: 750, venueType: "club" as const, capacityCategory: "small" as const },
+    { name: "Southeast Venue", city: "Atlanta", region: "GA", country: "USA", latitude: 33.7490, longitude: -84.3880, marketCategory: "secondary" as const, capacity: 850, venueType: "club" as const, capacityCategory: "medium" as const },
+    { name: "Northeast Venue", city: "Boston", region: "MA", country: "USA", latitude: 42.3601, longitude: -71.0589, marketCategory: "secondary" as const, capacity: 700, venueType: "bar" as const, capacityCategory: "small" as const },
   ];
   
   const venueEntities = [];
@@ -89,6 +89,7 @@ async function createAiOptimizationDemoTour() {
           marketCategory: venue.marketCategory,
           capacity: venue.capacity,
           venueType: venue.venueType,
+          capacityCategory: venue.capacityCategory,
           website: null,
           contactEmail: null,
           contactPhone: null,
