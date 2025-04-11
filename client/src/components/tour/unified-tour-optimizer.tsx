@@ -495,37 +495,56 @@ export function UnifiedTourOptimizer({ tourId, onApplyChanges }: UnifiedTourOpti
           </div>
         )}
         
-        <DialogFooter className="flex flex-col sm:flex-row gap-2">
+        <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4 border-t">
           <div className="text-sm text-muted-foreground mr-auto">
             {data?.optimizationResult && (
-              <span className="flex items-center gap-1">
-                <Check className="h-4 w-4 text-green-500" />
-                Optimized route ready to apply
-              </span>
+              <div className="flex flex-col">
+                <span className="flex items-center gap-1">
+                  <Check className="h-4 w-4 text-green-500" />
+                  Optimized route ready to apply
+                </span>
+                <span className="text-xs flex items-center gap-1 mt-1">
+                  {data.optimizationResult.optimizationMethod === 'ai' 
+                    ? (
+                      <>
+                        <Brain size={12} className="text-blue-500" />
+                        <span>AI-powered optimization</span>
+                      </>
+                    ) 
+                    : (
+                      <>
+                        <BarChart3 size={12} className="text-green-500" />
+                        <span>Standard optimization algorithm</span>
+                      </>
+                    )}
+                </span>
+              </div>
             )}
           </div>
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            {data ? 'Cancel' : 'Close'}
-          </Button>
-          {data && (
-            <Button 
-              onClick={() => applyOptimization()} 
-              disabled={isApplying}
-              className="gap-2 bg-gradient-to-r from-primary to-primary/80"
-            >
-              {isApplying ? (
-                <>
-                  <RotateCw className="h-4 w-4 animate-spin" />
-                  Applying Optimization...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4" />
-                  Apply Optimization
-                </>
-              )}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              {data ? 'Cancel' : 'Close'}
             </Button>
-          )}
+            {data && (
+              <Button 
+                onClick={() => applyOptimization()} 
+                disabled={isApplying}
+                className="gap-2 bg-gradient-to-r from-primary to-primary/80"
+              >
+                {isApplying ? (
+                  <>
+                    <RotateCw className="h-4 w-4 animate-spin" />
+                    Applying Optimization...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Apply Optimization
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
