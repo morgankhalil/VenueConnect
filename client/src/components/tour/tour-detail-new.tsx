@@ -337,16 +337,17 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
               </div>
             </div>
             <div className="flex space-x-2">
-              <Button
-                variant="default"
-                size="sm"
-                className="bg-gradient-to-r from-primary to-primary/80"
-                onClick={() => setShowOptimizer(true)}
-                disabled={!hasEnoughVenuesForOptimization}
-              >
-                <Sparkles className="mr-2 h-4 w-4" />
-                Optimize Tour
-              </Button>
+              <Link href={`/tours/${tourId}/optimize`}>
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="bg-gradient-to-r from-primary to-primary/80"
+                  disabled={!hasEnoughVenuesForOptimization}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Unified Optimizer
+                </Button>
+              </Link>
               
               {/* AI Tour Optimizer */}
               <AITourOptimizer 
@@ -476,16 +477,17 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
                 </div>
 
                 <div className="flex space-x-2">
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="bg-gradient-to-r from-primary to-primary/80"
-                    onClick={() => setShowOptimizer(true)}
-                    disabled={!hasEnoughVenuesForOptimization}
-                  >
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Optimize Tour
-                  </Button>
+                  <Link href={`/tours/${tourId}/optimize`}>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="bg-gradient-to-r from-primary to-primary/80"
+                      disabled={!hasEnoughVenuesForOptimization}
+                    >
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Unified Optimizer
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </CardHeader>

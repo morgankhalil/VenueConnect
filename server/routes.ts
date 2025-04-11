@@ -11,6 +11,7 @@ import venueNetworkRoutes from './routes/venue-network-routes';
 import tourRouteOptimizationRouter from './routes/tour-route-optimization-fixed';
 import tourOptimizationEnhancedRouter from './routes/tour-optimization-enhanced';
 import { aiOptimizationRouter } from './routes/ai-tour-optimizer';
+import { unifiedOptimizerRouter } from './routes/unified-tour-optimizer';
 import { type Express } from 'express';
 import { type Server } from 'http';
 
@@ -23,6 +24,7 @@ app.use('/api/documentation', documentationRoutes);
   app.use('/api/tour-optimization', tourRouteOptimizationRouter);
   app.use('/api/tour-optimization-enhanced', tourOptimizationEnhancedRouter);
   app.use('/api/ai-optimization', aiOptimizationRouter);
+  app.use('/api/unified-optimizer', unifiedOptimizerRouter);
   app.use('/api/users', userRoutes);
   app.use('/api/auth', authRoutes);
   app.use('/api/venues', venueRoutes);
