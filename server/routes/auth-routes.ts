@@ -24,7 +24,7 @@ router.post('/login', async (req, res) => {
     // This is a simplified version for demo purposes
     let user;
     
-    // For demo/testing purposes, accept hardcoded admin/venueManager credentials
+    // For demo/testing purposes, accept both hardcoded and database credentials
     if (username === 'admin' && password === 'password') {
       // Create a mock admin user
       user = {
@@ -32,7 +32,7 @@ router.post('/login', async (req, res) => {
         username: 'admin',
         name: 'Admin User',
         role: 'admin',
-        venueId: 1 // Default venue ID
+        venueId: 217 // 40 Watt Club venue ID
       };
     } else if (username === 'venueManager' && password === 'password') {
       // Create a mock venue manager user
@@ -41,10 +41,40 @@ router.post('/login', async (req, res) => {
         username: 'venueManager',
         name: 'Venue Manager',
         role: 'venue_manager',
-        venueId: 217 // The first venue from the database (40 Watt Club)
+        venueId: 217 // 40 Watt Club venue ID
       };
+    } else if (username === 'manager' && password === 'password') {
+      // Find the actual manager user from the database
+      const dbUser = await db.query.users.findFirst({
+        where: eq(users.username, 'manager'),
+      });
+      
+      if (dbUser) {
+        user = {
+          id: dbUser.id,
+          username: dbUser.username,
+          name: dbUser.name || 'Demo User',
+          role: dbUser.role,
+          venueId: 217 // 40 Watt Club venue ID
+        };
+      }
+    } else if (username === 'superadmin' && password === 'password') {
+      // Find the actual superadmin user from the database
+      const dbUser = await db.query.users.findFirst({
+        where: eq(users.username, 'superadmin'),
+      });
+      
+      if (dbUser) {
+        user = {
+          id: dbUser.id,
+          username: dbUser.username,
+          name: dbUser.name || 'Super Admin',
+          role: 'admin', // Map super_admin to admin role for permissions
+          venueId: 217 // 40 Watt Club venue ID
+        };
+      }
     } else {
-      // Try to find the user in the database
+      // Try to find any other user in the database
       user = await db.query.users.findFirst({
         where: eq(users.username, username),
       });

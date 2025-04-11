@@ -103,10 +103,16 @@ export function LoginForm() {
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="flex justify-center">
-        <p className="text-sm text-muted-foreground">
-          Use credentials: "venueManager" / "password" or "admin" / "password"
+      <CardFooter className="flex flex-col items-center space-y-2">
+        <p className="text-sm text-muted-foreground font-semibold">
+          Available login credentials:
         </p>
+        <div className="grid grid-cols-1 gap-2 text-sm text-muted-foreground text-center">
+          <div className="px-3 py-1 bg-secondary rounded">admin / password</div>
+          <div className="px-3 py-1 bg-secondary rounded">venueManager / password</div>
+          <div className="px-3 py-1 bg-secondary rounded">manager / password</div> 
+          <div className="px-3 py-1 bg-secondary rounded">superadmin / password</div>
+        </div>
       </CardFooter>
     </Card>
   );
