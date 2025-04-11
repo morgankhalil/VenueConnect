@@ -9,8 +9,9 @@ const router = express.Router();
 /**
  * Login endpoint
  * Accepts username and password, returns user information if credentials are valid
+ * Route: /api/auth/login
  */
-router.post('/login', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const { username, password } = req.body;
     

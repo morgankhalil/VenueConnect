@@ -43,7 +43,9 @@ app.use(session({
 // Authentication middleware for auth routes bypass
 app.use(async (req, res, next) => {
   // Skip for auth-related routes (login, register, etc.)
-  if (req.path.startsWith('/api/auth/') && !req.path.includes('/api/auth/check')) {
+  // Auth routes are now at /api/auth directly instead of /api/auth/login
+  if (req.path.startsWith('/api/auth')) {
+    console.log('Allowing auth endpoint access for path:', req.path);
     return next();
   }
   

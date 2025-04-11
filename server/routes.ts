@@ -12,12 +12,12 @@ import { type Server } from 'http';
 export function registerRoutes(app: Express): Server {
   // Create HTTP server
   const server = createServer(app);
-  // Register routes
-  app.use('/api', tourRoutes);
-  app.use('/api', userRoutes);
-  app.use('/api', authRoutes);
-  app.use('/api', venueRoutes);
-  app.use('/api', dashboardRoutes);
+  // Register routes with more specific prefixes to avoid conflicts with the Vite server
+  app.use('/api/tours', tourRoutes);
+  app.use('/api/users', userRoutes);
+  app.use('/api/auth', authRoutes);
+  app.use('/api/venues', venueRoutes);
+  app.use('/api/dashboard', dashboardRoutes);
   
   // Both user-info and venue selection are now handled in their respective route files
   
