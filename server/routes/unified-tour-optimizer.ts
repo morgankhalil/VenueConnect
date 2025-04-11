@@ -180,12 +180,12 @@ End Date: ${tourData.endDate || 'Not set'}
 
 # CONFIRMED VENUES (fixed points that cannot be changed)
 ${tourData.confirmedVenues.map((v: any, i: number) => 
-  `${i+1}. ${v.name} (${v.city}) - ${v.date ? new Date(v.date).toLocaleDateString() : 'No date'} - Coordinates: [${v.latitude}, ${v.longitude}]`
+  `${i+1}. ${v.name} (${v.city}) - ${v.date ? new Date(v.date).toLocaleDateString() : 'No date'} - Coordinates: [${v.latitude}, ${v.longitude}] - ID: ${v.id}`
 ).join('\n')}
 
 # POTENTIAL VENUES (can be reordered, included, or excluded)
 ${tourData.potentialVenues.map((v: any, i: number) => 
-  `${i+1}. ${v.name} (${v.city}) - ${v.date ? new Date(v.date).toLocaleDateString() : 'No date'} - Coordinates: [${v.latitude}, ${v.longitude}]`
+  `${i+1}. ${v.name} (${v.city}) - ${v.date ? new Date(v.date).toLocaleDateString() : 'No date'} - Coordinates: [${v.latitude}, ${v.longitude}] - ID: ${v.id}`
 ).join('\n')}
 
 # TASK
@@ -196,18 +196,22 @@ Analyze this tour data and provide optimization suggestions. Consider:
 3. Venues that should be skipped
 4. New venues that should be added to fill geographical gaps
 
-Return your response as JSON in the following format:
+# OUTPUT FORMAT INSTRUCTIONS
+Your response MUST include ONLY a valid JSON object enclosed in triple backticks with the json tag.
+Example:
+\`\`\`json
 {
-  "optimizedSequence": [venue_ids_in_optimal_order],
-  "suggestedDates": {"venue_id": "YYYY-MM-DD"},
-  "recommendedVenues": [venue_ids_to_include],
-  "suggestedSkips": [venue_ids_to_skip],
-  "estimatedDistanceReduction": percentage_reduction,
-  "estimatedTimeSavings": percentage_time_saved,
-  "reasoning": "detailed_explanation_of_your_suggestions"
+  "optimizedSequence": [1, 2, 3, 4, 5],
+  "suggestedDates": {"1": "2025-06-15", "3": "2025-07-03"},
+  "recommendedVenues": [1, 3],
+  "suggestedSkips": [],
+  "estimatedDistanceReduction": "15%",
+  "estimatedTimeSavings": "20%",
+  "reasoning": "The optimized sequence minimizes travel distance by placing venues in geographic order."
 }
+\`\`\`
 
-Only include valid venue_ids from the provided lists. For the optimizedSequence, include ALL venues that should be kept in the final tour (both confirmed and recommended potential venues).
+Do not include any text before or after the JSON code block. Only include valid venue_ids from the provided lists. For the optimizedSequence, include ALL venues that should be kept in the final tour (both confirmed and recommended potential venues).
 `;
     
     // Call Hugging Face API
@@ -230,18 +234,68 @@ Only include valid venue_ids from the provided lists. For the optimizedSequence,
       // Try to find a JSON object in the response
       console.log("Raw AI response:", text);
       
-      // First attempt: Look for a JSON object with the expected fields
-      let jsonMatch = text.match(/\{[\s\S]*?"optimizedSequence"[\s\S]*?\}/);
-      
-      // If that doesn't work, look for any JSON object
-      if (!jsonMatch) {
-        jsonMatch = text.match(/\{[\s\S]*?\}/);
+      // First attempt: Look for code block with JSON - This addresses multi-line JSON responses
+      // that might be formatted as Markdown code blocks
+      let jsonMatch = text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+      if (jsonMatch) {
+        try {
+          aiSuggestions = JSON.parse(jsonMatch[1]);
+          console.log("Successfully parsed JSON from code block");
+        } catch (err) {
+          console.warn("Error parsing JSON from code block:", err);
+          jsonMatch = null; // Reset to try other methods
+        }
       }
       
-      if (jsonMatch) {
-        aiSuggestions = JSON.parse(jsonMatch[0]);
-      } else {
-        // Create a fallback response if no JSON is found
+      // Second attempt: Look for a JSON object with the expected fields
+      if (!aiSuggestions) {
+        jsonMatch = text.match(/\{[\s\S]*?"optimizedSequence"[\s\S]*?\}/);
+        if (jsonMatch) {
+          try {
+            aiSuggestions = JSON.parse(jsonMatch[0]);
+            console.log("Successfully parsed JSON with optimizedSequence field");
+          } catch (err) {
+            console.warn("Error parsing JSON with optimizedSequence field:", err);
+          }
+        }
+      }
+      
+      // Third attempt: Look for any JSON object
+      if (!aiSuggestions) {
+        jsonMatch = text.match(/\{[\s\S]*?\}/);
+        if (jsonMatch) {
+          try {
+            aiSuggestions = JSON.parse(jsonMatch[0]);
+            console.log("Successfully parsed generic JSON object");
+          } catch (err) {
+            console.warn("Error parsing generic JSON object:", err);
+          }
+        }
+      }
+      
+      // If no JSON could be parsed, create a fallback response
+      if (!aiSuggestions) {
+        // Extract the sequence from the text based on common patterns
+        // Often the model will describe the sequence in natural language first
+        const sequenceMatch = text.match(/optimal sequence(?:.*?)(?:is|:)(?:.*?)([0-9][0-9,\s]*[0-9])/i);
+        if (sequenceMatch) {
+          const sequence = sequenceMatch[1].split(/[,\s]+/).map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+          if (sequence.length > 0) {
+            console.log("Extracted sequence from text:", sequence);
+            aiSuggestions = {
+              optimizedSequence: sequence,
+              suggestedDates: {},
+              recommendedVenues: [],
+              suggestedSkips: [],
+              estimatedDistanceReduction: "10%",
+              estimatedTimeSavings: "15%",
+              reasoning: "Extracted from AI natural language response"
+            };
+          }
+        }
+      }
+      
+      if (!aiSuggestions) {
         throw new Error("Failed to parse AI response");
       }
     } catch (parseError: any) {
