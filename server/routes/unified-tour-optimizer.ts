@@ -435,8 +435,14 @@ unifiedOptimizerRouter.post('/apply/:tourId', async (req: Request, res: Response
         return null;
       }
       
-      // Apply suggested date if available
-      const suggestedDate = suggestedDates?.[venueId];
+      // Try to find suggested date for this venue - check both by ID and position
+      let suggestedDate = suggestedDates?.[venueId]; // Direct match first
+      
+      // If using 1-based indexing for the venue, also check the dates by index
+      if (!suggestedDate && tourVenue.id !== venueId) {
+        // If we're using the 1-based index for the venue ID, also look up the date the same way
+        suggestedDate = suggestedDates?.[tourVenue.id];
+      }
       
       // Create a date object from the string if needed
       let dateValue = tourVenue.date;
@@ -445,6 +451,7 @@ unifiedOptimizerRouter.post('/apply/:tourId', async (req: Request, res: Response
           // Convert Date to ISO string for database storage
           const newDate = new Date(suggestedDate);
           dateValue = newDate.toISOString();
+          console.log(`Applying suggested date ${suggestedDate} to venue ${tourVenue.id}`);
         } catch (e) {
           console.warn(`Invalid date format: ${suggestedDate}`);
         }
@@ -464,7 +471,17 @@ unifiedOptimizerRouter.post('/apply/:tourId', async (req: Request, res: Response
     
     // Calculate new metrics
     const orderedVenues = optimizedSequence
-      .map(id => currentTourVenues.find(tv => tv.id === id))
+      .map(id => {
+        // First try direct ID match
+        let tourVenue = currentTourVenues.find(tv => tv.id === id);
+        
+        // If that fails, try 1-based array indexing (AI might be using simple 1-based indexing)
+        if (!tourVenue && id > 0 && id <= currentTourVenues.length) {
+          tourVenue = currentTourVenues[id - 1];
+        }
+        
+        return tourVenue;
+      })
       .filter(Boolean)
       .map(tv => ({
         id: tv?.id,
