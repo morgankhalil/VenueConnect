@@ -1,6 +1,6 @@
 import express from 'express';
 import { db } from '../db';
-import { venues, venueConnections } from '../../shared/schema';
+import { venues, venueNetwork } from '../../shared/schema';
 import { eq, and } from 'drizzle-orm';
 import { isAuthenticated } from '../middleware/auth-middleware';
 
@@ -44,8 +44,8 @@ router.get('/graph/:venueId', isAuthenticated, async (req, res) => {
     }
     
     // Get all connections for this venue
-    const connections = await db.query.venueConnections.findMany({
-      where: eq(venueConnections.venueId, venueId),
+    const connections = await db.query.venueNetwork.findMany({
+      where: eq(venueNetwork.venueId, venueId),
       with: {
         connectedVenue: true
       }
@@ -116,10 +116,10 @@ router.post('/connections', isAuthenticated, async (req, res) => {
     }
     
     // Check if the connection already exists
-    const existingConnection = await db.query.venueConnections.findFirst({
+    const existingConnection = await db.query.venueNetwork.findFirst({
       where: and(
-        eq(venueConnections.venueId, venueId),
-        eq(venueConnections.connectedVenueId, connectedVenueId)
+        eq(venueNetwork.venueId, venueId),
+        eq(venueNetwork.connectedVenueId, connectedVenueId)
       )
     });
     
@@ -131,7 +131,7 @@ router.post('/connections', isAuthenticated, async (req, res) => {
     }
     
     // Create the new connection
-    await db.insert(venueConnections).values({
+    await db.insert(venueNetwork).values({
       venueId,
       connectedVenueId,
       status: status || 'pending',

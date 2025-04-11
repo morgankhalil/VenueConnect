@@ -6,6 +6,7 @@ import userRoutes from './routes/user-routes';
 import authRoutes from './routes/auth-routes';
 import venueRoutes from './routes/venue-routes';
 import dashboardRoutes from './routes/dashboard-routes';
+import venueNetworkRoutes from './routes/venue-network-routes';
 import { type Express } from 'express';
 import { type Server } from 'http';
 
@@ -18,6 +19,7 @@ export function registerRoutes(app: Express): Server {
   app.use('/api/auth', authRoutes);
   app.use('/api/venues', venueRoutes);
   app.use('/api/dashboard', dashboardRoutes);
+  app.use('/api/venue-network', venueNetworkRoutes);
   
   // Both user-info and venue selection are now handled in their respective route files
   

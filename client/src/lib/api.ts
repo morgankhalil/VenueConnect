@@ -142,8 +142,9 @@ export async function createVenueConnection(connection: {
   connectedVenueId: number;
   status?: string;
   trustScore?: number;
+  collaborativeBookings?: number;
 }) {
-  return apiRequest('/api/venue-network', {
+  return apiRequest('/api/venue-network/connections', {
     method: 'POST',
     body: JSON.stringify(connection),
     headers: { 'Content-Type': 'application/json' }
