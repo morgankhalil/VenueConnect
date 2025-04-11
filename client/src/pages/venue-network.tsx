@@ -7,17 +7,23 @@ import { TabsContent, Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { getVenueNetworkGraph, getCollaborativeOpportunitiesByVenue, createVenueConnection } from "@/lib/api";
+import { getVenueNetworkGraph, getCollaborativeOpportunitiesByVenue, createVenueConnection, searchVenues } from "@/lib/api";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/context/auth-context";
+import { Input } from "@/components/ui/input";
+import { hasPermission } from "@/lib/permissions";
 
 export default function VenueNetwork() {
   const { toast } = useToast();
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [selectedVenue, setSelectedVenue] = useState<any>(null);
+  const [isSearching, setIsSearching] = useState(false);
   const queryClient = useQueryClient();
   
   // Get the current user from auth context
-  const { currentVenueId: authVenueId } = useAuth();
+  const { currentVenueId: authVenueId, user } = useAuth();
   
   // Use a React.useEffect to track venue ID changes
   const [currentVenueId, setCurrentVenueId] = useState<number | null>(null);
@@ -100,7 +106,39 @@ export default function VenueNetwork() {
   };
 
   const handleAddVenue = () => {
+    // Reset search state when opening the dialog
+    setSearchQuery("");
+    setSearchResults([]);
+    setSelectedVenue(null);
     setShowInviteDialog(true);
+  };
+  
+  // Handle search for venues
+  const handleVenueSearch = async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    
+    try {
+      setIsSearching(true);
+      const results = await searchVenues(searchQuery);
+      
+      // Filter out venues that are already in the network
+      const existingVenueIds = networkData?.nodes.map(node => node.id) || [];
+      const filteredResults = results.filter(venue => !existingVenueIds.includes(venue.id));
+      
+      setSearchResults(filteredResults);
+    } catch (error) {
+      console.error("Error searching venues:", error);
+      toast({
+        title: "Search Error",
+        description: "Failed to search for venues. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   // Show a different message if no venue is selected
@@ -271,38 +309,120 @@ export default function VenueNetwork() {
       </div>
 
       <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Connect with a New Venue</DialogTitle>
           </DialogHeader>
           <div className="py-4">
+            {/* Search for venues */}
+            <div className="space-y-4 mb-6">
+              <div className="flex space-x-2">
+                <Input
+                  type="text"
+                  placeholder="Search venues by name, city, or region"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1"
+                />
+                <Button 
+                  type="button" 
+                  onClick={handleVenueSearch}
+                  disabled={isSearching || !searchQuery.trim()}
+                >
+                  {isSearching ? "Searching..." : "Search"}
+                </Button>
+              </div>
+              
+              {/* Search results */}
+              <div className="mt-4">
+                {searchResults.length > 0 ? (
+                  <div className="max-h-64 overflow-y-auto border rounded-md">
+                    {searchResults.map((venue) => (
+                      <div 
+                        key={venue.id}
+                        className={`p-3 border-b cursor-pointer hover:bg-gray-50 flex justify-between items-center ${selectedVenue?.id === venue.id ? 'bg-primary-50' : ''}`}
+                        onClick={() => setSelectedVenue(venue)}
+                      >
+                        <div>
+                          <h3 className="font-medium">{venue.name}</h3>
+                          <p className="text-sm text-gray-500">{venue.city}, {venue.region}</p>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {venue.capacity ? `Capacity: ${venue.capacity}` : 'No capacity data'}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : searchQuery && !isSearching ? (
+                  <div className="text-center py-4 text-gray-500">
+                    No venues found matching your search
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            
+            {/* Manual venue ID input and form submission */}
             <form onSubmit={(e) => {
               e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              const venueId = Number(formData.get('venueId'));
+              
+              let targetVenueId: number;
+              
+              if (selectedVenue) {
+                targetVenueId = selectedVenue.id;
+              } else {
+                const formData = new FormData(e.currentTarget);
+                targetVenueId = Number(formData.get('venueId'));
+              }
 
-              if (venueId && currentVenueId) {
+              if (targetVenueId && currentVenueId) {
+                // Check if user has permission to manage venue network
+                if (!hasPermission(user, 'canManageVenueNetwork')) {
+                  toast({
+                    title: "Permission Error",
+                    description: "You don't have permission to manage venue connections",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                
                 createConnectionMutation.mutate({
                   venueId: currentVenueId,
-                  connectedVenueId: venueId,
+                  connectedVenueId: targetVenueId,
                   status: 'pending',
                   trustScore: 50,
                   collaborativeBookings: 0
                 });
               }
             }} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="venueId" className="text-sm font-medium">Venue ID</label>
-                <input 
-                  id="venueId"
-                  name="venueId" 
-                  type="number" 
-                  className="w-full p-2 border rounded" 
-                  placeholder="Enter venue ID"
-                  required
-                />
-              </div>
-              <div className="flex justify-end space-x-2">
+              {selectedVenue ? (
+                <div className="space-y-2 rounded-md p-3 bg-primary-50 border">
+                  <h3 className="font-medium">Selected Venue</h3>
+                  <p>{selectedVenue.name} - {selectedVenue.city}, {selectedVenue.region}</p>
+                  <input type="hidden" name="venueId" value={selectedVenue.id} />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setSelectedVenue(null)}
+                    className="mt-2"
+                  >
+                    Clear Selection
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <label htmlFor="venueId" className="text-sm font-medium">Or enter Venue ID manually</label>
+                  <Input 
+                    id="venueId"
+                    name="venueId" 
+                    type="number" 
+                    placeholder="Enter venue ID"
+                    required={!selectedVenue}
+                  />
+                </div>
+              )}
+              
+              <div className="flex justify-end space-x-2 mt-4">
                 <Button 
                   type="button" 
                   variant="outline" 
@@ -310,8 +430,11 @@ export default function VenueNetwork() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit">
-                  Send Connection Request
+                <Button 
+                  type="submit"
+                  disabled={createConnectionMutation.isPending}
+                >
+                  {createConnectionMutation.isPending ? "Connecting..." : "Send Connection Request"}
                 </Button>
               </div>
             </form>

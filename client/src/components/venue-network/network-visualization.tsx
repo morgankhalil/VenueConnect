@@ -101,7 +101,18 @@ export function NetworkVisualization({
   return (
     <Card>
       <CardContent className="p-0">
-        <div className="h-[600px] rounded-lg overflow-hidden">
+        <div className="h-[600px] rounded-lg overflow-hidden relative">
+          {/* Floating action button for adding new venues */}
+          <div className="absolute bottom-6 right-6 z-10">
+            <Button 
+              onClick={onAddVenue} 
+              size="lg" 
+              className="rounded-full h-14 w-14 shadow-lg flex items-center justify-center"
+            >
+              <Plus size={24} />
+            </Button>
+          </div>
+          
           <MapContainer
             center={mapCenter as [number, number]}
             zoom={4}
