@@ -21,7 +21,7 @@ export const queryClient = new QueryClient({
       // Add a one-time cache buster that doesn't change during a session
       queryKeyHashFn: (queryKey: any) => {
         // Special case for user data - use fixed key to prevent multiple calls
-        if (Array.isArray(queryKey) && (queryKey[0] === '/api/users/me' || queryKey[0] === '/api/user')) {
+        if (Array.isArray(queryKey) && queryKey[0] === '/api/users/me') {
           return JSON.stringify(queryKey);
         }
         

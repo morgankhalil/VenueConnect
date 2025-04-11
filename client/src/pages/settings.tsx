@@ -37,8 +37,8 @@ export default function Settings() {
   
   // Get user data from API
   const { data: user, isLoading: isLoadingUser, error: userError } = useQuery({
-    queryKey: ['/api/user'],
-    queryFn: () => apiRequest('/api/user')
+    queryKey: ['/api/users/me'],
+    queryFn: () => apiRequest('/api/users/me')
   });
 
   // Get venue data from API

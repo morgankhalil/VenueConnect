@@ -36,8 +36,8 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   // Get user data from API with optimized loading and caching
   const { data: user, isLoading: isLoadingUser, error: userError } = useQuery({
-    queryKey: ['/api/user'],
-    queryFn: () => apiRequest('/api/user'),
+    queryKey: ['/api/users/me'],
+    queryFn: () => apiRequest('/api/users/me'),
     retry: 1,
     staleTime: Infinity, // Keep user data permanently fresh during session
     // Load from cache immediately while fetching new data in background
@@ -56,11 +56,14 @@ export function MainLayout({ children }: MainLayoutProps) {
     refetchOnWindowFocus: false // Don't refetch when window regains focus
   });
 
-  // Get venue data for current user
+  // Get current venue ID from auth context
+  const { currentVenueId } = useAuth();
+  
+  // Get venue data for current venue
   const { data: currentVenue, isLoading: isLoadingVenue } = useQuery({
-    queryKey: ['/api/venues', user?.venueId],
-    queryFn: () => apiRequest(`/api/venues/${user?.venueId}`),
-    enabled: !!user?.venueId,
+    queryKey: ['/api/venues', currentVenueId],
+    queryFn: () => apiRequest(`/api/venues/${currentVenueId}`),
+    enabled: !!currentVenueId,
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
   
@@ -71,7 +74,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     venueName: currentVenue?.name || "Loading venue...",
     role: user?.role || "user",
     avatar: user?.profileImageUrl || null, 
-    venueId: user?.venueId || null
+    venueId: currentVenueId
   };
 
   // Show a loading indicator in the header instead of blocking the entire UI
