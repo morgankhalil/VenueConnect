@@ -1,22 +1,26 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, BrainCircuit, CheckCircle, Loader2, Map, Send, Star } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { getAIOptimizationSuggestions, applyAIOptimization } from '@/lib/api';
+import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
+  DialogTrigger,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Sparkles, RotateCw, Check, Calendar, MapPin, Brain, ArrowRight, LucideMapPinned } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
-// Type definitions for AI optimization
+// Type for venue data in the optimization
 type VenueData = {
   id: number;
   venueId: number;
@@ -29,6 +33,7 @@ type VenueData = {
   status: string;
 };
 
+// Type for AI suggestion response
 type AiSuggestion = {
   optimizedSequence: number[];
   suggestedDates: Record<string, string>;
@@ -39,6 +44,7 @@ type AiSuggestion = {
   reasoning: string;
 };
 
+// Type for tour data
 type TourData = {
   tourName: string;
   artistName: string;
@@ -49,6 +55,7 @@ type TourData = {
   potentialVenues: VenueData[];
 };
 
+// Type for the complete optimization response
 type AiOptimizationResponse = {
   aiSuggestions: AiSuggestion;
   calculatedMetrics: {
@@ -59,334 +66,275 @@ type AiOptimizationResponse = {
 };
 
 export function AITourOptimizer({ tourId, onApplyChanges }: { tourId: number; onApplyChanges?: () => void }) {
-  const [loading, setLoading] = useState(false);
-  const [optimizing, setOptimizing] = useState(false);
-  const [applying, setApplying] = useState(false);
-  const [showResults, setShowResults] = useState(false);
-  const [aiResponse, setAiResponse] = useState<AiOptimizationResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('suggestions');
   const { toast } = useToast();
 
-  const optimizeTour = async () => {
-    setOptimizing(true);
-    setError(null);
-    
-    try {
-      const response = await fetch('/api/ai-optimization/suggest', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ tourId }),
-      });
+  // Fetch AI optimization suggestions
+  const { data, isLoading, isError, error, refetch } = useQuery<AiOptimizationResponse>({
+    queryKey: ['ai-tour-optimization', tourId],
+    queryFn: async () => {
+      const response = await getAIOptimizationSuggestions(tourId);
+      return response;
+    },
+    enabled: false, // Don't fetch on component mount
+  });
+
+  // Apply AI optimization mutation
+  const { mutate: applyOptimization, isPending: isApplying } = useMutation({
+    mutationFn: async () => {
+      if (!data?.aiSuggestions) return;
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to get AI optimization suggestions');
-      }
-      
-      const data: AiOptimizationResponse = await response.json();
-      setAiResponse(data);
-      setShowResults(true);
-      
-    } catch (err: any) {
-      console.error('Error optimizing tour:', err);
-      setError(err.message || 'An error occurred while optimizing the tour');
+      const { optimizedSequence, suggestedDates } = data.aiSuggestions;
+      return await applyAIOptimization(tourId, optimizedSequence, suggestedDates);
+    },
+    onSuccess: () => {
       toast({
-        title: 'Optimization Error',
-        description: err.message || 'Failed to get AI optimization suggestions',
-        variant: 'destructive',
-      });
-    } finally {
-      setOptimizing(false);
-    }
-  };
-  
-  const applyOptimization = async () => {
-    if (!aiResponse?.aiSuggestions) return;
-    
-    setApplying(true);
-    
-    try {
-      const response = await fetch('/api/ai-optimization/apply', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          tourId,
-          optimizedSequence: aiResponse.aiSuggestions.optimizedSequence,
-          suggestedDates: aiResponse.aiSuggestions.suggestedDates,
-        }),
+        title: 'AI optimization applied',
+        description: 'Your tour has been optimized with AI suggestions',
       });
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to apply AI optimization');
-      }
+      // Close the dialog
+      setOpen(false);
       
-      toast({
-        title: 'Success',
-        description: 'AI optimization applied successfully',
-        variant: 'default',
-      });
+      // Invalidate tour queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/tours', tourId] });
       
-      setShowResults(false);
-      
-      // Callback to refresh parent component if provided
+      // Call the callback if provided
       if (onApplyChanges) {
         onApplyChanges();
       }
-      
-    } catch (err: any) {
-      console.error('Error applying optimization:', err);
+    },
+    onError: (err) => {
       toast({
-        title: 'Error',
-        description: err.message || 'Failed to apply AI optimization',
+        title: 'Error applying AI optimization',
+        description: 'There was a problem applying the AI suggestions. Please try again.',
         variant: 'destructive',
       });
-    } finally {
-      setApplying(false);
+    }
+  });
+
+  // Handle dialog open state
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (isOpen && !data) {
+      // Fetch data when dialog opens
+      refetch();
     }
   };
 
   return (
-    <>
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BrainCircuit className="h-5 w-5 text-primary" />
-            AI Tour Optimizer
-          </CardTitle>
-          <CardDescription>
-            Let our AI analyze your tour and suggest improvements to minimize travel time and distance
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="flex items-center gap-2">
+          <Brain size={16} />
+          <span>AI Optimize</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[800px]">
+        <DialogHeader>
+          <DialogTitle>AI Tour Optimization</DialogTitle>
+          <DialogDescription>
+            Get intelligent recommendations for your tour routing, scheduling, and venue selection powered by AI.
+          </DialogDescription>
+        </DialogHeader>
+
+        {isLoading ? (
           <div className="space-y-4">
-            <div className="flex gap-2 items-center">
-              <Badge variant="outline" className="bg-primary/10">
-                <Star className="h-3 w-3 mr-1 text-primary" /> AI-Powered
-              </Badge>
-              <Badge variant="outline" className="bg-primary/10">
-                <Map className="h-3 w-3 mr-1 text-primary" /> Route Optimization
-              </Badge>
-            </div>
-            
-            <p className="text-sm text-muted-foreground">
-              Our AI can analyze your tour's confirmed and potential venues to suggest the most efficient route,
-              potentially reducing travel distance by up to 30% and saving valuable time on the road.
-            </p>
-            
-            <div className="mt-2">
-              <p className="text-sm font-medium mb-1">Key features:</p>
-              <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
-                <li>Optimize routing between venues to minimize travel</li>
-                <li>Suggest optimal dates for booking potential venues</li>
-                <li>Identify which potential venues fit best in your route</li>
-                <li>Preserve your confirmed bookings while optimizing around them</li>
-              </ul>
+            <Skeleton className="h-[200px] w-full rounded-md" />
+            <div className="flex gap-4">
+              <Skeleton className="h-10 w-full rounded-md" />
+              <Skeleton className="h-10 w-full rounded-md" />
             </div>
           </div>
-        </CardContent>
-        
-        <CardFooter>
-          <Button
-            onClick={optimizeTour}
-            disabled={optimizing}
-            className="w-full"
-          >
-            {optimizing ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                Analyzing Tour Data...
-              </>
-            ) : (
-              <>
-                <BrainCircuit className="mr-2 h-4 w-4" /> 
-                Start AI Optimization
-              </>
-            )}
-          </Button>
-        </CardFooter>
-      </Card>
-      
-      {/* Results Dialog */}
-      <Dialog open={showResults} onOpenChange={setShowResults}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <BrainCircuit className="h-5 w-5 text-primary" />
-              AI Optimization Results
-            </DialogTitle>
-            <DialogDescription>
-              {aiResponse?.tourData?.tourName} - {aiResponse?.tourData?.artistName}
-            </DialogDescription>
-          </DialogHeader>
-          
-          {aiResponse && (
-            <div className="space-y-6">
-              {/* Summary Metrics */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                  <CardHeader className="p-4 pb-2">
-                    <CardTitle className="text-sm font-medium">Distance Reduction</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <div className="text-2xl font-bold text-primary">
-                      {aiResponse.aiSuggestions.estimatedDistanceReduction}%
-                    </div>
-                    <Progress 
-                      value={aiResponse.aiSuggestions.estimatedDistanceReduction} 
-                      className="h-2 mt-2" 
-                    />
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="p-4 pb-2">
-                    <CardTitle className="text-sm font-medium">Travel Time Savings</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <div className="text-2xl font-bold text-primary">
-                      {aiResponse.aiSuggestions.estimatedTimeSavings} min
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {Math.floor(aiResponse.aiSuggestions.estimatedTimeSavings / 60)} hours {aiResponse.aiSuggestions.estimatedTimeSavings % 60} minutes
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="p-4 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Distance</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <div className="text-2xl font-bold">
-                      {aiResponse.calculatedMetrics.totalDistance} km
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Optimized route total distance
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+        ) : isError ? (
+          <div className="p-6 text-center">
+            <p className="text-red-500 mb-4">
+              Error fetching AI recommendations. Please try again.
+            </p>
+            <Button onClick={() => refetch()}>Retry</Button>
+          </div>
+        ) : !data ? (
+          <div className="p-6 text-center">
+            <p className="mb-4">Click generate to get AI-powered optimization suggestions.</p>
+            <Button onClick={() => refetch()}>
+              <Sparkles className="mr-2 h-4 w-4" />
+              Generate Suggestions
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <Tabs defaultValue="suggestions" value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid grid-cols-2">
+                <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
+                <TabsTrigger value="reasoning">AI Reasoning</TabsTrigger>
+              </TabsList>
               
-              {/* Venue Sequence */}
-              <div>
-                <h3 className="text-lg font-medium mb-3">Optimized Venue Sequence</h3>
-                <div className="rounded-md border">
-                  <div className="flex flex-col divide-y">
-                    {aiResponse.aiSuggestions.optimizedSequence.map((venueId, index) => {
-                      // Find venue details from either confirmed or potential venues
-                      const venue = [...aiResponse.tourData.confirmedVenues, ...aiResponse.tourData.potentialVenues]
-                        .find(v => v.id === venueId || v.venueId === venueId);
-                        
-                      if (!venue) return null;
-                      
-                      // Get suggested date if available
-                      const suggestedDate = aiResponse.aiSuggestions.suggestedDates[venueId];
-                      const displayDate = venue.isFixed ? 
-                        (venue.date ? new Date(venue.date).toLocaleDateString() : 'No date') : 
-                        (suggestedDate ? new Date(suggestedDate).toLocaleDateString() : 'Suggested date pending');
-                      
-                      const isRecommended = aiResponse.aiSuggestions.recommendedVenues.includes(venueId);
-                      const isSkippable = aiResponse.aiSuggestions.suggestedSkips.includes(venueId);
-                      
-                      return (
-                        <div 
-                          key={`venue-${venueId}-${index}`} 
-                          className={`p-3 flex justify-between items-center ${
-                            venue.isFixed ? 'bg-muted/30' : 
-                            isRecommended ? 'bg-green-50/50 dark:bg-green-950/20' : 
-                            isSkippable ? 'bg-orange-50/50 dark:bg-orange-950/20' : ''
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium">
-                              {index + 1}
-                            </div>
-                            <div>
-                              <div className="font-medium">{venue.name}</div>
-                              <div className="text-sm text-muted-foreground">{venue.city}</div>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            {venue.isFixed && (
-                              <Badge variant="outline" className="bg-muted/50">
-                                Fixed
-                              </Badge>
-                            )}
-                            
-                            {isRecommended && !venue.isFixed && (
-                              <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
-                                Recommended
-                              </Badge>
-                            )}
-                            
-                            {isSkippable && (
-                              <Badge variant="outline" className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300">
-                                Optional
-                              </Badge>
-                            )}
-                            
-                            <div className="text-sm">
-                              {displayDate}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+              <TabsContent value="suggestions" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Distance Reduction</p>
+                        <p className="text-3xl font-bold">{data.aiSuggestions.estimatedDistanceReduction}%</p>
+                        <p className="text-xs text-muted-foreground mt-1">Total: {data.calculatedMetrics.totalDistance}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Time Savings</p>
+                        <p className="text-3xl font-bold">{data.aiSuggestions.estimatedTimeSavings}%</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {Math.floor(data.calculatedMetrics.totalTravelTimeMinutes / 60)}h {data.calculatedMetrics.totalTravelTimeMinutes % 60}m
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Sequence Changes</p>
+                        <p className="text-3xl font-bold">{data.aiSuggestions.optimizedSequence.length}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Venues optimized</p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </div>
+                
+                {/* Optimized Sequence */}
+                {data.aiSuggestions.optimizedSequence.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Optimized Venue Sequence</h3>
+                    <div className="bg-muted p-4 rounded-md space-y-2">
+                      <div className="flex flex-wrap gap-2">
+                        {data.aiSuggestions.optimizedSequence.map((venueId, index) => {
+                          const venue = [...data.tourData.confirmedVenues, ...data.tourData.potentialVenues]
+                            .find(v => v.id === venueId);
+                          
+                          if (!venue) return null;
+                          
+                          return (
+                            <div key={venueId} className="flex items-center">
+                              {index > 0 && <ArrowRight size={12} className="mx-1 text-muted-foreground" />}
+                              <Badge variant={venue.isFixed ? "default" : "outline"} className="flex items-center gap-1">
+                                {venue.isFixed ? <LucideMapPinned size={12} /> : <MapPin size={12} />}
+                                <span>{venue.name}</span>
+                              </Badge>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Date Suggestions */}
+                {Object.keys(data.aiSuggestions.suggestedDates).length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Suggested Dates</h3>
+                    <div className="bg-muted p-4 rounded-md">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {Object.entries(data.aiSuggestions.suggestedDates).map(([venueId, date]) => {
+                          const venue = [...data.tourData.confirmedVenues, ...data.tourData.potentialVenues]
+                            .find(v => v.id === Number(venueId));
+                          
+                          if (!venue) return null;
+                          
+                          return (
+                            <div key={venueId} className="flex items-center justify-between">
+                              <span className="font-medium">{venue.name}</span>
+                              <Badge variant="secondary" className="flex items-center gap-1">
+                                <Calendar size={12} />
+                                <span>{new Date(date).toLocaleDateString()}</span>
+                              </Badge>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Recommended Venues */}
+                {data.aiSuggestions.recommendedVenues.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Recommended Venues</h3>
+                    <div className="bg-muted p-4 rounded-md">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {data.aiSuggestions.recommendedVenues.map(venueId => {
+                          const venue = [...data.tourData.confirmedVenues, ...data.tourData.potentialVenues]
+                            .find(v => v.id === venueId);
+                          
+                          if (!venue) return null;
+                          
+                          return (
+                            <div key={venueId} className="flex items-center gap-2">
+                              <Check size={14} className="text-green-500" />
+                              <span>{venue.name}, {venue.city}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Suggested Skips */}
+                {data.aiSuggestions.suggestedSkips.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Suggested Skips</h3>
+                    <div className="bg-muted p-4 rounded-md">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {data.aiSuggestions.suggestedSkips.map(venueId => {
+                          const venue = [...data.tourData.confirmedVenues, ...data.tourData.potentialVenues]
+                            .find(v => v.id === venueId);
+                          
+                          if (!venue) return null;
+                          
+                          return (
+                            <div key={venueId} className="flex items-center gap-2 text-muted-foreground">
+                              <span className="line-through">{venue.name}, {venue.city}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
               
-              {/* AI Reasoning */}
-              <div>
-                <h3 className="text-lg font-medium mb-2">AI Reasoning</h3>
+              <TabsContent value="reasoning">
                 <Card>
-                  <CardContent className="p-4 text-sm whitespace-pre-line">
-                    {aiResponse.aiSuggestions.reasoning}
+                  <CardContent className="pt-6">
+                    <div className="prose max-w-none dark:prose-invert">
+                      <h3>AI Optimization Reasoning</h3>
+                      <p className="whitespace-pre-line">{data.aiSuggestions.reasoning}</p>
+                    </div>
                   </CardContent>
                 </Card>
-              </div>
-            </div>
-          )}
-          
-          <DialogFooter className="flex sm:justify-between gap-3 mt-6">
-            <Button variant="outline" onClick={() => setShowResults(false)}>
-              Cancel
-            </Button>
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          {data && (
             <Button 
-              onClick={applyOptimization} 
-              disabled={applying}
-              className="min-w-[120px]"
+              onClick={() => applyOptimization()} 
+              disabled={isApplying}
+              className="gap-2"
             >
-              {applying ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                  Applying...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="mr-2 h-4 w-4" /> 
-                  Apply Changes
-                </>
-              )}
+              {isApplying ? <RotateCw className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              Apply AI Optimization
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

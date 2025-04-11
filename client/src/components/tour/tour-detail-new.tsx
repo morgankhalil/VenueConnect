@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { VenueStatusBadge } from './venue-status-badge';
 import { StatCard } from './stat-card';
 import { VenueList } from './venue-list';
+import { AITourOptimizer } from './ai-optimizer';
 import { 
   getStatusInfo, 
   getStatusBadgeVariant,
@@ -332,6 +333,18 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
                 <Sparkles className="mr-2 h-4 w-4" />
                 Optimize Tour
               </Button>
+              
+              {/* AI Tour Optimizer */}
+              <AITourOptimizer 
+                tourId={Number(tourId)} 
+                onApplyChanges={() => {
+                  refetch();
+                  toast({
+                    title: "AI optimization applied",
+                    description: "Your tour has been updated with AI-recommended optimizations"
+                  });
+                }}
+              />
 
               <Link href={`/tours/${tourId}/edit`}>
                 <Button size="sm" variant="outline">
