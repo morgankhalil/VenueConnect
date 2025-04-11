@@ -10,7 +10,7 @@ const router = express.Router();
  * Get connected venues
  * Returns venues connected to the current venue based on network data
  */
-router.get('/venues/connected', isAuthenticated, async (req, res) => {
+router.get('/connected', isAuthenticated, async (req, res) => {
   try {
     if (!req.session.user) {
       return res.status(401).json({ error: 'Not authenticated' });
@@ -59,7 +59,7 @@ router.get('/venues/connected', isAuthenticated, async (req, res) => {
  * Select venue for current user
  * Updates the user's current selected venue
  */
-router.get('/venues/select/:id', isAuthenticated, async (req, res) => {
+router.get('/select/:id', isAuthenticated, async (req, res) => {
   try {
     const venueId = parseInt(req.params.id);
     
@@ -111,7 +111,7 @@ router.get('/venues/select/:id', isAuthenticated, async (req, res) => {
  * Get venue by id
  * Returns detailed information about a specific venue
  */
-router.get('/venues/:id', isAuthenticated, async (req, res) => {
+router.get('/:id', isAuthenticated, async (req, res) => {
   try {
     const venueId = parseInt(req.params.id);
     
@@ -138,7 +138,7 @@ router.get('/venues/:id', isAuthenticated, async (req, res) => {
  * Get all venues
  * Returns a list of all venues
  */
-router.get('/venues', isAuthenticated, async (req, res) => {
+router.get('/', isAuthenticated, async (req, res) => {
   try {
     const allVenues = await db.query.venues.findMany({
       columns: {
