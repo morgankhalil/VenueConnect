@@ -1,7 +1,7 @@
 import express from 'express';
 import { db } from '../db';
 import { venues } from '../../shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { isAuthenticated } from '../middleware/auth-middleware';
 
 const router = express.Router();
@@ -30,6 +30,55 @@ router.get('/venues/:id', isAuthenticated, async (req, res) => {
   } catch (error) {
     console.error('Error fetching venue:', error);
     return res.status(500).json({ error: 'Failed to load venue' });
+  }
+});
+
+/**
+ * Get connected venues
+ * Returns venues connected to the current venue based on network data
+ */
+router.get('/venues/connected', isAuthenticated, async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    
+    const { role, venueId } = req.session.user;
+    
+    // If admin user or no venue is selected, return a reasonable selection of venues
+    if (role === 'admin' || !venueId) {
+      const connectedVenues = await db.query.venues.findMany({
+        limit: 5,
+        columns: {
+          id: true,
+          name: true,
+          city: true,
+          region: true
+        },
+        orderBy: venues.name
+      });
+      
+      return res.json(connectedVenues);
+    }
+    
+    // For venue managers, return venues similar to their assigned venue
+    // In a real app, this would use a more sophisticated algorithm
+    const connectedVenues = await db.query.venues.findMany({
+      where: sql`${venues.id} != ${venueId}`,
+      limit: 5,
+      columns: {
+        id: true,
+        name: true,
+        city: true,
+        region: true
+      },
+      orderBy: venues.name
+    });
+    
+    return res.json(connectedVenues);
+  } catch (error) {
+    console.error('Error fetching connected venues:', error);
+    return res.status(500).json({ error: 'Failed to load connected venues' });
   }
 });
 

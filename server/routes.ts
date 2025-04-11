@@ -17,6 +17,7 @@ export function registerRoutes(app: Express): Server {
   app.use('/api', userRoutes);
   app.use('/api', authRoutes);
   app.use('/api', venueRoutes);
+  app.use('/api', dashboardRoutes);
   
   // Add user info endpoint
   app.get('/api/user-info', (req, res) => {
