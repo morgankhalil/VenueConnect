@@ -177,3 +177,203 @@ export async function setBandsintownApiKey(apiKey: string) {
     body: JSON.stringify({ apiKey })
   });
 }
+
+/**
+ * Calendar and Event endpoints
+ */
+
+/**
+ * Get a single event by ID
+ */
+export async function getEvent(id: number) {
+  return request(`/api/events/${id}`);
+}
+
+/**
+ * Get events for a specific period
+ */
+export async function getEvents(params?: { startDate?: string, endDate?: string, venueId?: number }) {
+  const searchParams = new URLSearchParams();
+  
+  if (params?.startDate) searchParams.append('startDate', params.startDate);
+  if (params?.endDate) searchParams.append('endDate', params.endDate);
+  if (params?.venueId) searchParams.append('venueId', params.venueId.toString());
+  
+  const queryString = searchParams.toString() ? `?${searchParams.toString()}` : '';
+  return request(`/api/events${queryString}`);
+}
+
+/**
+ * Tour optimization endpoints
+ */
+
+/**
+ * Get optimization options
+ */
+export async function getOptimizationOptions(tourId: number) {
+  return request(`/api/tour-optimization/tours/${tourId}/options`);
+}
+
+/**
+ * Generate an optimized route for a tour
+ */
+export async function optimizeTourRoute(tourId: number, preferences: any) {
+  return request(`/api/tour-optimization/tours/${tourId}/optimize`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(preferences)
+  });
+}
+
+/**
+ * Apply optimized tour changes
+ */
+export async function applyTourOptimization(tourId: number, optimizationData: any) {
+  return request(`/api/tour-optimization/tours/${tourId}/apply`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ optimizationData })
+  });
+}
+
+/**
+ * Tour management endpoints
+ */
+
+/**
+ * Get a single tour by ID
+ */
+export async function getTour(id: number) {
+  return request(`/api/tours/${id}`);
+}
+
+/**
+ * Alias for getTour to maintain compatibility
+ */
+export const getTourById = getTour;
+
+/**
+ * Get all tours or filtered tours
+ */
+export async function getTours(params?: { artistId?: number, status?: string }) {
+  const searchParams = new URLSearchParams();
+  
+  if (params?.artistId) searchParams.append('artistId', params.artistId.toString());
+  if (params?.status) searchParams.append('status', params.status);
+  
+  const queryString = searchParams.toString() ? `?${searchParams.toString()}` : '';
+  return request(`/api/tours${queryString}`);
+}
+
+/**
+ * Create a new tour
+ */
+export async function createTour(data: any) {
+  return request('/api/tours', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  });
+}
+
+/**
+ * Update an existing tour
+ */
+export async function updateTour(id: number, data: any) {
+  return request(`/api/tours/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  });
+}
+
+/**
+ * Delete a tour
+ */
+export async function deleteTour(id: number) {
+  return request(`/api/tours/${id}`, {
+    method: 'DELETE'
+  });
+}
+
+/**
+ * Venue management endpoints
+ */
+
+/**
+ * Get a single venue by ID
+ */
+export async function getVenue(id: number) {
+  return request(`/api/venues/${id}`);
+}
+
+/**
+ * Get all venues or filtered venues
+ */
+export async function getVenues(params?: { city?: string, region?: string, minCapacity?: number, maxCapacity?: number }) {
+  const searchParams = new URLSearchParams();
+  
+  if (params?.city) searchParams.append('city', params.city);
+  if (params?.region) searchParams.append('region', params.region);
+  if (params?.minCapacity) searchParams.append('minCapacity', params.minCapacity.toString());
+  if (params?.maxCapacity) searchParams.append('maxCapacity', params.maxCapacity.toString());
+  
+  const queryString = searchParams.toString() ? `?${searchParams.toString()}` : '';
+  return request(`/api/venues${queryString}`);
+}
+
+/**
+ * Create a new venue
+ */
+export async function createVenue(data: any) {
+  return request('/api/venues', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  });
+}
+
+/**
+ * Update an existing venue
+ */
+export async function updateVenue(id: number, data: any) {
+  return request(`/api/venues/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  });
+}
+
+/**
+ * Delete a venue
+ */
+export async function deleteVenue(id: number) {
+  return request(`/api/venues/${id}`, {
+    method: 'DELETE'
+  });
+}
+
+/**
+ * Get events by venue
+ */
+export async function getEventsByVenue(venueId: number, params?: { startDate?: string, endDate?: string }) {
+  const searchParams = new URLSearchParams();
+  
+  searchParams.append('venueId', venueId.toString());
+  if (params?.startDate) searchParams.append('startDate', params.startDate);
+  if (params?.endDate) searchParams.append('endDate', params.endDate);
+  
+  return request(`/api/events?${searchParams.toString()}`);
+}

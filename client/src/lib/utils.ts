@@ -51,3 +51,40 @@ export function formatTime(minutes: number): string {
   
   return `${hours}h ${mins}m`;
 }
+
+/**
+ * Format travel time in minutes to a readable format
+ * @param minutes Travel time in minutes
+ * @returns Formatted string (e.g., "2h 30m")
+ */
+export function formatTravelTime(minutes: number): string {
+  return formatTime(minutes);
+}
+
+/**
+ * Format a currency value to a readable format
+ * @param value Currency value
+ * @param currency Currency code (default: USD)
+ * @returns Formatted string (e.g., "$1,234.56")
+ */
+export function formatCurrency(value: number, currency: string = 'USD'): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value);
+}
+
+/**
+ * Calculate the percentage improvement between two values
+ * @param oldValue Original value
+ * @param newValue New value
+ * @returns Percentage improvement (negative for decrease, positive for increase)
+ */
+export function calculateImprovement(oldValue: number, newValue: number): number {
+  if (oldValue === 0) return 0;
+  
+  const change = oldValue - newValue;
+  return Math.round((change / oldValue) * 100);
+}
