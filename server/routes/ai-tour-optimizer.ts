@@ -236,9 +236,12 @@ Only include valid venue_ids from the provided lists. For the optimizedSequence,
         },
         tourData
       });
-    } catch (aiError) {
+    } catch (aiError: any) {
       console.error("Error calling AI service:", aiError);
-      return res.status(500).json({ error: 'AI optimization service unavailable', details: aiError.message });
+      return res.status(500).json({ 
+        error: 'AI optimization service unavailable', 
+        details: aiError?.message || 'Unknown error'
+      });
     }
   } catch (error) {
     console.error("Error in AI tour optimizer:", error);

@@ -135,16 +135,23 @@ export function AITourOptimizer({ tourId, onApplyChanges }: { tourId: number; on
         <DialogHeader>
           <DialogTitle>AI Tour Optimization</DialogTitle>
           <DialogDescription>
-            Get intelligent recommendations for your tour routing, scheduling, and venue selection powered by AI.
+            Get intelligent recommendations for your tour routing, scheduling, and venue selection powered by Hugging Face LLaMA 3.
           </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
           <div className="space-y-4">
-            <Skeleton className="h-[200px] w-full rounded-md" />
-            <div className="flex gap-4">
-              <Skeleton className="h-10 w-full rounded-md" />
-              <Skeleton className="h-10 w-full rounded-md" />
+            <div className="flex flex-col items-center justify-center py-8">
+              <Sparkles className="h-12 w-12 animate-pulse text-primary mb-4" />
+              <h3 className="text-xl font-semibold mb-2">AI Optimization in Progress</h3>
+              <p className="text-muted-foreground text-center max-w-md">
+                Analyzing your tour data, calculating optimal routes, and generating recommendations...
+              </p>
+              <div className="mt-4 w-full max-w-xs">
+                <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-primary animate-progress" style={{ width: '100%' }}></div>
+                </div>
+              </div>
             </div>
           </div>
         ) : isError ? (
@@ -325,15 +332,26 @@ export function AITourOptimizer({ tourId, onApplyChanges }: { tourId: number; on
         )}
         
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            {data ? 'Cancel' : 'Close'}
+          </Button>
           {data && (
             <Button 
               onClick={() => applyOptimization()} 
               disabled={isApplying}
               className="gap-2"
             >
-              {isApplying ? <RotateCw className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              Apply AI Optimization
+              {isApplying ? (
+                <>
+                  <RotateCw className="h-4 w-4 animate-spin" />
+                  Applying Optimization...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  Apply AI Optimization
+                </>
+              )}
             </Button>
           )}
         </DialogFooter>
