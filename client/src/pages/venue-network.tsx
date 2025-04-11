@@ -28,8 +28,9 @@ export default function VenueNetwork() {
       console.log(`Auth venue ID changed to ${authVenueId}`);
       setCurrentVenueId(authVenueId);
     } else {
-      // Fallback to a known venue ID (195 is The Middle East in Cambridge)
-      setCurrentVenueId(195);
+      // Don't set a venue ID if none is available from auth context
+      console.log("No venue ID available in auth context");
+      setCurrentVenueId(null);
     }
   }, [authVenueId]);
   
@@ -40,11 +41,16 @@ export default function VenueNetwork() {
   }, [queryClient]);
 
   // Ensure the venue network graph is refetched when the user changes 
-  const { data: networkData, isLoading: isLoadingNetwork, refetch: refetchNetwork } = useQuery({
+  const { data: networkData, isLoading: isLoadingNetwork, refetch: refetchNetwork, error: networkError } = useQuery({
     queryKey: ['/api/venue-network/graph', currentVenueId],
     queryFn: async () => {
+      if (!currentVenueId) {
+        console.log("Cannot fetch venue network - no venue ID provided");
+        return { nodes: [], links: [] };
+      }
+      
       console.log(`Fetching venue network for venue ID: ${currentVenueId}`);
-      const data = await getVenueNetworkGraph(currentVenueId || 195);
+      const data = await getVenueNetworkGraph(currentVenueId);
       return data;
     },
     enabled: !!currentVenueId, // Only fetch when we have a venue ID
@@ -97,6 +103,26 @@ export default function VenueNetwork() {
     setShowInviteDialog(true);
   };
 
+  // Show a different message if no venue is selected
+  if (!currentVenueId) {
+    return (
+      <div className="py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-heading font-semibold text-gray-900">Venue Network</h1>
+          </div>
+          <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-4">
+            <p className="text-amber-800 font-medium">No venue selected</p>
+            <p className="text-amber-700 text-sm mt-1">
+              Please select a venue from the venue selector in the navigation bar to view its network.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show loading state
   if (isLoadingNetwork) {
     return (
       <div className="py-6">
