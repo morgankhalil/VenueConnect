@@ -64,7 +64,7 @@ router.get('/venues', isAuthenticated, async (req, res) => {
  * Select venue for current user
  * Updates the user's current selected venue
  */
-router.get('/select-venue/:id', isAuthenticated, async (req, res) => {
+router.get('/venues/select-venue/:id', isAuthenticated, async (req, res) => {
   try {
     const venueId = parseInt(req.params.id);
     
