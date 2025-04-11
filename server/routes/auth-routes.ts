@@ -25,9 +25,17 @@ router.post('/', async (req, res) => {
     // This is a simplified version for demo purposes
     let user;
     
-    // Find user in the database by username
+    // Find user in the database by username - select only columns that exist in DB
     user = await db.query.users.findFirst({
       where: eq(users.username, username),
+      columns: {
+        id: true,
+        username: true,
+        name: true,
+        email: true,
+        role: true,
+        venue_id: true
+      }
     });
     
     // In a real application, this would be a hashed password comparison

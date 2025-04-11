@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   // Get current user information
   const { data: user, isLoading, refetch } = useQuery<User | null>({
-    queryKey: ['/api/user'],
+    queryKey: ['/api/users/me'],
     retry: false,
     initialData: null,
   });
@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     onSuccess: () => {
       console.log("Logout successful, updating client state");
       // Set local user state to null immediately
-      queryClient.setQueryData(['/api/user'], null);
+      queryClient.setQueryData(['/api/users/me'], null);
       
       // Show success message
       toast({
