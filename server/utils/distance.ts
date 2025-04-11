@@ -1,39 +1,35 @@
 /**
- * Calculate the distance between two geographic coordinates using the Haversine formula
- * This calculates the distance "as the crow flies" in kilometers
- * 
- * @param lat1 Latitude of the first point (in decimal degrees)
- * @param lon1 Longitude of the first point (in decimal degrees)
- * @param lat2 Latitude of the second point (in decimal degrees)
- * @param lon2 Longitude of the second point (in decimal degrees)
+ * Calculate distance between two points using the Haversine formula
+ * @param lat1 Latitude of point 1 in decimal degrees
+ * @param lon1 Longitude of point 1 in decimal degrees
+ * @param lat2 Latitude of point 2 in decimal degrees
+ * @param lon2 Longitude of point 2 in decimal degrees
  * @returns Distance in kilometers
  */
 export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  // Earth's radius in kilometers
-  const R = 6371;
-  
-  // Convert latitude and longitude from degrees to radians
-  const dLat = toRadians(lat2 - lat1);
-  const dLon = toRadians(lon2 - lon1);
-  
-  // Haversine formula
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = 
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * 
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  
-  // Distance in kilometers
-  const distance = R * c;
-  
-  // Round to 1 decimal place
-  return Math.round(distance * 10) / 10;
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
 }
 
 /**
- * Convert degrees to radians
+ * Estimate travel time between two coordinates
+ * @param lat1 Latitude of point 1
+ * @param lon1 Longitude of point 1
+ * @param lat2 Latitude of point 2
+ * @param lon2 Longitude of point 2
+ * @returns Estimated travel time in minutes
  */
-function toRadians(degrees: number): number {
-  return degrees * (Math.PI / 180);
+export function estimateTravelTime(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const distanceKm = calculateDistance(lat1, lon1, lat2, lon2);
+  // Assume average speed of 60 km/h for travel between cities
+  const averageSpeedKmh = 60;
+  // Convert to minutes
+  return Math.round(distanceKm / averageSpeedKmh * 60);
 }

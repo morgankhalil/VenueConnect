@@ -20,56 +20,68 @@ function getHfToken(): string {
 
 // Format tour data for AI processing
 async function formatTourDataForAI(tourId: number) {
-  // Fetch the tour with venues
-  const tour = await db.query.tours.findFirst({
-    where: eq(tours.id, tourId),
-    with: {
-      artist: true,
-      tourVenues: {
-        with: {
-          venue: true
-        }
-      }
-    }
-  });
+  // Fetch the tour
+  const tour = await db.select().from(tours).where(eq(tours.id, tourId)).limit(1).then(res => res[0]);
+  
+  if (!tour) {
+    throw new Error('Tour not found');
+  }
+  
+  // Fetch the artist
+  const artist = await db.select().from(artists).where(eq(artists.id, tour.artistId)).limit(1).then(res => res[0]);
+  
+  // Fetch tour venues with venue details
+  const tourVenuesList = await db.select()
+    .from(tourVenues)
+    .where(eq(tourVenues.tourId, tourId))
+    .innerJoin(venues, eq(tourVenues.venueId, venues.id));
 
   if (!tour) {
     throw new Error('Tour not found');
   }
 
-  // Organize data for the AI
-  const confirmedVenues = tour.tourVenues
-    .filter(tv => tv.status === 'confirmed')
+  // Process the joined tour venues
+  const confirmedVenues = tourVenuesList
+    .filter(tv => tv.tour_venues.status === 'confirmed')
     .map(tv => ({
-      id: tv.id,
-      venueId: tv.venueId,
-      name: tv.venue?.name || 'Unknown Venue',
-      city: tv.venue?.city || 'Unknown City',
-      latitude: tv.venue?.latitude,
-      longitude: tv.venue?.longitude,
-      date: tv.date,
+      id: tv.tour_venues.id,
+      venueId: tv.tour_venues.venueId,
+      name: tv.venues.name || 'Unknown Venue',
+      city: tv.venues.city || 'Unknown City',
+      latitude: tv.venues.latitude,
+      longitude: tv.venues.longitude,
+      date: tv.tour_venues.date,
       isFixed: true,
-      status: tv.status
+      status: tv.tour_venues.status
     }));
 
-  const potentialVenues = tour.tourVenues
-    .filter(tv => tv.status !== 'confirmed' && tv.status !== 'cancelled')
+  const potentialVenues = tourVenuesList
+    .filter(tv => tv.tour_venues.status !== 'confirmed' && tv.tour_venues.status !== 'cancelled')
     .map(tv => ({
-      id: tv.id,
-      venueId: tv.venueId,
-      name: tv.venue?.name || 'Unknown Venue',
-      city: tv.venue?.city || 'Unknown City',
-      latitude: tv.venue?.latitude,
-      longitude: tv.venue?.longitude,
-      date: tv.date,
+      id: tv.tour_venues.id,
+      venueId: tv.tour_venues.venueId,
+      name: tv.venues.name || 'Unknown Venue',
+      city: tv.venues.city || 'Unknown City',
+      latitude: tv.venues.latitude,
+      longitude: tv.venues.longitude,
+      date: tv.tour_venues.date,
       isFixed: false,
-      status: tv.status
+      status: tv.tour_venues.status
     }));
+
+  // Get artist data (genres)
+  const artistData = artist ? {
+    name: artist.name,
+    genres: artist.genres || []
+  } : {
+    name: 'Unknown Artist',
+    genres: []
+  };
 
   return {
     tourName: tour.name,
-    artistName: tour.artist?.name || 'Unknown Artist',
-    artistGenres: tour.artist?.genres || [],
+    artistName: artistData.name,
+    artistGenres: artistData.genres,
     startDate: tour.startDate,
     endDate: tour.endDate,
     confirmedVenues,
@@ -256,10 +268,20 @@ aiOptimizationRouter.post('/apply', async (req: Request, res: Response) => {
       // Apply suggested date if available
       const suggestedDate = suggestedDates[venueId];
       
+      // Create a date object from the string if needed
+      let dateValue = tourVenue.date;
+      if (suggestedDate) {
+        try {
+          dateValue = new Date(suggestedDate);
+        } catch (e) {
+          console.warn(`Invalid date format: ${suggestedDate}`);
+        }
+      }
+      
       return db.update(tourVenues)
         .set({ 
           sequence: index,
-          date: suggestedDate ? new Date(suggestedDate) : tourVenue.date,
+          date: dateValue,
           // If it's a potential venue in the optimized sequence, update status to 'hold'
           status: tourVenue.status === 'potential' ? 'hold' : tourVenue.status
         })
