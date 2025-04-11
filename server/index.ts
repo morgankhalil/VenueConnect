@@ -30,35 +30,10 @@ app.use(session({
   }
 }));
 
-// Simple authentication middleware
+// Authentication middleware - disabled for demo purposes
 app.use(async (req, res, next) => {
-  // Paths that don't require authentication
-  const publicPaths = [
-    '/api/auth',       // All auth-related endpoints
-    '/api/health',     // Health check endpoint
-    '/api/webhooks'    // Webhook endpoints
-  ];
-  
-  // Skip auth for non-API routes (static assets, etc.)
-  if (!req.path.startsWith('/api')) {
-    return next();
-  }
-  
-  // Skip auth for public paths
-  if (publicPaths.some(path => req.path.startsWith(path))) {
-    return next();
-  }
-  
-  // If user is already authenticated, proceed
-  if (req.session && req.session.user) {
-    return next();
-  }
-  
-  // Otherwise, require authentication
-  return res.status(401).json({ 
-    success: false,
-    message: "Authentication required"
-  });
+  // All routes are public for the demo
+  return next();
 });
 
 app.use((req, res, next) => {
