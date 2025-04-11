@@ -49,8 +49,10 @@ interface NetworkVisualizationProps {
       isCurrentVenue: boolean;
       collaborativeBookings: number;
       trustScore: number;
-      latitude: number;
-      longitude: number;
+      latitude?: number;
+      longitude?: number;
+      lat?: number;
+      lng?: number;
     }>;
     links: Array<{
       source: number;
@@ -90,7 +92,10 @@ export function NetworkVisualization({
   
   // Set map center based on current venue, or default to US center
   const mapCenter = currentVenue 
-    ? [currentVenue.latitude, currentVenue.longitude] 
+    ? [
+        currentVenue.latitude || currentVenue.lat || 39.5, 
+        currentVenue.longitude || currentVenue.lng || -98.5
+      ] 
     : [39.5, -98.5];
 
   return (
@@ -114,12 +119,21 @@ export function NetworkVisualization({
 
               if (!source || !target) return null;
 
+              // Get coordinates from either latitude/longitude or lat/lng
+              const sourceLat = source.latitude || source.lat;
+              const sourceLng = source.longitude || source.lng;
+              const targetLat = target.latitude || target.lat;
+              const targetLng = target.longitude || target.lng;
+
+              // Skip if any coordinates are missing
+              if (!sourceLat || !sourceLng || !targetLat || !targetLng) return null;
+
               return (
                 <Polyline
                   key={`link-${idx}`}
                   positions={[
-                    [source.latitude, source.longitude],
-                    [target.latitude, target.longitude]
+                    [sourceLat as number, sourceLng as number],
+                    [targetLat as number, targetLng as number]
                   ]}
                   pathOptions={{
                     color: '#4f46e5',
@@ -131,29 +145,38 @@ export function NetworkVisualization({
               );
             })}
 
-            {data.nodes.map((node) => (
-              <Marker
-                key={node.id}
-                position={[node.latitude, node.longitude]}
-                icon={node.isCurrentVenue ? currentVenueIcon : venueIcon}
-                eventHandlers={{
-                  click: () => onNodeClick?.(node)
-                }}
-              >
-                <Popup>
-                  <div className="text-sm">
-                    <h3 className="font-semibold">{node.name}</h3>
-                    <div>{node.city}, {node.state}</div>
-                    {!node.isCurrentVenue && (
-                      <div className="mt-1">
-                        <div>Trust Score: {node.trustScore}%</div>
-                        <div>Collaborations: {node.collaborativeBookings}</div>
-                      </div>
-                    )}
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
+            {data.nodes.map((node) => {
+              // Get coordinates from either latitude/longitude or lat/lng
+              const nodeLat = node.latitude || node.lat;
+              const nodeLng = node.longitude || node.lng;
+
+              // Skip nodes with missing coordinates
+              if (!nodeLat || !nodeLng) return null;
+
+              return (
+                <Marker
+                  key={node.id}
+                  position={[nodeLat as number, nodeLng as number]}
+                  icon={node.isCurrentVenue ? currentVenueIcon : venueIcon}
+                  eventHandlers={{
+                    click: () => onNodeClick?.(node)
+                  }}
+                >
+                  <Popup>
+                    <div className="text-sm">
+                      <h3 className="font-semibold">{node.name}</h3>
+                      <div>{node.city}, {node.state}</div>
+                      {!node.isCurrentVenue && (
+                        <div className="mt-1">
+                          <div>Trust Score: {node.trustScore}%</div>
+                          <div>Collaborations: {node.collaborativeBookings}</div>
+                        </div>
+                      )}
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
           </MapContainer>
         </div>
         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
