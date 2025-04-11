@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 import { getTours, apiRequest } from '@/lib/api';
 import {
@@ -34,6 +34,7 @@ import { toast } from '@/hooks/use-toast';
 export function TourList() {
   const [filterStatus, setFilterStatus] = useState<string | undefined>(undefined);
   const [_, navigate] = useLocation();
+  const queryClient = useQueryClient();
   
   const { data: tours, isLoading, error, isError } = useQuery({
     queryKey: ['/api/tours', filterStatus],
@@ -60,6 +61,9 @@ export function TourList() {
       return response.json();
     },
     onSuccess: (data) => {
+      // Invalidate tours query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['/api/tours'] });
+      
       toast({
         title: "Demo Tour Created",
         description: "A new demo tour has been created with venues ready for optimization.",
