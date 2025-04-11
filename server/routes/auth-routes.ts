@@ -105,7 +105,8 @@ router.get('/status', (req, res) => {
     return res.status(200).json({
       success: true,
       authenticated: true,
-      user: req.session.user
+      user: req.session.user,
+      currentVenueId: req.session.currentVenueId || null
     });
   }
   

@@ -1,0 +1,61 @@
+chunk-RPCDYKBN.js?v=a63919eb:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+queryClient.ts:68 Making fetch request to https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/api/users/available-venues with options: Object
+queryClient.ts:68 Making fetch request to https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/api/bandsintown/status with options: Object
+queryClient.ts:68 Making fetch request to https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/api/users/me with options: Object
+api/users/available-venues:1 
+        
+        
+       Failed to load resource: the server responded with a status of 401 (Unauthorized)
+queryClient.ts:70 Response status from https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/api/users/available-venues: 401 Unauthorized
+queryClient.ts:73 API error for https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/api/users/available-venues: 401 Unauthorized
+apiRequest @ queryClient.ts:73
+queryClient.ts:99 API /api/users/available-venues failed after 52ms: Error: API error: 401
+    at apiRequest (queryClient.ts:74:13)
+apiRequest @ queryClient.ts:99
+api/bandsintown/status:1 
+        
+        
+       Failed to load resource: the server responded with a status of 401 (Unauthorized)
+queryClient.ts:70 Response status from https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/api/bandsintown/status: 401 Unauthorized
+queryClient.ts:73 API error for https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/api/bandsintown/status: 401 Unauthorized
+apiRequest @ queryClient.ts:73
+queryClient.ts:99 API /api/bandsintown/status failed after 49ms: Error: API error: 401
+    at apiRequest (queryClient.ts:74:13)
+    at async queryFn (settings.tsx:83:16)
+apiRequest @ queryClient.ts:99
+settings.tsx:85 Error checking Bandsintown API key status: Error: API error: 401
+    at apiRequest (queryClient.ts:74:13)
+    at async queryFn (settings.tsx:83:16)
+queryFn @ settings.tsx:85
+api/users/me:1 
+        
+        
+       Failed to load resource: the server responded with a status of 401 (Unauthorized)
+queryClient.ts:70 Response status from https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/api/users/me: 401 Unauthorized
+queryClient.ts:73 API error for https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/api/users/me: 401 Unauthorized
+apiRequest @ queryClient.ts:73
+queryClient.ts:99 API /api/users/me failed after 65ms: Error: API error: 401
+    at apiRequest (queryClient.ts:74:13)
+apiRequest @ queryClient.ts:99
+queryClient.ts:68 Making fetch request to https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/api/users/available-venues with options: Object
+queryClient.ts:68 Making fetch request to https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/api/users/me with options: Object
+api/users/available-venues:1 
+        
+        
+       Failed to load resource: the server responded with a status of 401 (Unauthorized)
+queryClient.ts:70 Response status from https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/api/users/available-venues: 401 Unauthorized
+queryClient.ts:73 API error for https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/api/users/available-venues: 401 Unauthorized
+apiRequest @ queryClient.ts:73
+queryClient.ts:99 API /api/users/available-venues failed after 50ms: Error: API error: 401
+    at apiRequest (queryClient.ts:74:13)
+apiRequest @ queryClient.ts:99
+api/users/me:1 
+        
+        
+       Failed to load resource: the server responded with a status of 401 (Unauthorized)
+queryClient.ts:70 Response status from https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/api/users/me: 401 Unauthorized
+queryClient.ts:73 API error for https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/api/users/me: 401 Unauthorized
+apiRequest @ queryClient.ts:73
+queryClient.ts:99 API /api/users/me failed after 48ms: Error: API error: 401
+    at apiRequest (queryClient.ts:74:13)
+apiRequest @ queryClient.ts:99

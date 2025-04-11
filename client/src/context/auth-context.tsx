@@ -67,15 +67,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initialData: null,
   });
   
-  // Set the current venue ID when user data is loaded
-  // Note: We now maintain currentVenueId in auth context state rather than in the user object
-  useEffect(() => {
-    if (user) {
-      // The current venue ID will be set via the switchVenue function
-      // This will be replaced with a proper user-venue relation in the future
-    }
-  }, [user]);
-  
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: async (credentials: { username: string; password: string }) => {
@@ -116,6 +107,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Set local user state to null immediately
       queryClient.setQueryData(['/api/users/me'], null);
       
+      // Reset venue ID
+      setCurrentVenueId(null);
+      
       // Show success message
       toast({
         title: 'Logged out',
@@ -154,9 +148,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
     },
     onSuccess: (data, newVenueId) => {
-      refetch();
       // Set the current venue ID directly in our state
       setCurrentVenueId(newVenueId);
+      
+      // Invalidate queries that depend on the venue ID
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = query.queryKey;
+          return Array.isArray(queryKey) && (
+            queryKey[0] === '/api/venue-network/graph' ||
+            queryKey[0] === '/api/venues' ||
+            queryKey[0] === '/api/settings'
+          );
+        }
+      });
+      
       toast({
         title: 'Venue Changed',
         description: data.message || `Now viewing venue ID: ${newVenueId}`,
@@ -170,6 +176,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
     },
   });
+  
+  // Set the current venue ID when user data is loaded
+  useEffect(() => {
+    const fetchVenueStatus = async () => {
+      try {
+        // First check if we already have a venue selected in the session
+        const statusResponse = await axios.get('/api/auth/status', { withCredentials: true });
+        const sessionVenueId = statusResponse.data.currentVenueId;
+        
+        if (sessionVenueId) {
+          console.log("Found venue ID in session:", sessionVenueId);
+          setCurrentVenueId(sessionVenueId);
+          return;
+        }
+        
+        // If user is authenticated but no venue is selected yet, fetch available venues
+        if (user && !currentVenueId) {
+          console.log("User authenticated but no venue selected, fetching available venues");
+          const venuesResponse = await axios.get('/api/users/available-venues', { withCredentials: true });
+          const venues = venuesResponse.data;
+          
+          if (venues && venues.length > 0) {
+            // Select the first available venue as default
+            console.log("Setting default venue:", venues[0].id);
+            switchVenueMutation.mutate(venues[0].id);
+          }
+        }
+      } catch (error) {
+        console.error("Error setting up venue context:", error);
+      }
+    };
+    
+    if (user) {
+      fetchVenueStatus();
+    }
+  }, [user, currentVenueId, switchVenueMutation]);
   
   // Login handler
   const login = async (username: string, password: string) => {
