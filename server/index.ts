@@ -8,17 +8,7 @@ import { users, venues } from "../shared/schema";
 import path from "path";
 import { Server } from "http";
 
-// Define session user for TypeScript
-declare module 'express-session' {
-  interface SessionData {
-    user: {
-      id: number;
-      name: string;
-      role: string;
-      venueId: number | null;
-    };
-  }
-}
+// Session type is defined in auth-middleware.ts
 
 const app = express();
 app.use(express.json());

@@ -17,7 +17,8 @@ router.get('/stats', isAuthenticated, async (req, res) => {
       return res.status(401).json({ error: 'Not authenticated' });
     }
     
-    const { role, venueId } = req.session.user;
+    const { role } = req.session.user;
+    const currentVenueId = req.session.currentVenueId;
     
     // Different stats based on role
     if (role === 'admin') {
@@ -40,10 +41,10 @@ router.get('/stats', isAuthenticated, async (req, res) => {
         role: 'admin',
         venueId: null
       });
-    } else if (role === 'venue_manager' && venueId) {
+    } else if (role === 'venue_manager' && currentVenueId) {
       // Venue manager sees stats for their venue
       const venue = await db.query.venues.findFirst({
-        where: eq(venues.id, venueId),
+        where: eq(venues.id, currentVenueId),
         columns: {
           id: true,
           name: true,
@@ -60,19 +61,19 @@ router.get('/stats', isAuthenticated, async (req, res) => {
       
       const [eventCount] = await db.select({ count: count() })
         .from(events)
-        .where(eq(events.venueId, venueId));
+        .where(eq(events.venueId, currentVenueId));
       
       const [confirmedCount] = await db.select({ count: count() })
         .from(tourVenues)
         .where(and(
-          eq(tourVenues.venueId, venueId),
+          eq(tourVenues.venueId, currentVenueId),
           eq(tourVenues.status, 'confirmed')
         ));
       
       const [pendingCount] = await db.select({ count: count() })
         .from(tourVenues)
         .where(and(
-          eq(tourVenues.venueId, venueId),
+          eq(tourVenues.venueId, currentVenueId),
           eq(tourVenues.status, 'potential')
         ));
       
@@ -82,14 +83,14 @@ router.get('/stats', isAuthenticated, async (req, res) => {
         confirmedBookings: confirmedCount.count,
         pendingBookings: pendingCount.count,
         role: 'venue_manager',
-        venueId
+        venueId: currentVenueId
       });
     } else {
       // Default minimal stats if no role/venue match
       return res.json({
         message: 'Limited dashboard access',
         role: req.session.user.role || 'user',
-        venueId: req.session.user.venueId
+        venueId: req.session.currentVenueId || null
       });
     }
   } catch (error) {
