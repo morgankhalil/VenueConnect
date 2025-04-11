@@ -20,3 +20,7 @@ export default function ToursPage() {
     </div>
   );
 }
+
+// @implemented Tour listing with filtering and sorting
+// @partial Tour comparison feature
+// @todo Add bulk tour operations
