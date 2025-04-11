@@ -27,7 +27,7 @@ export function PageHeader({
           </div>
         </Link>
       )}
-      
+
       <div className="flex items-center">
         {icon && (
           <div className="mr-3 p-1.5 bg-primary/10 rounded-md">
@@ -35,9 +35,9 @@ export function PageHeader({
           </div>
         )}
         <div>
-          <h1 className="text-2xl font-bold">{title}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
           {description && (
-            <p className="text-muted-foreground">{description}</p>
+            <p className="text-gray-600 dark:text-gray-300">{description}</p>
           )}
         </div>
       </div>
