@@ -21,7 +21,7 @@ app.get('/api/health', (_, res) => {
 
 // Set up session middleware
 app.use(session({
-  secret: 'venue-connect-session-secret',
+  secret: process.env.SESSION_SECRET || 'venue-connect-session-secret',
   resave: false,
   saveUninitialized: false,
   cookie: { 
@@ -89,8 +89,8 @@ app.use((req, res, next) => {
     });
   }
 
-  // ALWAYS serve the app on port 3000 now
-  const port = 3000; 
+  // Use port 5000 in production (for deployments) and 3000 in development
+  const port = process.env.NODE_ENV === 'production' ? 5000 : 3000;
   server.listen({
     port,
     host: "0.0.0.0",
