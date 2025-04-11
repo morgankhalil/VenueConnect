@@ -56,14 +56,22 @@ export function MainLayout({ children }: MainLayoutProps) {
     refetchOnWindowFocus: false // Don't refetch when window regains focus
   });
 
+  // Get venue data for current user
+  const { data: currentVenue, isLoading: isLoadingVenue } = useQuery({
+    queryKey: ['/api/venues', user?.venueId],
+    queryFn: () => apiRequest(`/api/venues/${user?.venueId}`),
+    enabled: !!user?.venueId,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+  
   // Default user if still loading, to prevent blocking the UI
-  const userToDisplay = user || {
-    id: 0,
-    name: "Loading...",
-    venueName: "Loading...",
-    role: "user",
-    avatar: null,
-    venueId: null
+  const userToDisplay = {
+    id: user?.id || 0,
+    name: user?.name || "Loading...",
+    venueName: currentVenue?.name || "Loading venue...",
+    role: user?.role || "user",
+    avatar: user?.profileImageUrl || null, 
+    venueId: user?.venueId || null
   };
 
   // Show a loading indicator in the header instead of blocking the entire UI
@@ -202,6 +210,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           onMobileMenuToggle={toggleMobileMenu}
           userAvatar={userToDisplay.avatar}
           userName={userToDisplay.name}
+          userRole={userToDisplay.role}
           onLogout={handleLogout}
           onSearch={handleSearch}
           isLoading={isInitialLoading}

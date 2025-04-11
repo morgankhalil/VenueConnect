@@ -30,6 +30,7 @@ interface HeaderProps {
   onMobileMenuToggle: () => void;
   userAvatar?: string;
   userName: string;
+  userRole?: string;
   onLogout?: () => void;
   onSearch?: (query: string) => void;
   isLoading?: boolean;
@@ -39,6 +40,7 @@ export function Header({
   onMobileMenuToggle, 
   userAvatar, 
   userName,
+  userRole = "user",
   onLogout, 
   onSearch,
   isLoading = false
@@ -140,7 +142,11 @@ export function Header({
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium text-black dark:text-white">{userName}</p>
-                  <p className="text-xs text-[hsl(var(--custom-grey-medium))]">Admin</p>
+                  <p className="text-xs text-[hsl(var(--custom-grey-medium))]">
+                    {userRole === 'admin' ? 'Administrator' : 
+                     userRole === 'venueManager' ? 'Venue Manager' : 
+                     userRole === 'artist' ? 'Artist' : 'User'}
+                  </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-800" />
