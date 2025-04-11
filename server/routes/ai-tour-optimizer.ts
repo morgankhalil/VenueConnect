@@ -285,7 +285,9 @@ aiOptimizationRouter.post('/apply', async (req: Request, res: Response) => {
       let dateValue = tourVenue.date;
       if (suggestedDate) {
         try {
-          dateValue = new Date(suggestedDate);
+          // Convert Date to ISO string for database storage
+          const newDate = new Date(suggestedDate);
+          dateValue = newDate.toISOString();
         } catch (e) {
           console.warn(`Invalid date format: ${suggestedDate}`);
         }
