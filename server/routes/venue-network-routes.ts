@@ -7,10 +7,91 @@ import { isAuthenticated } from '../middleware/auth-middleware';
 const router = express.Router();
 
 /**
+ * Get default venue network graph for demo
+ * Returns a demo dataset with sample venues and connections
+ */
+router.get('/graph', async (req, res) => {
+  try {
+    // Demo mode - return a sample dataset
+    const demoVenues = await db.query.venues.findMany({
+      limit: 10,
+      columns: {
+        id: true,
+        name: true,
+        city: true,
+        region: true,
+        latitude: true,
+        longitude: true,
+        capacity: true,
+        primaryGenre: true
+      }
+    });
+    
+    if (demoVenues.length === 0) {
+      return res.json({
+        nodes: [],
+        links: []
+      });
+    }
+    
+    // Use the first venue as the current venue
+    const currentVenue = demoVenues[0];
+    
+    // Create demo links between the first venue and others
+    const graphData = {
+      nodes: [
+        // Add the current venue as the first node
+        {
+          id: currentVenue.id,
+          name: currentVenue.name,
+          city: currentVenue.city,
+          state: currentVenue.region,
+          capacity: currentVenue.capacity,
+          lat: currentVenue.latitude,
+          lng: currentVenue.longitude,
+          genre: currentVenue.primaryGenre,
+          isCurrentVenue: true,
+          trustScore: 100,
+          collaborativeBookings: 15
+        },
+        // Add all other venues as connected venues
+        ...demoVenues.slice(1).map((venue, index) => ({
+          id: venue.id,
+          name: venue.name,
+          city: venue.city,
+          state: venue.region,
+          capacity: venue.capacity,
+          lat: venue.latitude,
+          lng: venue.longitude,
+          genre: venue.primaryGenre,
+          isCurrentVenue: false,
+          trustScore: 60 + (index * 5) % 40, // Random-ish trust score between 60-100
+          collaborativeBookings: 3 + index
+        }))
+      ],
+      links: demoVenues.slice(1).map((venue, index) => ({
+        source: currentVenue.id,
+        target: venue.id,
+        value: 3 + index,
+        status: 'active'
+      }))
+    };
+    
+    return res.json(graphData);
+  } catch (error) {
+    console.error('Error generating demo venue network graph:', error);
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to generate demo venue network graph' 
+    });
+  }
+});
+
+/**
  * Get venue network graph for visualization
  * Returns nodes (venues) and links (connections) for the specified venue's network
  */
-router.get('/graph/:venueId', isAuthenticated, async (req, res) => {
+router.get('/graph/:venueId', async (req, res) => {
   try {
     const venueId = parseInt(req.params.venueId);
     
@@ -103,8 +184,9 @@ router.get('/graph/:venueId', isAuthenticated, async (req, res) => {
 
 /**
  * Create a new venue connection
+ * In demo mode, no authentication is required
  */
-router.post('/connections', isAuthenticated, async (req, res) => {
+router.post('/connections', async (req, res) => {
   try {
     const { venueId, connectedVenueId, status, trustScore, collaborativeBookings } = req.body;
     
