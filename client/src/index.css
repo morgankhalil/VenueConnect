@@ -30,15 +30,15 @@
 @layer base {
   /* Base text color utilities */
   .text-default {
-    @apply text-gray-900 dark:text-gray-300;
+    @apply text-gray-900 dark:text-gray-100;
   }
   
   .text-muted {
-    @apply text-gray-600 dark:text-gray-500;
+    @apply text-gray-600 dark:text-gray-300;
   }
 
   .text-heading {
-    @apply text-gray-900 dark:text-gray-200;
+    @apply text-gray-900 dark:text-gray-50;
   }
 
   :root {
@@ -94,7 +94,7 @@
   }
 
   body {
-    @apply bg-white dark:bg-[#0D0D0D] text-gray-900 dark:text-gray-300 antialiased;
+    @apply bg-white dark:bg-[#0D0D0D] text-gray-900 dark:text-gray-100 antialiased;
     font-family: 'Afacad', sans-serif;
   }
 
