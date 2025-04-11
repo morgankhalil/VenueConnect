@@ -8,8 +8,9 @@ const router = express.Router();
 
 /**
  * Get current user information
+ * Route: /api/users/me
  */
-router.get('/user', isAuthenticated, (req, res) => {
+router.get('/me', isAuthenticated, (req, res) => {
   console.log("Session in /api/user:", req.session);
   console.log("Session user:", req.session.user);
   console.log("Session ID:", req.sessionID);
@@ -21,8 +22,9 @@ router.get('/user', isAuthenticated, (req, res) => {
 /**
  * Get available venues for the current user
  * Returns all venues for admin users, only assigned venue for other users
+ * Route: /api/users/available-venues
  */
-router.get('/user/available-venues', isAuthenticated, async (req, res) => {
+router.get('/available-venues', isAuthenticated, async (req, res) => {
   try {
     if (!req.session.user) {
       return res.status(401).json({ error: 'Not authenticated' });
@@ -66,8 +68,9 @@ router.get('/user/available-venues', isAuthenticated, async (req, res) => {
 
 /**
  * User management endpoints - requires admin permission
+ * Route: /api/users/list
  */
-router.get('/users', isAuthenticated, hasPermission('canManageUsers'), async (req, res) => {
+router.get('/list', isAuthenticated, hasPermission('canManageUsers'), async (req, res) => {
   try {
     const allUsers = await db.query.users.findMany({
       columns: {

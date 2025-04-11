@@ -28,14 +28,14 @@ export function VenueSelector() {
 
   // Get current user
   const { data: user } = useQuery({
-    queryKey: ['/api/user'],
-    queryFn: () => apiRequest('/api/user')
+    queryKey: ['/api/users/me'],
+    queryFn: () => apiRequest('/api/users/me')
   });
 
   // Get available venues
   const { data: venues } = useQuery({
-    queryKey: ['/api/user/available-venues'],
-    queryFn: () => apiRequest('/api/user/available-venues')
+    queryKey: ['/api/users/available-venues'],
+    queryFn: () => apiRequest('/api/users/available-venues')
   });
 
   // Find current venue
@@ -52,7 +52,7 @@ export function VenueSelector() {
       await apiRequest(`/api/venues/select/${venueId}`);
       
       // Invalidate queries to refresh data across the application
-      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users/me'] });
       
       // Invalidate all venue network data to ensure it gets freshly loaded
       // We need to invalidate all venue network graph queries regardless of venue ID

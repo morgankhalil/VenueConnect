@@ -9,8 +9,9 @@ const router = express.Router();
 /**
  * Get dashboard statistics
  * Returns key metrics for the dashboard based on the user's venue
+ * Route: /api/dashboard/stats
  */
-router.get('/dashboard/stats', isAuthenticated, async (req, res) => {
+router.get('/stats', isAuthenticated, async (req, res) => {
   try {
     if (!req.session.user) {
       return res.status(401).json({ error: 'Not authenticated' });
