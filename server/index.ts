@@ -84,7 +84,7 @@ app.use(async (req, res, next) => {
         id: 1,
         name: 'Admin User',
         role: 'admin',
-        venueId: 1
+        venueId: 217  // 40 Watt Club (ID from actual venues list)
       };
       return next();
     } else {
