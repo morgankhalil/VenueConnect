@@ -5,7 +5,7 @@ import { OpportunityCard } from "@/components/dashboard/opportunity-card";
 import { VenueCard } from "@/components/venue-network/venue-card";
 import { Button } from "@/components/ui/button";
 import { getStatsData, getPredictionsWithDetails } from "@/lib/api";
-import { PredictionWithDetails } from "@/types";
+import type { PredictionWithDetails } from "@/types/index";
 import { useToast } from "@/hooks/use-toast";
 import { Filter, ArrowUpRight, BarChart3, List } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -17,7 +17,7 @@ export default function Dashboard() {
   // Fetch dashboard data with optimized loading
   const { data: statsData, isLoading: isLoadingStats } = useQuery({
     queryKey: ['/api/dashboard/stats'],
-    queryFn: getStatsData,
+    queryFn: () => apiRequest('/api/dashboard/stats'),
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     // Default data to prevent loading state
     placeholderData: {
@@ -31,7 +31,7 @@ export default function Dashboard() {
   // Get predictions data for opportunities section
   const { data: predictions, isLoading: isLoadingPredictions } = useQuery({
     queryKey: ['/api/predictions/details'],
-    queryFn: getPredictionsWithDetails,
+    queryFn: () => apiRequest('/api/predictions/details'),
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     initialData: [], // Default empty array to avoid errors
     refetchOnWindowFocus: false // Don't refetch when window regains focus
