@@ -300,7 +300,7 @@ router.post('/venue-network', async (req, res) => {
 /**
  * Get all tours with artist details
  */
-router.get('/tours', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     // Get query parameters for filtering
     const { artistId, status, startDate, endDate } = req.query;
@@ -370,7 +370,7 @@ router.get('/tours', async (req, res) => {
 /**
  * Get a single tour by ID with venues and gaps
  */
-router.get('/tours/:id', async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const tourId = Number(req.params.id);
     
@@ -482,7 +482,7 @@ router.get('/tours/:id', async (req, res) => {
 /**
  * Create a new tour
  */
-router.post('/tours', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     // Validate request body
     const validatedData = insertTourSchema.parse(req.body);
@@ -508,7 +508,7 @@ router.post('/tours', async (req, res) => {
 /**
  * Add a venue to a tour
  */
-router.post('/tours/:tourId/venues', async (req, res) => {
+router.post('/:tourId/venues', async (req, res) => {
   try {
     const tourId = Number(req.params.tourId);
     // Invalidate optimization cache when venues change
@@ -596,7 +596,7 @@ router.post('/tours/:tourId/venues', async (req, res) => {
 /**
  * Update tour status
  */
-router.patch('/tours/:id', async (req, res) => {
+router.patch('/:id', async (req, res) => {
   try {
     const tourId = Number(req.params.id);
     
