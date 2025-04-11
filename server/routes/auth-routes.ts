@@ -47,12 +47,15 @@ router.post('/login', async (req, res) => {
     }
     
     // Set the user in session
-    req.session.user = {
+    const sessionUser = {
       id: user.id,
       name: user.name || user.username,
       role: user.role,
-      venueId: user.venueId
+      venueId: user.venue_id // Use venue_id from database
     };
+    
+    console.log('Setting user session with data:', JSON.stringify(sessionUser));
+    req.session.user = sessionUser;
     
     // Clear the loggedOut flag
     // @ts-ignore
