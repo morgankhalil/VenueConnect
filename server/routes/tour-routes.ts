@@ -657,7 +657,7 @@ router.patch('/:id', async (req, res) => {
 /**
  * Update a tour venue
  */
-router.patch('/tours/:tourId/venues/:venueId', async (req, res) => {
+router.patch('/:tourId/venues/:venueId', async (req, res) => {
   try {
     const tourId = Number(req.params.tourId);
     const venueId = Number(req.params.venueId);
@@ -775,7 +775,7 @@ router.patch('/tours/:tourId/venues/:venueId', async (req, res) => {
  */
 import { optimizationCache } from '../cache/optimization-cache';
 
-router.post('/tours/:id/optimize', async (req, res) => {
+router.post('/:id/optimize', async (req, res) => {
   try {
     const tourId = Number(req.params.id);
     const wizardPreferences = req.body?.preferences || null;
@@ -945,7 +945,7 @@ router.post('/tours/:id/optimize', async (req, res) => {
 /**
  * Apply optimized tour route
  */
-router.post('/tours/:id/apply-optimization', async (req, res) => {
+router.post('/:id/apply-optimization', async (req, res) => {
   try {
     const tourId = Number(req.params.id);
     const { optimizationData } = req.body;
@@ -1347,7 +1347,7 @@ router.get('/artists/:id/tour-stats', async (req, res) => {
 /**
  * Create a demo tour for optimization testing
  */
-router.post('/tours/create-demo', async (req, res) => {
+router.post('/create-demo', async (req, res) => {
   try {
     // Find an artist to use for the tour
     const artistResult = await db
