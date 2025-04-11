@@ -45,7 +45,7 @@ export function TourList() {
   // Mutation for creating a demo tour
   const createDemoTourMutation = useMutation({
     mutationFn: async () => {
-      // Fix for the request method
+      // Updated path to match the server-side route
       const response = await fetch('/api/tours/create-demo', {
         method: 'POST',
         headers: {
