@@ -18,10 +18,17 @@ declare module 'express-session' {
  * Middleware to check if user is authenticated
  */
 export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+  console.log("Auth check - Session ID:", req.sessionID);
+  console.log("Auth check - Session exists:", !!req.session);
+  console.log("Auth check - User in session:", req.session?.user);
+  
   if (req.session && req.session.user) {
+    // Log the authentication success
+    console.log(`User authenticated: ${req.session.user.id} (${req.session.user.name}), Role: ${req.session.user.role}`);
     return next();
   }
   
+  console.log("Authentication failed: No user in session");
   return res.status(401).json({
     error: 'Authentication required'
   });

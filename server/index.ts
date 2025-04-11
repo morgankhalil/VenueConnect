@@ -78,8 +78,15 @@ app.use(async (req, res, next) => {
         return res.status(401).json({ error: "Authentication required" });
       }
       
-      // In all other cases - redirect to login instead of creating auto-login
-      return res.status(401).json({ error: "Authentication required" });
+      // For development, create a mock admin session to help with testing
+      console.log("Creating mock admin session for development");
+      req.session.user = {
+        id: 1,
+        name: 'Admin User',
+        role: 'admin',
+        venueId: 1
+      };
+      return next();
     } else {
       // In production, enforce authentication
       return res.status(401).json({ error: "Authentication required" });

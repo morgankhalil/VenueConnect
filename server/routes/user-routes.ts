@@ -10,6 +10,10 @@ const router = express.Router();
  * Get current user information
  */
 router.get('/user', isAuthenticated, (req, res) => {
+  console.log("Session in /api/user:", req.session);
+  console.log("Session user:", req.session.user);
+  console.log("Session ID:", req.sessionID);
+  
   // User is guaranteed to exist due to isAuthenticated middleware
   return res.json(req.session.user);
 });
