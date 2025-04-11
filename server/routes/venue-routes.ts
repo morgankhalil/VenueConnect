@@ -1,10 +1,54 @@
 import express from 'express';
 import { db } from '../db';
 import { venues } from '../../shared/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, like, or, and, not } from 'drizzle-orm';
 import { isAuthenticated } from '../middleware/auth-middleware';
 
 const router = express.Router();
+
+/**
+ * Search venues by name, city, or region
+ * Returns venues matching the search query
+ */
+router.get('/search', isAuthenticated, async (req, res) => {
+  try {
+    const query = req.query.q as string;
+    const currentVenueId = req.session.currentVenueId;
+    
+    if (!query) {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+    
+    // Search for venues matching the query in name, city, or region
+    // Exclude the current venue from the results
+    const searchResults = await db.query.venues.findMany({
+      where: and(
+        or(
+          like(venues.name, `%${query}%`),
+          like(venues.city, `%${query}%`),
+          like(venues.region, `%${query}%`)
+        ),
+        currentVenueId ? not(eq(venues.id, currentVenueId)) : undefined
+      ),
+      columns: {
+        id: true,
+        name: true,
+        city: true,
+        region: true,
+        capacity: true,
+        latitude: true,
+        longitude: true
+      },
+      limit: 10,
+      orderBy: venues.name
+    });
+    
+    return res.json(searchResults);
+  } catch (error) {
+    console.error('Error searching venues:', error);
+    return res.status(500).json({ error: 'Failed to search venues' });
+  }
+});
 
 /**
  * Get connected venues

@@ -133,6 +133,15 @@ export async function getVenue(id: number) {
 }
 
 /**
+ * Search for venues by query string
+ * @param query The search query
+ * @returns A promise that resolves to venues matching the search
+ */
+export async function searchVenues(query: string) {
+  return apiRequest(`/api/venues/search?q=${encodeURIComponent(query)}`);
+}
+
+/**
  * Create a connection between two venues
  * @param connection The venue connection details
  * @returns A promise that resolves when the connection is created

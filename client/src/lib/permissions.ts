@@ -18,14 +18,15 @@ export type Permission =
   | 'canViewAnalytics'
   | 'canSendMessages'
   | 'canViewAllVenueData'
-  | 'canCreateWebhooks';
+  | 'canCreateWebhooks'
+  | 'canManageVenueNetwork';
 
 /**
  * Map roles to their corresponding permissions
  */
 export const PERMISSIONS_BY_ROLE: Record<string, string[]> = {
-  admin: ['canManageUsers', 'canManageVenues', 'canManageArtists', 'canManageTours', 'canViewAnalytics', 'canSendMessages', 'canViewAllVenueData', 'canCreateWebhooks'],
-  venue_manager: ['canManageVenues', 'canManageTours', 'canViewAnalytics', 'canSendMessages', 'canCreateWebhooks'],
+  admin: ['canManageUsers', 'canManageVenues', 'canManageArtists', 'canManageTours', 'canViewAnalytics', 'canSendMessages', 'canViewAllVenueData', 'canCreateWebhooks', 'canManageVenueNetwork'],
+  venue_manager: ['canManageVenues', 'canManageTours', 'canViewAnalytics', 'canSendMessages', 'canCreateWebhooks', 'canManageVenueNetwork'],
   artist_manager: ['canManageArtists', 'canManageTours', 'canViewAnalytics', 'canSendMessages', 'canCreateWebhooks'],
   booking_agent: ['canManageTours', 'canViewAnalytics', 'canSendMessages'],
   staff: ['canSendMessages'],
