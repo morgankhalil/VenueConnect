@@ -38,8 +38,23 @@ export function TourList() {
   
   console.log("Fetching tours with filter:", filterStatus);
   const { data: tours, isLoading, error, isError } = useQuery({
-    queryKey: ['api/tours', filterStatus],
-    queryFn: () => getTours({ status: filterStatus }),
+    queryKey: ['/api/tours', filterStatus],
+    queryFn: async () => {
+      console.log("Executing tours query function with filter:", filterStatus);
+      try {
+        // Direct fetch to guarantee we're using the right URL
+        const response = await fetch(`/api/tours${filterStatus ? `?status=${filterStatus}` : ''}`);
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+        const result = await response.json();
+        console.log("Tours API response:", result);
+        return result;
+      } catch (error) {
+        console.error("Error fetching tours:", error);
+        throw error;
+      }
+    },
     retry: 3,
     staleTime: 30000, // 30 seconds
   });
@@ -63,7 +78,7 @@ export function TourList() {
     },
     onSuccess: (data) => {
       // Invalidate tours query to refresh the list
-      queryClient.invalidateQueries({ queryKey: ['api/tours'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tours'] });
       
       toast({
         title: "Demo Tour Created",
