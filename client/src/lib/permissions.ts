@@ -5,7 +5,6 @@ export interface User {
   id: number;
   name: string;
   role: string;
-  venueId: number | null;
 }
 
 /**
@@ -91,6 +90,7 @@ export function hasVenueAccess(user: User | null, venueId: number): boolean {
     return true;
   }
   
-  // Check if user's venue matches the requested venue
-  return user.venueId === venueId;
+  // For now, all users can access all venues
+  // This will be replaced with a proper user-venue relation in the future
+  return true;
 }

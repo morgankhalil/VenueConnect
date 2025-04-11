@@ -68,9 +68,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
   
   // Set the current venue ID when user data is loaded
+  // Note: We now maintain currentVenueId in auth context state rather than in the user object
   useEffect(() => {
-    if (user && user.venueId) {
-      setCurrentVenueId(user.venueId);
+    if (user) {
+      // The current venue ID will be set via the switchVenue function
+      // This will be replaced with a proper user-venue relation in the future
     }
   }, [user]);
   
@@ -146,20 +148,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   // Switch venue mutation
   const switchVenueMutation = useMutation({
-    mutationFn: async (venueId: number) => {
-      return apiCall(`/api/venues/select/${venueId}`, {
+    mutationFn: async (newVenueId: number) => {
+      return apiCall(`/api/venues/select/${newVenueId}`, {
         method: 'GET',
       });
     },
-    onSuccess: (data) => {
+    onSuccess: (data, newVenueId) => {
       refetch();
-      if (data.user && data.user.venueId) {
-        setCurrentVenueId(data.user.venueId);
-        toast({
-          title: 'Venue Changed',
-          description: data.message || `Now viewing venue ID: ${data.user.venueId}`,
-        });
-      }
+      // Set the current venue ID directly in our state
+      setCurrentVenueId(newVenueId);
+      toast({
+        title: 'Venue Changed',
+        description: data.message || `Now viewing venue ID: ${newVenueId}`,
+      });
     },
     onError: () => {
       toast({

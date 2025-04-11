@@ -13,6 +13,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { MapPin, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/auth-context';
 
 interface Venue {
   id: number;
@@ -26,11 +27,8 @@ export function VenueSelector() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get current user
-  const { data: user } = useQuery({
-    queryKey: ['/api/users/me'],
-    queryFn: () => apiRequest('/api/users/me')
-  });
+  // Access the current venue ID from the auth context
+  const { currentVenueId } = useAuth();
 
   // Get available venues
   const { data: venues } = useQuery({
@@ -40,22 +38,22 @@ export function VenueSelector() {
 
   // Find current venue
   const currentVenue = venues?.find((venue: Venue) => 
-    venue.id === user?.venueId
+    venue.id === currentVenueId
   );
+
+  // Get the switchVenue function from auth context
+  const { switchVenue } = useAuth();
 
   // Handle venue selection
   const selectVenue = async (venueId: number) => {
-    if (venueId === user?.venueId) return;
+    if (venueId === currentVenueId) return;
     
     setIsLoading(true);
     try {
-      await apiRequest(`/api/venues/select/${venueId}`);
+      // Use the switchVenue function from auth context
+      await switchVenue(venueId);
       
-      // Invalidate queries to refresh data across the application
-      queryClient.invalidateQueries({ queryKey: ['/api/users/me'] });
-      
-      // Invalidate all venue network data to ensure it gets freshly loaded
-      // We need to invalidate all venue network graph queries regardless of venue ID
+      // Invalidate venue network data to ensure it gets freshly loaded
       queryClient.invalidateQueries({ 
         predicate: (query) => {
           const queryKey = query.queryKey;
@@ -71,11 +69,6 @@ export function VenueSelector() {
       
       queryClient.invalidateQueries({
         queryKey: ['/api/settings']
-      });
-      
-      toast({
-        title: "Venue Changed",
-        description: `Now managing: ${venues?.find(v => v.id === venueId)?.name || 'Selected venue'}`,
       });
     } catch (error) {
       toast({
@@ -114,11 +107,11 @@ export function VenueSelector() {
           venues.map((venue: Venue) => (
             <DropdownMenuItem
               key={venue.id}
-              disabled={venue.id === user?.venueId || isLoading}
+              disabled={venue.id === currentVenueId || isLoading}
               onClick={() => selectVenue(venue.id)}
               className={cn(
                 "cursor-pointer justify-between",
-                venue.id === user?.venueId ? "bg-primary/10" : ""
+                venue.id === currentVenueId ? "bg-primary/10" : ""
               )}
             >
               <div className="flex flex-col overflow-hidden mr-2">
@@ -127,7 +120,7 @@ export function VenueSelector() {
                   {venue.city}{venue.region ? `, ${venue.region}` : ''}
                 </span>
               </div>
-              {venue.id === user?.venueId && (
+              {venue.id === currentVenueId && (
                 <span className="ml-2 text-green-600 flex-shrink-0">●</span>
               )}
             </DropdownMenuItem>

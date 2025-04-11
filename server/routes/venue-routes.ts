@@ -16,10 +16,11 @@ router.get('/connected', isAuthenticated, async (req, res) => {
       return res.status(401).json({ error: 'Not authenticated' });
     }
     
-    const { role, venueId } = req.session.user;
+    const { role } = req.session.user;
+    const currentVenueId = req.session.currentVenueId;
     
     // If admin user or no venue is selected, return a reasonable selection of venues
-    if (role === 'admin' || !venueId) {
+    if (role === 'admin' || !currentVenueId) {
       const connectedVenues = await db.query.venues.findMany({
         limit: 5,
         columns: {
@@ -37,7 +38,7 @@ router.get('/connected', isAuthenticated, async (req, res) => {
     // For venue managers, return venues similar to their assigned venue
     // In a real app, this would use a more sophisticated algorithm
     const connectedVenues = await db.query.venues.findMany({
-      where: sql`${venues.id} != ${venueId}`,
+      where: sql`${venues.id} != ${currentVenueId}`,
       limit: 5,
       columns: {
         id: true,
@@ -85,18 +86,20 @@ router.get('/select/:id', isAuthenticated, async (req, res) => {
       });
     }
     
-    // Update the user's current venue in the session
-    if (req.session.user) {
-      req.session.user.venueId = venue.id;
-      
-      // Save session changes
-      req.session.save();
-    }
+    // Store the current venue ID in the session (not in the user object)
+    req.session.currentVenueId = venue.id;
+    
+    // Save session changes
+    req.session.save((err) => {
+      if (err) {
+        console.error('Error saving session:', err);
+      }
+    });
     
     return res.status(200).json({
       success: true,
       message: `Now viewing ${venue.name}`,
-      user: req.session.user
+      venueId: venue.id
     });
   } catch (error) {
     console.error('Error selecting venue:', error);

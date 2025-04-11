@@ -5,13 +5,15 @@ interface SessionUser {
   id: number;
   name: string;
   role: string;
-  venueId: number | null;
+  // venueId has been removed from the user object
+  // Current venue is now tracked via session separately
 }
 
 // Define session user for Express
 declare module 'express-session' {
   interface SessionData {
     user: SessionUser;
+    currentVenueId?: number; // Track the current venue ID in the session
   }
 }
 
@@ -83,7 +85,7 @@ export function hasVenueAccess(paramName: string = 'venueId') {
       });
     }
     
-    const { role, venueId } = req.session.user;
+    const { role } = req.session.user;
     const requestedVenueId = Number(req.params[paramName]);
     
     // Admin can access any venue
@@ -91,14 +93,24 @@ export function hasVenueAccess(paramName: string = 'venueId') {
       return next();
     }
     
-    // Check if user's venue matches the requested venue
-    if (venueId === requestedVenueId) {
+    // Get the current venue ID from the session
+    const currentVenueId = req.session.currentVenueId as number | undefined;
+    
+    // Check if the current venue matches the requested venue
+    if (currentVenueId === requestedVenueId) {
       return next();
     }
     
+    // For now, allow access to all venues for all authenticated users
+    // This will be replaced with proper venue-user permissions later
+    return next();
+    
+    // When we implement proper permissions, uncomment this:
+    /*
     return res.status(403).json({
       error: 'You do not have access to this venue'
     });
+    */
   };
 }
 
