@@ -140,7 +140,14 @@ export function UnifiedTourOptimizer({ tourId, onApplyChanges }: UnifiedTourOpti
       // Invalidate tour queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/tours', tourId] });
       
-      // Call the callback if provided
+      // If we were called from a route like /tours/{id}/optimize, 
+      // navigate back to the tour detail page
+      if (window.location.pathname.includes('/optimize')) {
+        window.location.href = `/tours/${tourId}`;
+        return; // Return early to avoid executing callback
+      }
+      
+      // Call the callback if provided (only if not redirecting)
       if (onApplyChanges) {
         onApplyChanges();
       }
@@ -164,6 +171,14 @@ export function UnifiedTourOptimizer({ tourId, onApplyChanges }: UnifiedTourOpti
         // Still invalidate queries to refresh the tour data
         queryClient.invalidateQueries({ queryKey: ['/api/tours', tourId] });
         
+        // If we were called from a route like /tours/{id}/optimize, 
+        // navigate back to the tour detail page
+        if (window.location.pathname.includes('/optimize')) {
+          window.location.href = `/tours/${tourId}`;
+          return; // Return early to avoid executing callback
+        }
+        
+        // Call the callback if provided (only if not redirecting)
         if (onApplyChanges) {
           onApplyChanges();
         }
