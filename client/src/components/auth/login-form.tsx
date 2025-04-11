@@ -105,7 +105,7 @@ export function LoginForm() {
       </CardContent>
       <CardFooter className="flex justify-center">
         <p className="text-sm text-muted-foreground">
-          Demo credentials: admin / password
+          Use credentials: "venueManager" / "password" or "admin" / "password"
         </p>
       </CardFooter>
     </Card>
