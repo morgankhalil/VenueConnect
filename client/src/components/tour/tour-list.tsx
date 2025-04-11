@@ -36,8 +36,9 @@ export function TourList() {
   const [_, navigate] = useLocation();
   const queryClient = useQueryClient();
   
+  console.log("Fetching tours with filter:", filterStatus);
   const { data: tours, isLoading, error, isError } = useQuery({
-    queryKey: ['/api/tours', filterStatus],
+    queryKey: ['api/tours', filterStatus],
     queryFn: () => getTours({ status: filterStatus }),
     retry: 3,
     staleTime: 30000, // 30 seconds
@@ -62,7 +63,7 @@ export function TourList() {
     },
     onSuccess: (data) => {
       // Invalidate tours query to refresh the list
-      queryClient.invalidateQueries({ queryKey: ['/api/tours'] });
+      queryClient.invalidateQueries({ queryKey: ['api/tours'] });
       
       toast({
         title: "Demo Tour Created",
