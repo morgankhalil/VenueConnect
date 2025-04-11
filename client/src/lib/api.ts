@@ -195,3 +195,54 @@ export async function updateEvent(eventId: number, data: any) {
     body: JSON.stringify(data),
   });
 }
+
+// Tour listing and management
+export async function getTours(filters?: any) {
+  return apiRequest(`/api/tours${filters ? `?${new URLSearchParams(filters)}` : ''}`);
+}
+
+export async function createTour(tour: any) {
+  return apiRequest('/api/tours', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(tour),
+  });
+}
+
+export async function deleteTour(tourId: number) {
+  return apiRequest(`/api/tours/${tourId}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function getTourVenues(tourId: number) {
+  return apiRequest(`/api/tours/${tourId}/venues`);
+}
+
+export async function addVenueToTour(tourId: number, data: any) {
+  return apiRequest(`/api/tours/${tourId}/venues`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateTourVenue(tourId: number, venueId: number, data: any) {
+  return apiRequest(`/api/tours/${tourId}/venues/${venueId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function removeTourVenue(tourId: number, venueId: number) {
+  return apiRequest(`/api/tours/${tourId}/venues/${venueId}`, {
+    method: 'DELETE',
+  });
+}
