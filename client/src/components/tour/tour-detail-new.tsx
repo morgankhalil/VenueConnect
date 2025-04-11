@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { VenueStatusBadge } from './venue-status-badge';
 import { StatCard } from './stat-card';
 import { VenueList } from './venue-list';
-// Removed redundant AI optimizer import
+import { UnifiedTourOptimizer } from './unified-tour-optimizer';
 import { 
   getStatusInfo, 
   getStatusBadgeVariant,
@@ -337,17 +337,26 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
               </div>
             </div>
             <div className="flex space-x-2">
-              <Link href={`/tours/${tourId}/optimize`}>
+              {hasEnoughVenuesForOptimization ? (
+                <UnifiedTourOptimizer 
+                  tourId={tourId} 
+                  onApplyChanges={() => {
+                    // Refresh the data after applying optimization
+                    refetch();
+                  }} 
+                />
+              ) : (
                 <Button
                   variant="default"
                   size="sm"
                   className="bg-gradient-to-r from-primary to-primary/80"
-                  disabled={!hasEnoughVenuesForOptimization}
+                  disabled={true}
+                  title="Need at least 2 venues for optimization"
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
                   Optimize Tour
                 </Button>
-              </Link>
+              )}
 
               <Link href={`/tours/${tourId}/edit`}>
                 <Button size="sm" variant="outline">
@@ -465,17 +474,26 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
                 </div>
 
                 <div className="flex space-x-2">
-                  <Link href={`/tours/${tourId}/optimize`}>
+                  {hasEnoughVenuesForOptimization ? (
+                    <UnifiedTourOptimizer 
+                      tourId={tourId} 
+                      onApplyChanges={() => {
+                        // Refresh the data after applying optimization
+                        refetch();
+                      }} 
+                    />
+                  ) : (
                     <Button
                       variant="default"
                       size="sm"
                       className="bg-gradient-to-r from-primary to-primary/80"
-                      disabled={!hasEnoughVenuesForOptimization}
+                      disabled={true}
+                      title="Need at least 2 venues for optimization"
                     >
                       <Sparkles className="mr-2 h-4 w-4" />
                       Optimize Tour
                     </Button>
-                  </Link>
+                  )}
                 </div>
               </div>
             </CardHeader>
