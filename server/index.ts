@@ -21,7 +21,7 @@ app.get('/api/health', (_, res) => {
 
 // Set up session middleware
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'venue-connect-session-secret',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: { 
