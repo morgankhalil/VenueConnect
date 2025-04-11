@@ -189,16 +189,19 @@ export function UnifiedTourOptimizer({ tourId, onApplyChanges }: UnifiedTourOpti
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="flex items-center gap-2">
-          <Sliders size={16} />
+        <Button variant="default" className="flex items-center gap-2 bg-gradient-to-r from-primary to-primary/80">
+          <Sparkles size={16} />
           <span>Optimize Tour</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
-          <DialogTitle>Unified Tour Optimization</DialogTitle>
-          <DialogDescription>
-            Get intelligent recommendations for your tour routing, scheduling, and venue selection.
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <Sparkles className="h-5 w-5 text-primary" />
+            Tour Optimization
+          </DialogTitle>
+          <DialogDescription className="text-base">
+            Optimize your tour routing, scheduling, and venue selection to save time and travel distance.
           </DialogDescription>
         </DialogHeader>
 
@@ -487,7 +490,15 @@ export function UnifiedTourOptimizer({ tourId, onApplyChanges }: UnifiedTourOpti
           </div>
         )}
         
-        <DialogFooter>
+        <DialogFooter className="flex flex-col sm:flex-row gap-2">
+          <div className="text-sm text-muted-foreground mr-auto">
+            {data?.optimizationResult && (
+              <span className="flex items-center gap-1">
+                <Check className="h-4 w-4 text-green-500" />
+                Optimized route ready to apply
+              </span>
+            )}
+          </div>
           <Button variant="outline" onClick={() => setOpen(false)}>
             {data ? 'Cancel' : 'Close'}
           </Button>
@@ -495,7 +506,7 @@ export function UnifiedTourOptimizer({ tourId, onApplyChanges }: UnifiedTourOpti
             <Button 
               onClick={() => applyOptimization()} 
               disabled={isApplying}
-              className="gap-2"
+              className="gap-2 bg-gradient-to-r from-primary to-primary/80"
             >
               {isApplying ? (
                 <>
