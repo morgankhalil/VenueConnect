@@ -40,56 +40,60 @@ export default function OptimizeTour() {
   });
   
   return (
-    <div className="container py-8 space-y-6 max-w-7xl">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/dashboard">
-                <Home className="h-4 w-4" />
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator>
-            <ChevronRight className="h-4 w-4" />
-          </BreadcrumbSeparator>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/tours">Tours</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator>
-            <ChevronRight className="h-4 w-4" />
-          </BreadcrumbSeparator>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href={`/tours/${tourId}`}>{isLoading ? 'Tour Details' : tour?.name}</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator>
-            <ChevronRight className="h-4 w-4" />
-          </BreadcrumbSeparator>
-          <BreadcrumbItem>
-            <BreadcrumbPage>Tour Optimizer</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-      
-      <div className="flex items-center">
-        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center mr-3">
-          <Music className="h-4 w-4 text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {isLoading ? 'Loading Tour...' : `Optimize: ${tour?.name}`}
-          </h1>
-          <p className="text-muted-foreground">
-            Streamlined tour optimization and venue recommendations
-          </p>
+    <div className="py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/dashboard">
+                  <Home className="h-4 w-4" />
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator>
+              <ChevronRight className="h-4 w-4" />
+            </BreadcrumbSeparator>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/tours">Tours</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator>
+              <ChevronRight className="h-4 w-4" />
+            </BreadcrumbSeparator>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href={`/tours/${tourId}`}>{isLoading ? 'Tour Details' : tour?.name}</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator>
+              <ChevronRight className="h-4 w-4" />
+            </BreadcrumbSeparator>
+            <BreadcrumbItem>
+              <BreadcrumbPage>Tour Optimizer</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+        
+        <div className="mt-4 flex items-center">
+          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+            <Music className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              {isLoading ? 'Loading Tour...' : `Optimize: ${tour?.name}`}
+            </h1>
+            <p className="text-muted-foreground">
+              Streamlined tour optimization and venue recommendations
+            </p>
+          </div>
         </div>
       </div>
       
-      {tourId && <UnifiedTourOptimizer tourId={Number(tourId)} />}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-6">
+        {tourId && <UnifiedTourOptimizer tourId={Number(tourId)} />}
+      </div>
     </div>
   );
 }

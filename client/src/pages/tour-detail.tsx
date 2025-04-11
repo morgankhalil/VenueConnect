@@ -12,16 +12,20 @@ export default function TourDetailPage() {
   }
   
   return (
-    <div className="container py-6">
-      <PageHeader
-        title="Tour Details"
-        description="View and manage tour details"
-        icon={<Truck size={28} />}
-        backLink="/tours"
-        backLinkText="Back to Tours"
-      />
-      <div className="mt-6">
-        <TourDetail tourId={params.id} />
+    <div className="py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+        <PageHeader
+          title="Tour Details"
+          description="View and manage tour details"
+          icon={<Truck size={28} />}
+          backLink="/tours"
+          backLinkText="Back to Tours"
+        />
+      </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+        <div className="mt-6">
+          <TourDetail tourId={params.id} />
+        </div>
       </div>
     </div>
   );
