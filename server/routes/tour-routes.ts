@@ -294,6 +294,8 @@ router.post('/venue-network', async (req, res) => {
  */
 router.get('/', async (req, res) => {
   try {
+    console.log("GET /api/tours request with query params:", req.query);
+    
     // Get query parameters for filtering
     const { artistId, status, startDate, endDate } = req.query;
     
@@ -301,22 +303,26 @@ router.get('/', async (req, res) => {
     let filters = [];
     
     if (artistId) {
+      console.log("Filtering by artistId:", artistId);
       filters.push(eq(tours.artistId, Number(artistId)));
     }
     
     if (status) {
+      console.log("Filtering by status:", status);
       filters.push(eq(tours.status, String(status)));
     }
     
     if (startDate) {
       // Convert to SQL date format
       const startDateStr = new Date(String(startDate)).toISOString().split('T')[0];
+      console.log("Filtering by startDate:", startDateStr);
       filters.push(sql`${tours.startDate} >= ${startDateStr}`);
     }
     
     if (endDate) {
       // Convert to SQL date format
       const endDateStr = new Date(String(endDate)).toISOString().split('T')[0];
+      console.log("Filtering by endDate:", endDateStr);
       filters.push(sql`${tours.endDate} <= ${endDateStr}`);
     }
     
@@ -351,6 +357,12 @@ router.get('/', async (req, res) => {
           .orderBy(desc(tours.startDate))
       : await toursQuery
           .orderBy(desc(tours.startDate));
+    
+    console.log("GET /api/tours found", result.length, "tours");
+    
+    // Get a simple count of tours in the database
+    const countResult = await db.select({ count: sql`count(*)` }).from(tours);
+    console.log("Total tours in database:", countResult[0]?.count);
     
     res.json(result);
   } catch (error) {
