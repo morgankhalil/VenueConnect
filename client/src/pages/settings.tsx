@@ -18,9 +18,11 @@ import * as api from "@/lib/api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/context/auth-context";
 
 export default function Settings() {
   const { toast } = useToast();
+  const { currentVenueId } = useAuth();
   const [formValues, setFormValues] = useState({
     name: "",
     email: "",
@@ -30,7 +32,7 @@ export default function Settings() {
   
   const [syncFormData, setSyncFormData] = useState({
     artistName: "",
-    venueId: 18, // Default to Bug Jar venue ID if no user venue
+    venueId: currentVenueId || 18, // Use Auth context venueId or default to Bug Jar venue ID
     radius: 250,
     limit: 10
   });
@@ -43,34 +45,34 @@ export default function Settings() {
 
   // Get venue data from API
   const { data: venue, isLoading: isLoadingVenue, error: venueError } = useQuery({
-    queryKey: ['/api/venues', user?.id], 
+    queryKey: ['/api/venues', currentVenueId], 
     queryFn: async () => {
-      // Make sure we have a valid user ID
-      if (!user?.id || isNaN(Number(user.id))) {
-        console.error("Invalid user ID:", user?.id);
-        return Promise.reject(new Error("Invalid user ID"));
+      // Make sure we have a valid venue ID
+      if (!currentVenueId) {
+        console.error("No current venue ID set");
+        return Promise.reject(new Error("No current venue ID"));
       }
-      return apiRequest(`/api/venues/${user.id}`);
+      return apiRequest(`/api/venues/${currentVenueId}`);
     },
-    enabled: !!user && !!user.id && !isNaN(Number(user.id)), // Only run if user exists with valid ID
+    enabled: !!currentVenueId, // Only run if we have a current venue ID
     retry: 1 // Only retry once if there's an error
   });
   
   // Get venue network connections
   const { data: networkData, isLoading: isLoadingNetwork } = useQuery({
-    queryKey: ['/api/venue-network/graph', user?.id],
+    queryKey: ['/api/venue-network/graph', currentVenueId],
     queryFn: async () => {
-      if (!user?.id || isNaN(Number(user.id))) {
+      if (!currentVenueId) {
         return { nodes: [], links: [] };
       }
       try {
-        return await apiRequest(`/api/venue-network/graph/${user.id}`);
+        return await apiRequest(`/api/venue-network/graph/${currentVenueId}`);
       } catch (err) {
         console.error("Error fetching venue network:", err);
         return { nodes: [], links: [] };
       }
     },
-    enabled: !!user && !!user.id && !isNaN(Number(user.id))
+    enabled: !!currentVenueId
   });
   
   // Check if the Bandsintown API key is configured
@@ -95,16 +97,18 @@ export default function Settings() {
         phone: user.contactPhone || "",
         role: user.role || "manager"
       });
-      
-      // Update venue ID for sync operations
-      if (user.venueId) {
-        setSyncFormData(prev => ({
-          ...prev,
-          venueId: user.venueId
-        }));
-      }
     }
   }, [user]);
+  
+  // Update syncFormData when currentVenueId changes
+  React.useEffect(() => {
+    if (currentVenueId) {
+      setSyncFormData(prev => ({
+        ...prev,
+        venueId: currentVenueId
+      }));
+    }
+  }, [currentVenueId]);
   
   const handleSave = () => {
     toast({
