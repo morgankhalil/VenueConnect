@@ -7,7 +7,7 @@ export async function apiRequest(url: string, options?: RequestInit): Promise<Re
     'Content-Type': 'application/json',
     ...(options?.headers || {})
   };
-  
+
   // Make the API request
   return fetch(url, {
     ...options,
@@ -137,13 +137,13 @@ export async function createVenueConnection(sourceVenueId: number, targetVenueId
  */
 export async function searchVenues(params: { query?: string, city?: string, capacity?: { min?: number, max?: number }, genre?: string }) {
   const searchParams = new URLSearchParams();
-  
+
   if (params.query) searchParams.append('query', params.query);
   if (params.city) searchParams.append('city', params.city);
   if (params.capacity?.min) searchParams.append('minCapacity', params.capacity.min.toString());
   if (params.capacity?.max) searchParams.append('maxCapacity', params.capacity.max.toString());
   if (params.genre) searchParams.append('genre', params.genre);
-  
+
   return request(`/api/venues/search?${searchParams.toString()}`);
 }
 
@@ -208,6 +208,22 @@ export async function setBandsintownApiKey(apiKey: string) {
   });
 }
 
+export const checkBandsintownApiStatus = async () => {
+  const response = await fetch('/api/admin/bandsintown-status');
+  return response.json();
+};
+
+export const triggerVenueSync = async (artistName: string) => {
+  const response = await fetch('/api/admin/sync-venues', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ artistName })
+  });
+  return response.json();
+};
+
+export const testWebhook = async (id: number) => {
+
 /**
  * Calendar and Event endpoints
  */
@@ -224,11 +240,11 @@ export async function getEvent(id: number) {
  */
 export async function getEvents(params?: { startDate?: string, endDate?: string, venueId?: number }) {
   const searchParams = new URLSearchParams();
-  
+
   if (params?.startDate) searchParams.append('startDate', params.startDate);
   if (params?.endDate) searchParams.append('endDate', params.endDate);
   if (params?.venueId) searchParams.append('venueId', params.venueId.toString());
-  
+
   const queryString = searchParams.toString() ? `?${searchParams.toString()}` : '';
   return request(`/api/events${queryString}`);
 }
@@ -295,10 +311,10 @@ export const getTourById = getTour;
  */
 export async function getTours(params?: { artistId?: number, status?: string }) {
   const searchParams = new URLSearchParams();
-  
+
   if (params?.artistId) searchParams.append('artistId', params.artistId.toString());
   if (params?.status) searchParams.append('status', params.status);
-  
+
   const queryString = searchParams.toString() ? `?${searchParams.toString()}` : '';
   return request(`/api/tours${queryString}`);
 }
@@ -354,12 +370,12 @@ export async function getVenue(id: number) {
  */
 export async function getVenues(params?: { city?: string, region?: string, minCapacity?: number, maxCapacity?: number }) {
   const searchParams = new URLSearchParams();
-  
+
   if (params?.city) searchParams.append('city', params.city);
   if (params?.region) searchParams.append('region', params.region);
   if (params?.minCapacity) searchParams.append('minCapacity', params.minCapacity.toString());
   if (params?.maxCapacity) searchParams.append('maxCapacity', params.maxCapacity.toString());
-  
+
   const queryString = searchParams.toString() ? `?${searchParams.toString()}` : '';
   return request(`/api/venues${queryString}`);
 }
@@ -404,10 +420,11 @@ export async function deleteVenue(id: number) {
  */
 export async function getEventsByVenue(venueId: number, params?: { startDate?: string, endDate?: string }) {
   const searchParams = new URLSearchParams();
-  
+
   searchParams.append('venueId', venueId.toString());
   if (params?.startDate) searchParams.append('startDate', params.startDate);
   if (params?.endDate) searchParams.append('endDate', params.endDate);
-  
+
   return request(`/api/events?${searchParams.toString()}`);
+}
 }
