@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
-import { getTourRoutes } from '@/lib/api';
+import { getTourRoutes } from '../../lib/api';
 import { Badge } from '@/components/ui/badge';
 import { 
   AlertTriangle, 
@@ -11,7 +11,7 @@ import {
   Clock,
   ArrowRightCircle
 } from 'lucide-react';
-import { formatDistance } from '@/lib/utils';
+import { formatDistance } from '../../lib/utils';
 
 // Import these for type checking, actual implementation will use mapboxgl globally
 declare global {

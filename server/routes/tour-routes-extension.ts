@@ -1,233 +1,205 @@
-import { Router } from 'express';
 import { db } from '../db';
+import { tourRoutes, venues } from '../../shared/schema';
+import { calculateDistance, estimateTravelTime } from '../../shared/utils/tour-optimizer';
 import { eq, and, sql } from 'drizzle-orm';
-import { z } from 'zod';
-import { fromZodError } from 'zod-validation-error';
-import { 
-  calculateDistance, 
-  estimateTravelTime, 
-  optimizeTourRoute 
-} from '../../shared/utils/tour-optimizer';
-import { 
-  tours, 
-  tourVenues, 
-  tourGaps, 
-  venues,
-  tourRoutes,
-  insertTourRouteSchema
-} from '../../shared/schema';
 
-// This function enhances the apply-optimization endpoint to store route information
+/**
+ * Enhance the apply optimization functionality to store detailed route information
+ * This function adds rich route data to the tour_routes table for visualization and analytics
+ */
 export async function enhanceApplyOptimization(
-  tourId: number, 
-  optimizedVenues: Array<any>, 
-  totalDistance: number, 
+  tourId: number,
+  sortedVenues: any[],
+  totalTravelDistance: number,
   totalTravelTime: number
 ) {
   try {
-    // First delete existing routes for this tour
+    // First, clear existing route data for this tour
     await db
       .delete(tourRoutes)
       .where(eq(tourRoutes.tourId, tourId));
     
-    const venues = [...optimizedVenues].sort((a, b) => {
-      const aSequence = a.sequence || 0;
-      const bSequence = b.sequence || 0;
-      return aSequence - bSequence;
-    });
-    
-    // Create routes between consecutive venues
-    for (let i = 0; i < venues.length - 1; i++) {
-      const current = venues[i];
-      const next = venues[i + 1];
+    // Process venues in pairs to create routes
+    for (let i = 0; i < sortedVenues.length - 1; i++) {
+      const currentVenue = sortedVenues[i];
+      const nextVenue = sortedVenues[i + 1];
       
-      // Skip if venues don't have coordinates or venue objects
-      if (!current.venue || !next.venue || 
-          !current.venue.latitude || !current.venue.longitude || 
-          !next.venue.latitude || !next.venue.longitude) {
+      // Skip venues without locations
+      if (!currentVenue.venue?.latitude || !currentVenue.venue?.longitude ||
+          !nextVenue.venue?.latitude || !nextVenue.venue?.longitude) {
         continue;
       }
       
-      // Calculate distance and travel time
+      // Calculate the distance and travel time between these venues
       const distance = calculateDistance(
-        Number(current.venue.latitude),
-        Number(current.venue.longitude),
-        Number(next.venue.latitude),
-        Number(next.venue.longitude)
+        Number(currentVenue.venue.latitude),
+        Number(currentVenue.venue.longitude),
+        Number(nextVenue.venue.latitude),
+        Number(nextVenue.venue.longitude)
       );
       
       const travelTime = estimateTravelTime(distance);
       
-      // Calculate a simple optimization score for this segment
-      // Lower distances get higher scores
-      const segmentScore = Math.round(100 - Math.min(50, distance / 10));
+      // Calculate local optimization score based on distance and time
+      const optimizationScore = Math.max(0, 100 - Math.min(50, distance / 10));
       
-      // Store additional metadata about the route segment
-      const additionalInfo = {
-        // Calculate detour ratio if available
-        detourRatio: current.detourRatio || next.detourRatio,
-        // Note if this is a gap-filling segment
-        isGapFilling: current.gapFilling || next.gapFilling,
-        // Capture date information for better scheduling
-        startDate: current.date || current.suggestedDate,
-        endDate: next.date || next.suggestedDate,
-        // Status of the venues
-        startStatus: current.status,
-        endStatus: next.status
-      };
-      
-      // Insert the route with detailed information
-      await db
-        .insert(tourRoutes)
-        .values({
-          tourId: tourId,
-          startVenueId: current.venue.id,
-          endVenueId: next.venue.id,
-          distanceKm: distance,
-          estimatedTravelTimeMinutes: travelTime,
-          optimizationScore: segmentScore
-        });
+      // Insert the route data
+      await db.insert(tourRoutes).values({
+        tourId,
+        startVenueId: currentVenue.venueId,
+        endVenueId: nextVenue.venueId,
+        distanceKm: distance,
+        estimatedTravelTimeMinutes: travelTime,
+        optimizationScore,
+        createdAt: new Date()
+      });
     }
     
-    return true;
+    return { success: true };
   } catch (error) {
-    console.error("Error enhancing tour optimization with routes:", error);
-    return false;
+    console.error("Error enhancing route optimization:", error);
+    throw error;
   }
 }
 
-// Enhanced gap filling algorithm to find better matches for schedule gaps
+/**
+ * Find improved venues to fill gaps in a tour schedule
+ * Uses geographic proximity and artist preferences to suggest venues
+ */
 export function findImprovedVenuesForGap(
   startVenue: any,
   endVenue: any,
   startDate: Date,
   endDate: Date,
   allVenues: any[],
-  artistPreferences: any = null
+  artistPreferences?: any
 ) {
-  try {
-    if (!startVenue || !endVenue || !startDate || !endDate) {
-      return [];
-    }
-    
-    // Calculate the gap duration in days
-    const gapDays = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    
-    // No gap or gap too small for a show
-    if (gapDays <= 1) {
-      return [];
-    }
-    
-    // Filter venues with coordinates
-    const venuesWithCoordinates = allVenues.filter(v => 
-      v.latitude && v.longitude
-    );
-    
-    if (venuesWithCoordinates.length === 0) {
-      return [];
-    }
-    
-    // Start with geographic filtering - find venues in the general path between start and end
-    const candidateVenues = venuesWithCoordinates.map(venue => {
-      // Calculate direct distance between start and end venues
-      const directDistance = calculateDistance(
-        Number(startVenue.latitude), 
-        Number(startVenue.longitude), 
-        Number(endVenue.latitude), 
-        Number(endVenue.longitude)
-      );
-      
-      // Calculate distances for this venue
-      const distanceFromStart = calculateDistance(
-        Number(startVenue.latitude), 
-        Number(startVenue.longitude), 
-        Number(venue.latitude), 
-        Number(venue.longitude)
-      );
-      
-      const distanceToEnd = calculateDistance(
-        Number(venue.latitude), 
-        Number(venue.longitude), 
-        Number(endVenue.latitude), 
-        Number(endVenue.longitude)
-      );
-      
-      // Calculate the detour ratio - how much this venue adds to the direct path
-      // A ratio of 1.0 means it's perfectly on the path, higher means more detour
-      const detourRatio = (distanceFromStart + distanceToEnd) / directDistance;
-      
-      // Calculate a score based on how well this venue fits geographically
-      // Lower scores are better
-      const geographicScore = (detourRatio - 1) * 100;
-      
-      // Apply artist preferences if available
-      let preferenceScore = 0;
-      if (artistPreferences) {
-        // Preferred regions
-        if (artistPreferences.preferredRegions && 
-            artistPreferences.preferredRegions.includes(venue.region)) {
-          preferenceScore += 20;
-        }
-        
-        // Preferred venue types
-        if (artistPreferences.preferredVenueTypes && 
-            venue.venueType && 
-            artistPreferences.preferredVenueTypes.includes(venue.venueType)) {
-          preferenceScore += 15;
-        }
-        
-        // Preferred venue capacity
-        if (artistPreferences.preferredVenueCapacity && 
-            venue.capacity &&
-            venue.capacity >= artistPreferences.preferredVenueCapacity.min &&
-            venue.capacity <= artistPreferences.preferredVenueCapacity.max) {
-          preferenceScore += 15;
-        }
-      }
-      
-      return {
-        venue,
-        distanceFromStart,
-        distanceToEnd,
-        detourRatio,
-        geographicScore,
-        preferenceScore,
-        // Combined score (lower is better for geographic, higher is better for preferences)
-        totalScore: 100 - geographicScore + preferenceScore
-      };
-    });
-    
-    // Sort venues by total score (higher is better)
-    const rankedVenues = candidateVenues
-      .filter(v => v.detourRatio < 2.5) // Not too far out of the way
-      .sort((a, b) => b.totalScore - a.totalScore);
-    
-    // Select the best venues based on the gap size
-    // For larger gaps, we might want to include more venues
-    const maxVenues = Math.min(3, Math.max(1, Math.floor(gapDays / 2)));
-    
-    // Get the best venues
-    const selectedVenues = rankedVenues.slice(0, maxVenues);
-    
-    // Generate suggested dates for these venues
-    return selectedVenues.map((venue, index) => {
-      // Distribute venues evenly throughout the gap
-      const daysFromStart = Math.round(gapDays * ((index + 1) / (selectedVenues.length + 1)));
-      
-      // Calculate the suggested date
-      const suggestedDate = new Date(startDate);
-      suggestedDate.setDate(suggestedDate.getDate() + daysFromStart);
-      
-      return {
-        venue: venue.venue,
-        suggestedDate,
-        detourRatio: venue.detourRatio,
-        score: venue.totalScore,
-        gapFilling: true
-      };
-    });
-  } catch (error) {
-    console.error("Error finding improved venues for gap:", error);
+  // Check if we have valid coordinates for start and end
+  if (!startVenue?.latitude || !startVenue?.longitude ||
+      !endVenue?.latitude || !endVenue?.longitude) {
     return [];
   }
+  
+  // Calculate the direct distance between start and end venues
+  const directDistance = calculateDistance(
+    Number(startVenue.latitude),
+    Number(startVenue.longitude),
+    Number(endVenue.latitude),
+    Number(endVenue.longitude)
+  );
+  
+  // Calculate the time available between dates (in days)
+  const daysBetween = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  
+  // We need at least 1 day gap to consider filling
+  if (daysBetween < 1) {
+    return [];
+  }
+  
+  // Determine maximum reasonable distance to travel
+  // Based on the idea that we don't want to increase the total travel distance by more than 40%
+  const maxTotalDistance = directDistance * 1.4;
+  
+  // Calculate the maximum distance from either endpoint for a candidate venue
+  // This is a triangle where the three points are start, end, and the potential venue
+  const maxDistanceFromEndpoint = maxTotalDistance / 2;
+  
+  // Filter venues first by excluding the start and end venues
+  const candidateVenues = allVenues.filter(venue => 
+    venue.id !== startVenue.id && venue.id !== endVenue.id &&
+    venue.latitude && venue.longitude
+  );
+  
+  // Compute scores for each candidate venue based on various factors
+  const scoredVenues = candidateVenues.map(venue => {
+    // Calculate distances from this venue to both start and end venues
+    const distanceFromStart = calculateDistance(
+      Number(startVenue.latitude),
+      Number(startVenue.longitude),
+      Number(venue.latitude),
+      Number(venue.longitude)
+    );
+    
+    const distanceFromEnd = calculateDistance(
+      Number(venue.latitude),
+      Number(venue.longitude),
+      Number(endVenue.latitude),
+      Number(endVenue.longitude)
+    );
+    
+    // Calculate total travel distance if this venue is included
+    const totalDistance = distanceFromStart + distanceFromEnd;
+    
+    // Calculate how well this venue divides the journey (scores higher if it's close to midpoint)
+    const idealDistanceFromStart = directDistance / 2;
+    const distanceFromIdeal = Math.abs(distanceFromStart - idealDistanceFromStart);
+    const positionScore = Math.max(0, 100 - (distanceFromIdeal / directDistance) * 100);
+    
+    // Apply artist preferences if available
+    let preferenceScore = 50; // Default neutral score
+    
+    if (artistPreferences) {
+      // Prefer venues with capacity matching the artist's typical audience
+      if (artistPreferences.preferredCapacity && venue.capacity) {
+        const capacityDiff = Math.abs(venue.capacity - artistPreferences.preferredCapacity);
+        const capacityScore = Math.max(0, 100 - (capacityDiff / artistPreferences.preferredCapacity) * 100);
+        preferenceScore += capacityScore * 0.2; // 20% weight for capacity
+      }
+      
+      // Prefer venues that match genre focus
+      if (artistPreferences.genres && venue.genreFocus) {
+        const genreMatch = artistPreferences.genres.some((genre: string) => 
+          venue.genreFocus && venue.genreFocus.includes(genre)
+        );
+        preferenceScore += genreMatch ? 20 : 0; // 20% weight for genre match
+      }
+      
+      // Prefer venues in preferred market categories
+      if (artistPreferences.marketCategories && venue.marketCategory) {
+        const marketMatch = artistPreferences.marketCategories.includes(venue.marketCategory);
+        preferenceScore += marketMatch ? 10 : 0; // 10% weight for market category
+      }
+    }
+    
+    // Calculate a combined score (weighted factors)
+    // - 40% weight for how well the venue is positioned between start and end
+    // - 30% weight for total distance (less is better)
+    // - 30% weight for artist preferences
+    const distanceToMaxRatio = totalDistance / maxTotalDistance;
+    const distanceScore = Math.max(0, 100 - distanceToMaxRatio * 100);
+    
+    const combinedScore = 
+      (positionScore * 0.4) + 
+      (distanceScore * 0.3) + 
+      (preferenceScore * 0.3);
+    
+    // Get an ideal date for this venue (evenly distributed in the gap)
+    // For simplicity, we'll use linear interpolation based on distance from start
+    const totalDays = daysBetween + 1; // Include both start and end dates
+    const dayOffset = Math.round((distanceFromStart / totalDistance) * totalDays);
+    const suggestedDate = new Date(startDate);
+    suggestedDate.setDate(startDate.getDate() + dayOffset);
+    
+    return {
+      venue,
+      score: combinedScore,
+      totalDistance,
+      distanceFromStart,
+      distanceFromEnd,
+      suggestedDate: suggestedDate.toISOString().split('T')[0],
+      gapFilling: true,
+      status: 'potential'
+    };
+  });
+  
+  // Filter venues that are too far away and sort by score
+  const filteredVenues = scoredVenues
+    .filter(item => 
+      item.distanceFromStart <= maxDistanceFromEndpoint && 
+      item.distanceFromEnd <= maxDistanceFromEndpoint
+    )
+    .sort((a, b) => b.score - a.score);
+  
+  // Return top improved venues
+  return filteredVenues.slice(0, Math.min(5, daysBetween));
 }

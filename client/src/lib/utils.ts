@@ -1,60 +1,53 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
+/**
+ * Utility function to combine class names
+ */
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
-export function formatDate(dateInput: string | Date | null | undefined) {
-  if (!dateInput) return 'No date';
-  
-  const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-  
-  // Check if date is valid
-  if (isNaN(date.getTime())) {
-    return 'Invalid date';
+/**
+ * Format a distance in kilometers to a readable format
+ * @param distanceKm Distance in kilometers
+ * @returns Formatted string
+ */
+export function formatDistance(distanceKm: number): string {
+  if (distanceKm < 1) {
+    return `${Math.round(distanceKm * 1000)} m`;
   }
-  
-  return date.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric' 
+  return `${distanceKm.toFixed(1)} km`;
+}
+
+/**
+ * Format a date to a readable format
+ * @param date Date to format
+ * @returns Formatted string
+ */
+export function formatDate(date: Date | string): string {
+  if (!date) return '';
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleDateString('en-US', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
   });
 }
 
-export function formatCurrency(amount: number, currency = 'USD') {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-export function formatDistance(distanceInKm?: number | null): string {
-  if (distanceInKm === undefined || distanceInKm === null) {
-    return 'Not calculated';
-  }
-  return `${Math.round(distanceInKm)} km`;
-}
-
-export function formatTravelTime(timeInMinutes?: number | null): string {
-  if (timeInMinutes === undefined || timeInMinutes === null) {
-    return 'Not calculated';
-  }
-  const hours = Math.floor(timeInMinutes / 60);
-  const minutes = Math.round(timeInMinutes % 60);
+/**
+ * Format minutes to a readable time format
+ * @param minutes Total minutes
+ * @returns Formatted string (e.g., "2h 30m")
+ */
+export function formatTime(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const mins = Math.round(minutes % 60);
   
   if (hours === 0) {
-    return `${minutes} min`;
-  } else if (minutes === 0) {
-    return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
-  } else {
-    return `${hours} ${hours === 1 ? 'hour' : 'hours'} ${minutes} min`;
+    return `${mins}m`;
   }
-}
-
-export function calculateImprovement(current: number, optimized: number): number {
-  if (current === 0) return 0;
-  return Math.round((1 - optimized / current) * 100);
+  
+  return `${hours}h ${mins}m`;
 }
