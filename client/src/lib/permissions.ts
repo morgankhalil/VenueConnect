@@ -24,7 +24,7 @@ export type Permission =
 /**
  * Map roles to their corresponding permissions
  */
-const PERMISSIONS_BY_ROLE: Record<string, string[]> = {
+export const PERMISSIONS_BY_ROLE: Record<string, string[]> = {
   admin: ['canManageUsers', 'canManageVenues', 'canManageArtists', 'canManageTours', 'canViewAnalytics', 'canSendMessages', 'canViewAllVenueData', 'canCreateWebhooks'],
   venue_manager: ['canManageVenues', 'canManageTours', 'canViewAnalytics', 'canSendMessages', 'canCreateWebhooks'],
   artist_manager: ['canManageArtists', 'canManageTours', 'canViewAnalytics', 'canSendMessages', 'canCreateWebhooks'],
@@ -45,13 +45,16 @@ export function hasPermission(user: User | null, permission: Permission): boolea
     return false;
   }
   
+  // Admin users have all permissions
+  if (user.role === 'admin') {
+    return true;
+  }
+  
   // Get permissions for the user's role
-  const userRole = user.role as keyof typeof rolePermissions;
+  const permissions = PERMISSIONS_BY_ROLE[user.role] || [];
   
-  // Fall back to user role if the role doesn't exist in our permissions map
-  const permissionSet = rolePermissions[userRole] || rolePermissions.user;
-  
-  return !!permissionSet[permission];
+  // Check if the permission is in the list
+  return permissions.includes(permission);
 }
 
 /**

@@ -40,17 +40,22 @@ app.use(session({
   }
 }));
 
-// Authentication middleware for auth routes bypass
+// Simple authentication middleware
 app.use(async (req, res, next) => {
-  // Skip for auth-related routes (login, register, etc.)
-  // Auth routes are now at /api/auth directly instead of /api/auth/login
-  if (req.path.startsWith('/api/auth')) {
-    console.log('Allowing auth endpoint access for path:', req.path);
+  // Paths that don't require authentication
+  const publicPaths = [
+    '/api/auth',       // All auth-related endpoints
+    '/api/health',     // Health check endpoint
+    '/api/webhooks'    // Webhook endpoints
+  ];
+  
+  // Skip auth for non-API routes (static assets, etc.)
+  if (!req.path.startsWith('/api')) {
     return next();
   }
   
-  // Skip for static assets and non-API routes
-  if (!req.path.startsWith('/api') || req.path.startsWith('/api/webhooks')) {
+  // Skip auth for public paths
+  if (publicPaths.some(path => req.path.startsWith(path))) {
     return next();
   }
   
@@ -59,42 +64,11 @@ app.use(async (req, res, next) => {
     return next();
   }
   
-  // Skip authentication for demo purposes if needed
-  // Comment this section out to enforce proper authentication
-  try {
-    if (process.env.NODE_ENV !== 'production') {
-      // Check if this is a login or logout request - always allow them
-      if (req.path === '/api/auth/login' || req.path === '/api/auth/logout') {
-        return next();
-      }
-      
-      // If user is already authenticated, let them through
-      if (req.session && req.session.user) {
-        return next();
-      }
-      
-      // Check if user has explicitly logged out - don't auto-login in that case
-      // @ts-ignore - Access the logout flag
-      if (req.session.loggedOut === true) {
-        console.log("User is logged out, not creating demo session");
-        return res.status(401).json({ error: "Authentication required" });
-      }
-      
-      // For development, don't auto-create sessions anymore
-      // We have real credentials now that we can test with
-      console.log("Auth required - please log in with one of the available credentials");
-      return res.status(401).json({ 
-        error: "Authentication required",
-        message: "Please log in with valid credentials"
-      });
-    } else {
-      // In production, enforce authentication
-      return res.status(401).json({ error: "Authentication required" });
-    }
-  } catch (error) {
-    console.error("Error in auth middleware:", error);
-    return res.status(500).json({ error: "Authentication error" });
-  }
+  // Otherwise, require authentication
+  return res.status(401).json({ 
+    success: false,
+    message: "Authentication required"
+  });
 });
 
 app.use((req, res, next) => {
