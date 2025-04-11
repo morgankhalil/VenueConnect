@@ -1,6 +1,6 @@
 
 import { db } from '../db';
-import { syncLogs } from '../../shared/schema';
+import { sql } from 'drizzle-orm';
 
 export class SyncLogger {
   private context: string;
@@ -12,11 +12,9 @@ export class SyncLogger {
   async log(message: string, level: 'info' | 'error' | 'warning' = 'info') {
     console.log(`[${this.context}] ${message}`);
     
-    await db.insert(syncLogs).values({
-      context: this.context,
-      message,
-      level,
-      timestamp: new Date()
-    });
+    await db.execute(sql`
+      INSERT INTO sync_logs (context, message, level, timestamp)
+      VALUES (${this.context}, ${message}, ${level}, NOW())
+    `);
   }
 }
