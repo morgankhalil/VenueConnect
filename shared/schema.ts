@@ -468,6 +468,18 @@ export const insertWebhookConfigurationSchema = createInsertSchema(webhookConfig
 export type WebhookConfiguration = typeof webhookConfigurations.$inferSelect;
 export type InsertWebhookConfiguration = z.infer<typeof insertWebhookConfigurationSchema>;
 
+// Tour Routes table for optimization paths
+export const tourRoutes = pgTable("tour_routes", {
+  id: serial("id").primaryKey(),
+  tourId: integer("tour_id").references(() => tours.id).notNull(),
+  startVenueId: integer("start_venue_id").references(() => venues.id),
+  endVenueId: integer("end_venue_id").references(() => venues.id),
+  distanceKm: real("distance_km"),
+  estimatedTravelTimeMinutes: integer("estimated_travel_time_minutes"),
+  optimizationScore: integer("optimization_score"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Tour optimization tables
 export const tours = pgTable("tours", {
   id: serial("id").primaryKey(),
@@ -582,6 +594,22 @@ export const toursRelations = relations(tours, ({ one, many }) => ({
   }),
   venues: many(tourVenues),
   gaps: many(tourGaps),
+  routes: many(tourRoutes),
+}));
+
+export const tourRoutesRelations = relations(tourRoutes, ({ one }) => ({
+  tour: one(tours, {
+    fields: [tourRoutes.tourId],
+    references: [tours.id],
+  }),
+  startVenue: one(venues, {
+    fields: [tourRoutes.startVenueId],
+    references: [venues.id],
+  }),
+  endVenue: one(venues, {
+    fields: [tourRoutes.endVenueId],
+    references: [venues.id],
+  }),
 }));
 
 export const tourVenuesRelations = relations(tourVenues, ({ one }) => ({
@@ -668,9 +696,17 @@ export const insertVenueTourPreferencesSchema = createInsertSchema(venueTourPref
   createdAt: true,
 });
 
+export const insertTourRouteSchema = createInsertSchema(tourRoutes).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types for tour optimization
 export type Tour = typeof tours.$inferSelect;
 export type InsertTour = z.infer<typeof insertTourSchema>;
+
+export type TourRoute = typeof tourRoutes.$inferSelect;
+export type InsertTourRoute = z.infer<typeof insertTourRouteSchema>;
 
 export type TourVenue = typeof tourVenues.$inferSelect;
 export type InsertTourVenue = z.infer<typeof insertTourVenueSchema>;
