@@ -9,36 +9,34 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getVenueNetworkGraph, getCollaborativeOpportunitiesByVenue, createVenueConnection } from "@/lib/api";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/context/auth-context";
 
 export default function VenueNetwork() {
   const { toast } = useToast();
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const queryClient = useQueryClient();
   
-  // Get the current user to determine venue ID
-  const { data: user } = useQuery({
-    queryKey: ['/api/user'],
-    queryFn: () => apiRequest('/api/user')
-  });
+  // Get the current user from auth context
+  const { currentVenueId: authVenueId } = useAuth();
   
   // Use a React.useEffect to track venue ID changes
   const [currentVenueId, setCurrentVenueId] = useState<number | null>(null);
   
-  // Update the currentVenueId state when the user data changes
+  // Update the currentVenueId state when the auth venue ID changes
   useEffect(() => {
-    if (user?.venueId) {
-      console.log(`User venue ID changed to ${user.venueId}`);
-      setCurrentVenueId(user.venueId);
+    if (authVenueId) {
+      console.log(`Auth venue ID changed to ${authVenueId}`);
+      setCurrentVenueId(authVenueId);
     } else {
       // Fallback to a known venue ID (195 is The Middle East in Cambridge)
       setCurrentVenueId(195);
     }
-  }, [user?.venueId]);
+  }, [authVenueId]);
   
   // Force a refetch of the user data when this page mounts to ensure we have the current venue ID
   useEffect(() => {
     // Refetch the current user to ensure we have the latest venue ID
-    queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/users/me'] });
   }, [queryClient]);
 
   // Ensure the venue network graph is refetched when the user changes 
