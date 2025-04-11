@@ -89,8 +89,8 @@ app.use((req, res, next) => {
     });
   }
 
-  // Use port 5000 in production (for deployments) and 3000 in development
-  const port = process.env.NODE_ENV === 'production' ? 5000 : 3000;
+  // Use port 3000 for all environments to match deployment configuration
+  const port = 3000;
   server.listen({
     port,
     host: "0.0.0.0",

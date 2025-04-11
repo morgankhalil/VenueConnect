@@ -427,4 +427,7 @@ export async function getEventsByVenue(venueId: number, params?: { startDate?: s
 
   return request(`/api/events?${searchParams.toString()}`);
 }
+
+export const deleteVenue = deleteVenue;
+export { getEvent };
 }
