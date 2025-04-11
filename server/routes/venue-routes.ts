@@ -86,20 +86,36 @@ router.get('/select/:id', isAuthenticated, async (req, res) => {
       });
     }
     
+    console.log(`Setting current venue ID in session to ${venue.id} (${venue.name})`);
+    
     // Store the current venue ID in the session (not in the user object)
     req.session.currentVenueId = venue.id;
     
     // Save session changes
-    req.session.save((err) => {
-      if (err) {
-        console.error('Error saving session:', err);
-      }
-    });
-    
-    return res.status(200).json({
-      success: true,
-      message: `Now viewing ${venue.name}`,
-      venueId: venue.id
+    return new Promise<void>((resolve, reject) => {
+      req.session.save((err) => {
+        if (err) {
+          console.error('Error saving session:', err);
+          reject(err);
+          return;
+        }
+        
+        console.log(`Successfully saved venue ID ${venue.id} to session`);
+        resolve();
+      });
+    })
+    .then(() => {
+      return res.status(200).json({
+        success: true,
+        message: `Now viewing ${venue.name}`,
+        venueId: venue.id
+      });
+    })
+    .catch(() => {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to save venue selection to session'
+      });
     });
   } catch (error) {
     console.error('Error selecting venue:', error);

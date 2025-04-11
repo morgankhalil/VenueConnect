@@ -177,21 +177,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
   });
   
-  // Set the current venue ID when user data is loaded
+  // Check authentication status and get current venue when component mounts
   useEffect(() => {
-    const fetchVenueStatus = async () => {
+    const checkAuthAndVenue = async () => {
       try {
-        // First check if we already have a venue selected in the session
+        // First check if we're authenticated and if a venue is already selected in the session
+        console.log("Checking authentication status and current venue");
         const statusResponse = await axios.get('/api/auth/status', { withCredentials: true });
-        const sessionVenueId = statusResponse.data.currentVenueId;
+        console.log("Auth status response:", statusResponse.data);
         
-        if (sessionVenueId) {
-          console.log("Found venue ID in session:", sessionVenueId);
-          setCurrentVenueId(sessionVenueId);
-          return;
+        if (statusResponse.data.authenticated) {
+          // If authenticated but no current venue ID in state, use the one from session
+          if (statusResponse.data.currentVenueId && !currentVenueId) {
+            console.log("Found venue ID in session:", statusResponse.data.currentVenueId);
+            setCurrentVenueId(statusResponse.data.currentVenueId);
+          }
         }
-        
-        // If user is authenticated but no venue is selected yet, fetch available venues
+      } catch (error) {
+        console.error("Error checking auth status:", error);
+      }
+    };
+    
+    checkAuthAndVenue();
+  }, []); // Only run once when component mounts
+  
+  // Set default venue when user is loaded but no venue is selected
+  useEffect(() => {
+    const selectDefaultVenue = async () => {
+      try {
+        // Only proceed if we have a user but no venue is selected
         if (user && !currentVenueId) {
           console.log("User authenticated but no venue selected, fetching available venues");
           const venuesResponse = await axios.get('/api/users/available-venues', { withCredentials: true });
@@ -204,13 +218,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } catch (error) {
-        console.error("Error setting up venue context:", error);
+        console.error("Error selecting default venue:", error);
       }
     };
     
-    if (user) {
-      fetchVenueStatus();
-    }
+    selectDefaultVenue();
   }, [user, currentVenueId, switchVenueMutation]);
   
   // Login handler

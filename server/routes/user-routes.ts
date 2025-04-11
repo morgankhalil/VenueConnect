@@ -11,7 +11,14 @@ const router = express.Router();
  * Route: /api/users/me
  */
 router.get('/me', isAuthenticated, (req, res) => {
-  return res.status(200).json(req.session.user);
+  // Include any additional info about the user that the client needs
+  const userData = {
+    ...req.session.user,
+    // Add any other user information we want to expose to the client
+  };
+  
+  console.log("Sending user data:", userData);
+  return res.status(200).json(userData);
 });
 
 /**
