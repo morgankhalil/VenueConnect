@@ -2,6 +2,7 @@
 import { Router } from 'express';
 import { createServer } from 'http';
 import tourRoutes from './routes/tour-routes';
+import documentationRoutes from './routes/documentation-routes';
 import userRoutes from './routes/user-routes';
 import authRoutes from './routes/auth-routes';
 import venueRoutes from './routes/venue-routes';
@@ -18,6 +19,7 @@ export function registerRoutes(app: Express): Server {
   const server = createServer(app);
   // Register routes with more specific prefixes to avoid conflicts with the Vite server
   app.use('/api/tours', tourRoutes);
+app.use('/api/documentation', documentationRoutes);
   app.use('/api/tour-optimization', tourRouteOptimizationRouter);
   app.use('/api/tour-optimization-enhanced', tourOptimizationEnhancedRouter);
   app.use('/api/ai-optimization', aiOptimizationRouter);
