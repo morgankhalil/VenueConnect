@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '../../components/ui/card';
 import { useQuery } from '@tanstack/react-query';
-import { getTourRoutes } from '../../lib/api';
-import { Badge } from '@/components/ui/badge';
+import { getTourRoutes, TourRoute } from '../../lib/api';
+import { Badge } from '../../components/ui/badge';
 import { 
   AlertTriangle, 
   CheckCircle2, 
