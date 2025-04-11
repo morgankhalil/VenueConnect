@@ -421,10 +421,17 @@ unifiedOptimizerRouter.post('/apply/:tourId', async (req: Request, res: Response
 
     // Update sequence for each venue in the optimized sequence
     const updates = optimizedSequence.map(async (venueId: number, index: number) => {
-      const tourVenue = currentTourVenues.find(tv => tv.id === venueId);
+      // First try direct ID match
+      let tourVenue = currentTourVenues.find(tv => tv.id === venueId);
+      
+      // If that fails, try 1-based array indexing (AI might be using simple 1-based indexing)
+      if (!tourVenue && venueId > 0 && venueId <= currentTourVenues.length) {
+        tourVenue = currentTourVenues[venueId - 1];
+        console.log(`Using 1-based indexing for venue at position ${venueId}`);
+      }
       
       if (!tourVenue) {
-        console.warn(`Tour venue with ID ${venueId} not found`);
+        console.warn(`Tour venue with ID or position ${venueId} not found`);
         return null;
       }
       
@@ -450,7 +457,7 @@ unifiedOptimizerRouter.post('/apply/:tourId', async (req: Request, res: Response
           // If it's a potential venue in the optimized sequence, update status to 'hold'
           status: tourVenue.status === 'potential' ? 'hold' : tourVenue.status
         })
-        .where(eq(tourVenues.id, venueId));
+        .where(eq(tourVenues.id, tourVenue.id));
     });
     
     await Promise.all(updates.filter(Boolean));

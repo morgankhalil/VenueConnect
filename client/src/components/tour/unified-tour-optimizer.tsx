@@ -355,16 +355,25 @@ export function UnifiedTourOptimizer({ tourId, onApplyChanges }: UnifiedTourOpti
                     <div className="bg-muted p-4 rounded-md space-y-2">
                       <div className="flex flex-wrap gap-2">
                         {data.optimizationResult.optimizedSequence.map((venueId, index) => {
-                          const venue = data.tourData.allVenues.find(v => v.id === venueId);
+                          // Try to find by id first (actual ID)
+                          let venue = data.tourData.allVenues.find(v => v.id === venueId);
                           
-                          if (!venue) return null;
+                          // If not found, try by index+1 (AI might be using 1-based indexing)
+                          if (!venue && typeof venueId === 'number' && venueId <= data.tourData.allVenues.length) {
+                            venue = data.tourData.allVenues[venueId - 1];
+                          }
+                          
+                          if (!venue) {
+                            console.warn(`Venue not found for ID ${venueId}`);
+                            return null;
+                          }
                           
                           return (
-                            <div key={venueId} className="flex items-center">
+                            <div key={index} className="flex items-center">
                               {index > 0 && <ArrowRight size={12} className="mx-1 text-muted-foreground" />}
                               <Badge variant={venue.isFixed ? "default" : "outline"} className="flex items-center gap-1">
                                 {venue.isFixed ? <LucideMapPinned size={12} /> : <MapPin size={12} />}
-                                <span>{venue.name}</span>
+                                <span>{venue.name} (ID: {venue.id})</span>
                               </Badge>
                             </div>
                           );
@@ -380,13 +389,19 @@ export function UnifiedTourOptimizer({ tourId, onApplyChanges }: UnifiedTourOpti
                     <h3 className="text-sm font-medium mb-2">Suggested Dates</h3>
                     <div className="bg-muted p-4 rounded-md">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {Object.entries(data.optimizationResult.suggestedDates).map(([venueId, date]) => {
-                          const venue = data.tourData.allVenues.find(v => v.id === Number(venueId));
+                        {Object.entries(data.optimizationResult.suggestedDates).map(([venueId, date], index) => {
+                          // Try to find by id first (actual ID)
+                          let venue = data.tourData.allVenues.find(v => v.id === Number(venueId));
+                          
+                          // If not found, try by index+1 (AI might be using 1-based indexing)
+                          if (!venue && !isNaN(Number(venueId)) && Number(venueId) <= data.tourData.allVenues.length) {
+                            venue = data.tourData.allVenues[Number(venueId) - 1];
+                          }
                           
                           if (!venue) return null;
                           
                           return (
-                            <div key={venueId} className="flex items-center justify-between">
+                            <div key={index} className="flex items-center justify-between">
                               <span className="font-medium">{venue.name}</span>
                               <Badge variant="secondary" className="flex items-center gap-1">
                                 <Calendar size={12} />
@@ -406,13 +421,19 @@ export function UnifiedTourOptimizer({ tourId, onApplyChanges }: UnifiedTourOpti
                     <h3 className="text-sm font-medium mb-2">Recommended Venues</h3>
                     <div className="bg-muted p-4 rounded-md">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {data.optimizationResult.recommendedVenues.map(venueId => {
-                          const venue = data.tourData.allVenues.find(v => v.id === venueId);
+                        {data.optimizationResult.recommendedVenues.map((venueId, index) => {
+                          // Try to find by id first (actual ID)
+                          let venue = data.tourData.allVenues.find(v => v.id === venueId);
+                          
+                          // If not found, try by index+1 (AI might be using 1-based indexing)
+                          if (!venue && typeof venueId === 'number' && venueId <= data.tourData.allVenues.length) {
+                            venue = data.tourData.allVenues[venueId - 1];
+                          }
                           
                           if (!venue) return null;
                           
                           return (
-                            <div key={venueId} className="flex items-center gap-2">
+                            <div key={index} className="flex items-center gap-2">
                               <Check size={14} className="text-green-500" />
                               <span>{venue.name}, {venue.city}</span>
                             </div>
@@ -429,13 +450,19 @@ export function UnifiedTourOptimizer({ tourId, onApplyChanges }: UnifiedTourOpti
                     <h3 className="text-sm font-medium mb-2">Suggested Skips</h3>
                     <div className="bg-muted p-4 rounded-md">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {data.optimizationResult.suggestedSkips.map(venueId => {
-                          const venue = data.tourData.allVenues.find(v => v.id === venueId);
+                        {data.optimizationResult.suggestedSkips.map((venueId, index) => {
+                          // Try to find by id first (actual ID)
+                          let venue = data.tourData.allVenues.find(v => v.id === venueId);
+                          
+                          // If not found, try by index+1 (AI might be using 1-based indexing)
+                          if (!venue && typeof venueId === 'number' && venueId <= data.tourData.allVenues.length) {
+                            venue = data.tourData.allVenues[venueId - 1];
+                          }
                           
                           if (!venue) return null;
                           
                           return (
-                            <div key={venueId} className="flex items-center gap-2 text-muted-foreground">
+                            <div key={index} className="flex items-center gap-2 text-muted-foreground">
                               <span className="line-through">{venue.name}, {venue.city}</span>
                             </div>
                           );
