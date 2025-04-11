@@ -1,259 +1,58 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
-import { User, hasPermission, Permission } from '@/lib/permissions';
-import axios from 'axios';
-import { toast } from '@/hooks/use-toast';
+import React, { createContext, useContext } from 'react';
 
+// Mock user data for the demo
+const mockUser = {
+  id: 1,
+  username: 'demo',
+  name: 'Demo User',
+  email: 'demo@example.com',
+  role: 'admin',
+  permissions: ['view_tours', 'edit_tours', 'create_tours', 'delete_tours', 'view_venues', 'edit_venues']
+};
+
+// Define a simplified version of the auth context
 interface AuthContextType {
-  user: User | null;
+  user: any;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  hasPermission: (permission: Permission) => boolean;
+  hasPermission: (permission: string) => boolean;
   currentVenueId: number | null;
   switchVenue: (venueId: number) => Promise<void>;
+  login: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Helper function for API requests
-const apiCall = async (url: string, options: { method: string; data?: any }) => {
-  try {
-    console.log(`Making ${options.method} request to ${url}`, options.data);
-    const { method, data } = options;
-    const response = method === 'GET' 
-      ? await axios.get(url, { withCredentials: true })
-      : await axios.post(url, data, { withCredentials: true });
-    console.log(`Response from ${url}:`, response.data);
-    return response.data;
-  } catch (error) {
-    console.error(`Error in API call to ${url}:`, error);
-    if (axios.isAxiosError(error) && error.response) {
-      throw new Error(error.response.data.message || 'API request failed');
-    }
-    throw error;
-  }
-};
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [, setLocation] = useLocation();
-  const [currentVenueId, setCurrentVenueId] = useState<number | null>(null);
-  const queryClient = useQueryClient();
-  
-  // Get current user information
-  const { data: user, isLoading, refetch } = useQuery<User | null>({
-    queryKey: ['/api/users/me'],
-    queryFn: async () => {
-      try {
-        // Use axios directly to simplify debugging
-        const response = await axios.get('/api/users/me', { 
-          withCredentials: true 
-        });
-        console.log("Current user response:", response.data);
-        return response.data;
-      } catch (error) {
-        // If we get a 401 error, it means we're not authenticated
-        if (axios.isAxiosError(error) && error.response?.status === 401) {
-          console.log("User not authenticated");
-          return null;
-        }
-        console.error("Error fetching current user:", error);
-        return null;
-      }
-    },
-    retry: false,
-    initialData: null,
-  });
-  
-  // Login mutation
-  const loginMutation = useMutation({
-    mutationFn: async (credentials: { username: string; password: string }) => {
-      return apiCall('/api/auth', {
-        method: 'POST',
-        data: credentials,
-      });
-    },
-    onSuccess: () => {
-      refetch(); // Refetch user data after successful login
-      toast({
-        title: 'Login successful',
-        description: 'Welcome back!',
-      });
-      setLocation('/dashboard'); // Redirect to dashboard
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Login failed',
-        description: error.message || 'Invalid username or password',
-        variant: 'destructive',
-      });
-    },
-  });
-  
-  // Logout mutation
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      console.log("Calling logout API endpoint");
-      const result = await apiCall('/api/auth/logout', {
-        method: 'POST',
-      });
-      console.log("Logout API response:", result);
-      return result;
-    },
-    onSuccess: () => {
-      console.log("Logout successful, updating client state");
-      // Set local user state to null immediately
-      queryClient.setQueryData(['/api/users/me'], null);
-      
-      // Reset venue ID
-      setCurrentVenueId(null);
-      
-      // Show success message
-      toast({
-        title: 'Logged out',
-        description: 'You have been logged out successfully',
-      });
-      
-      // Force redirect to login page
-      console.log("Redirecting to login page");
-      setLocation('/auth/login');
-      
-      // Wait a moment and then refetch to ensure we've got the latest state
-      setTimeout(() => {
-        refetch();
-      }, 100);
-    },
-    onError: (error) => {
-      console.error("Logout error:", error);
-      toast({
-        title: 'Error',
-        description: 'Failed to logout. Redirecting to login page...',
-        variant: 'destructive',
-      });
-      
-      // Even on error, redirect to login page
-      setTimeout(() => {
-        setLocation('/auth/login');
-      }, 500);
-    },
-  });
-  
-  // Switch venue mutation
-  const switchVenueMutation = useMutation({
-    mutationFn: async (newVenueId: number) => {
-      return apiCall(`/api/venues/select/${newVenueId}`, {
-        method: 'GET',
-      });
-    },
-    onSuccess: (data, newVenueId) => {
-      // Set the current venue ID directly in our state
-      setCurrentVenueId(newVenueId);
-      
-      // Invalidate queries that depend on the venue ID
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const queryKey = query.queryKey;
-          return Array.isArray(queryKey) && (
-            queryKey[0] === '/api/venue-network/graph' ||
-            queryKey[0] === '/api/venues' ||
-            queryKey[0] === '/api/settings'
-          );
-        }
-      });
-      
-      toast({
-        title: 'Venue Changed',
-        description: data.message || `Now viewing venue ID: ${newVenueId}`,
-      });
-    },
-    onError: () => {
-      toast({
-        title: 'Error',
-        description: 'Failed to switch venue',
-        variant: 'destructive',
-      });
-    },
-  });
-  
-  // Check authentication status and get current venue when component mounts
-  useEffect(() => {
-    const checkAuthAndVenue = async () => {
-      try {
-        // First check if we're authenticated and if a venue is already selected in the session
-        console.log("Checking authentication status and current venue");
-        const statusResponse = await axios.get('/api/auth/status', { withCredentials: true });
-        console.log("Auth status response:", statusResponse.data);
-        
-        if (statusResponse.data.authenticated) {
-          // If authenticated but no current venue ID in state, use the one from session
-          if (statusResponse.data.currentVenueId && !currentVenueId) {
-            console.log("Found venue ID in session:", statusResponse.data.currentVenueId);
-            setCurrentVenueId(statusResponse.data.currentVenueId);
-          }
-        }
-      } catch (error) {
-        console.error("Error checking auth status:", error);
-      }
-    };
-    
-    checkAuthAndVenue();
-  }, []); // Only run once when component mounts
-  
-  // Set default venue when user is loaded but no venue is selected
-  useEffect(() => {
-    const selectDefaultVenue = async () => {
-      try {
-        // Only proceed if we have a user but no venue is selected
-        if (user && !currentVenueId) {
-          console.log("User authenticated but no venue selected, fetching available venues");
-          const venuesResponse = await axios.get('/api/users/available-venues', { withCredentials: true });
-          const venues = venuesResponse.data;
-          
-          if (venues && venues.length > 0) {
-            // Select the first available venue as default
-            console.log("Setting default venue:", venues[0].id);
-            switchVenueMutation.mutate(venues[0].id);
-          }
-        }
-      } catch (error) {
-        console.error("Error selecting default venue:", error);
-      }
-    };
-    
-    selectDefaultVenue();
-  }, [user, currentVenueId, switchVenueMutation]);
-  
-  // Login handler
-  const login = async (username: string, password: string) => {
-    await loginMutation.mutateAsync({ username, password });
+// Simple AuthProvider for demo purposes - always authenticated and bypasses server checks
+export function AuthProvider({ children }: { children: React.ReactNode }) {  
+  // Demo implementation for permission checking
+  const checkPermission = (permission: string): boolean => {
+    return mockUser.permissions.includes(permission);
   };
   
-  // Logout handler
+  // Mock implementations that do nothing
+  const login = async () => {
+    console.log('Demo login - no authentication required');
+  };
+  
   const logout = async () => {
-    await logoutMutation.mutateAsync();
+    console.log('Demo logout - no authentication required');
   };
   
-  // Switch venue handler
   const switchVenue = async (venueId: number) => {
-    await switchVenueMutation.mutateAsync(venueId);
+    console.log(`Demo venue switch to venue ID: ${venueId}`);
   };
   
-  // Check if the user has a specific permission
-  const checkPermission = (permission: Permission): boolean => {
-    return hasPermission(user, permission);
-  };
-  
-  // Create the context value object
+  // Create the context value object with mock data
   const contextValue: AuthContextType = {
-    user,
-    isLoading: isLoading || loginMutation.isPending || logoutMutation.isPending,
-    isAuthenticated: !!user,
+    user: mockUser,
+    isLoading: false,
+    isAuthenticated: true, // Always authenticated for demo
     login,
     logout,
     hasPermission: checkPermission,
-    currentVenueId,
+    currentVenueId: 1, // Default venue ID
     switchVenue,
   };
   

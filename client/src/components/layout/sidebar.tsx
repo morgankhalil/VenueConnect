@@ -40,12 +40,10 @@ export function Sidebar({
 
   const navigation = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
-    { name: "Calendar", href: "/calendar", icon: Calendar },
-    { name: "Discover", href: "/discover", icon: Compass },
     { name: "Tours", href: "/tours", icon: Truck },
     { name: "Venue Network", href: "/venue-network", icon: Network },
-    { name: "Messages", href: "/messages", icon: MessageSquare },
-    { name: "Settings", href: "/settings", icon: Settings },
+    { name: "Calendar", href: "/calendar", icon: Calendar },
+    { name: "Discover", href: "/discover", icon: Compass },
   ];
 
   return (
@@ -60,39 +58,13 @@ export function Sidebar({
         </div>
         
         <div className="mt-8 flex-1 flex flex-col overflow-y-auto px-4">
-          {/* User Profile */}
-          <div className="mb-8">
-            <div className="flex items-center p-3 rounded-lg border border-[hsl(var(--custom-grey-light))] dark:border-[hsl(var(--custom-grey-dark))] bg-white dark:bg-black">
-              <div className="flex-shrink-0 h-12 w-12">
-                {userAvatar ? (
-                  <img 
-                    className="h-12 w-12 rounded-full object-cover ring-1 ring-[hsl(var(--custom-grey-medium))]" 
-                    src={userAvatar} 
-                    alt={userName} 
-                  />
-                ) : (
-                  <div className="h-12 w-12 rounded-full bg-[hsl(var(--custom-grey-medium))] flex items-center justify-center">
-                    <span className="text-white font-semibold text-lg">
-                      {userName.charAt(0)}
-                    </span>
-                  </div>
-                )}
-              </div>
-              <div className="ml-4">
-                <p className="text-base font-medium text-black dark:text-white">{userName}</p>
-                <p className="text-sm text-[hsl(var(--custom-grey-medium))]">{venueName}</p>
-              </div>
-            </div>
-          </div>
-          
-          {/* Venue Selector */}
-          <div className="mb-6">
-            <h3 className="text-sm font-semibold text-black dark:text-white px-4 mb-2">
-              Selected Venue
-            </h3>
-            <div className="px-2">
-              <VenueSelector />
-            </div>
+          <div className="px-4 py-2 mb-6">
+            <h2 className="text-base font-medium text-gray-700 dark:text-gray-300">
+              Venue Discovery Platform
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Tour Optimization Demo
+            </p>
           </div>
           
           {/* Navigation */}

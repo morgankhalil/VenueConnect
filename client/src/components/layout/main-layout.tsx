@@ -34,51 +34,38 @@ export function MainLayout({ children }: MainLayoutProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Get user data from API with optimized loading and caching
-  const { data: user, isLoading: isLoadingUser, error: userError } = useQuery({
-    queryKey: ['/api/users/me'],
-    queryFn: () => apiRequest('/api/users/me'),
-    retry: 1,
-    staleTime: Infinity, // Keep user data permanently fresh during session
-    // Load from cache immediately while fetching new data in background
-    refetchOnMount: "always", // Always fetch on first mount
-    refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    refetchOnReconnect: false // Don't refetch on reconnect
-  });
-
-  // Get connected venues from API with optimized dependencies
-  const { data: connectedVenues = [] } = useQuery({
-    queryKey: ['/api/venues/connected'],
-    queryFn: () => apiRequest('/api/venues/connected'),
-    initialData: [],
-    enabled: !!user, // Only fetch when user is available
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    refetchOnWindowFocus: false // Don't refetch when window regains focus
-  });
-
-  // Get current venue ID from auth context
-  const { currentVenueId } = useAuth();
+  // Demo mode: use hardcoded data for demo purposes
+  const demoUser = {
+    id: 1,
+    name: "Demo User",
+    role: "admin",
+    avatar: null
+  };
   
-  // Get venue data for current venue
-  const { data: currentVenue, isLoading: isLoadingVenue } = useQuery({
-    queryKey: ['/api/venues', currentVenueId],
-    queryFn: () => apiRequest(`/api/venues/${currentVenueId}`),
-    enabled: !!currentVenueId,
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-  });
+  const demoVenue = {
+    id: 1,
+    name: "The Fillmore",
+  };
   
-  // Default user if still loading, to prevent blocking the UI
+  // Mock venue connections for the demo
+  const connectedVenues = [
+    { id: 2, name: "Bowery Ballroom", isOnline: true },
+    { id: 3, name: "9:30 Club", isOnline: false },
+    { id: 4, name: "The Troubadour", isOnline: true }
+  ];
+  
+  // Default user values for demo
   const userToDisplay = {
-    id: user?.id || 0,
-    name: user?.name || "Loading...",
-    venueName: currentVenue?.name || "Loading venue...",
-    role: user?.role || "user",
-    avatar: user?.profileImageUrl || null, 
-    venueId: currentVenueId
+    id: demoUser.id,
+    name: demoUser.name,
+    venueName: demoVenue.name,
+    role: demoUser.role,
+    avatar: demoUser.avatar,
+    venueId: demoVenue.id
   };
 
-  // Show a loading indicator in the header instead of blocking the entire UI
-  const isInitialLoading = isLoadingUser && !user;
+  // Simple state for demo
+  const [isLoading, setIsLoading] = useState(false);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -216,7 +203,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           userRole={userToDisplay.role}
           onLogout={handleLogout}
           onSearch={handleSearch}
-          isLoading={isInitialLoading}
+          isLoading={isLoading}
         />
 
         {/* Page Content */}
