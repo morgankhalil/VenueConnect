@@ -223,6 +223,11 @@ export const triggerVenueSync = async (artistName: string) => {
 };
 
 export const testWebhook = async (id: number) => {
+  const response = await fetch(`/api/admin/test-webhook/${id}`, {
+    method: 'POST'
+  });
+  return response.json();
+};
 
 /**
  * Calendar and Event endpoints
@@ -428,6 +433,3 @@ export async function getEventsByVenue(venueId: number, params?: { startDate?: s
   return request(`/api/events?${searchParams.toString()}`);
 }
 
-export const deleteVenue = deleteVenue;
-export { getEvent };
-}
