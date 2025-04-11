@@ -35,9 +35,11 @@ export function TourList() {
   const [filterStatus, setFilterStatus] = useState<string | undefined>(undefined);
   const [_, navigate] = useLocation();
   
-  const { data: tours, isLoading, error } = useQuery({
+  const { data: tours, isLoading, error, isError } = useQuery({
     queryKey: ['/api/tours', filterStatus],
     queryFn: () => getTours({ status: filterStatus }),
+    retry: 3,
+    staleTime: 30000, // 30 seconds
   });
   
   // Mutation for creating a demo tour
