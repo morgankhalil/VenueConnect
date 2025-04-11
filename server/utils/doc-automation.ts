@@ -2,7 +2,9 @@
 import { DocumentationScanner } from './doc-scanner';
 import { StatusUpdater } from './status-updater';
 import path from 'path';
+import chokidar from 'chokidar';
 
+// Function to run documentation automation
 export async function runDocumentationAutomation() {
   try {
     // Scan codebase for status markers
@@ -23,4 +25,18 @@ export async function runDocumentationAutomation() {
     console.error('Documentation automation failed:', error);
     return { success: false, error };
   }
+}
+// Watch for file changes
+export function watchForChanges() {
+  const watcher = chokidar.watch(['**/*.ts', '**/*.tsx'], {
+    ignored: /(node_modules|\.git)/,
+    persistent: true
+  });
+
+  watcher.on('change', async (filepath) => {
+    console.log(`File ${filepath} changed, updating documentation...`);
+    await runDocumentationAutomation();
+  });
+
+  console.log('Documentation watcher started');
 }
