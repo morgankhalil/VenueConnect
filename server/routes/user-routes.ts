@@ -9,11 +9,8 @@ const router = express.Router();
 /**
  * Get current user information
  */
-router.get('/user', (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
-  }
-  
+router.get('/user', isAuthenticated, (req, res) => {
+  // User is guaranteed to exist due to isAuthenticated middleware
   return res.json(req.session.user);
 });
 

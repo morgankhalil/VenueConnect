@@ -5,6 +5,7 @@ import tourRoutes from './routes/tour-routes';
 import userRoutes from './routes/user-routes';
 import authRoutes from './routes/auth-routes';
 import venueRoutes from './routes/venue-routes';
+import dashboardRoutes from './routes/dashboard-routes';
 import { type Express } from 'express';
 import { type Server } from 'http';
 
