@@ -90,11 +90,10 @@ app.use((req, res, next) => {
   }
 
   // Use port 3000 for all environments to match deployment configuration
-  const port = 3000;
+  const port = process.env.PORT || 3000;
   server.listen({
     port,
     host: "0.0.0.0",
-    reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
   });

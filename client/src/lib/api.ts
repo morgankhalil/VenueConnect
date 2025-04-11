@@ -236,9 +236,11 @@ export const testWebhook = async (id: number) => {
 /**
  * Get a single event by ID
  */
-export async function getEvent(id: number) {
+async function getEvent(id: number) {
   return request(`/api/events/${id}`);
 }
+
+export { getEvent };
 
 /**
  * Get events for a specific period
