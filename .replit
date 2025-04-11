@@ -62,3 +62,12 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "tsx server/utils/doc-automation.ts"
+
+[[workflows.workflow]]
+name = "Documentation Watch"
+author = 37567996
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "tsx server/utils/doc-automation.ts --watch"
