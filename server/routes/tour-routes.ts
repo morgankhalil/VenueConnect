@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { db } from '../db';
 import { z } from 'zod';
 import { fromZodError } from 'zod-validation-error';
-import { calculateDistance, estimateTravelTime, optimizeTourRoute } from '../../shared/utils/tour-optimizer';
+import { optimizeTourRoute } from '../../shared/utils/tour-optimizer';
+import { calculateDistance, estimateTravelTime } from '../../shared/utils/geo';
 import { 
   tours, 
   tourVenues, 
@@ -153,14 +154,14 @@ router.get('/venue-network/graph/:id', async (req, res) => {
           if (!a.latitude || !a.longitude) return 1;
           if (!b.latitude || !b.longitude) return -1;
           
-          const distA = calculateDistance(
+          const distA = calculateDistanceInMiles(
             currentVenueObj.latitude, 
             currentVenueObj.longitude,
             a.latitude,
             a.longitude
           );
           
-          const distB = calculateDistance(
+          const distB = calculateDistanceInMiles(
             currentVenueObj.latitude, 
             currentVenueObj.longitude,
             b.latitude,
@@ -196,24 +197,15 @@ router.get('/venue-network/graph/:id', async (req, res) => {
 });
 
 /**
- * Calculate distance between two coordinates in miles
+ * Calculate distance between two coordinates in miles (legacy implementation)
+ * This is kept for backward compatibility with existing code
  */
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+function calculateDistanceInMiles(lat1: number, lon1: number, lat2: number, lon2: number): number {
   if (!lat1 || !lon1 || !lat2 || !lon2) return 9999;
   
-  const R = 3958.8; // Earth's radius in miles
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  const distance = R * c;
-  
-  return distance;
+  // Use our new km-based distance calculator and convert to miles
+  const distanceKm = calculateDistance(lat1, lon1, lat2, lon2);
+  return distanceKm * 0.621371; // Convert km to miles
 }
 
 /**
@@ -562,7 +554,7 @@ router.post('/:tourId/venues', async (req, res) => {
         const currVenue = currentVenueResult[0];
         
         if (prevVenue.latitude && prevVenue.longitude && currVenue.latitude && currVenue.longitude) {
-          const distance = calculateDistance(
+          const distance = calculateDistanceInMiles(
             Number(prevVenue.latitude),
             Number(prevVenue.longitude),
             Number(currVenue.latitude),
@@ -738,7 +730,7 @@ router.patch('/:tourId/venues/:venueId', async (req, res) => {
         if (prevVenue && currVenue && 
             prevVenue.latitude && prevVenue.longitude && 
             currVenue.latitude && currVenue.longitude) {
-          const distance = calculateDistance(
+          const distance = calculateDistanceInMiles(
             Number(prevVenue.latitude),
             Number(prevVenue.longitude),
             Number(currVenue.latitude),

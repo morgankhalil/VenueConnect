@@ -3,7 +3,8 @@ import { db } from '../db';
 import { eq, and, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { fromZodError } from 'zod-validation-error';
-import { calculateDistance, estimateTravelTime, optimizeTourRoute } from '../../shared/utils/tour-optimizer';
+import { optimizeTourRoute } from '../../shared/utils/tour-optimizer';
+import { calculateDistance, estimateTravelTime } from '../../shared/utils/geo';
 import { 
   tours, 
   tourVenues, 

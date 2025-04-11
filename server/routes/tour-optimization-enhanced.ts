@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { db } from '../db';
 import { eq, and, sql } from 'drizzle-orm';
 import { tours, tourVenues, venues, tourRoutes } from '../../shared/schema';
-import { calculateDistance, estimateTravelTime } from '../../shared/utils/tour-optimizer';
+import { calculateDistance, estimateTravelTime } from '../../shared/utils/geo';
 import { enhanceApplyOptimization, findImprovedVenuesForGap } from './tour-routes-extension';
 
 const router = Router();

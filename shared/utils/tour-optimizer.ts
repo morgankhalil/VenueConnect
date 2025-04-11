@@ -1,4 +1,14 @@
 import { Venue, Artist, TourVenue, Tour, TourGap } from "../schema";
+import { 
+  calculateDistance,
+  calculateTotalDistance,
+  estimateTravelTime,
+  calculateOptimizationScore,
+  calculateGeographicClustering,
+  calculateScheduleEfficiency,
+  calculateDateCoverage,
+  OptimizationScoreParams
+} from './geo';
 
 /**
  * Represents a point in the tour route
@@ -59,64 +69,7 @@ export interface OptimizedRoute {
   optimizationScore: number;
 }
 
-/**
- * Calculate distance between two points using Haversine formula
- * @param lat1 Latitude of first point
- * @param lon1 Longitude of first point
- * @param lat2 Latitude of second point
- * @param lon2 Longitude of second point
- * @returns Distance in kilometers
- */
-export function calculateDistance(lat1: number | null, lon1: number | null, lat2: number | null, lon2: number | null): number {
-  // Enhanced null checking - if any coordinate is null, NaN, or undefined, return 0
-  if (lat1 === null || lon1 === null || lat2 === null || lon2 === null || 
-      isNaN(Number(lat1)) || isNaN(Number(lon1)) || isNaN(Number(lat2)) || isNaN(Number(lon2))) {
-    console.log('Invalid coordinates detected in calculateDistance, returning 0');
-    return 0;
-  }
-  
-  // Convert to numbers (in case they're string representations)
-  const numLat1 = Number(lat1);
-  const numLon1 = Number(lon1);
-  const numLat2 = Number(lat2);
-  const numLon2 = Number(lon2);
-  
-  // Convert latitude and longitude from degrees to radians
-  const radLat1 = (Math.PI * numLat1) / 180;
-  const radLon1 = (Math.PI * numLon1) / 180;
-  const radLat2 = (Math.PI * numLat2) / 180;
-  const radLon2 = (Math.PI * numLon2) / 180;
-  
-  // Haversine formula
-  const dLat = radLat2 - radLat1;
-  const dLon = radLon2 - radLon1;
-  const a = 
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(radLat1) * Math.cos(radLat2) * 
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  
-  // Earth's radius in kilometers
-  const radius = 6371;
-  
-  // Calculate distance
-  return radius * c;
-}
-
-/**
- * Estimate travel time between two points based on distance
- * @param distanceKm Distance in kilometers
- * @returns Estimated travel time in minutes
- */
-export function estimateTravelTime(distanceKm: number): number {
-  // Assuming average speed of 70 km/h for touring
-  const averageSpeedKmh = 70;
-  // Convert to minutes and add buffer for rest stops, traffic, etc.
-  const travelTimeMinutes = (distanceKm / averageSpeedKmh) * 60;
-  const bufferFactor = 1.2; // 20% buffer
-  
-  return Math.round(travelTimeMinutes * bufferFactor);
-}
+// Distance calculation and travel time functions are now imported from './geo'
 
 /**
  * Find the nearest venue to a given point
@@ -202,18 +155,34 @@ export function optimizeTourRoute(
           name: `Venue ${point.id}`, // The UI will look up the full venue info
           city: "",
           region: null,
-          country: null,
+          country: "US",
           latitude: point.latitude,
           longitude: point.longitude,
           capacity: null,
           description: null,
-          website: null,
+          websiteUrl: null,
           contactEmail: null,
-          contactPhone: null, // Matches schema name
+          contactPhone: null,
           imageUrl: null,
           ownerId: null,
           bandsintownId: null,
           createdAt: null,
+          updatedAt: null,
+          marketCategory: null,
+          venueType: null,
+          capacityCategory: null,
+          primaryGenre: null,
+          secondaryGenres: null,
+          bookingContactName: null,
+          bookingEmail: null,
+          typicalBookingLeadTime: null,
+          paymentStructure: null,
+          soundSystem: null,
+          localAccommodation: null,
+          localPromotion: null,
+          ageRestriction: null,
+          socialMediaLinks: null,
+          songkickId: null
         },
         date: point.date,
         isFixed: point.status === 'confirmed', // Only confirmed venues are fixed
@@ -364,11 +333,8 @@ export function optimizeTourRoute(
     venue.sequence = index + 1; // Sequences start at 1
   });
   
-  // Calculate optimization score with enhanced prioritization
-  const baseScore = 100;
-  const distancePenalty = Math.min(20, result.totalDistance / 100);
-  const timePenalty = Math.min(20, result.totalTravelTime / 500);
-  
+  // Calculate optimization score using standardized function
+  // First calculate other metrics
   // Enhanced gap filling analysis
   const filledGaps = result.tourVenues.filter(v => !v.isFixed && v.gapFilling);
   const gapFillingQuality = filledGaps.reduce((score, venue) => {
@@ -376,41 +342,33 @@ export function optimizeTourRoute(
     return score + (venue.detourRatio ? Math.max(0, 5 - (venue.detourRatio - 1) * 10) : 0);
   }, 0);
   
-  const gapFillingBonus = Math.min(15, gapFillingQuality);
+  // Calculate geographic clustering using standardized function
+  const geographicClustering = calculateGeographicClustering(
+    result.tourVenues.map(v => ({ 
+      latitude: v.venue.latitude, 
+      longitude: v.venue.longitude 
+    }))
+  );
   
-  // Geographic clustering bonus
-  const clusterBonus = Math.min(10, result.tourVenues.reduce((bonus, venue, i, arr) => {
-    if (i === 0 || i === arr.length - 1) return bonus;
-    const prev = arr[i - 1];
-    const next = arr[i + 1];
-    
-    if (venue.venue && prev.venue && next.venue) {
-      const distanceToPrev = calculateDistance(
-        Number(venue.venue.latitude),
-        Number(venue.venue.longitude),
-        Number(prev.venue.latitude),
-        Number(prev.venue.longitude)
-      );
-      
-      const distanceToNext = calculateDistance(
-        Number(venue.venue.latitude),
-        Number(venue.venue.longitude),
-        Number(next.venue.latitude),
-        Number(next.venue.longitude)
-      );
-      
-      // Add bonus for venues close to their neighbors
-      if (distanceToPrev < 500 && distanceToNext < 500) {
-        return bonus + 2;
-      }
-    }
-    return bonus;
-  }, 0));
+  // Calculate schedule efficiency using standardized function
+  const scheduleEfficiency = calculateScheduleEfficiency(
+    result.tourVenues.map(v => ({ date: v.date }))
+  );
   
-  result.optimizationScore = Math.round(baseScore - distancePenalty - timePenalty + gapFillingBonus + clusterBonus);
+  // Calculate date coverage using standardized function
+  const dateCoverage = calculateDateCoverage(
+    result.tourVenues.map(v => ({ date: v.date }))
+  );
   
-  // Cap score at reasonable bounds
-  result.optimizationScore = Math.max(0, Math.min(100, result.optimizationScore));
+  // Calculate final optimization score
+  result.optimizationScore = calculateOptimizationScore({
+    totalDistance: result.totalDistance,
+    totalTravelTime: result.totalTravelTime,
+    gapFillingQuality: Math.min(100, gapFillingQuality * 10),
+    geographicClustering,
+    scheduleEfficiency,
+    dateCoverage
+  });
   
   return result;
 }

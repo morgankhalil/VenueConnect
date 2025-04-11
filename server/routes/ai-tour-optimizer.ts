@@ -3,7 +3,12 @@ import { db } from '../db';
 import { HfInference } from '@huggingface/inference';
 import { tours, tourVenues, artists, venues } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
-import { calculateDistance, calculateTotalDistance, estimateTravelTime } from '../utils/distance';
+import { 
+  calculateDistance, 
+  calculateTotalDistance, 
+  estimateTravelTime,
+  calculateOptimizationScore
+} from '../../shared/utils/geo';
 
 // Create router
 export const aiOptimizationRouter = Router();
@@ -319,10 +324,27 @@ aiOptimizationRouter.post('/apply', async (req: Request, res: Response) => {
     const optimizedDistance = calculateTotalDistance(orderedVenues);
     const optimizedTravelTime = estimateTravelTime(optimizedDistance);
     
+    // Get existing tour data to calculate optimization improvement
+    const tour = await db.select().from(tours).where(eq(tours.id, Number(tourId))).limit(1);
+    const initialDistance = tour[0]?.estimatedTravelDistance || optimizedDistance * 1.2; // Fallback if no initial
+    const initialTravelTime = tour[0]?.estimatedTravelTime || optimizedTravelTime * 1.2; // Fallback if no initial
+    
+    // Calculate optimization metrics
+    const optimizationScore = calculateOptimizationScore({
+      totalDistance: optimizedDistance,
+      totalTravelTime: optimizedTravelTime,
+      // Determine if we have enough data for these metrics
+      ...(optimizedDistance < initialDistance && {
+        geographicClustering: 80, // Assuming AI provides good clustering
+        scheduleEfficiency: 75,   // Assuming AI provides decent scheduling
+        dateCoverage: Object.keys(suggestedDates).length > 0 ? 90 : 60 // Higher if dates provided
+      })
+    });
+    
     // Update tour with new metrics
     await db.update(tours)
       .set({
-        optimizationScore: 85, // Base score for AI optimization
+        optimizationScore,
         estimatedTravelDistance: optimizedDistance,
         estimatedTravelTime: optimizedTravelTime
       })

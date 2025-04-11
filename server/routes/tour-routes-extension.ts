@@ -1,6 +1,6 @@
 import { db } from '../db';
 import { tourRoutes, venues } from '../../shared/schema';
-import { calculateDistance, estimateTravelTime } from '../../shared/utils/tour-optimizer';
+import { calculateDistance, estimateTravelTime } from '../../shared/utils/geo';
 import { eq, and, sql } from 'drizzle-orm';
 
 /**
