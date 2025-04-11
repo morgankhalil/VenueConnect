@@ -1,0 +1,81 @@
+chunk-RPCDYKBN.js?v=b9935fd3:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+queryClient.ts:68 Making fetch request to https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/api/dashboard/stats with options: Object
+5A soft navigation has been detected: <URL>
+queryClient.ts:70 Response status from https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/api/dashboard/stats: 200 OK
+queryClient.ts:79 Parsed response data from https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/api/dashboard/stats: Object
+queryClient.ts:88 API /api/dashboard/stats response time: 2025ms
+queryClient.ts:92 API Response: {
+  "venueCount": 42,
+  "eventCount": 0,
+  "tourCount": 9,
+  "confirmedBookings": 8,
+  "role": "admin",
+  "venueId": null
+}
+tour-detail-new.tsx:79 Tour venues data: Array(0)
+tour-detail-new.tsx:103 Mapped venues for map: Array(0)
+tour-detail-new.tsx:109 No venues with valid coordinates found
+(anonymous) @ tour-detail-new.tsx:109
+tour-detail-new.tsx:79 Tour venues data: Array(5)
+tour-detail-new.tsx:103 Mapped venues for map: Array(5)
+tour-detail-new.tsx:106 Setting 5 venues to map
+chunk-RPCDYKBN.js?v=b9935fd3:521 Warning: Function components cannot be given refs. Attempts to access this ref will fail. Did you mean to use React.forwardRef()?
+
+Check the render method of `SlotClone`.
+    at Badge (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/src/components/ui/badge.tsx:35:18)
+    at https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-DKHUMOWT.js?v=b9935fd3:52:11
+    at https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-DKHUMOWT.js?v=b9935fd3:33:11
+    at https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-CPFL7ZFD.js?v=b9935fd3:41:13
+    at https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-DKHUMOWT.js?v=b9935fd3:52:11
+    at https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-DKHUMOWT.js?v=b9935fd3:33:11
+    at https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-CPFL7ZFD.js?v=b9935fd3:41:13
+    at https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2WZHSNBH.js?v=b9935fd3:1982:13
+    at https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=0b0a7b32:191:13
+    at Provider (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-7X6RRC7I.js?v=b9935fd3:38:15)
+    at Provider (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2WZHSNBH.js?v=b9935fd3:1917:15)
+    at Popper (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2WZHSNBH.js?v=b9935fd3:1974:11)
+    at Tooltip (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=0b0a7b32:109:5)
+    at Provider (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-7X6RRC7I.js?v=b9935fd3:38:15)
+    at TooltipProvider (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=0b0a7b32:65:5)
+    at VenueStatusBadge (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/src/components/tour/venue-status-badge.tsx:22:3)
+    at div
+    at div
+    at VenueListItem (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/src/components/tour/venue-list.tsx:61:26)
+    at div
+    at div
+    at div
+    at https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-CPFL7ZFD.js?v=b9935fd3:41:13
+    at https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-scroll-area.js?v=8fb66b03:118:13
+    at div
+    at https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-CPFL7ZFD.js?v=b9935fd3:41:13
+    at Provider (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-7X6RRC7I.js?v=b9935fd3:38:15)
+    at https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-scroll-area.js?v=8fb66b03:56:7
+    at _c (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/src/components/ui/scroll-area.tsx:21:11)
+    at VenueList (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/src/components/tour/venue-list.tsx:22:3)
+    at div
+    at _c9 (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at div
+    at TourDetailNew (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/src/components/tour/tour-detail-new.tsx:67:33)
+    at div
+    at div
+    at div
+    at TourDetailPage (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/src/pages/tour-detail.tsx:24:27)
+    at Route (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=65f5d01d:323:16)
+    at Switch (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=65f5d01d:379:17)
+    at Router
+    at div
+    at main
+    at div
+    at div
+    at MainLayout (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/src/components/layout/main-layout.tsx:29:30)
+    at AuthProvider (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/src/context/auth-context.tsx:28:32)
+    at QueryClientProvider (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=85b4f202:2805:3)
+    at ThemeProvider (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/src/components/ui/theme-provider.tsx:25:3)
+    at App (https://8ea8895f-5dcf-4ad3-80d4-3e3b84a956e0-00-tss995hx7hnh.janeway.replit.dev/src/App.tsx?v=wx6FB7RkIUHunZMAVCPSQ:161:22)
+printWarning @ chunk-RPCDYKBN.js?v=b9935fd3:521
+Show 1 more frame
+Show less
