@@ -34,7 +34,7 @@ import {
 import { format } from 'date-fns';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 
 
 // Form schema for validating tour data
@@ -66,7 +66,7 @@ type TourFormProps = {
 };
 
 export function TourForm({ tourId, defaultValues, onSuccess }: TourFormProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -132,7 +132,7 @@ export function TourForm({ tourId, defaultValues, onSuccess }: TourFormProps) {
       if (onSuccess) {
         onSuccess(result);
       }
-      router.back();
+      navigate(-1);
     } catch (error) {
       console.error('Error creating/updating tour:', error);
 
@@ -364,7 +364,7 @@ export function TourForm({ tourId, defaultValues, onSuccess }: TourFormProps) {
         />
 
         <div className="flex justify-end space-x-4">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
+          <Button type="button" variant="outline" onClick={() => navigate(-1)}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
