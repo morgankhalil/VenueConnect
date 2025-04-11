@@ -301,7 +301,9 @@ export function UnifiedTourOptimizer({ tourId, onApplyChanges }: UnifiedTourOpti
                     <CardContent className="pt-6">
                       <div className="text-center">
                         <p className="text-sm font-medium text-muted-foreground mb-1">Distance Reduction</p>
-                        <p className="text-3xl font-bold">{data.optimizationResult.estimatedDistanceReduction}%</p>
+                        <p className="text-3xl font-bold">{typeof data.optimizationResult.estimatedDistanceReduction === 'string' ? 
+                          data.optimizationResult.estimatedDistanceReduction : 
+                          `${data.optimizationResult.estimatedDistanceReduction}%`}</p>
                         <p className="text-xs text-muted-foreground mt-1">Total: {data.optimizationResult.calculatedMetrics.totalDistance}</p>
                       </div>
                     </CardContent>
@@ -311,7 +313,9 @@ export function UnifiedTourOptimizer({ tourId, onApplyChanges }: UnifiedTourOpti
                     <CardContent className="pt-6">
                       <div className="text-center">
                         <p className="text-sm font-medium text-muted-foreground mb-1">Time Savings</p>
-                        <p className="text-3xl font-bold">{data.optimizationResult.estimatedTimeSavings}%</p>
+                        <p className="text-3xl font-bold">{typeof data.optimizationResult.estimatedTimeSavings === 'string' ? 
+                          data.optimizationResult.estimatedTimeSavings : 
+                          `${data.optimizationResult.estimatedTimeSavings}%`}</p>
                         <p className="text-xs text-muted-foreground mt-1">
                           {Math.floor(data.optimizationResult.calculatedMetrics.totalTravelTimeMinutes / 60)}h {data.optimizationResult.calculatedMetrics.totalTravelTimeMinutes % 60}m
                         </p>
