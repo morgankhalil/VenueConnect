@@ -77,11 +77,7 @@ export function Header({
             <Menu className="h-5 w-5" />
           </button>
 
-          <div className="hidden md:block mr-6">
-            <h2 className="text-xl font-medium tracking-tight text-black dark:text-white fade-in">
-              Welcome back, <span className="font-semibold">{userName.split(' ')[0]}</span>
-            </h2>
-          </div>
+          
 
           <form 
             className="max-w-md w-full"
