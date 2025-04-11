@@ -19,15 +19,39 @@ export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2
 }
 
 /**
- * Estimate travel time between two coordinates
- * @param lat1 Latitude of point 1
- * @param lon1 Longitude of point 1
- * @param lat2 Latitude of point 2
- * @param lon2 Longitude of point 2
+ * Calculate total distance between multiple venues
+ * @param venues Array of venue objects with latitude and longitude
+ * @returns Total distance in kilometers
+ */
+export function calculateTotalDistance(venues: Array<{ latitude: number | null; longitude: number | null; }>): number {
+  if (venues.length < 2) return 0;
+  
+  let totalDistance = 0;
+  for (let i = 0; i < venues.length - 1; i++) {
+    const currentVenue = venues[i];
+    const nextVenue = venues[i + 1];
+    
+    if (currentVenue.latitude && currentVenue.longitude && 
+        nextVenue.latitude && nextVenue.longitude) {
+      const distance = calculateDistance(
+        currentVenue.latitude, 
+        currentVenue.longitude,
+        nextVenue.latitude,
+        nextVenue.longitude
+      );
+      totalDistance += distance;
+    }
+  }
+  
+  return Math.round(totalDistance * 10) / 10; // Round to 1 decimal place
+}
+
+/**
+ * Estimate travel time based on total distance
+ * @param distanceKm Total distance in kilometers
  * @returns Estimated travel time in minutes
  */
-export function estimateTravelTime(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const distanceKm = calculateDistance(lat1, lon1, lat2, lon2);
+export function estimateTravelTime(distanceKm: number): number {
   // Assume average speed of 60 km/h for travel between cities
   const averageSpeedKmh = 60;
   // Convert to minutes

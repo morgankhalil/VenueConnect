@@ -157,9 +157,12 @@ export function AITourOptimizer({ tourId, onApplyChanges }: { tourId: number; on
         ) : !data ? (
           <div className="p-6 text-center">
             <p className="mb-4">Click generate to get AI-powered optimization suggestions.</p>
-            <Button onClick={() => refetch()}>
-              <Sparkles className="mr-2 h-4 w-4" />
-              Generate Suggestions
+            <p className="text-xs text-muted-foreground mb-2">
+              Uses Hugging Face inference API to optimize your tour routing.
+            </p>
+            <Button onClick={() => refetch()} className="gap-2">
+              <Sparkles className="h-4 w-4" />
+              Generate AI Suggestions
             </Button>
           </div>
         ) : (

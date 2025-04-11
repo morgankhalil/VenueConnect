@@ -3,7 +3,7 @@ import { db } from '../db';
 import { HfInference } from '@huggingface/inference';
 import { tours, tourVenues, artists, venues } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
-import { calculateDistance } from '../utils/distance';
+import { calculateDistance, calculateTotalDistance, estimateTravelTime } from '../utils/distance';
 
 // Create router
 export const aiOptimizationRouter = Router();
@@ -89,37 +89,7 @@ async function formatTourDataForAI(tourId: number) {
   };
 }
 
-// Calculate total distance between venues
-function calculateTotalDistance(venues: any[]): number {
-  if (venues.length < 2) return 0;
-  
-  let totalDistance = 0;
-  for (let i = 0; i < venues.length - 1; i++) {
-    const currentVenue = venues[i];
-    const nextVenue = venues[i + 1];
-    
-    if (currentVenue.latitude && currentVenue.longitude && 
-        nextVenue.latitude && nextVenue.longitude) {
-      const distance = calculateDistance(
-        currentVenue.latitude, 
-        currentVenue.longitude,
-        nextVenue.latitude,
-        nextVenue.longitude
-      );
-      totalDistance += distance;
-    }
-  }
-  
-  return Math.round(totalDistance * 10) / 10; // Round to 1 decimal place
-}
-
-// Estimate travel time based on distance
-function estimateTravelTime(distanceKm: number): number {
-  // Assume average speed of 60 km/h for travel between cities
-  const averageSpeedKmh = 60;
-  // Convert to minutes
-  return Math.round(distanceKm / averageSpeedKmh * 60);
-}
+// Using these functions imported from '../utils/distance'
 
 // Endpoint to get AI optimization suggestions
 aiOptimizationRouter.post('/suggest', async (req: Request, res: Response) => {
