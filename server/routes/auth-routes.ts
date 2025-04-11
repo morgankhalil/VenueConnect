@@ -30,8 +30,7 @@ router.post('/', async (req, res) => {
         username: true,
         name: true,
         email: true,
-        role: true,
-        venue_id: true
+        role: true
       }
     });
     
@@ -47,8 +46,7 @@ router.post('/', async (req, res) => {
     const sessionUser = {
       id: user.id,
       name: user.name || user.username,
-      role: user.role,
-      venueId: user.venue_id // Convert venue_id from database to venueId for frontend consistency
+      role: user.role || 'user'
     };
     
     req.session.user = sessionUser;

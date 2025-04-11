@@ -86,7 +86,6 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   role: text("role").default("user"),  // Using text for backward compatibility
   // The following fields enhance the user profile
-  venueId: integer("venue_id").references(() => venues.id),
   artistId: integer("artist_id").references(() => artists.id),
   contactPhone: text("contact_phone"),
   profileImageUrl: text("profile_image_url"),
@@ -257,9 +256,7 @@ export const collaborativeParticipants = pgTable("collaborative_participants", {
 });
 
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
-  venues: many(venues),
-}));
+export const usersRelations = relations(users, ({ many }) => ({}));
 
 export const venuesRelations = relations(venues, ({ one, many }) => ({
   owner: one(users, {

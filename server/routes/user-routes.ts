@@ -16,13 +16,13 @@ router.get('/me', isAuthenticated, (req, res) => {
 
 /**
  * Get available venues for the current user
- * Returns all venues for admin users, only assigned venue for other users
+ * Returns all venues for admin users, filtered venues for other users based on role
  * Route: /api/users/available-venues
  */
 router.get('/available-venues', isAuthenticated, async (req, res) => {
   try {
     // User is guaranteed to exist due to isAuthenticated middleware
-    const { role, venueId } = req.session.user as { role: string, venueId: number | null };
+    const { role } = req.session.user as { role: string };
     
     let availableVenues: any[] = [];
     
@@ -38,16 +38,17 @@ router.get('/available-venues', isAuthenticated, async (req, res) => {
         orderBy: venues.name
       });
     } 
-    // Other users can only see their assigned venue(s)
-    else if (venueId) {
+    // For now, venue managers and other users get the first 5 venues (this will be replaced with a proper user-venue relation)
+    else {
       availableVenues = await db.query.venues.findMany({
-        where: eq(venues.id, venueId),
         columns: {
           id: true,
           name: true,
           city: true,
           region: true
-        }
+        },
+        orderBy: venues.name,
+        limit: 5
       });
     }
     
@@ -74,21 +75,13 @@ router.get('/list', isAuthenticated, hasPermission('canManageUsers'), async (req
         name: true,
         email: true,
         role: true,
-        venue_id: true,
         profileImageUrl: true,
         lastLogin: true
       },
       orderBy: users.name
     });
     
-    // Convert to frontend field names
-    const formattedUsers = allUsers.map(user => ({
-      ...user,
-      venueId: user.venue_id,
-      venue_id: undefined
-    }));
-    
-    return res.status(200).json(formattedUsers);
+    return res.status(200).json(allUsers);
   } catch (error) {
     console.error('Error fetching users:', error);
     return res.status(500).json({ 
