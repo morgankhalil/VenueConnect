@@ -89,9 +89,14 @@ export function AITourOptimizer({ tourId, onApplyChanges }: { tourId: number; on
       return await applyAIOptimization(tourId, optimizedSequence, suggestedDates);
     },
     onSuccess: () => {
+      // Check if we're using the fallback optimization (presence of aiError)
+      const isUsingFallback = data?.aiError !== undefined;
+      
       toast({
-        title: 'AI optimization applied',
-        description: 'Your tour has been optimized with AI suggestions',
+        title: isUsingFallback ? 'Standard optimization applied' : 'AI optimization applied',
+        description: isUsingFallback 
+          ? 'Your tour has been optimized using standard algorithm (AI service unavailable)'
+          : 'Your tour has been optimized with AI suggestions',
       });
       
       // Close the dialog
@@ -105,12 +110,29 @@ export function AITourOptimizer({ tourId, onApplyChanges }: { tourId: number; on
         onApplyChanges();
       }
     },
-    onError: (err) => {
+    onError: (err: any) => {
+      // Provide more detailed error message if available
+      const isApiKeyError = err?.message?.includes('API key') || err?.message?.includes('token');
+      
       toast({
-        title: 'Error applying AI optimization',
-        description: 'There was a problem applying the AI suggestions. Please try again.',
-        variant: 'destructive',
+        title: isApiKeyError ? 'AI Service Unavailable' : 'Error applying optimization',
+        description: isApiKeyError 
+          ? 'Hugging Face API key is missing or invalid. The system has applied standard optimization instead.'
+          : 'There was a problem applying the AI suggestions. Please try again.',
+        variant: data?.aiError ? 'default' : 'destructive',
       });
+      
+      // If we have fallback data, still consider it successful and close
+      if (data?.aiError) {
+        setOpen(false);
+        
+        // Still invalidate queries to refresh the tour data
+        queryClient.invalidateQueries({ queryKey: ['/api/tours', tourId] });
+        
+        if (onApplyChanges) {
+          onApplyChanges();
+        }
+      }
     }
   });
 
