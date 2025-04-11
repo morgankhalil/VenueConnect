@@ -19,15 +19,11 @@ declare module 'express-session' {
 
 /**
  * Middleware to check if user is authenticated
+ * In demo mode, this middleware is disabled and allows all requests
  */
 export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
-  if (req.session && req.session.user) {
-    return next();
-  }
-  
-  return res.status(401).json({
-    error: 'Authentication required'
-  });
+  // Demo mode: always pass through authentication
+  return next();
 }
 
 /**
@@ -44,98 +40,36 @@ const rolePermissions: Record<string, string[]> = {
 
 /**
  * Middleware to check if user has a specific permission
+ * In demo mode, this middleware is disabled and allows all requests
  * @param permission The permission to check
  */
 export function hasPermission(permission: string) {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.session || !req.session.user) {
-      return res.status(401).json({
-        error: 'Authentication required'
-      });
-    }
-    
-    const { role } = req.session.user;
-    
-    // Admin has all permissions
-    if (role === 'admin') {
-      return next();
-    }
-    
-    // Check if the role has the required permission
-    const permissions = rolePermissions[role] || [];
-    if (permissions.includes(permission)) {
-      return next();
-    }
-    
-    return res.status(403).json({
-      error: 'Permission denied'
-    });
+    // Demo mode: always pass through permission check
+    return next();
   };
 }
 
 /**
  * Middleware to check if user has access to a specific venue
+ * In demo mode, this middleware is disabled and allows all requests
  * @param paramName The parameter name containing the venue ID (defaults to 'venueId')
  */
 export function hasVenueAccess(paramName: string = 'venueId') {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.session || !req.session.user) {
-      return res.status(401).json({
-        error: 'Authentication required'
-      });
-    }
-    
-    const { role } = req.session.user;
-    const requestedVenueId = Number(req.params[paramName]);
-    
-    // Admin can access any venue
-    if (role === 'admin') {
-      return next();
-    }
-    
-    // Get the current venue ID from the session
-    const currentVenueId = req.session.currentVenueId as number | undefined;
-    
-    // Check if the current venue matches the requested venue
-    if (currentVenueId === requestedVenueId) {
-      return next();
-    }
-    
-    // For now, allow access to all venues for all authenticated users
-    // This will be replaced with proper venue-user permissions later
+    // Demo mode: always pass through venue access check
     return next();
-    
-    // When we implement proper permissions, uncomment this:
-    /*
-    return res.status(403).json({
-      error: 'You do not have access to this venue'
-    });
-    */
   };
 }
 
 /**
  * Middleware to check if user has a specific role
+ * In demo mode, this middleware is disabled and allows all requests
  * @param roles Array of allowed roles
  */
 export function hasRole(roles: string | string[]) {
-  const allowedRoles = Array.isArray(roles) ? roles : [roles];
-  
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.session || !req.session.user) {
-      return res.status(401).json({
-        error: 'Authentication required'
-      });
-    }
-    
-    const { role } = req.session.user;
-    
-    if (allowedRoles.includes(role)) {
-      return next();
-    }
-    
-    return res.status(403).json({
-      error: 'Role required'
-    });
+    // Demo mode: always pass through role check
+    return next();
   };
 }

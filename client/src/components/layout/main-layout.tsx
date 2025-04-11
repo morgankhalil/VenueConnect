@@ -39,7 +39,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     id: 1,
     name: "Demo User",
     role: "admin",
-    avatar: null
+    avatar: undefined
   };
   
   const demoVenue = {
