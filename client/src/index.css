@@ -28,6 +28,15 @@
 }
 
 @layer base {
+  /* Base text color utilities */
+  .text-default {
+    @apply text-gray-900 dark:text-gray-100;
+  }
+  
+  .text-muted {
+    @apply text-gray-600 dark:text-gray-400;
+  }
+
   :root {
 
 /* Z-index stacking fixes */
@@ -81,7 +90,7 @@
   }
 
   body {
-    @apply bg-white dark:bg-black text-black dark:text-white antialiased;
+    @apply bg-white dark:bg-black text-gray-900 dark:text-gray-100 antialiased;
     font-family: 'Afacad', sans-serif;
   }
 
