@@ -126,7 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Switch venue mutation
   const switchVenueMutation = useMutation({
     mutationFn: async (venueId: number) => {
-      return apiCall(`/api/select-venue/${venueId}`, {
+      return apiCall(`/api/venues/select-venue/${venueId}`, {
         method: 'GET',
       });
     },

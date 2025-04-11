@@ -61,8 +61,13 @@ app.use(async (req, res, next) => {
   // Comment this section out to enforce proper authentication
   try {
     if (process.env.NODE_ENV !== 'production') {
-      // Check if this is a logout request - always allow it
-      if (req.path === '/api/auth/logout') {
+      // Check if this is a login or logout request - always allow them
+      if (req.path === '/api/auth/login' || req.path === '/api/auth/logout') {
+        return next();
+      }
+      
+      // If user is already authenticated, let them through
+      if (req.session && req.session.user) {
         return next();
       }
       
@@ -73,24 +78,8 @@ app.use(async (req, res, next) => {
         return res.status(401).json({ error: "Authentication required" });
       }
       
-      console.log("Creating demo user session for development");
-      
-      // Try to find a venue with ID 1 (simplest approach)
-      const venueId = 1;
-      
-      // Fallback to a demo user with admin role for development
-      req.session.user = {
-        id: 1,
-        name: "Demo Admin",
-        role: "admin", // Give admin role for easy access to features
-        venueId: venueId
-      };
-      
-      // Make sure the loggedOut flag is explicitly false
-      // @ts-ignore
-      req.session.loggedOut = false;
-      
-      return next();
+      // In all other cases - redirect to login instead of creating auto-login
+      return res.status(401).json({ error: "Authentication required" });
     } else {
       // In production, enforce authentication
       return res.status(401).json({ error: "Authentication required" });

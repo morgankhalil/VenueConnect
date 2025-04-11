@@ -4,6 +4,7 @@ import { createServer } from 'http';
 import tourRoutes from './routes/tour-routes';
 import userRoutes from './routes/user-routes';
 import authRoutes from './routes/auth-routes';
+import venueRoutes from './routes/venue-routes';
 import { type Express } from 'express';
 import { type Server } from 'http';
 
@@ -14,6 +15,7 @@ export function registerRoutes(app: Express): Server {
   app.use('/api', tourRoutes);
   app.use('/api', userRoutes);
   app.use('/api', authRoutes);
+  app.use('/api', venueRoutes);
   
   // Add user info endpoint
   app.get('/api/user-info', (req, res) => {

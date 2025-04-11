@@ -22,18 +22,42 @@ router.post('/login', async (req, res) => {
     
     // In a real application, you would use proper hashed password comparison
     // This is a simplified version for demo purposes
-    const user = await db.query.users.findFirst({
-      where: eq(users.username, username),
-    });
+    let user;
+    
+    // For demo/testing purposes, accept hardcoded admin/venueManager credentials
+    if (username === 'admin' && password === 'password') {
+      // Create a mock admin user
+      user = {
+        id: 1,
+        username: 'admin',
+        name: 'Admin User',
+        role: 'admin',
+        venueId: 1 // Default venue ID
+      };
+    } else if (username === 'venueManager' && password === 'password') {
+      // Create a mock venue manager user
+      user = {
+        id: 2,
+        username: 'venueManager',
+        name: 'Venue Manager',
+        role: 'venue_manager',
+        venueId: 217 // The first venue from the database (40 Watt Club)
+      };
+    } else {
+      // Try to find the user in the database
+      user = await db.query.users.findFirst({
+        where: eq(users.username, username),
+      });
+      
+      // In a real application, we would verify password hash here
+      // For simplicity in this demo, we're accepting any password for DB users
+    }
     
     if (!user) {
       return res.status(401).json({
         error: 'Invalid username or password'
       });
     }
-    
-    // In a real application, compare password hash here
-    // For demo, we'll accept any password
     
     // Set the user in session
     req.session.user = {

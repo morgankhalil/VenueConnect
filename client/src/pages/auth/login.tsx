@@ -33,9 +33,6 @@ export default function LoginPage() {
       <div className="max-w-md w-full">
         <h1 className="text-3xl font-bold text-center mb-8">VenueConnect Platform</h1>
         <LoginForm />
-        <p className="text-center mt-6 text-sm text-muted-foreground">
-          For testing use: username = admin, password = password
-        </p>
       </div>
     </div>
   );
