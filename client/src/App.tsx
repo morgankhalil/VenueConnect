@@ -50,6 +50,7 @@ function Router() {
       <Route path="/tours/:id/optimize" component={OptimizeTour} />
       <Route path="/tours/:id/wizard" component={TourWizard} />
       <Route path="/tours/:id" component={TourDetail} />
+      <Route path="/documentation" component={Documentation} />
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />
