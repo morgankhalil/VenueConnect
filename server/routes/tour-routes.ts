@@ -1464,11 +1464,11 @@ router.post('/create-demo', async (req, res) => {
         });
     }
     
-    // Return the created tour
+    // Return the created tour with redirect to tour detail page, not the optimizer
     res.status(201).json({ 
       id: tour.id,
       message: "Demo tour created successfully",
-      redirectUrl: `/tours/${tour.id}/optimize`
+      redirectUrl: `/tours/${tour.id}`
     });
     
   } catch (error) {

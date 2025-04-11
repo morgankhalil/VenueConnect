@@ -85,11 +85,11 @@ export function TourList() {
         description: "A new demo tour has been created with venues ready for optimization.",
       });
       
-      // Navigate to the optimization page for the new tour
+      // Navigate to the tour detail page (not directly to optimization)
       if (data && data.redirectUrl) {
         navigate(data.redirectUrl);
       } else if (data && data.id) {
-        navigate(`/tours/${data.id}/optimize`);
+        navigate(`/tours/${data.id}`);
       }
     },
     onError: (error) => {

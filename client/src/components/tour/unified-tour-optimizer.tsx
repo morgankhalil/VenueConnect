@@ -174,15 +174,33 @@ export function UnifiedTourOptimizer({ tourId, onApplyChanges }: UnifiedTourOpti
   // Handle dialog open state
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
-    if (isOpen && !data) {
-      // Fetch data when dialog opens
-      refetch();
+    
+    if (isOpen) {
+      // Reset the state when the dialog opens
+      setShowMethodSelection(true);
+      setHasSelectedMethod(optimizationMethod !== 'auto'); // If a non-default method is already selected, enable the button
+    } else {
+      // Reset when dialog closes
+      if (!data) {
+        setOptimizationMethod('auto');
+      }
     }
   };
 
+  // States to track the UI flow
+  const [showMethodSelection, setShowMethodSelection] = useState(true);
+  const [hasSelectedMethod, setHasSelectedMethod] = useState(false);
+  
   // Handle optimization method change
   const handleMethodChange = (value: 'standard' | 'ai' | 'auto') => {
     setOptimizationMethod(value);
+    setHasSelectedMethod(true);
+    // Don't automatically run the optimization
+  };
+  
+  // Start the optimization process after method selection
+  const startOptimization = () => {
+    setShowMethodSelection(false);
     refetch();
   };
 
@@ -265,11 +283,27 @@ export function UnifiedTourOptimizer({ tourId, onApplyChanges }: UnifiedTourOpti
           </div>
         ) : !data ? (
           <div className="p-6 text-center">
-            <p className="mb-4">Click generate to get optimization suggestions.</p>
-            <Button onClick={() => refetch()} className="gap-2">
-              <Sparkles className="h-4 w-4" />
-              Generate Optimization
-            </Button>
+            {showMethodSelection ? (
+              <>
+                <p className="mb-4">Select an optimization method and click continue to generate optimization suggestions.</p>
+                <Button 
+                  onClick={startOptimization} 
+                  className="gap-2"
+                  disabled={!hasSelectedMethod}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Continue with {optimizationMethod === 'ai' ? 'AI' : optimizationMethod === 'standard' ? 'Standard' : 'Auto'} Optimization
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className="mb-4">Click generate to get optimization suggestions.</p>
+                <Button onClick={() => refetch()} className="gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  Generate Optimization
+                </Button>
+              </>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
