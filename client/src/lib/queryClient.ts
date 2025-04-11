@@ -56,7 +56,7 @@ export async function apiRequest(
     headers: {
       'Content-Type': 'application/json',
     },
-    credentials: 'include',
+    credentials: 'include', // This enables sending cookies with cross-origin requests
   };
 
   const fetchOptions = { ...defaultOptions, ...options };
@@ -65,14 +65,18 @@ export async function apiRequest(
   const startTime = performance.now();
   
   try {
+    console.log(`Making fetch request to ${url} with options:`, fetchOptions);
     const response = await fetch(url, fetchOptions);
+    console.log(`Response status from ${url}:`, response.status, response.statusText);
 
     if (!response.ok) {
+      console.error(`API error for ${url}:`, response.status, response.statusText);
       throw new Error(`API error: ${response.status}`);
     }
 
     // Parse response
     const data = await response.json();
+    console.log(`Parsed response data from ${url}:`, data);
     
     // Calculate and store response time
     const endTime = performance.now();

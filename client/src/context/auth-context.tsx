@@ -21,12 +21,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Helper function for API requests
 const apiCall = async (url: string, options: { method: string; data?: any }) => {
   try {
+    console.log(`Making ${options.method} request to ${url}`, options.data);
     const { method, data } = options;
     const response = method === 'GET' 
-      ? await axios.get(url)
-      : await axios.post(url, data);
+      ? await axios.get(url, { withCredentials: true })
+      : await axios.post(url, data, { withCredentials: true });
+    console.log(`Response from ${url}:`, response.data);
     return response.data;
   } catch (error) {
+    console.error(`Error in API call to ${url}:`, error);
     if (axios.isAxiosError(error) && error.response) {
       throw new Error(error.response.data.message || 'API request failed');
     }
@@ -42,6 +45,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Get current user information
   const { data: user, isLoading, refetch } = useQuery<User | null>({
     queryKey: ['/api/users/me'],
+    queryFn: async () => {
+      try {
+        console.log("Fetching current user data...");
+        const response = await apiCall('/api/users/me', {
+          method: 'GET'
+        });
+        console.log("Current user response:", response);
+        return response;
+      } catch (error) {
+        console.error("Error fetching current user:", error);
+        return null;
+      }
+    },
     retry: false,
     initialData: null,
   });

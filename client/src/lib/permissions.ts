@@ -95,15 +95,28 @@ export const rolePermissions = {
  * @returns boolean indicating whether the user has the permission
  */
 export function hasPermission(user: User | null, permission: Permission): boolean {
+  console.log("Checking permission:", permission, "for user:", user);
+  
   if (!user) {
+    console.log("No user provided, denying permission");
     return false;
   }
   
   // Get permissions for the user's role
   const userRole = user.role as keyof typeof rolePermissions;
-  const permissionSet = rolePermissions[userRole] || rolePermissions.user;
+  console.log("User role:", userRole);
   
-  return !!permissionSet[permission];
+  if (!rolePermissions[userRole]) {
+    console.log("Role not found in permissions map, using default 'user' role");
+  }
+  
+  const permissionSet = rolePermissions[userRole] || rolePermissions.user;
+  console.log("Permission set for role:", permissionSet);
+  
+  const hasPermission = !!permissionSet[permission];
+  console.log("Permission result:", hasPermission);
+  
+  return hasPermission;
 }
 
 /**

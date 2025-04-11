@@ -11,12 +11,26 @@ const router = express.Router();
  * Route: /api/users/me
  */
 router.get('/me', isAuthenticated, (req, res) => {
-  console.log("Session in /api/user:", req.session);
+  console.log("Session in /api/users/me:", req.session);
   console.log("Session user:", req.session.user);
   console.log("Session ID:", req.sessionID);
   
   // User is guaranteed to exist due to isAuthenticated middleware
-  return res.json(req.session.user);
+  if (!req.session.user) {
+    console.log("WARNING: User should be guaranteed by isAuthenticated middleware but is missing");
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  
+  // Ensure user has the expected data structure
+  const user = {
+    id: req.session.user.id,
+    name: req.session.user.name,
+    role: req.session.user.role,
+    venueId: req.session.user.venueId
+  };
+  
+  console.log("Returning user data:", user);
+  return res.json(user);
 });
 
 /**
