@@ -24,63 +24,20 @@ router.post('/login', async (req, res) => {
     // This is a simplified version for demo purposes
     let user;
     
-    // For demo/testing purposes, accept both hardcoded and database credentials
-    if (username === 'admin' && password === 'password') {
-      // Create a mock admin user
-      user = {
-        id: 1,
-        username: 'admin',
-        name: 'Admin User',
-        role: 'admin',
-        venueId: 217 // 40 Watt Club venue ID
-      };
-    } else if (username === 'venueManager' && password === 'password') {
-      // Create a mock venue manager user
-      user = {
-        id: 2,
-        username: 'venueManager',
-        name: 'Venue Manager',
-        role: 'venue_manager',
-        venueId: 217 // 40 Watt Club venue ID
-      };
-    } else if (username === 'manager' && password === 'password') {
-      // Find the actual manager user from the database
-      const dbUser = await db.query.users.findFirst({
-        where: eq(users.username, 'manager'),
-      });
-      
-      if (dbUser) {
-        user = {
-          id: dbUser.id,
-          username: dbUser.username,
-          name: dbUser.name || 'Demo User',
-          role: dbUser.role,
-          venueId: 217 // 40 Watt Club venue ID
-        };
-      }
-    } else if (username === 'superadmin' && password === 'password') {
-      // Find the actual superadmin user from the database
-      const dbUser = await db.query.users.findFirst({
-        where: eq(users.username, 'superadmin'),
-      });
-      
-      if (dbUser) {
-        user = {
-          id: dbUser.id,
-          username: dbUser.username,
-          name: dbUser.name || 'Super Admin',
-          role: 'admin', // Map super_admin to admin role for permissions
-          venueId: 217 // 40 Watt Club venue ID
-        };
-      }
-    } else {
-      // Try to find any other user in the database
-      user = await db.query.users.findFirst({
-        where: eq(users.username, username),
-      });
-      
-      // In a real application, we would verify password hash here
-      // For simplicity in this demo, we're accepting any password for DB users
+    // Find user in the database by username
+    user = await db.query.users.findFirst({
+      where: eq(users.username, username),
+    });
+    
+    // In a real application, this would be a hashed password comparison
+    // For simplicity in this demo, we're just checking for the password 'password'
+    if (user && password !== 'password') {
+      user = null; // Invalid password
+    }
+    
+    // If valid user, prepare the user object for session
+    if (user) {
+      console.log(`User authenticated from database: ${user.id} (${user.name}), Role: ${user.role}`);
     }
     
     if (!user) {
