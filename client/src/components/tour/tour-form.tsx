@@ -34,6 +34,8 @@ import {
 import { format } from 'date-fns';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+
 
 // Form schema for validating tour data
 const tourFormSchema = z.object({
@@ -44,7 +46,7 @@ const tourFormSchema = z.object({
   startDate: z.date().optional(),
   endDate: z.date().optional().refine(
     (date, ctx) => {
-      const startDate = ctx.path?.[0] === 'endDate' ? ctx.parent.startDate : null;
+      const startDate = ctx.parent.startDate;
       if (date && startDate && date < startDate) {
         return false;
       }
@@ -64,15 +66,16 @@ type TourFormProps = {
 };
 
 export function TourForm({ tourId, defaultValues, onSuccess }: TourFormProps) {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  
+
   // Get artists for the select input
   const { data: artists, isLoading: isLoadingArtists } = useQuery({
     queryKey: ['/api/artists'],
     queryFn: () => fetch('/api/artists').then(res => res.json()),
   });
-  
+
   const form = useForm<TourFormValues>({
     resolver: zodResolver(tourFormSchema),
     defaultValues: defaultValues || {
@@ -82,13 +85,13 @@ export function TourForm({ tourId, defaultValues, onSuccess }: TourFormProps) {
       totalBudget: undefined,
     },
   });
-  
+
   const onSubmit = async (data: TourFormValues) => {
     setIsSubmitting(true);
-    
+
     try {
       let result;
-      
+
       if (tourId) {
         // Update existing tour
         result = await updateTour(tourId, {
@@ -99,7 +102,7 @@ export function TourForm({ tourId, defaultValues, onSuccess }: TourFormProps) {
           endDate: data.endDate ? format(data.endDate, 'yyyy-MM-dd') : undefined,
           totalBudget: data.totalBudget,
         });
-        
+
         toast({
           title: 'Tour Updated',
           description: 'The tour has been updated successfully.',
@@ -115,23 +118,24 @@ export function TourForm({ tourId, defaultValues, onSuccess }: TourFormProps) {
           endDate: data.endDate ? format(data.endDate, 'yyyy-MM-dd') : undefined,
           totalBudget: data.totalBudget,
         });
-        
+
         toast({
           title: 'Tour Created',
           description: 'The tour has been created successfully.',
         });
       }
-      
+
       // Invalidate tours cache to refresh lists
       await queryClient.invalidateQueries({ queryKey: ['/api/tour/tours'] });
-      
+
       // Call onSuccess callback if provided
       if (onSuccess) {
         onSuccess(result);
       }
+      router.back();
     } catch (error) {
       console.error('Error creating/updating tour:', error);
-      
+
       toast({
         title: 'Error',
         description: 'There was an error saving the tour. Please try again.',
@@ -141,7 +145,7 @@ export function TourForm({ tourId, defaultValues, onSuccess }: TourFormProps) {
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -161,7 +165,7 @@ export function TourForm({ tourId, defaultValues, onSuccess }: TourFormProps) {
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="artistId"
@@ -198,7 +202,7 @@ export function TourForm({ tourId, defaultValues, onSuccess }: TourFormProps) {
             </FormItem>
           )}
         />
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
@@ -242,7 +246,7 @@ export function TourForm({ tourId, defaultValues, onSuccess }: TourFormProps) {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="endDate"
@@ -292,7 +296,7 @@ export function TourForm({ tourId, defaultValues, onSuccess }: TourFormProps) {
             )}
           />
         </div>
-        
+
         <FormField
           control={form.control}
           name="status"
@@ -320,7 +324,7 @@ export function TourForm({ tourId, defaultValues, onSuccess }: TourFormProps) {
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="totalBudget"
@@ -337,7 +341,7 @@ export function TourForm({ tourId, defaultValues, onSuccess }: TourFormProps) {
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="description"
@@ -358,9 +362,9 @@ export function TourForm({ tourId, defaultValues, onSuccess }: TourFormProps) {
             </FormItem>
           )}
         />
-        
+
         <div className="flex justify-end space-x-4">
-          <Button type="button" variant="outline" onClick={() => history.back()}>
+          <Button type="button" variant="outline" onClick={() => router.back()}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
