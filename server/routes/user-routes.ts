@@ -11,26 +11,7 @@ const router = express.Router();
  * Route: /api/users/me
  */
 router.get('/me', isAuthenticated, (req, res) => {
-  console.log("Session in /api/users/me:", req.session);
-  console.log("Session user:", req.session.user);
-  console.log("Session ID:", req.sessionID);
-  
-  // User is guaranteed to exist due to isAuthenticated middleware
-  if (!req.session.user) {
-    console.log("WARNING: User should be guaranteed by isAuthenticated middleware but is missing");
-    return res.status(401).json({ error: 'Not authenticated' });
-  }
-  
-  // Ensure user has the expected data structure
-  const user = {
-    id: req.session.user.id,
-    name: req.session.user.name,
-    role: req.session.user.role,
-    venueId: req.session.user.venueId
-  };
-  
-  console.log("Returning user data:", user);
-  return res.json(user);
+  return res.status(200).json(req.session.user);
 });
 
 /**
@@ -40,11 +21,8 @@ router.get('/me', isAuthenticated, (req, res) => {
  */
 router.get('/available-venues', isAuthenticated, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    
-    const { role, venueId } = req.session.user;
+    // User is guaranteed to exist due to isAuthenticated middleware
+    const { role, venueId } = req.session.user as { role: string, venueId: number | null };
     
     let availableVenues: any[] = [];
     
@@ -73,10 +51,13 @@ router.get('/available-venues', isAuthenticated, async (req, res) => {
       });
     }
     
-    return res.json(availableVenues);
+    return res.status(200).json(availableVenues);
   } catch (error) {
     console.error('Error fetching available venues:', error);
-    return res.status(500).json({ error: 'Failed to load available venues' });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to load available venues' 
+    });
   }
 });
 
@@ -93,17 +74,27 @@ router.get('/list', isAuthenticated, hasPermission('canManageUsers'), async (req
         name: true,
         email: true,
         role: true,
-        venueId: true,
+        venue_id: true,
         profileImageUrl: true,
         lastLogin: true
       },
       orderBy: users.name
     });
     
-    return res.json(allUsers);
+    // Convert to frontend field names
+    const formattedUsers = allUsers.map(user => ({
+      ...user,
+      venueId: user.venue_id,
+      venue_id: undefined
+    }));
+    
+    return res.status(200).json(formattedUsers);
   } catch (error) {
     console.error('Error fetching users:', error);
-    return res.status(500).json({ error: 'Failed to load users' });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to load users' 
+    });
   }
 });
 

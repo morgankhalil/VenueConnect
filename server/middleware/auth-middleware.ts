@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 
+// Define the session user type
 interface SessionUser {
   id: number;
   name: string;
@@ -18,21 +19,26 @@ declare module 'express-session' {
  * Middleware to check if user is authenticated
  */
 export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
-  console.log("Auth check - Session ID:", req.sessionID);
-  console.log("Auth check - Session exists:", !!req.session);
-  console.log("Auth check - User in session:", req.session?.user);
-  
   if (req.session && req.session.user) {
-    // Log the authentication success
-    console.log(`User authenticated: ${req.session.user.id} (${req.session.user.name}), Role: ${req.session.user.role}`);
     return next();
   }
   
-  console.log("Authentication failed: No user in session");
   return res.status(401).json({
     error: 'Authentication required'
   });
 }
+
+/**
+ * Simple role-permission mapping
+ */
+const rolePermissions: Record<string, string[]> = {
+  admin: ['canManageUsers', 'canManageVenues', 'canManageArtists', 'canManageTours', 'canViewAnalytics', 'canSendMessages', 'canViewAllVenueData', 'canCreateWebhooks'],
+  venue_manager: ['canManageVenues', 'canManageTours', 'canViewAnalytics', 'canSendMessages', 'canCreateWebhooks'],
+  artist_manager: ['canManageArtists', 'canManageTours', 'canViewAnalytics', 'canSendMessages', 'canCreateWebhooks'],
+  booking_agent: ['canManageTours', 'canViewAnalytics', 'canSendMessages'],
+  staff: ['canSendMessages'],
+  user: []
+};
 
 /**
  * Middleware to check if user has a specific permission
@@ -53,18 +59,9 @@ export function hasPermission(permission: string) {
       return next();
     }
     
-    // For the other roles, check based on the role and permission
-    // This is a simplified version - in a real app you would check against a database or more complete mapping
-    if (
-      // Venue managers can manage venues, tours, and view analytics
-      (role === 'venue_manager' && ['canManageVenues', 'canManageTours', 'canViewAnalytics', 'canSendMessages'].includes(permission)) ||
-      // Artist managers can manage artists, tours, and view analytics
-      (role === 'artist_manager' && ['canManageArtists', 'canManageTours', 'canViewAnalytics', 'canSendMessages'].includes(permission)) ||
-      // Booking agents can manage tours and view analytics
-      (role === 'booking_agent' && ['canManageTours', 'canViewAnalytics', 'canSendMessages'].includes(permission)) ||
-      // Staff can send messages
-      (role === 'staff' && ['canSendMessages'].includes(permission))
-    ) {
+    // Check if the role has the required permission
+    const permissions = rolePermissions[role] || [];
+    if (permissions.includes(permission)) {
       return next();
     }
     

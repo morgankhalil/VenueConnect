@@ -64,7 +64,10 @@ router.get('/select/:id', isAuthenticated, async (req, res) => {
     const venueId = parseInt(req.params.id);
     
     if (isNaN(venueId)) {
-      return res.status(400).json({ error: 'Invalid venue ID format' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid venue ID format' 
+      });
     }
     
     const venue = await db.query.venues.findFirst({
@@ -76,34 +79,31 @@ router.get('/select/:id', isAuthenticated, async (req, res) => {
     });
     
     if (!venue) {
-      return res.status(404).json({ error: 'Venue not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Venue not found' 
+      });
     }
     
     // Update the user's current venue in the session
     if (req.session.user) {
       req.session.user.venueId = venue.id;
       
-      await new Promise<void>((resolve, reject) => {
-        req.session.save((err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
-        });
-      });
-      
-      return res.json({
-        success: true,
-        message: `Now viewing ${venue.name}`,
-        user: req.session.user
-      });
-    } else {
-      return res.status(401).json({ error: 'User not authenticated' });
+      // Save session changes
+      req.session.save();
     }
+    
+    return res.status(200).json({
+      success: true,
+      message: `Now viewing ${venue.name}`,
+      user: req.session.user
+    });
   } catch (error) {
     console.error('Error selecting venue:', error);
-    return res.status(500).json({ error: 'Failed to select venue' });
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to select venue' 
+    });
   }
 });
 

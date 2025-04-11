@@ -24,67 +24,13 @@ export type Permission =
 /**
  * Map roles to their corresponding permissions
  */
-export const rolePermissions = {
-  admin: {
-    canManageUsers: true,
-    canManageVenues: true,
-    canManageArtists: true,
-    canManageTours: true,
-    canViewAnalytics: true,
-    canSendMessages: true,
-    canViewAllVenueData: true,
-    canCreateWebhooks: true,
-  },
-  venue_manager: {
-    canManageUsers: false,
-    canManageVenues: true,
-    canManageArtists: false,
-    canManageTours: true,
-    canViewAnalytics: true,
-    canSendMessages: true,
-    canViewAllVenueData: false,
-    canCreateWebhooks: true,
-  },
-  artist_manager: {
-    canManageUsers: false,
-    canManageVenues: false,
-    canManageArtists: true,
-    canManageTours: true,
-    canViewAnalytics: true,
-    canSendMessages: true,
-    canViewAllVenueData: false,
-    canCreateWebhooks: true,
-  },
-  booking_agent: {
-    canManageUsers: false,
-    canManageVenues: false,
-    canManageArtists: false,
-    canManageTours: true,
-    canViewAnalytics: true,
-    canSendMessages: true,
-    canViewAllVenueData: false,
-    canCreateWebhooks: false,
-  },
-  staff: {
-    canManageUsers: false,
-    canManageVenues: false,
-    canManageArtists: false,
-    canManageTours: false,
-    canViewAnalytics: false,
-    canSendMessages: true,
-    canViewAllVenueData: false,
-    canCreateWebhooks: false,
-  },
-  user: {
-    canManageUsers: false,
-    canManageVenues: false,
-    canManageArtists: false,
-    canManageTours: false,
-    canViewAnalytics: false,
-    canSendMessages: false,
-    canViewAllVenueData: false,
-    canCreateWebhooks: false,
-  }
+const PERMISSIONS_BY_ROLE: Record<string, string[]> = {
+  admin: ['canManageUsers', 'canManageVenues', 'canManageArtists', 'canManageTours', 'canViewAnalytics', 'canSendMessages', 'canViewAllVenueData', 'canCreateWebhooks'],
+  venue_manager: ['canManageVenues', 'canManageTours', 'canViewAnalytics', 'canSendMessages', 'canCreateWebhooks'],
+  artist_manager: ['canManageArtists', 'canManageTours', 'canViewAnalytics', 'canSendMessages', 'canCreateWebhooks'],
+  booking_agent: ['canManageTours', 'canViewAnalytics', 'canSendMessages'],
+  staff: ['canSendMessages'],
+  user: []
 };
 
 /**
