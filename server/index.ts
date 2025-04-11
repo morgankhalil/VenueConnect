@@ -78,15 +78,13 @@ app.use(async (req, res, next) => {
         return res.status(401).json({ error: "Authentication required" });
       }
       
-      // For development, create a mock admin session to help with testing
-      console.log("Creating mock admin session for development");
-      req.session.user = {
-        id: 1,
-        name: 'Admin User',
-        role: 'admin',
-        venueId: 217  // 40 Watt Club (ID from actual venues list)
-      };
-      return next();
+      // For development, don't auto-create sessions anymore
+      // We have real credentials now that we can test with
+      console.log("Auth required - please log in with one of the available credentials");
+      return res.status(401).json({ 
+        error: "Authentication required",
+        message: "Please log in with valid credentials"
+      });
     } else {
       // In production, enforce authentication
       return res.status(401).json({ error: "Authentication required" });
