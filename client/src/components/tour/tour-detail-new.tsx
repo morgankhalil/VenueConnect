@@ -76,10 +76,19 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
   // Create map events from tour venues (even without optimization)
   useEffect(() => {
     if (tour?.venues) {
+      console.log("Tour venues data:", tour.venues);
+      
       const venues = tour.venues
-        .filter(v => v.venue && v.venue.latitude && v.venue.longitude)
+        .filter(v => {
+          // Log any venues without coordinates for debugging
+          if (!v.venue || v.venue.latitude === null || v.venue.longitude === null) {
+            console.warn("Venue without coordinates:", v);
+            return false;
+          }
+          return true;
+        })
         .map((v, index) => ({
-          id: v.venue.id,
+          id: v.tourVenue.id, // Use tourVenue id for uniqueness
           venue: v.venue.name || `Venue ${v.venue.id}`,
           latitude: v.venue.latitude,
           longitude: v.venue.longitude,
@@ -88,11 +97,16 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
           isRoutingOpportunity: false,
           status: v.tourVenue.status || 'confirmed',
           venue_id: v.venue.id,
-          sequence: v.tourVenue.sequence || index
+          sequence: v.tourVenue.sequence !== null ? v.tourVenue.sequence : index
         }));
 
+      console.log("Mapped venues for map:", venues);
+      
       if (venues.length > 0) {
+        console.log(`Setting ${venues.length} venues to map`);
         setMapEvents(venues);
+      } else {
+        console.warn("No venues with valid coordinates found");
       }
     }
   }, [tour]);
