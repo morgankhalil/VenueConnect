@@ -1,7 +1,69 @@
 // API utilities
 
-// Base API request function
-export async function apiRequest(url: string, options?: RequestInit) {
+// Create axios-like request helpers
+export const apiRequest = {
+  async get(url: string, options?: RequestInit) {
+    return fetch(url, {
+      ...options,
+      method: 'GET',
+    }).then(handleResponse);
+  },
+  
+  async post(url: string, data?: any, options?: RequestInit) {
+    return fetch(url, {
+      ...options,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options?.headers || {}),
+      },
+      body: JSON.stringify(data),
+    }).then(handleResponse);
+  },
+  
+  async put(url: string, data?: any, options?: RequestInit) {
+    return fetch(url, {
+      ...options,
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options?.headers || {}),
+      },
+      body: JSON.stringify(data),
+    }).then(handleResponse);
+  },
+  
+  async patch(url: string, data?: any, options?: RequestInit) {
+    return fetch(url, {
+      ...options,
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options?.headers || {}),
+      },
+      body: JSON.stringify(data),
+    }).then(handleResponse);
+  },
+  
+  async delete(url: string, options?: RequestInit) {
+    return fetch(url, {
+      ...options,
+      method: 'DELETE',
+    }).then(handleResponse);
+  },
+};
+
+// Helper for handling API responses
+async function handleResponse(response: Response) {
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || error.message || 'API request failed');
+  }
+  return response.json();
+}
+
+// Legacy API request function (for backward compatibility)
+export async function apiRequestLegacy(url: string, options?: RequestInit) {
   const response = await fetch(url, options);
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
@@ -12,63 +74,40 @@ export async function apiRequest(url: string, options?: RequestInit) {
 
 // Tour related API functions
 export async function getTour(tourId: number) {
-  return apiRequest(`/api/tours/${tourId}`);
+  return apiRequest.get(`/api/tours/${tourId}`);
 }
 
 export async function getTourById(tourId: number) {
-  return apiRequest(`/api/tours/${tourId}`);
+  return apiRequest.get(`/api/tours/${tourId}`);
 }
 
 export async function updateTour(tourId: number, data: any) {
-  return apiRequest(`/api/tours/${tourId}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
+  return apiRequest.patch(`/api/tours/${tourId}`, data);
 }
 
-export async function optimizeTourRoute(tourId: number) {
-  return apiRequest(`/api/tour-optimization/${tourId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    }
-  });
+export async function optimizeTourRoute(tourId: number, options = {}) {
+  return apiRequest.post(`/api/tours/${tourId}/optimize`, options);
 }
 
 export async function applyTourOptimization(tourId: number, optimizationResult: any) {
-  return apiRequest(`/api/tour-optimization/apply/${tourId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(optimizationResult),
-  });
+  return apiRequest.post(`/api/tours/${tourId}/apply-optimization`, optimizationResult);
 }
 
 // Venue network related functions
 export async function getVenueNetworkGraph(filters?: any) {
-  return apiRequest(`/api/venue-network/graph${filters ? `?${new URLSearchParams(filters)}` : ''}`);
+  return apiRequest.get(`/api/venue-network/graph${filters ? `?${new URLSearchParams(filters)}` : ''}`);
 }
 
 export async function getCollaborativeOpportunitiesByVenue(venueId: number) {
-  return apiRequest(`/api/venue-network/opportunities/${venueId}`);
+  return apiRequest.get(`/api/venue-network/opportunities/${venueId}`);
 }
 
 export async function searchVenues(query: string) {
-  return apiRequest(`/api/venues/search?query=${encodeURIComponent(query)}`);
+  return apiRequest.get(`/api/venues/search?query=${encodeURIComponent(query)}`);
 }
 
 export async function createVenueConnection(data: { sourceVenueId: number; targetVenueId: number; connectionType: string }) {
-  return apiRequest(`/api/venue-network/connections`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
+  return apiRequest.post(`/api/venue-network/connections`, data);
 }
 
 // Note: AI optimization functions have been consolidated into the unified optimizer API
@@ -86,24 +125,12 @@ export async function applyAIOptimization(tourId: number, optimizedSequence: num
 
 // Get unified optimization suggestions
 export async function getUnifiedOptimization(tourId: number, method: 'standard' | 'ai' | 'auto' = 'auto') {
-  return apiRequest(`/api/unified-optimizer/optimize/${tourId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ method }),
-  });
+  return apiRequest.post(`/api/unified-optimizer/optimize/${tourId}`, { method });
 }
 
 // Apply unified optimization
 export async function applyUnifiedOptimization(tourId: number, optimizedSequence: number[], suggestedDates: Record<string, string> = {}) {
-  return apiRequest(`/api/unified-optimizer/apply/${tourId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ optimizedSequence, suggestedDates }),
-  });
+  return apiRequest.post(`/api/unified-optimizer/apply/${tourId}`, { optimizedSequence, suggestedDates });
 }
 
 // Messages API

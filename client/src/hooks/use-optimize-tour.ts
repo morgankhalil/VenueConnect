@@ -1,106 +1,102 @@
 import { useState } from 'react';
-import { toast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest } from '@/lib/api';
 
-export function useOptimizeTour() {
-  const [isOptimizing, setIsOptimizing] = useState(false);
-  const [optimizationResults, setOptimizationResults] = useState<any>(null);
-  const [optimizationError, setOptimizationError] = useState<string | null>(null);
+// Standard optimization options
+interface StandardOptimizationOptions {
+  prioritizeDistance: boolean;
+  distanceWeight: number;
+}
 
-  const optimizeTour = async (tourId: number, options: {
-    optimizeRouteOrder?: boolean;
-    optimizeDates?: boolean;
-    includeFixedVenues?: boolean;
-    useAi?: boolean;
-    modelType?: string;
-  } = {}) => {
+// AI optimization options
+interface AIOptimizationOptions {
+  optimizeForCapacity: boolean;
+  respectGenre: boolean;
+  includeMarketConsiderations: boolean;
+}
+
+// Types of optimization to run
+type OptimizationType = 'standard' | 'ai';
+
+// Combined optimization request
+interface OptimizationRequest {
+  type: OptimizationType;
+  options: StandardOptimizationOptions | AIOptimizationOptions;
+}
+
+// Optimization result type
+interface OptimizationResult {
+  tourId: number;
+  optimizationScore: number;
+  totalDistance: number;
+  totalTravelTime: number;
+  fixedPoints?: any[];
+  potentialFillVenues?: any[];
+  gaps?: any[];
+  recommendations?: string[];
+}
+
+export function useOptimizeTour(tourId: number) {
+  const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [optimizationResult, setOptimizationResult] = useState<OptimizationResult | null>(null);
+  
+  // Function to optimize the tour route
+  const optimize = async (request: OptimizationRequest): Promise<OptimizationResult | null> => {
     setIsOptimizing(true);
-    setOptimizationError(null);
-    
-    const defaultOptions = {
-      optimizeRouteOrder: true,
-      optimizeDates: true,
-      includeFixedVenues: false,
-      useAi: false,
-      modelType: 'gpt-3.5-turbo'
-    };
-    
-    const optimizationOptions = { ...defaultOptions, ...options };
+    setError(null);
     
     try {
-      // Call the API to optimize the tour
-      const response = await apiRequest(`/api/tours/${tourId}/optimize`, {
-        method: 'POST',
-        body: JSON.stringify(optimizationOptions),
-      });
+      let endpoint = '';
+      let requestBody = {};
       
-      setOptimizationResults(response);
-      toast({
-        title: "Tour optimization completed",
-        description: "Your tour has been successfully optimized",
-      });
+      // Determine which endpoint to use based on optimization type
+      if (request.type === 'standard') {
+        endpoint = `/api/tours/${tourId}/optimize`;
+        const options = request.options as StandardOptimizationOptions;
+        requestBody = {
+          optimizeRouteOrder: true,
+          optimizeDates: true,
+          distanceWeight: options.prioritizeDistance ? options.distanceWeight : 0.3,
+        };
+      } else {
+        endpoint = `/api/unified-optimizer/optimize/${tourId}`;
+        const options = request.options as AIOptimizationOptions;
+        requestBody = {
+          optimizeForCapacity: options.optimizeForCapacity,
+          respectGenre: options.respectGenre,
+          considerMarketTiming: options.includeMarketConsiderations,
+          useAi: true,
+          modelType: 'gpt-4',
+        };
+      }
       
-      return response;
-    } catch (error: any) {
-      console.error('Tour optimization error:', error);
+      // Make the API request
+      const result = await apiRequest.post(endpoint, requestBody);
       
-      setOptimizationError(
-        error.message || 'An error occurred during tour optimization'
-      );
-      
-      toast({
-        title: "Optimization failed",
-        description: error.message || 'Failed to optimize tour. Please try again.',
-        variant: "destructive",
-      });
-      
-      return null;
-    } finally {
+      // Process the result
+      setOptimizationResult(result.data);
       setIsOptimizing(false);
+      
+      return result.data;
+    } catch (err: any) {
+      console.error('Optimization failed:', err);
+      setError(err?.response?.data?.message || err.message || 'An error occurred during optimization');
+      setIsOptimizing(false);
+      return null;
     }
   };
   
-  const applyOptimization = async (tourId: number, optimizationId: number) => {
-    setIsOptimizing(true);
-    
-    try {
-      // Call the API to apply the optimization
-      const response = await apiRequest(`/api/tours/${tourId}/optimize/${optimizationId}/apply`, {
-        method: 'POST',
-      });
-      
-      toast({
-        title: "Optimization applied",
-        description: "The optimized route has been applied to your tour",
-      });
-      
-      return response;
-    } catch (error: any) {
-      console.error('Apply optimization error:', error);
-      
-      toast({
-        title: "Failed to apply optimization",
-        description: error.message || 'An error occurred while applying the optimization',
-        variant: "destructive",
-      });
-      
-      return null;
-    } finally {
-      setIsOptimizing(false);
-    }
+  // Reset optimization state
+  const resetOptimization = () => {
+    setOptimizationResult(null);
+    setError(null);
   };
   
-  const clearOptimizationResults = () => {
-    setOptimizationResults(null);
-    setOptimizationError(null);
-  };
-
   return {
-    optimizeTour,
-    applyOptimization,
-    clearOptimizationResults,
+    optimize,
     isOptimizing,
-    optimizationResults,
-    optimizationError,
+    error,
+    optimizationResult,
+    resetOptimization,
   };
 }

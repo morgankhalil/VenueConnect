@@ -2,43 +2,36 @@ import React, { useState } from 'react';
 import {
   Card,
   CardContent,
-  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardFooter,
+  CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent
-} from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { 
-  Alert,
-  AlertTitle,
-  AlertDescription
-} from '@/components/ui/alert';
+import { Label } from '@/components/ui/label';
 import {
+  Calculator,
+  CalendarClock,
+  Route,
   BarChart,
-  Clock,
-  Calendar as CalendarIcon,
-  MapPin,
-  Truck,
-  BarChart2,
-  RefreshCw,
-  CheckCircle2,
   AlertTriangle,
-  ChevronRight,
-  Sparkles
+  CheckCircle2,
+  Sparkles,
+  AlertCircle,
+  Info,
+  ArrowRight,
+  Loader2,
+  RefreshCw,
 } from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
-import { formatDate, formatDistance, formatTravelTime } from '@/lib/utils';
+import { formatDistance, formatTravelTime } from '@/lib/utils';
+import { useOptimizeTour } from '../../hooks/use-optimize-tour';
+import { toast } from '@/hooks/use-toast';
 
 interface OptimizationPanelProps {
   tourId: number;
@@ -53,510 +46,445 @@ export function OptimizationPanel({
   venues,
   tourData,
   onApplyOptimization,
-  refetch
+  refetch,
 }: OptimizationPanelProps) {
+  // Optimization type state
   const [optimizationType, setOptimizationType] = useState<'standard' | 'ai'>('standard');
-  const [isOptimizing, setIsOptimizing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [optimizationResult, setOptimizationResult] = useState<any>(null);
   
-  // Optimization parameters
-  const [preserveConfirmedDates, setPreserveConfirmedDates] = useState(true);
-  const [optimizeFor, setOptimizeFor] = useState<'distance' | 'time' | 'balanced'>('balanced');
-  const [preferredDates, setPreferredDates] = useState('');
+  // Standard optimization settings
+  const [prioritizeDistance, setPrioritizeDistance] = useState<boolean>(true);
+  const [weightDistance, setWeightDistance] = useState<number[]>([70]);
   
-  // Calculate metrics for the current tour
-  const currentTotalDistance = tourData?.totalDistance || 0;
-  const currentTravelTime = tourData?.travelTimeMinutes || 0;
+  // AI optimization settings
+  const [optimizeForCapacity, setOptimizeForCapacity] = useState<boolean>(false);
+  const [respectGenre, setRespectGenre] = useState<boolean>(true);
+  const [includeMarketConsiderations, setIncludeMarketConsiderations] = useState<boolean>(true);
   
-  // Calculate metrics for optimized tour (if available)
-  const optimizedTotalDistance = optimizationResult?.totalDistance || 0;
-  const optimizedTravelTime = optimizationResult?.travelTimeMinutes || 0;
+  // Get the hook for optimization
+  const {
+    optimize,
+    isOptimizing,
+    error,
+    optimizationResult
+  } = useOptimizeTour(tourId);
   
-  // Calculate improvements
-  const distanceImprovement = currentTotalDistance > 0 
-    ? Math.round((currentTotalDistance - optimizedTotalDistance) / currentTotalDistance * 100)
-    : 0;
-    
-  const timeImprovement = currentTravelTime > 0
-    ? Math.round((currentTravelTime - optimizedTravelTime) / currentTravelTime * 100)
-    : 0;
+  // Count venues by status
+  const confirmedVenues = venues?.filter(v => v.tourVenue?.status === 'confirmed') || [];
+  const potentialVenues = venues?.filter(v => v.tourVenue?.status === 'potential' || v.tourVenue?.status === 'hold') || [];
   
-  // Determine if we can optimize (need at least 3 active venues)
-  const activeVenues = venues.filter(v => v.tourVenue?.status !== 'cancelled');
-  const canOptimize = activeVenues.length >= 3;
+  // Calculate current route stats
+  const hasPotentialVenues = potentialVenues.length > 0;
+  const hasConfirmedVenues = confirmedVenues.length >= 2;
+  const hasGeolocation = venues?.filter(v => v.venue?.latitude && v.venue?.longitude).length > 0;
   
-  // Handler for standard optimization
-  const handleRunStandardOptimization = async () => {
-    setIsOptimizing(true);
-    setError(null);
-    setOptimizationType('standard');
-    
-    try {
-      const response = await apiRequest(`/api/tours/${tourId}/optimize`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          preserveConfirmedDates,
-          optimizeFor,
-          preferredDates: preferredDates.split(',').map(date => date.trim()).filter(Boolean)
-        }),
-      });
-      
-      setOptimizationResult(response);
-    } catch (err: any) {
-      console.error('Standard optimization error:', err);
-      setError(err.message || 'Failed to run optimization');
-    } finally {
-      setIsOptimizing(false);
-    }
+  // Determine if we can run an optimization
+  const canOptimize = hasGeolocation && (hasPotentialVenues || hasConfirmedVenues);
+  
+  // Calculate the optimization potential based on number of venues and their distribution
+  const calculateOptimizationPotential = (): 'high' | 'medium' | 'low' => {
+    if (potentialVenues.length > 5 && hasConfirmedVenues) return 'high';
+    if (potentialVenues.length > 2 || venues.length > 8) return 'medium';
+    return 'low';
   };
   
-  // Handler for AI optimization
-  const handleRunAIOptimization = async () => {
-    setIsOptimizing(true);
-    setError(null);
-    setOptimizationType('ai');
-    
-    try {
-      const response = await apiRequest(`/api/unified-optimizer/optimize/${tourId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          method: 'ai',
-          preserveConfirmedDates,
-          preferredDates: preferredDates.split(',').map(date => date.trim()).filter(Boolean)
-        }),
-      });
-      
-      setOptimizationResult(response);
-    } catch (err: any) {
-      console.error('AI optimization error:', err);
-      setError(err.message || 'Failed to run AI optimization');
-    } finally {
-      setIsOptimizing(false);
-    }
+  const optimizationPotential = calculateOptimizationPotential();
+  
+  // Format the optimization score
+  const formatScore = (score: number | undefined) => {
+    if (score === undefined) return 'N/A';
+    return `${Math.round(score)}/100`;
   };
   
-  // Handler for applying optimization
-  const handleApplyOptimization = async () => {
-    if (!optimizationResult) return;
-    
+  // Calculate improvement percentage
+  const calculateImprovement = (current: number | undefined, improved: number | undefined) => {
+    if (!current || !improved) return undefined;
+    return Math.round(((improved - current) / current) * 100);
+  };
+  
+  // Format improvement value with plus/minus sign
+  const formatImprovement = (value: number | undefined) => {
+    if (value === undefined) return '';
+    const prefix = value > 0 ? '+' : '';
+    return `${prefix}${value}%`;
+  };
+  
+  // Handle the optimization button click
+  const handleOptimize = async () => {
     try {
-      // Determine which API to use based on the optimization type
-      let applyEndpoint = '';
-      let payload = {};
-      
-      // If AI optimization was used (and we have the special optimizationResult.optimizationMethod field)
-      if (optimizationResult.optimizationMethod === 'ai') {
-        applyEndpoint = `/api/unified-optimizer/apply/${tourId}`;
-        payload = {
-          optimizedSequence: optimizationResult.optimizedSequence,
-          suggestedDates: optimizationResult.suggestedDates || {}
-        };
+      if (optimizationType === 'standard') {
+        await optimize({
+          type: 'standard',
+          options: {
+            prioritizeDistance,
+            distanceWeight: weightDistance[0] / 100,
+          }
+        });
       } else {
-        // Standard optimization
-        applyEndpoint = `/api/tours/${tourId}/apply-optimization`;
-        payload = {
-          optimizationData: optimizationResult
-        };
+        await optimize({
+          type: 'ai',
+          options: {
+            optimizeForCapacity,
+            respectGenre,
+            includeMarketConsiderations,
+          }
+        });
       }
       
-      await apiRequest(applyEndpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
+      toast({
+        title: "Optimization complete",
+        description: "Tour route has been optimized successfully.",
       });
       
-      // Refresh tour data and notify parent
-      refetch();
+    } catch (err) {
+      console.error("Optimization failed:", err);
+      toast({
+        title: "Optimization failed",
+        description: "There was an error optimizing the tour route.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Handle applying the optimized route
+  const handleApplyOptimization = async () => {
+    try {
       onApplyOptimization();
-      setOptimizationResult(null);
-    } catch (err: any) {
-      console.error('Apply optimization error:', err);
-      setError(err.message || 'Failed to apply optimization');
+      refetch();
+      
+      toast({
+        title: "Optimization applied",
+        description: "The optimized route has been applied to your tour.",
+      });
+    } catch (err) {
+      console.error("Failed to apply optimization:", err);
+      toast({
+        title: "Failed to apply optimization",
+        description: "There was an error applying the optimized route.",
+        variant: "destructive",
+      });
     }
   };
   
   return (
     <div className="space-y-6">
-      {/* Optimization Overview Card */}
+      {/* Optimization Controls Panel */}
       <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <CardHeader className="pb-2">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
             <div>
-              <CardTitle>Optimization Controls</CardTitle>
+              <CardTitle className="text-xl">Tour Route Optimization</CardTitle>
               <CardDescription>
-                Configure and run tour optimization
+                Optimize your tour route for distance, travel time, and venue suitability
               </CardDescription>
             </div>
             
-            <div className="flex flex-col md:flex-row items-center gap-3">
-              <Badge className={`px-3 py-1 ${tourData?.optimizationScore > 70 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                <BarChart className="h-3.5 w-3.5 mr-1" />
-                Score: {tourData?.optimizationScore || 'Not optimized'}
-              </Badge>
-              
-              {tourData?.optimizationScore && tourData?.optimizationScore < 70 && (
-                <Badge variant="outline" className="bg-amber-50 text-amber-700">
-                  Needs improvement
-                </Badge>
+            <Badge
+              className={
+                optimizationPotential === 'high'
+                  ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                  : optimizationPotential === 'medium'
+                  ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                  : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+              }
+            >
+              {optimizationPotential === 'high' ? (
+                <><BarChart className="h-3.5 w-3.5 mr-1" /> High Optimization Potential</>
+              ) : optimizationPotential === 'medium' ? (
+                <><BarChart className="h-3.5 w-3.5 mr-1" /> Medium Optimization Potential</>
+              ) : (
+                <><BarChart className="h-3.5 w-3.5 mr-1" /> Low Optimization Potential</>
               )}
-              
-              {tourData?.optimizationScore && tourData?.optimizationScore >= 70 && (
-                <Badge variant="outline" className="bg-green-50 text-green-700">
-                  Optimized
-                </Badge>
-              )}
-            </div>
+            </Badge>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex items-start gap-3">
-              <div className="bg-primary/10 p-2 rounded-full">
-                <Truck className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-medium">Total Distance</h3>
-                <p className="text-muted-foreground text-sm">{formatDistance(currentTotalDistance)}</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <div className="bg-primary/10 p-2 rounded-full">
-                <Clock className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-medium">Travel Time</h3>
-                <p className="text-muted-foreground text-sm">{formatTravelTime(currentTravelTime)}</p>
+        
+        <CardContent className="pb-2">
+          {/* Optimization summary stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div className="p-4 border rounded-lg bg-muted/20">
+              <div className="flex flex-col">
+                <span className="text-sm text-muted-foreground flex items-center">
+                  <Route className="h-3.5 w-3.5 mr-1" />
+                  Current Score
+                </span>
+                <span className="text-2xl font-bold">
+                  {formatScore(tourData?.optimizationScore)}
+                </span>
               </div>
             </div>
             
-            <div className="flex items-start gap-3">
-              <div className="bg-primary/10 p-2 rounded-full">
-                <CalendarIcon className="h-5 w-5 text-primary" />
+            <div className="p-4 border rounded-lg bg-muted/20">
+              <div className="flex flex-col">
+                <span className="text-sm text-muted-foreground flex items-center">
+                  <Route className="h-3.5 w-3.5 mr-1" />
+                  Distance
+                </span>
+                <span className="text-2xl font-bold">
+                  {formatDistance(tourData?.totalDistance || 0)}
+                </span>
               </div>
-              <div>
-                <h3 className="font-medium">Tour Duration</h3>
-                <p className="text-muted-foreground text-sm">
-                  {tourData?.startDate && tourData?.endDate 
-                    ? `${formatDate(tourData.startDate)} - ${formatDate(tourData.endDate)}`
-                    : 'Not finalized'}
-                </p>
+            </div>
+            
+            <div className="p-4 border rounded-lg bg-muted/20">
+              <div className="flex flex-col">
+                <span className="text-sm text-muted-foreground flex items-center">
+                  <CalendarClock className="h-3.5 w-3.5 mr-1" />
+                  Travel Time
+                </span>
+                <span className="text-2xl font-bold">
+                  {formatTravelTime(tourData?.totalTravelTime || 0)}
+                </span>
+              </div>
+            </div>
+            
+            <div className="p-4 border rounded-lg bg-muted/20">
+              <div className="flex flex-col">
+                <span className="text-sm text-muted-foreground flex items-center">
+                  <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                  Fixed Venues
+                </span>
+                <span className="text-2xl font-bold">
+                  {confirmedVenues.length}
+                </span>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
-      
-      {/* Optimization Tabs */}
-      <Tabs defaultValue="standard" value={optimizationType} onValueChange={(value) => setOptimizationType(value as 'standard' | 'ai')}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="standard">Standard Optimization</TabsTrigger>
-          <TabsTrigger value="ai">AI Optimization</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="standard" className="space-y-4 mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Standard Route Optimization</CardTitle>
-              <CardDescription>
-                Optimize your tour based on venue locations and travel distance
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {!canOptimize && (
-                  <Alert>
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertTitle>Optimization not available</AlertTitle>
-                    <AlertDescription>
-                      You need at least 3 non-cancelled venues to optimize your tour.
-                    </AlertDescription>
-                  </Alert>
-                )}
-                
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="preserve-dates">Preserve confirmed venue dates</Label>
-                    <Switch
-                      id="preserve-dates"
-                      checked={preserveConfirmedDates}
-                      onCheckedChange={setPreserveConfirmedDates}
-                      disabled={!canOptimize}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="optimize-for">Optimize for</Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <Button
-                        variant={optimizeFor === 'distance' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setOptimizeFor('distance')}
-                        disabled={!canOptimize}
-                      >
-                        <MapPin className="h-4 w-4 mr-2" />
-                        Distance
-                      </Button>
-                      <Button
-                        variant={optimizeFor === 'time' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setOptimizeFor('time')}
-                        disabled={!canOptimize}
-                      >
-                        <Clock className="h-4 w-4 mr-2" />
-                        Time
-                      </Button>
-                      <Button
-                        variant={optimizeFor === 'balanced' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setOptimizeFor('balanced')}
-                        disabled={!canOptimize}
-                      >
-                        <BarChart2 className="h-4 w-4 mr-2" />
-                        Balanced
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="preferred-dates">Preferred dates (comma separated, optional)</Label>
-                    <Input
-                      id="preferred-dates"
-                      placeholder="YYYY-MM-DD, YYYY-MM-DD, ..."
-                      value={preferredDates}
-                      onChange={(e) => setPreferredDates(e.target.value)}
-                      disabled={!canOptimize}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Add specific dates you'd prefer to include in your tour
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button
-                onClick={handleRunStandardOptimization}
-                disabled={!canOptimize || isOptimizing}
-              >
-                {isOptimizing && optimizationType === 'standard' ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Optimizing...
-                  </>
-                ) : (
-                  <>
-                    <BarChart className="h-4 w-4 mr-2" />
-                    Run Optimization
-                  </>
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="ai" className="space-y-4 mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>AI-Powered Optimization</CardTitle>
-              <CardDescription>
-                Use advanced AI to optimize your tour considering venues, dates, and routing
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {!canOptimize && (
-                  <Alert>
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertTitle>Optimization not available</AlertTitle>
-                    <AlertDescription>
-                      You need at least 3 non-cancelled venues to optimize your tour.
-                    </AlertDescription>
-                  </Alert>
-                )}
-                
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="preserve-dates-ai">Preserve confirmed venue dates</Label>
-                    <Switch
-                      id="preserve-dates-ai"
-                      checked={preserveConfirmedDates}
-                      onCheckedChange={setPreserveConfirmedDates}
-                      disabled={!canOptimize}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="preferred-dates-ai">Preferred dates (comma separated, optional)</Label>
-                    <Input
-                      id="preferred-dates-ai"
-                      placeholder="YYYY-MM-DD, YYYY-MM-DD, ..."
-                      value={preferredDates}
-                      onChange={(e) => setPreferredDates(e.target.value)}
-                      disabled={!canOptimize}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Add specific dates you'd prefer to include in your tour
-                    </p>
-                  </div>
-                  
-                  <div className="p-4 bg-primary/5 rounded-md space-y-2">
-                    <div className="flex items-center">
-                      <Sparkles className="h-5 w-5 text-primary mr-2" />
-                      <span className="font-medium">AI Optimization Features</span>
-                    </div>
-                    <ul className="text-sm text-muted-foreground space-y-1 ml-7">
-                      <li className="flex items-start">
-                        <ChevronRight className="h-3 w-3 mt-1 mr-1 flex-shrink-0" />
-                        <span>Considers venue locations, capacity, and venue types</span>
-                      </li>
-                      <li className="flex items-start">
-                        <ChevronRight className="h-3 w-3 mt-1 mr-1 flex-shrink-0" />
-                        <span>Balances travel efficiency with optimal date scheduling</span>
-                      </li>
-                      <li className="flex items-start">
-                        <ChevronRight className="h-3 w-3 mt-1 mr-1 flex-shrink-0" />
-                        <span>Generates detailed explanations for optimization decisions</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button
-                onClick={handleRunAIOptimization}
-                disabled={!canOptimize || isOptimizing}
-              >
-                {isOptimizing && optimizationType === 'ai' ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Optimizing with AI...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Run AI Optimization
-                  </>
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-      </Tabs>
-      
-      {/* Error message */}
-      {error && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Optimization failed</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      
-      {/* Optimization Results */}
-      {optimizationResult && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Optimization Results</CardTitle>
-            <CardDescription>
-              Review the optimized tour route and improvements
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {/* Improvements Summary */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="border rounded-md p-4">
-                  <div className="text-sm text-muted-foreground mb-1">Optimization Score</div>
-                  <div className="text-2xl font-bold">{optimizationResult.score || '-'}</div>
-                  <div className="text-sm text-green-600 mt-1">
-                    {optimizationResult.score > (tourData?.optimizationScore || 0) 
-                      ? `+${optimizationResult.score - (tourData?.optimizationScore || 0)} improvement` 
-                      : 'No change'}
+          
+          {optimizationResult && (
+            <div className="mb-6 p-4 border rounded-lg bg-blue-50 border-blue-100">
+              <h3 className="font-medium text-lg flex items-center text-blue-800">
+                <Sparkles className="h-4 w-4 mr-2" />
+                Optimization Results
+              </h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                <div className="flex flex-col">
+                  <span className="text-sm text-blue-700 flex items-center">
+                    <Calculator className="h-3.5 w-3.5 mr-1" />
+                    Optimization Score
+                  </span>
+                  <div className="flex items-center mt-1">
+                    <span className="text-xl font-bold text-blue-900">
+                      {formatScore(optimizationResult.optimizationScore)}
+                    </span>
+                    {tourData?.optimizationScore && (
+                      <span className={`text-xs ml-2 px-1.5 py-0.5 rounded ${
+                        (optimizationResult.optimizationScore || 0) > tourData.optimizationScore
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        {formatImprovement(calculateImprovement(
+                          tourData.optimizationScore,
+                          optimizationResult.optimizationScore
+                        ))}
+                      </span>
+                    )}
                   </div>
                 </div>
                 
-                <div className="border rounded-md p-4">
-                  <div className="text-sm text-muted-foreground mb-1">Distance Savings</div>
-                  <div className="text-2xl font-bold">{formatDistance(currentTotalDistance - optimizedTotalDistance)}</div>
-                  <div className="text-sm text-green-600 mt-1">
-                    {distanceImprovement > 0 ? `${distanceImprovement}% reduction` : 'No change'}
+                <div className="flex flex-col">
+                  <span className="text-sm text-blue-700 flex items-center">
+                    <Route className="h-3.5 w-3.5 mr-1" />
+                    Total Distance
+                  </span>
+                  <div className="flex items-center mt-1">
+                    <span className="text-xl font-bold text-blue-900">
+                      {formatDistance(optimizationResult.totalDistance || 0)}
+                    </span>
+                    {tourData?.totalDistance && (
+                      <span className={`text-xs ml-2 px-1.5 py-0.5 rounded ${
+                        (optimizationResult.totalDistance || 0) < tourData.totalDistance
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        {formatImprovement(calculateImprovement(
+                          -(tourData.totalDistance),
+                          -(optimizationResult.totalDistance || 0)
+                        ))}
+                      </span>
+                    )}
                   </div>
                 </div>
                 
-                <div className="border rounded-md p-4">
-                  <div className="text-sm text-muted-foreground mb-1">Time Savings</div>
-                  <div className="text-2xl font-bold">{formatTravelTime(currentTravelTime - optimizedTravelTime)}</div>
-                  <div className="text-sm text-green-600 mt-1">
-                    {timeImprovement > 0 ? `${timeImprovement}% reduction` : 'No change'}
+                <div className="flex flex-col">
+                  <span className="text-sm text-blue-700 flex items-center">
+                    <CalendarClock className="h-3.5 w-3.5 mr-1" />
+                    Travel Time
+                  </span>
+                  <div className="flex items-center mt-1">
+                    <span className="text-xl font-bold text-blue-900">
+                      {formatTravelTime(optimizationResult.totalTravelTime || 0)}
+                    </span>
+                    {tourData?.totalTravelTime && (
+                      <span className={`text-xs ml-2 px-1.5 py-0.5 rounded ${
+                        (optimizationResult.totalTravelTime || 0) < tourData.totalTravelTime
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        {formatImprovement(calculateImprovement(
+                          -(tourData.totalTravelTime),
+                          -(optimizationResult.totalTravelTime || 0)
+                        ))}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
               
-              <Separator />
-              
-              {/* Changes summary */}
-              <div>
-                <h3 className="text-lg font-medium mb-3">Proposed Changes</h3>
-                <div className="space-y-3">
-                  {optimizationResult.changedVenues?.map((change: any) => (
-                    <div key={change.venueId} className="p-3 border rounded-md">
-                      <div className="flex items-start">
-                        <div className="bg-primary/10 p-1 rounded-full mr-3 mt-0.5">
-                          {change.type === 'date_change' ? (
-                            <CalendarIcon className="h-4 w-4 text-primary" />
-                          ) : (
-                            <MapPin className="h-4 w-4 text-primary" />
-                          )}
-                        </div>
-                        <div>
-                          <div className="font-medium">{change.venueName}</div>
-                          <p className="text-sm text-muted-foreground">
-                            {change.type === 'date_change' 
-                              ? `Date changed from ${formatDate(change.previousDate) || 'unscheduled'} to ${formatDate(change.newDate)}`
-                              : `Sequence changed from ${change.previousSequence} to ${change.newSequence}`}
-                          </p>
-                        </div>
+              <div className="flex justify-end mt-4">
+                <Button 
+                  onClick={handleApplyOptimization}
+                  className="gap-1"
+                >
+                  <ArrowRight className="h-4 w-4" />
+                  Apply Optimization
+                </Button>
+              </div>
+            </div>
+          )}
+          
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Optimization Error</AlertTitle>
+              <AlertDescription>
+                {error || "There was a problem optimizing your tour route. Please try again."}
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {!canOptimize && (
+            <Alert className="mb-4 bg-amber-50 border-amber-200">
+              <AlertCircle className="h-4 w-4 text-amber-700" />
+              <AlertTitle className="text-amber-700">Limited Optimization Potential</AlertTitle>
+              <AlertDescription className="text-amber-700">
+                For best results, add more venues with location data. Optimization works best with a mix of confirmed and potential venues.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          <Tabs defaultValue="standard" className="w-full" onValueChange={(v) => setOptimizationType(v as 'standard' | 'ai')}>
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="standard">Standard Optimization</TabsTrigger>
+              <TabsTrigger value="ai">
+                <Sparkles className="h-3.5 w-3.5 mr-1" />
+                AI-Powered Optimization
+              </TabsTrigger>
+            </TabsList>
+            
+            {optimizationType === 'standard' ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div className="font-medium">Distance Optimization</div>
+                    <div className="text-sm text-muted-foreground">
+                      Optimize for shortest total route distance
+                    </div>
+                  </div>
+                  <Switch 
+                    checked={prioritizeDistance}
+                    onCheckedChange={setPrioritizeDistance}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <Label>Distance Weight: {weightDistance[0]}%</Label>
+                  </div>
+                  <Slider
+                    defaultValue={[70]}
+                    value={weightDistance}
+                    onValueChange={setWeightDistance}
+                    max={100}
+                    step={5}
+                    disabled={!prioritizeDistance}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Higher values prioritize shorter total distance over other factors
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 px-2 py-1.5 bg-blue-50 rounded text-blue-800 text-sm">
+                  <Info className="h-4 w-4" />
+                  AI optimization uses advanced algorithms to optimize for multiple factors simultaneously
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="font-medium">Venue Capacity Optimization</div>
+                      <div className="text-sm text-muted-foreground">
+                        Prefer venues with appropriate capacity for your expected audience
                       </div>
                     </div>
-                  ))}
+                    <Switch 
+                      checked={optimizeForCapacity}
+                      onCheckedChange={setOptimizeForCapacity}
+                    />
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="font-medium">Genre Compatibility</div>
+                      <div className="text-sm text-muted-foreground">
+                        Consider venue genre specialization and booking history
+                      </div>
+                    </div>
+                    <Switch 
+                      checked={respectGenre}
+                      onCheckedChange={setRespectGenre}
+                    />
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="font-medium">Market Timing Optimization</div>
+                      <div className="text-sm text-muted-foreground">
+                        Optimize the sequence of primary and secondary markets
+                      </div>
+                    </div>
+                    <Switch 
+                      checked={includeMarketConsiderations}
+                      onCheckedChange={setIncludeMarketConsiderations}
+                    />
+                  </div>
                 </div>
               </div>
-              
-              {/* AI-specific reasoning */}
-              {optimizationResult.optimizationMethod === 'ai' && optimizationResult.reasoning && (
-                <>
-                  <Separator />
-                  <div>
-                    <h3 className="text-lg font-medium mb-3">AI Optimization Reasoning</h3>
-                    <div className="p-4 bg-primary/5 rounded-md">
-                      <p className="text-sm">{optimizationResult.reasoning}</p>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </CardContent>
-          <CardFooter className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={() => setOptimizationResult(null)}>
-              Discard
-            </Button>
-            <Button onClick={handleApplyOptimization}>
-              Apply Optimization
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
+            )}
+          </Tabs>
+        </CardContent>
+        
+        <CardFooter className="flex justify-between pt-2">
+          <Button variant="outline" disabled={isOptimizing}>
+            <RefreshCw className="h-4 w-4 mr-1" />
+            Reset Settings
+          </Button>
+          
+          <Button
+            onClick={handleOptimize}
+            disabled={isOptimizing || !canOptimize}
+            className="gap-1"
+          >
+            {isOptimizing ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Optimizing...
+              </>
+            ) : (
+              <>
+                <BarChart className="h-4 w-4" />
+                Run Optimization
+              </>
+            )}
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }
