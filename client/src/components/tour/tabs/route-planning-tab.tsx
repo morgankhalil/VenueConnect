@@ -348,11 +348,11 @@ export function RoutePlanningTab({
         </TabsList>
         
         <TabsContent value="current" className="mt-6">
-          {originalSequenceVenues?.length > 0 ? (
+          {originalSequenceVenues && originalSequenceVenues.length > 0 ? (
             <>
-              {viewMode === 'timeline' && <TimelineView sequence={showAllVenues ? originalSequenceVenues : originalSequenceVenues?.filter(v => v.status !== 'cancelled') || []} />}
-              {viewMode === 'list' && <ListView sequence={showAllVenues ? originalSequenceVenues : originalSequenceVenues?.filter(v => v.status !== 'cancelled') || []} />}
-              {viewMode === 'map' && <MapView sequence={showAllVenues ? originalSequenceVenues : originalSequenceVenues?.filter(v => v.status !== 'cancelled') || []} />}
+              {viewMode === 'timeline' && <TimelineView sequence={showAllVenues ? originalSequenceVenues : originalSequenceVenues.filter(v => v.status !== 'cancelled')} />}
+              {viewMode === 'list' && <ListView sequence={showAllVenues ? originalSequenceVenues : originalSequenceVenues.filter(v => v.status !== 'cancelled')} />}
+              {viewMode === 'map' && <MapView sequence={showAllVenues ? originalSequenceVenues : originalSequenceVenues.filter(v => v.status !== 'cancelled')} />}
             </>
           ) : (
             <Alert variant="default" className="bg-muted/50">
