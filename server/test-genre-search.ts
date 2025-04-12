@@ -1,6 +1,7 @@
 import { db } from './db';
-import { artists, events, venues, artistGenres, genres } from '../shared/schema';
+import { artists, events, venues, genres } from '../shared/schema';
 import { eq, inArray, sql } from 'drizzle-orm';
+import { artistGenres, venueGenres } from '../shared/schema';
 
 async function main() {
   try {
@@ -77,45 +78,56 @@ async function main() {
       }
     }
     
-    // Test 3: Demonstrate a SQL query that could fetch venues by genre compatibility
+    // Test 3: Get La Luz's specific genres
     const artistId = 182; // La Luz ID from earlier query
-    console.log('\nFinding compatible venues for La Luz (ID: 182)');
+    console.log('\nGetting genre data for La Luz (ID: 182)');
     
-    // First, get La Luz's genres
-    const artistGenreIds = await db
-      .select({ genreId: artistGenres.genreId })
-      .from(artistGenres)
-      .where(eq(artistGenres.artistId, artistId));
+    // First, get La Luz's genres with genre names
+    const artistGenreData = await db.execute(sql`
+      SELECT g.id, g.name, g."parentId" 
+      FROM genres g
+      JOIN "artistGenres" ag ON g.id = ag."genreId"
+      WHERE ag."artistId" = ${artistId}
+    `);
       
-    const artistGenreIdList = artistGenreIds.map(g => g.genreId);
-    console.log(`Artist has ${artistGenreIdList.length} genres: ${JSON.stringify(artistGenreIdList)}`);
+    console.log('\nLa Luz genres:');
+    console.log(JSON.stringify(artistGenreData.rows, null, 2));
     
-    // Find venues with matching genres
-    const compatibleVenueIds = await db
-      .select({ venueId: venues.id })
-      .from(venues)
-      .innerJoin(venueGenres, eq(venues.id, venueGenres.venueId))
-      .where(inArray(venueGenres.genreId, artistGenreIdList))
-      .groupBy(venues.id);
+    // Get La Luz's events
+    const artistEvents = await db
+      .select({
+        eventId: events.id,
+        eventDate: events.date,
+        venueName: venues.name,
+        venueCity: venues.city,
+      })
+      .from(events)
+      .innerJoin(venues, eq(events.venueId, venues.id))
+      .where(eq(events.artistId, artistId));
       
-    console.log(`Found ${compatibleVenueIds.length} compatible venues`);
+    console.log('\nLa Luz events:');
+    console.log(JSON.stringify(artistEvents, null, 2));
     
-    if (compatibleVenueIds.length > 0) {
-      const venueIdList = compatibleVenueIds.map(v => v.venueId);
-      const compatibleVenues = await db
-        .select({
-          id: venues.id,
-          name: venues.name,
-          city: venues.city,
-          region: venues.region,
-          capacity: venues.capacity,
-          primaryGenre: venues.primaryGenre
-        })
-        .from(venues)
-        .where(inArray(venues.id, venueIdList));
-        
-      console.log('\nCompatible venues:');
-      console.log(JSON.stringify(compatibleVenues, null, 2));
+    // Get venues that have event matches with La Luz
+    const venueIds = artistEvents.map(e => e.venueName);
+    console.log(`\nLa Luz has events at ${venueIds.length} venues: ${venueIds.join(', ')}`);
+    
+    // Display more details about those genres (parent genres)
+    const genreIds = artistGenreData.rows.map((g: any) => g.id);
+    if (genreIds.length > 0) {
+      // For any genres with parents, find the parent genre names
+      // We need to use individual parameters for each ID
+      const placeholders = genreIds.map((_, i) => `$${i + 1}`).join(',');
+      const query = `
+        SELECT g.id, g.name, p.id as "parentId", p.name as "parentName"
+        FROM genres g
+        JOIN genres p ON g."parentId" = p.id
+        WHERE g.id IN (${placeholders})
+      `;
+      const parentGenres = await db.execute(query, genreIds);
+      
+      console.log('\nParent genres for La Luz:');
+      console.log(JSON.stringify(parentGenres.rows, null, 2));
     }
     
   } catch (error) {
@@ -123,8 +135,7 @@ async function main() {
   }
 }
 
-// For joining with venue genres
-import { venueGenres } from '../shared/schema';
+// Already imported above
 
 main()
   .then(() => process.exit(0))
