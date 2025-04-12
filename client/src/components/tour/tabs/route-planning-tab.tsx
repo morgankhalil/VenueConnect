@@ -257,274 +257,231 @@ export function RoutePlanningTab({
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <div>
-              <CardTitle>Route Planning</CardTitle>
-              <CardDescription>
-                Optimize your tour route to minimize travel time and costs
-              </CardDescription>
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <h2 className="text-2xl font-semibold">Route Planning</h2>
+          <p className="text-muted-foreground">Optimize your tour route to minimize travel time and costs</p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Switch
+            id="show-all-venues"
+            checked={showAllVenues}
+            onCheckedChange={setShowAllVenues}
+          />
+          <label htmlFor="show-all-venues" className="text-sm font-medium cursor-pointer">
+            Show all venues
+          </label>
+          
+          {hasOptimizedData && (
+            <div className="flex items-center gap-2 ml-4">
+              <Switch
+                id="show-optimized-toggle"
+                checked={showOptimizedRoute}
+                onCheckedChange={setShowOptimizedRoute}
+              />
+              <Label htmlFor="show-optimized-toggle" className="text-sm font-medium">
+                {showOptimizedRoute ? 'Optimized' : 'Original'}
+              </Label>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Map */}
+      <div className="h-[450px] mb-5 border rounded-md overflow-hidden">
+        <SimplifiedRouteMap 
+          originalVenues={originalSequenceVenues}
+          optimizedVenues={optimizedSequenceVenues}
+          onVenueClick={onVenueClick}
+          showOptimized={showOptimizedRoute}
+          onShowOptimizedChange={setShowOptimizedRoute}
+        />
+      </div>
+      
+      {/* Comparison + Actions Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-5">
+        {/* Left: Original Route */}
+        <div className="bg-muted/30 rounded-md p-4 border">
+          <div className="flex justify-between items-start mb-3">
+            <h3 className="text-sm font-medium">Original Route</h3>
+            <Badge variant="outline" className="bg-blue-500/10 text-blue-500">
+              Current
+            </Badge>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Car className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">Distance: {formatDistance(originalDistance)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">Travel time: {formatTravelTime(originalTime)}</span>
             </div>
           </div>
-        </CardHeader>
+        </div>
         
-        <CardContent className="space-y-6">
-          {/* Map + Controls */}
-          <div className="relative">
-            {/* Controls above map */}
-            <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="show-all-venues"
-                    checked={showAllVenues}
-                    onCheckedChange={setShowAllVenues}
-                  />
-                  <label htmlFor="show-all-venues" className="text-sm font-medium cursor-pointer">
-                    Show all venues
-                  </label>
-                </div>
-              </div>
-              
-              <div className="flex gap-2">
-                {hasOptimizedData && (
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      id="show-optimized-toggle"
-                      checked={showOptimizedRoute}
-                      onCheckedChange={setShowOptimizedRoute}
-                    />
-                    <Label htmlFor="show-optimized-toggle" className="text-sm font-medium">
-                      {showOptimizedRoute ? 'Showing optimized route' : 'Showing original route'}
-                    </Label>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Map */}
-            <div className="h-[400px]">
-              <SimplifiedRouteMap 
-                originalVenues={originalSequenceVenues}
-                optimizedVenues={optimizedSequenceVenues}
-                onVenueClick={onVenueClick}
-                showOptimized={showOptimizedRoute}
-                onShowOptimizedChange={setShowOptimizedRoute}
-              />
-            </div>
+        {/* Center: Optimized Route */}
+        <div className={`rounded-md p-4 border ${hasOptimizedData ? "bg-gradient-to-br from-purple-500/5 to-purple-500/10" : "bg-muted/30"}`}>
+          <div className="flex justify-between items-start mb-3">
+            <h3 className="text-sm font-medium">Optimized Route</h3>
+            {hasOptimizedData && (
+              <Badge className="bg-green-500/20 text-green-600 border-0">
+                <Sparkles className="h-3 w-3 mr-1" />
+                Better
+              </Badge>
+            )}
           </div>
           
-          {/* Optimization summary + Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Stats for original route */}
-            <Card className="bg-muted/30 relative overflow-hidden">
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-sm font-medium">Original Route</h3>
-                  <Badge variant="outline" className="bg-blue-500/10 text-blue-500 hover:bg-blue-500/20">
-                    Current
+          {hasOptimizedData ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Car className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Distance: {formatDistance(optimizedDistance)}</span>
+                </div>
+                {distanceImprovement > 0 && (
+                  <Badge variant="outline" className="bg-green-500/10 text-green-600 border-0">
+                    -{distanceImprovement}%
                   </Badge>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Car className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Distance: {formatDistance(originalDistance)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Travel time: {formatTravelTime(originalTime)}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            {/* Stats for optimized route */}
-            <Card className={`
-              relative overflow-hidden
-              ${hasOptimizedData ? "bg-gradient-to-br from-purple-500/5 to-purple-500/10" : "bg-muted/30"}
-            `}>
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-sm font-medium">Optimized Route</h3>
-                  {hasOptimizedData && (
-                    <Badge className="bg-green-500/20 hover:bg-green-500/30 text-green-600 border-0">
-                      <Sparkles className="h-3 w-3 mr-1" />
-                      Better
-                    </Badge>
-                  )}
-                </div>
-                
-                {hasOptimizedData ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Car className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">Distance: {formatDistance(optimizedDistance)}</span>
-                      </div>
-                      {distanceImprovement > 0 && (
-                        <Badge variant="outline" className="bg-green-500/10 text-green-600 hover:bg-green-500/20 border-0">
-                          -{distanceImprovement}%
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">Travel time: {formatTravelTime(optimizedTime)}</span>
-                      </div>
-                      {timeImprovement > 0 && (
-                        <Badge variant="outline" className="bg-green-500/10 text-green-600 hover:bg-green-500/20 border-0">
-                          -{timeImprovement}%
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-sm text-muted-foreground italic">
-                    Optimize to see potential improvements
-                  </div>
                 )}
-              </CardContent>
-            </Card>
-            
-            {/* Optimization actions */}
-            <Card className="bg-muted/30">
-              <CardContent className="p-4 flex flex-col gap-3 justify-center h-full">
-                {!hasEnoughVenues ? (
-                  <Alert variant="destructive" className="py-2 px-3">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle className="text-xs font-medium">Not enough venues</AlertTitle>
-                    <AlertDescription className="text-xs">
-                      Add at least 3 venues with coordinates to optimize
-                    </AlertDescription>
-                  </Alert>
-                ) : hasOptimizedData ? (
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Travel time: {formatTravelTime(optimizedTime)}</span>
+                </div>
+                {timeImprovement > 0 && (
+                  <Badge variant="outline" className="bg-green-500/10 text-green-600 border-0">
+                    -{timeImprovement}%
+                  </Badge>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground italic">
+              Optimize to see potential improvements
+            </div>
+          )}
+        </div>
+        
+        {/* Right: Actions */}
+        <div className="flex items-center justify-center xl:justify-start">
+          {!hasEnoughVenues ? (
+            <Alert variant="destructive" className="py-2 px-3 w-full">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle className="text-xs font-medium">Not enough venues</AlertTitle>
+              <AlertDescription className="text-xs">
+                Add at least 3 venues with coordinates to optimize
+              </AlertDescription>
+            </Alert>
+          ) : hasOptimizedData ? (
+            <div className="flex flex-col gap-2 w-full">
+              <Button
+                variant="secondary"
+                onClick={handleOptimize}
+                disabled={isOptimizing || !hasEnoughVenues}
+              >
+                {isOptimizing ? (
                   <>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={handleOptimize}
-                      disabled={isOptimizing || !hasEnoughVenues}
-                    >
-                      {isOptimizing ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                          Optimizing...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="h-4 w-4 mr-1" />
-                          Re-Optimize Route
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      onClick={handleApplyOptimization}
-                      disabled={isApplying || !hasOptimizedData}
-                      size="sm"
-                    >
-                      {isApplying ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                          Applying...
-                        </>
-                      ) : (
-                        <>
-                          <MoveUp className="h-4 w-4 mr-1" />
-                          Apply Optimization
-                        </>
-                      )}
-                    </Button>
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    Optimizing...
                   </>
                 ) : (
-                  <Button
-                    onClick={handleOptimize}
-                    disabled={isOptimizing || !hasEnoughVenues}
-                    className="h-full py-6"
-                  >
-                    {isOptimizing ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                        Optimizing Route...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4 mr-1" />
-                        Optimize Route
-                      </>
-                    )}
-                  </Button>
+                  <>
+                    <Sparkles className="h-4 w-4 mr-1" />
+                    Re-Optimize Route
+                  </>
                 )}
-              </CardContent>
-            </Card>
-          </div>
+              </Button>
+              <Button
+                onClick={handleApplyOptimization}
+                disabled={isApplying || !hasOptimizedData}
+              >
+                {isApplying ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    Applying...
+                  </>
+                ) : (
+                  <>
+                    <MoveUp className="h-4 w-4 mr-1" />
+                    Apply Optimization
+                  </>
+                )}
+              </Button>
+            </div>
+          ) : (
+            <Button
+              onClick={handleOptimize}
+              disabled={isOptimizing || !hasEnoughVenues}
+              className="w-full py-6"
+            >
+              {isOptimizing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  Optimizing Route...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-1" />
+                  Optimize Route
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+      </div>
+      
+      {/* Timeline section */}
+      <div className="mb-2 mt-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-bold">
+            {showOptimizedRoute && optimizedSequenceVenues.length > 0 
+              ? 'Optimized Timeline' 
+              : 'Current Timeline'}
+          </h3>
           
-          {/* Timeline section */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium">
-                {showOptimizedRoute && optimizedSequenceVenues.length > 0 
-                  ? 'Optimized Timeline' 
-                  : 'Current Timeline'}
-              </h3>
-              
-              {hasOptimizedData && !showOptimizedRoute && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs"
-                        onClick={() => setShowOptimizedRoute(true)}
-                      >
-                        <Eye className="h-3.5 w-3.5 mr-1 text-purple-500" />
-                        View Optimized
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-xs">See how the optimized route affects your timeline</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+          {hasOptimizedData && (
+            <div className="flex gap-2">
+              {!showOptimizedRoute && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7"
+                  onClick={() => setShowOptimizedRoute(true)}
+                >
+                  <Eye className="h-3.5 w-3.5 mr-1 text-purple-500" />
+                  View Optimized
+                </Button>
               )}
               
-              {hasOptimizedData && showOptimizedRoute && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs"
-                        onClick={() => setShowOptimizedRoute(false)}
-                      >
-                        <Eye className="h-3.5 w-3.5 mr-1 text-blue-500" />
-                        View Original
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-xs">Return to your original timeline</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+              {showOptimizedRoute && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7"
+                  onClick={() => setShowOptimizedRoute(false)}
+                >
+                  <Eye className="h-3.5 w-3.5 mr-1 text-blue-500" />
+                  View Original
+                </Button>
               )}
             </div>
-            
-            <div className="overflow-auto max-h-[300px] border rounded-md">
-              <TimelineView 
-                sequence={
-                  showOptimizedRoute && optimizedSequenceVenues.length > 0
-                    ? (showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues.filter(v => v.tourVenue?.status !== 'cancelled'))
-                    : (showAllVenues ? venues : venues.filter(v => v.tourVenue?.status !== 'cancelled'))
-                } 
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          )}
+        </div>
+        
+        <div className="overflow-auto max-h-[300px] border rounded-md">
+          <TimelineView 
+            sequence={
+              showOptimizedRoute && optimizedSequenceVenues.length > 0
+                ? (showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues.filter(v => v.tourVenue?.status !== 'cancelled'))
+                : (showAllVenues ? venues : venues.filter(v => v.tourVenue?.status !== 'cancelled'))
+            } 
+          />
+        </div>
+      </div>
     </div>
   );
 }
