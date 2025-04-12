@@ -87,10 +87,10 @@ export const users = pgTable("users", {
   role: text("role").default("user"),  // Using text for backward compatibility
   // The following fields enhance the user profile
   artistId: integer("artistId").references(() => artists.id),
-  contactPhone: text("contact_phone"),
-  profileImageUrl: text("profile_image_url"),
+  contactPhone: text("contactPhone"),
+  profileImageUrl: text("profileImageUrl"),
   bio: text("bio"),
-  lastLogin: timestamp("last_login"),
+  lastLogin: timestamp("lastLogin"),
   createdAt: timestamp("createdAt").defaultNow(),
 });
 
@@ -126,39 +126,39 @@ export const venues = pgTable("venues", {
   latitude: real("latitude"),
   longitude: real("longitude"),
   // Geographic categorization
-  marketCategory: marketCategoryEnum("market_category"), // primary, secondary, tertiary
+  marketCategory: marketCategoryEnum("marketCategory"), // primary, secondary, tertiary
 
   // Venue details
-  venueType: venueTypeEnum("venue_type"), // club, bar, theater, etc.
+  venueType: venueTypeEnum("venueType"), // club, bar, theater, etc.
   capacity: integer("capacity"),
-  capacityCategory: capacityCategoryEnum("capacity_category"), // tiny, small, medium, large
+  capacityCategory: capacityCategoryEnum("capacityCategory"), // tiny, small, medium, large
 
   // Genre specialization
-  primaryGenre: genreEnum("primary_genre"),
-  secondaryGenres: genreEnum("secondary_genres").array(),
+  primaryGenre: genreEnum("primaryGenre"),
+  secondaryGenres: genreEnum("secondaryGenres").array(),
 
   // Booking details for indie venues
-  bookingContactName: text("booking_contact_name"),
-  bookingEmail: text("booking_email"), // Primary contact email for venue
-  contactPhone: text("contact_phone"),
-  typicalBookingLeadTime: integer("typical_booking_lead_time_days"), // How many days in advance they typically book
-  paymentStructure: text("payment_structure"), // guarantee, door split, etc.
-  soundSystem: text("sound_system"), // Description of sound system quality
+  bookingContactName: text("bookingContactName"),
+  bookingEmail: text("bookingEmail"), // Primary contact email for venue
+  contactPhone: text("contactPhone"),
+  typicalBookingLeadTime: integer("typicalBookingLeadTimeDays"), // How many days in advance they typically book
+  paymentStructure: text("paymentStructure"), // guarantee, door split, etc.
+  soundSystem: text("soundSystem"), // Description of sound system quality
 
   // Local support for touring artists
-  localAccommodation: boolean("local_accommodation"), // Whether they offer crash spots
-  localPromotion: boolean("local_promotion"), // Whether they help with promotion
+  localAccommodation: boolean("localAccommodation"), // Whether they offer crash spots
+  localPromotion: boolean("localPromotion"), // Whether they help with promotion
 
   // Additional venue information
   description: text("description"),
-  ageRestriction: text("age_restriction"), // All-ages, 18+, 21+
-  websiteUrl: text("website_url"), // Primary website URL for the venue
-  imageUrl: text("image_url"),
-  socialMediaLinks: jsonb("social_media_links"),
+  ageRestriction: text("ageRestriction"), // All-ages, 18+, 21+
+  websiteUrl: text("websiteUrl"), // Primary website URL for the venue
+  imageUrl: text("imageUrl"),
+  socialMediaLinks: jsonb("socialMediaLinks"),
 
   // External IDs for future synchronization
-  bandsintownId: text("bandsintown_id").unique(),
-  songkickId: text("songkick_id").unique(),
+  bandsintownId: text("bandsintownId").unique(),
+  songkickId: text("songkickId").unique(),
 
   // Ownership and tracking
   ownerId: integer("ownerId").references(() => users.id),
@@ -172,13 +172,13 @@ export const artists = pgTable("artists", {
   name: text("name").notNull(),
   genres: genreEnum("genres").array(),
   popularity: integer("popularity"),
-  spotifyId: text("spotify_id").unique(),
-  bandsintownId: text("bandsintown_id").unique(),
-  songkickId: text("songkick_id").unique(),
-  imageUrl: text("image_url"),
+  spotifyId: text("spotifyId").unique(),
+  bandsintownId: text("bandsintownId").unique(),
+  songkickId: text("songkickId").unique(),
+  imageUrl: text("imageUrl"),
   description: text("description"),
-  websiteUrl: text("website_url"),
-  socialMediaLinks: jsonb("social_media_links"),
+  websiteUrl: text("websiteUrl"),
+  socialMediaLinks: jsonb("socialMediaLinks"),
   createdAt: timestamp("createdAt").defaultNow(),
 });
 
@@ -188,11 +188,11 @@ export const events = pgTable("events", {
   artistId: integer("artistId").references(() => artists.id).notNull(),
   venueId: integer("venueId").references(() => venues.id).notNull(),
   date: date("date").notNull(),
-  startTime: text("start_time"),
-  ticketUrl: text("ticket_url"),
+  startTime: text("startTime"),
+  ticketUrl: text("ticketUrl"),
   status: text("status").default("confirmed"),
-  sourceId: text("source_id"),
-  sourceName: text("source_name"),
+  sourceId: text("sourceId"),
+  sourceName: text("sourceName"),
   createdAt: timestamp("createdAt").defaultNow(),
 });
 
@@ -202,8 +202,8 @@ export const venueNetwork = pgTable("venue_network", {
   venueId: integer("venueId").references(() => venues.id).notNull(),
   connectedVenueId: integer("connectedVenueId").references(() => venues.id).notNull(),
   status: text("status").default("active"),
-  trustScore: integer("trust_score").default(50),
-  collaborativeBookings: integer("collaborative_bookings").default(0),
+  trustScore: integer("trustScore").default(50),
+  collaborativeBookings: integer("collaborativeBookings").default(0),
   createdAt: timestamp("createdAt").defaultNow(),
 });
 
@@ -212,12 +212,12 @@ export const predictions = pgTable("predictions", {
   id: serial("id").primaryKey(),
   artistId: integer("artistId").references(() => artists.id).notNull(),
   venueId: integer("venueId").references(() => venues.id).notNull(),
-  suggestedDate: date("suggested_date").notNull(),
-  confidenceScore: integer("confidence_score").notNull(),
+  suggestedDate: date("suggestedDate").notNull(),
+  confidenceScore: integer("confidenceScore").notNull(),
   status: text("status").default("pending"),
   reasoning: text("reasoning"),
-  gapBeforeEvent: integer("gap_before_event_id").references(() => events.id),
-  gapAfterEvent: integer("gap_after_event_id").references(() => events.id),
+  gapBeforeEventId: integer("gapBeforeEventId").references(() => events.id),
+  gapAfterEventId: integer("gapAfterEventId").references(() => events.id),
   createdAt: timestamp("createdAt").defaultNow(),
 });
 
@@ -227,7 +227,7 @@ export const inquiries = pgTable("inquiries", {
   venueId: integer("venueId").references(() => venues.id).notNull(),
   artistId: integer("artistId").references(() => artists.id).notNull(),
   message: text("message").notNull(),
-  proposedDate: date("proposed_date"),
+  proposedDate: date("proposedDate"),
   status: text("status").default("pending"),
   collaborators: integer("collaborators").array(),
   createdAt: timestamp("createdAt").defaultNow(),
@@ -238,8 +238,8 @@ export const collaborativeOpportunities = pgTable("collaborative_opportunities",
   id: serial("id").primaryKey(),
   artistId: integer("artistId").references(() => artists.id).notNull(),
   creatorVenueId: integer("creatorVenueId").references(() => venues.id).notNull(),
-  dateRangeStart: date("date_range_start").notNull(),
-  dateRangeEnd: date("date_range_end").notNull(),
+  dateRangeStart: date("dateRangeStart").notNull(),
+  dateRangeEnd: date("dateRangeEnd").notNull(),
   status: text("status").default("pending"),
   createdAt: timestamp("createdAt").defaultNow(),
 });
@@ -250,7 +250,7 @@ export const collaborativeParticipants = pgTable("collaborative_participants", {
   opportunityId: integer("opportunityId").references(() => collaborativeOpportunities.id).notNull(),
   venueId: integer("venueId").references(() => venues.id).notNull(),
   status: text("status").default("pending"),
-  proposedDate: date("proposed_date"),
+  proposedDate: date("proposedDate"),
   createdAt: timestamp("createdAt").defaultNow(),
 });
 
@@ -294,11 +294,11 @@ export const predictionsRelations = relations(predictions, ({ one }) => ({
     references: [venues.id],
   }),
   gapBeforeEventRel: one(events, {
-    fields: [predictions.gapBeforeEvent],
+    fields: [predictions.gapBeforeEventId],
     references: [events.id],
   }),
   gapAfterEventRel: one(events, {
-    fields: [predictions.gapAfterEvent],
+    fields: [predictions.gapAfterEventId],
     references: [events.id],
   }),
 }));
@@ -331,11 +331,11 @@ export const webhookConfigurations = pgTable('webhook_configurations', {
   name: text('name').notNull(),
   type: text('type').notNull(), // e.g., 'bandsintown_events', 'artist_updates', etc.
   description: text('description'),
-  callbackUrl: text('callback_url').notNull(),
+  callbackUrl: text('callbackUrl').notNull(),
   isEnabled: boolean('isEnabled').default(false),
-  secretKey: text('secret_key'),
-  configOptions: text('config_options'),
-  lastExecuted: timestamp('last_executed'),
+  secretKey: text('secretKey'),
+  configOptions: text('configOptions'),
+  lastExecuted: timestamp('lastExecuted'),
   createdAt: timestamp('createdAt').defaultNow()
 });
 
@@ -445,9 +445,9 @@ export const tourRoutes = pgTable("tour_routes", {
   tourId: integer("tourId").references(() => tours.id).notNull(),
   startVenueId: integer("startVenueId").references(() => venues.id),
   endVenueId: integer("endVenueId").references(() => venues.id),
-  distanceKm: real("distance_km"),
-  estimatedTravelTimeMinutes: integer("estimated_travel_time_minutes"),
-  optimizationScore: integer("optimization_score"),
+  distanceKm: real("distanceKm"),
+  estimatedTravelTimeMinutes: integer("estimatedTravelTimeMinutes"),
+  optimizationScore: integer("optimizationScore"),
   createdAt: timestamp("createdAt").defaultNow(),
 });
 
@@ -456,19 +456,19 @@ export const tours = pgTable("tours", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   artistId: integer("artistId").references(() => artists.id).notNull(),
-  startDate: date("start_date").notNull(),
-  endDate: date("end_date").notNull(),
+  startDate: date("startDate").notNull(),
+  endDate: date("endDate").notNull(),
   status: text("status").default("planning"), // planning, booking, confirmed, completed, cancelled
   description: text("description"),
-  totalBudget: real("total_budget"),
-  estimatedTravelDistance: real("estimated_travel_distance"),
-  estimatedTravelTime: integer("estimated_travel_time_minutes"),
+  totalBudget: real("totalBudget"),
+  estimatedTravelDistance: real("estimatedTravelDistance"),
+  estimatedTravelTime: integer("estimatedTravelTimeMinutes"),
   // Initial score metrics (before optimization)
-  initialOptimizationScore: integer("initial_optimization_score"),
-  initialTotalDistance: real("initial_total_distance"),
-  initialTravelTime: integer("initial_travel_time_minutes"),
+  initialOptimizationScore: integer("initialOptimizationScore"),
+  initialTotalDistance: real("initialTotalDistance"),
+  initialTravelTime: integer("initialTravelTimeMinutes"),
   // Final optimization score (after optimization)
-  optimizationScore: integer("optimization_score"),
+  optimizationScore: integer("optimizationScore"),
   createdAt: timestamp("createdAt").defaultNow(),
   updatedAt: timestamp("updatedAt"),
 });
@@ -496,8 +496,8 @@ export const tourVenues = pgTable("tour_venues", {
   // Can be migrated to use the enum in a future update
   status: text("status").default("potential"), // See tourVenueStatusEnum for valid values
   sequence: integer("sequence"), // Order in the tour
-  travelDistanceFromPrevious: real("travel_distance_from_previous"),
-  travelTimeFromPrevious: integer("travel_time_from_previous"), // in minutes
+  travelDistanceFromPrevious: real("travelDistanceFromPrevious"),
+  travelTimeFromPrevious: integer("travelTimeFromPrevious"), // in minutes
   notes: text("notes"),
   statusUpdatedAt: timestamp("statusUpdatedAt"), // Track when status changes
   createdAt: timestamp("createdAt").defaultNow(),
