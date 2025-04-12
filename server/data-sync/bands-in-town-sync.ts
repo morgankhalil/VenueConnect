@@ -53,23 +53,40 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
   }
 
   try {
+    // First check if artist exists
+    const artistUrl = `https://rest.bandsintown.com/artists/${encodeURIComponent(artistName)}?app_id=${apiKey}`;
+    console.log(`Checking artist existence: ${artistUrl}`);
+    
+    const artistResponse = await axios.get(artistUrl, {
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+
+    console.log('Artist data:', JSON.stringify(artistResponse.data, null, 2));
+
+    if (!artistResponse.data || artistResponse.data.error) {
+      console.log(`Artist ${artistName} not found`);
+      return [];
+    }
+
     // Get events from 2 years ago to 2 years in future
     const startDate = new Date();
     startDate.setFullYear(startDate.getFullYear() - 2);
     const endDate = new Date();
     endDate.setFullYear(endDate.getFullYear() + 2);
     
-    const url = `https://rest.bandsintown.com/artists/${encodeURIComponent(artistName)}/events?app_id=${apiKey}&date=${startDate.toISOString().split('T')[0]},${endDate.toISOString().split('T')[0]}`;
-    console.log(`Making request to: ${url}`);
+    const eventsUrl = `https://rest.bandsintown.com/artists/${encodeURIComponent(artistName)}/events?app_id=${apiKey}&date=${startDate.toISOString().split('T')[0]},${endDate.toISOString().split('T')[0]}`;
+    console.log(`Fetching events: ${eventsUrl}`);
     
-    const response = await axios.get(url, {
+    const eventsResponse = await axios.get(eventsUrl, {
       headers: {
         'Accept': 'application/json'
       }
     });
 
-    console.log('Response data:', JSON.stringify(response.data, null, 2));
-    return response.data;
+    console.log('Events data:', JSON.stringify(eventsResponse.data, null, 2));
+    return eventsResponse.data;
   } catch (error) {
     console.error('Error fetching artist events:', error);
     throw error;
