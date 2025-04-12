@@ -116,15 +116,15 @@ async function main() {
     const genreIds = artistGenreData.rows.map((g: any) => g.id);
     if (genreIds.length > 0) {
       // For any genres with parents, find the parent genre names
-      // We need to use individual parameters for each ID
-      const placeholders = genreIds.map((_, i) => `$${i + 1}`).join(',');
+      // Using raw SQL with direct values since we're just testing
+      const idsForQuery = genreIds.map(id => `${id}`).join(',');
       const query = `
         SELECT g.id, g.name, p.id as "parentId", p.name as "parentName"
         FROM genres g
         JOIN genres p ON g."parentId" = p.id
-        WHERE g.id IN (${placeholders})
+        WHERE g.id IN (${idsForQuery})
       `;
-      const parentGenres = await db.execute(query, genreIds);
+      const parentGenres = await db.execute(query);
       
       console.log('\nParent genres for La Luz:');
       console.log(JSON.stringify(parentGenres.rows, null, 2));
