@@ -12,10 +12,10 @@ export class ConcertsTrackerProvider implements EventProvider {
 
   async getArtistEvents(artistName: string, options?: SyncOptions): Promise<any[]> {
     try {
-      const response = await axios.get(`${this.baseUrl}/search`, {
+      const response = await axios.get(`${this.baseUrl}/event`, {
         params: {
-          keyword: artistName,
-          type: 'event,venue'
+          name: artistName,
+          type: 'upcoming'
         },
         headers: {
           'X-RapidAPI-Key': this.apiKey,
