@@ -64,9 +64,6 @@ function Router() {
 function App() {
   const [location] = useLocation();
   
-  // Check if we're on an authentication page
-  const isAuthPage = location.startsWith('/auth/');
-  
   // Handle auth pages and main app layout
   const isAuthPage = location.startsWith('/auth/');
   const isMapTestPage = location === '/map-test';
