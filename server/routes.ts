@@ -6,6 +6,7 @@ import documentationRoutes from './routes/documentation-routes';
 import userRoutes from './routes/user-routes';
 import authRoutes from './routes/auth-routes';
 import venueRoutes from './routes/venue-routes';
+import artistRoutes from './routes/artist-routes';
 import dashboardRoutes from './routes/dashboard-routes';
 import venueNetworkRoutes from './routes/venue-network-routes';
 import tourRouteOptimizationRouter from './routes/tour-route-optimization-fixed';
@@ -28,6 +29,7 @@ app.use('/api/documentation', documentationRoutes);
   app.use('/api/users', userRoutes);
   app.use('/api/auth', authRoutes);
   app.use('/api/venues', venueRoutes);
+  app.use('/api/artists', artistRoutes);
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/venue-network', venueNetworkRoutes);
   
