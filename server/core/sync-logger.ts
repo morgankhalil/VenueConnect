@@ -12,9 +12,14 @@ export class SyncLogger {
   async log(message: string, level: 'info' | 'error' | 'warning' = 'info') {
     console.log(`[${this.context}] ${message}`);
     
-    await db.execute(sql`
-      INSERT INTO sync_logs (context, message, level, timestamp)
-      VALUES (${this.context}, ${message}, ${level}, NOW())
-    `);
+    try {
+      await db.execute(sql`
+        INSERT INTO sync_logs (context, message, level, timestamp)
+        VALUES (${this.context}, ${message}, ${level}, NOW())
+      `);
+    } catch (error) {
+      // Gracefully handle missing table
+      console.warn('Warning: sync_logs table not available');
+    }
   }
 }
