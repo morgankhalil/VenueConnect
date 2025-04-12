@@ -1,7 +1,7 @@
 import express from 'express';
 import { db } from '../db';
 import { venues, venueNetwork } from '../../shared/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, like, or, isNotNull } from 'drizzle-orm';
 import { isAuthenticated } from '../middleware/auth-middleware';
 
 const router = express.Router();
@@ -230,6 +230,124 @@ router.post('/connections', async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Failed to create venue connection'
+    });
+  }
+});
+
+/**
+ * Get all venues for network map
+ * Returns all venues with valid coordinates and optional filtering
+ */
+router.get('/all-venues', async (req, res) => {
+  try {
+    // Get query parameters for filtering
+    const { genre, capacity, region, marketCategory, venueType } = req.query;
+    
+    // Build the where clause based on filters
+    let whereClause = isNotNull(venues.latitude) && isNotNull(venues.longitude);
+    
+    if (genre) {
+      whereClause = and(whereClause, eq(venues.primaryGenre, genre as string));
+    }
+    
+    if (capacity) {
+      whereClause = and(whereClause, eq(venues.capacityCategory, capacity as string));
+    }
+    
+    if (region) {
+      whereClause = and(whereClause, eq(venues.region, region as string));
+    }
+    
+    if (marketCategory) {
+      whereClause = and(whereClause, eq(venues.marketCategory, marketCategory as string));
+    }
+    
+    if (venueType) {
+      whereClause = and(whereClause, eq(venues.venueType, venueType as string));
+    }
+    
+    // Get all venues with valid coordinates that match filters
+    const allVenues = await db.query.venues.findMany({
+      where: whereClause,
+      columns: {
+        id: true,
+        name: true,
+        city: true,
+        region: true,
+        latitude: true,
+        longitude: true,
+        capacity: true,
+        capacityCategory: true,
+        primaryGenre: true,
+        venueType: true,
+        marketCategory: true
+      }
+    });
+    
+    if (allVenues.length === 0) {
+      return res.json({
+        nodes: [],
+        links: []
+      });
+    }
+    
+    // Get all venue connections to create links
+    const connections = await db.query.venueNetwork.findMany({
+      with: {
+        venue: true,
+        connectedVenue: true
+      }
+    });
+    
+    // Create a map of venue IDs to trust scores and collaborative bookings
+    const connectionMap = new Map();
+    connections.forEach(conn => {
+      // Store connection data for both sides of the connection
+      const key1 = `${conn.venueId}-${conn.connectedVenueId}`;
+      connectionMap.set(key1, {
+        trustScore: conn.trustScore || 50,
+        collaborativeBookings: conn.collaborativeBookings || 0
+      });
+      
+      const key2 = `${conn.connectedVenueId}-${conn.venueId}`;
+      connectionMap.set(key2, {
+        trustScore: conn.trustScore || 50,
+        collaborativeBookings: conn.collaborativeBookings || 0
+      });
+    });
+    
+    // Format the data for the network visualization
+    const graphData = {
+      nodes: allVenues.map(venue => ({
+        id: venue.id,
+        name: venue.name,
+        city: venue.city,
+        state: venue.region,
+        capacity: venue.capacity,
+        capacityCategory: venue.capacityCategory,
+        lat: venue.latitude,
+        lng: venue.longitude,
+        genre: venue.primaryGenre,
+        venueType: venue.venueType,
+        marketCategory: venue.marketCategory,
+        isCurrentVenue: false, // None are considered "current" in the all-venues view
+        trustScore: 50, // Default trust score
+        collaborativeBookings: 0 // Default collaborative bookings
+      })),
+      links: connections.map(conn => ({
+        source: conn.venueId,
+        target: conn.connectedVenueId,
+        value: conn.collaborativeBookings || 1,
+        status: conn.status || 'active'
+      }))
+    };
+    
+    return res.json(graphData);
+  } catch (error) {
+    console.error('Error fetching all venues for network map:', error);
+    return res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch venues for network map' 
     });
   }
 });
