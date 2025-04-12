@@ -425,17 +425,40 @@ Only include valid venue_ids from the provided lists. For the optimizedSequence,
         } catch (parseError) {
           console.warn("Direct JSON parse failed, trying to extract JSON:", parseError);
           
-          // Second try - extract JSON object using regex
-          const jsonMatch = openAiContent.match(/\{[\s\S]*?\}/);
-          if (jsonMatch) {
+          // Second try - try to extract code block
+          const codeBlockMatch = openAiContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+          if (codeBlockMatch && codeBlockMatch[1]) {
             try {
-              openAiSuggestions = JSON.parse(jsonMatch[0]);
-            } catch (nestedError) {
-              console.error("Failed to parse JSON from OpenAI response:", nestedError);
-              throw new Error("Unable to parse OpenAI response");
+              openAiSuggestions = JSON.parse(codeBlockMatch[1]);
+            } catch (codeBlockError) {
+              console.error("Failed to parse JSON from code block:", codeBlockError);
+              
+              // Third try - extract JSON object using regex
+              const jsonMatch = openAiContent.match(/\{[\s\S]*?\}/);
+              if (jsonMatch) {
+                try {
+                  openAiSuggestions = JSON.parse(jsonMatch[0]);
+                } catch (nestedError) {
+                  console.error("Failed to parse JSON from OpenAI response:", nestedError);
+                  throw new Error("Unable to parse OpenAI response");
+                }
+              } else {
+                throw new Error("No JSON object found in OpenAI response");
+              }
             }
           } else {
-            throw new Error("No JSON object found in OpenAI response");
+            // Try simple JSON extraction if no code block found
+            const jsonMatch = openAiContent.match(/\{[\s\S]*?\}/);
+            if (jsonMatch) {
+              try {
+                openAiSuggestions = JSON.parse(jsonMatch[0]);
+              } catch (nestedError) {
+                console.error("Failed to parse JSON from OpenAI response:", nestedError);
+                throw new Error("Unable to parse OpenAI response");
+              }
+            } else {
+              throw new Error("No JSON object found in OpenAI response");
+            }
           }
         }
         
