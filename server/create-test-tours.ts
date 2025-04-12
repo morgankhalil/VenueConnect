@@ -512,15 +512,13 @@ async function calculateAndSetInitialScores(tourIds: number[]) {
   console.log("Score calculation complete");
 }
 
-// Execute the function if this script is run directly
-if (require.main === module) {
-  createTestTours().then(() => {
-    console.log("Test tour creation completed");
-    process.exit(0);
-  }).catch(err => {
-    console.error("Error in test tour creation:", err);
-    process.exit(1);
-  });
-}
+// Execute the function immediately for this script
+createTestTours().then(() => {
+  console.log("Test tour creation completed");
+  process.exit(0);
+}).catch(err => {
+  console.error("Error in test tour creation:", err);
+  process.exit(1);
+});
 
 export { createTestTours };
