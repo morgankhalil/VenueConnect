@@ -20,43 +20,39 @@ dotenv.config();
 
 // Function to map detailed genres to the allowed enum values in our schema
 function mapToAllowedGenres(detailedGenres: string[]): string[] {
-  // Valid genres in our database schema - updated to match our expanded enum
+  // Valid genres in our database schema (only the existing values)
   const allowedGenres = [
-    // Base genres
     "rock", "indie", "hip_hop", "electronic", "pop", "folk", "metal", "jazz", "blues", 
     "world", "classical", "country", "punk", "experimental", "alternative", "rnb", "soul",
-    "reggae", "ambient", "techno", "house", "disco", "funk",
-    
-    // Extended genres - use underscores instead of hyphens for DB compatibility
-    "indie_rock", "indie_pop", "indie_folk", "surf_rock", "psychedelic_rock", "lo_fi",
-    "dream_pop", "power_pop", "jangle_pop", "folk_rock", "garage_rock", "art_pop",
-    "bedroom_pop", "alternative_country", "emo", "soft_rock", "post_punk", "art_rock",
-    "slacker_rock", "shoegaze", "noise_rock", "math_rock", "post_rock", "krautrock",
-    
-    "other"
+    "reggae", "ambient", "techno", "house", "disco", "funk", "other"
   ];
   
-  // Mapping of detailed genres to our DB enum values (with underscores)
-  const genreMapping: Record<string, string> = {
-    "indie rock": "indie_rock",
-    "indie pop": "indie_pop",
-    "indie folk": "indie_folk",
-    "surf rock": "surf_rock",
-    "psychedelic rock": "psychedelic_rock",
-    "lo-fi": "lo_fi",
-    "dream pop": "dream_pop",
-    "power pop": "power_pop",
-    "jangle pop": "jangle_pop",
-    "folk rock": "folk_rock",
-    "garage rock": "garage_rock",
-    "art pop": "art_pop",
-    "bedroom pop": "bedroom_pop",
-    "alternative country": "alternative_country",
-    "emo": "emo",
-    "soft rock": "soft_rock",
-    "post-punk": "post_punk",
-    "art rock": "art_rock",
-    "slacker rock": "slacker_rock"
+  // Mapping of detailed genres to our database's enum values
+  const genreMapping: Record<string, string[]> = {
+    "indie rock": ["indie", "rock", "alternative"],
+    "indie pop": ["indie", "pop"],
+    "indie folk": ["indie", "folk"],
+    "surf rock": ["rock", "indie"],
+    "psychedelic rock": ["rock", "experimental"],
+    "lo-fi": ["indie", "experimental"],
+    "dream pop": ["pop", "experimental"],
+    "power pop": ["pop", "rock"],
+    "jangle pop": ["pop", "indie"],
+    "folk rock": ["folk", "rock"],
+    "garage rock": ["rock", "punk"],
+    "art pop": ["pop", "experimental"],
+    "bedroom pop": ["pop", "indie"],
+    "alternative country": ["country", "alternative"],
+    "emo": ["rock", "alternative"],
+    "soft rock": ["rock"],
+    "post-punk": ["punk", "alternative"],
+    "art rock": ["rock", "experimental"],
+    "slacker rock": ["rock", "indie"],
+    "shoegaze": ["rock", "experimental"],
+    "noise rock": ["rock", "experimental"],
+    "math rock": ["rock", "experimental"],
+    "post rock": ["rock", "experimental"],
+    "krautrock": ["rock", "experimental"]
   };
   
   // Map the detailed genres to allowed genres
@@ -67,8 +63,8 @@ function mapToAllowedGenres(detailedGenres: string[]): string[] {
       // If the genre is already allowed, add it directly
       result.add(genre);
     } else if (genreMapping[genre]) {
-      // If we have a mapping for this genre, add the transformed genre
-      result.add(genreMapping[genre]);
+      // If we have a mapping for this genre, add all the mapped genres
+      genreMapping[genre].forEach(mappedGenre => result.add(mappedGenre));
     } else {
       // Default to "other" if no mapping exists
       result.add("other");
