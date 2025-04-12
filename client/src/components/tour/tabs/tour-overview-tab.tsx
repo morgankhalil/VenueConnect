@@ -67,8 +67,8 @@ export function TourOverviewTab({ tourData, venues }: TourOverviewTabProps) {
     : 0;
   
   // Total distance and travel time
-  const totalDistance = tourData.totalDistance || tourData.initial_total_distance || 0;
-  const travelTime = tourData.travelTimeMinutes || tourData.initial_travel_time_minutes || 0;
+  const totalDistance = tourData.totalDistance || tourData.initialTotalDistance || tourData.estimatedTravelDistance || 0;
+  const travelTime = tourData.travelTimeMinutes || tourData.initialTravelTime || tourData.estimatedTravelTime || 0;
   
   // Revenue potential (very simple calculation)
   const estimatedRevenue = totalCapacity * 25; // $25 average ticket price
