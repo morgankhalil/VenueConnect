@@ -99,7 +99,7 @@ export function useOptimizeTour(tourId: number) {
           preserveConfirmedDates: options.preserveConfirmedDates || false
         };
         
-        result = await getUnifiedOptimization(tourId, 'ai');
+        result = await getUnifiedOptimization(tourId, { method: 'ai' });
       }
       
       // Process the result
@@ -123,9 +123,13 @@ export function useOptimizeTour(tourId: number) {
     }
 
     try {
-      const result = await apiRequest.post(`/api/tours/${tourId}/apply-optimization`, {
-        optimizedSequence,
-        suggestedDates
+      const result = await apiRequest({
+        url: `/api/tours/${tourId}/apply-optimization`,
+        method: 'POST',
+        data: {
+          optimizedSequence,
+          suggestedDates
+        }
       });
       return result;
     } catch (err: any) {

@@ -93,7 +93,12 @@ export function TourOptimizationPanel({ tourId, onApplyChanges }: TourOptimizati
   const [optimizationOptions, setOptimizationOptions] = useState({
     method: optimizationMethod,
     respectFixedDates: true,
-    optimizeFor: 'balanced' as 'balanced' | 'distance' | 'time'
+    optimizeFor: 'balanced' as 'balanced' | 'distance' | 'time',
+    venuePriorities: {} as Record<number, number>, // venueId -> priority (1-10)
+    preferredDates: {} as Record<number, string>, // venueId -> preferred date
+    avoidDates: [] as string[], // Dates to avoid (YYYY-MM-DD)
+    minDaysBetweenShows: 1, // Minimum days between shows
+    maxDaysBetweenShows: 7 // Maximum days between shows
   });
 
   // Update optimization options when method changes
