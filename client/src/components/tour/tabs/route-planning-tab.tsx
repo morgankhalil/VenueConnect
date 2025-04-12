@@ -135,60 +135,80 @@ export function RoutePlanningTab({
   // Timeline display component
   const TimelineView = ({ sequence }: { sequence: any[] }) => {
     return (
-      <div className="space-y-4">
+      <div>
         {sequence.length > 0 ? (
-          <div className="relative pl-6 border-l-2 border-muted">
-            {sequence.map((venue, index) => (
-              <div key={venue.id} className="mb-8 relative">
-                {/* Timeline marker */}
-                <div className={`absolute -left-[19px] p-1.5 rounded-full ${
-                  venue.tourVenue?.status === 'confirmed' ? 'bg-green-500' : 
-                  venue.tourVenue?.status === 'hold' ? 'bg-amber-500' : 
-                  venue.tourVenue?.status === 'potential' ? 'bg-blue-500' : 'bg-muted'
-                }`}></div>
-                
-                {/* Date indicator */}
-                <div className="text-sm font-medium text-muted-foreground mb-2">
-                  {venue.tourVenue?.date ? formatDate(venue.tourVenue.date) : 'Date TBD'}
-                </div>
-                
-                {/* Venue card */}
-                <Card className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow" onClick={() => onVenueClick(venue)}>
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-base">{venue.venue?.name}</h3>
-                        <p className="text-sm text-muted-foreground">{venue.venue?.city}{venue.venue?.region ? `, ${venue.venue.region}` : ''}</p>
-                      </div>
-                      <div>
-                        {renderStatusBadge(venue.tourVenue?.status)}
-                      </div>
-                    </div>
-                    
-                    {index < sequence.length - 1 && sequence[index + 1].tourVenue?.date && venue.tourVenue?.date && (
-                      <div className="mt-3 pt-3 border-t text-sm flex items-center justify-between text-muted-foreground">
-                        <div className="flex items-center">
-                          <Calendar className="h-3.5 w-3.5 mr-1" />
-                          <span>{Math.ceil((new Date(sequence[index + 1].tourVenue.date).getTime() - new Date(venue.tourVenue.date).getTime()) / (1000 * 60 * 60 * 24))} days</span>
+          <div className="relative overflow-visible mt-6">
+            {/* Horizontal line */}
+            <div className="absolute left-0 right-0 top-9 h-0.5 bg-muted z-0"></div>
+            
+            {/* Venues with connections */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-12">
+              {sequence.map((venue, index) => (
+                <div key={venue.id} className="relative">
+                  {/* Date pill at top */}
+                  <div className="text-sm font-medium text-center mb-2 text-muted-foreground">
+                    {venue.tourVenue?.date ? formatDate(venue.tourVenue.date) : 'Date TBD'}
+                  </div>
+                  
+                  {/* Timeline node */}
+                  <div className="flex justify-center mb-2">
+                    <div 
+                      className={`h-5 w-5 rounded-full z-10 border-2 border-background ${
+                        venue.tourVenue?.status === 'confirmed' ? 'bg-green-500' : 
+                        venue.tourVenue?.status === 'hold' ? 'bg-amber-500' : 
+                        venue.tourVenue?.status === 'potential' ? 'bg-blue-500' : 'bg-muted'
+                      }`}
+                    ></div>
+                  </div>
+                  
+                  {/* Venue card */}
+                  <Card 
+                    className="cursor-pointer hover:shadow-md transition-shadow" 
+                    onClick={() => onVenueClick(venue)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h3 className="font-medium text-base truncate">{venue.venue?.name}</h3>
+                          <p className="text-sm text-muted-foreground truncate">{venue.venue?.city}{venue.venue?.region ? `, ${venue.venue.region}` : ''}</p>
                         </div>
-                        
-                        {venue.venue?.longitude && venue.venue?.latitude && sequence[index + 1].venue?.longitude && sequence[index + 1].venue?.latitude && (
-                          <div className="flex items-center">
-                            <Route className="h-3.5 w-3.5 mr-1" />
-                            <span>{formatDistance(calculateDistance(
-                              venue.venue.latitude, 
-                              venue.venue.longitude, 
-                              sequence[index + 1].venue.latitude, 
-                              sequence[index + 1].venue.longitude
-                            ))}</span>
-                          </div>
-                        )}
+                        <div className="ml-2 flex-shrink-0">
+                          {renderStatusBadge(venue.tourVenue?.status)}
+                        </div>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            ))}
+                      
+                      {index < sequence.length - 1 && (
+                        <div className="mt-3 pt-3 border-t text-xs flex flex-wrap items-center gap-2 text-muted-foreground">
+                          {sequence[index + 1].tourVenue?.date && venue.tourVenue?.date && (
+                            <div className="flex items-center">
+                              <Calendar className="h-3 w-3 mr-1" />
+                              <span>{Math.ceil((new Date(sequence[index + 1].tourVenue.date).getTime() - new Date(venue.tourVenue.date).getTime()) / (1000 * 60 * 60 * 24))} days</span>
+                            </div>
+                          )}
+                          
+                          {venue.venue?.longitude && venue.venue?.latitude && sequence[index + 1].venue?.longitude && sequence[index + 1].venue?.latitude && (
+                            <div className="flex items-center">
+                              <Route className="h-3 w-3 mr-1" />
+                              <span>{formatDistance(calculateDistance(
+                                venue.venue.latitude, 
+                                venue.venue.longitude, 
+                                sequence[index + 1].venue.latitude, 
+                                sequence[index + 1].venue.longitude
+                              ))}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Connecting line to next venue (if not last) */}
+                  {index < sequence.length - 1 && (
+                    <div className="hidden md:block absolute top-[38px] right-0 w-full h-0.5 bg-muted z-0" style={{ width: 'calc(50% + 20px)', left: '50%' }}></div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="py-8 text-center text-muted-foreground">
@@ -435,9 +455,9 @@ export function RoutePlanningTab({
       </div>
       
       {/* Timeline section */}
-      <div className="mb-2 mt-4">
+      <div className="mb-2 mt-6">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold">
+          <h3 className="text-lg font-semibold">
             {showOptimizedRoute && optimizedSequenceVenues.length > 0 
               ? 'Optimized Timeline' 
               : 'Current Timeline'}
@@ -447,24 +467,24 @@ export function RoutePlanningTab({
             <div className="flex gap-2">
               {!showOptimizedRoute && (
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  className="h-7"
+                  className="border-purple-200 text-purple-600 hover:bg-purple-50"
                   onClick={() => setShowOptimizedRoute(true)}
                 >
-                  <Eye className="h-3.5 w-3.5 mr-1 text-purple-500" />
+                  <Eye className="h-3.5 w-3.5 mr-1" />
                   View Optimized
                 </Button>
               )}
               
               {showOptimizedRoute && (
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  className="h-7"
+                  className="border-blue-200 text-blue-600 hover:bg-blue-50"
                   onClick={() => setShowOptimizedRoute(false)}
                 >
-                  <Eye className="h-3.5 w-3.5 mr-1 text-blue-500" />
+                  <Eye className="h-3.5 w-3.5 mr-1" />
                   View Original
                 </Button>
               )}
@@ -472,7 +492,7 @@ export function RoutePlanningTab({
           )}
         </div>
         
-        <div className="overflow-auto max-h-[300px] border rounded-md">
+        <div className="border rounded-md p-6">
           <TimelineView 
             sequence={
               showOptimizedRoute && optimizedSequenceVenues.length > 0
