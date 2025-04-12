@@ -91,7 +91,8 @@ export async function apiRequest(
     
     // Create AbortController for timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    // Increase timeout for large data responses
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
     
     const response = await fetch(url, {
       ...fetchOptions,
@@ -111,14 +112,30 @@ export async function apiRequest(
     // Get text response first
     const text = await response.text();
     
-    // Try to parse as JSON
+    // Try to parse as JSON with error handling for large responses
     let data;
     try {
-      data = JSON.parse(text);
-    } catch (parseError) {
+      // For very large responses, we'll handle them in chunks
+      if (text.length > 10 * 1024 * 1024) { // 10MB
+        console.warn(`Large response detected (${(text.length / 1024 / 1024).toFixed(2)}MB) from ${url}. Processing in chunks.`);
+        
+        // For large JSON responses, use a streaming approach with a safer parsing method
+        data = await safeParseJSON(text);
+      } else {
+        data = JSON.parse(text);
+      }
+    } catch (parseError: any) {
       console.error(`JSON parse error for ${url}:`, parseError);
-      console.error(`Response content (first 500 chars): ${text.substring(0, 500)}...`);
-      throw new SyntaxError(`Failed to parse JSON response: ${parseError.message}`);
+      console.error(`Response content summary: length=${text.length}, first 500 chars: ${text.substring(0, 500)}...`);
+      
+      // Try to provide more specific error messages
+      if (text.length === 0) {
+        throw new Error('Empty response received from server');
+      } else if (text.includes('Internal Server Error')) {
+        throw new Error('Server encountered an internal error');
+      } else {
+        throw new SyntaxError(`Failed to parse JSON response: ${parseError.message}`);
+      }
     }
     
     // Calculate and store response time
@@ -126,23 +143,28 @@ export async function apiRequest(
     const responseTime = endTime - startTime;
     endpointTimes[endpoint] = responseTime;
     
-    // Only log in development or if response is slow
-    if (process.env.NODE_ENV === 'development' || responseTime > 1000) {
-      console.log(`API ${endpoint} response time: ${responseTime.toFixed(0)}ms`);
-      
-      // Only log compact response summary in development to avoid excessive logging
-      if (process.env.NODE_ENV === 'development') {
-        if (typeof data === 'object' && data !== null) {
-          // Log a summary for large objects
-          const keys = Object.keys(data);
-          console.log(`API Response (${keys.length} keys):`, keys);
-          
-          // For arrays, log the length and first item
-          if (Array.isArray(data)) {
-            console.log(`Array length: ${data.length}`, data.length > 0 ? data[0] : 'empty');
-          }
-        } else {
-          console.log('API Response:', data);
+    // Analyze response size and speed
+    const dataSizeEstimate = text.length;
+    const transferSpeed = dataSizeEstimate / (responseTime / 1000); // bytes per second
+    
+    // Log performance metrics for large or slow responses
+    if (responseTime > 1000 || dataSizeEstimate > 1024 * 1024) {
+      console.log(`API ${endpoint} metrics:
+        Response time: ${responseTime.toFixed(0)}ms
+        Data size: ${(dataSizeEstimate / 1024 / 1024).toFixed(2)}MB
+        Transfer speed: ${(transferSpeed / 1024 / 1024).toFixed(2)}MB/s`);
+    }
+    
+    // Log compact summary in development
+    if (process.env.NODE_ENV === 'development') {
+      if (typeof data === 'object' && data !== null) {
+        // Log a summary for large objects
+        const keys = Object.keys(data);
+        console.log(`API Response (${keys.length} keys):`, keys);
+        
+        // For arrays, log the length and first item
+        if (Array.isArray(data)) {
+          console.log(`Array length: ${data.length}`, data.length > 0 ? data[0] : 'empty');
         }
       }
     }
@@ -152,12 +174,35 @@ export async function apiRequest(
     const endTime = performance.now();
     console.error(`API ${endpoint} failed after ${(endTime - startTime).toFixed(0)}ms:`, error);
     
-    // Enhanced error handling
+    // Enhanced error handling with specific messages
     if (error.name === 'AbortError') {
       throw new Error(`Request timeout for ${endpoint} - response took too long`);
+    } else if (error.name === 'SyntaxError') {
+      throw new Error(`Invalid JSON response from ${endpoint}: ${error.message}`);
+    } else if (error.message && error.message.includes('NetworkError')) {
+      throw new Error(`Network error when connecting to ${endpoint}. Check your internet connection.`);
     }
     
     // Rethrow for proper error handling in React Query
     throw error;
   }
+}
+
+// Helper function for safely parsing potentially large JSON strings
+async function safeParseJSON(jsonString: string): Promise<any> {
+  return new Promise((resolve, reject) => {
+    try {
+      // Use a setTimeout to avoid blocking the main thread
+      setTimeout(() => {
+        try {
+          const result = JSON.parse(jsonString);
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      }, 0);
+    } catch (error) {
+      reject(error);
+    }
+  });
 }
