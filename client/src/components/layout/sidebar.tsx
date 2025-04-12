@@ -13,7 +13,8 @@ import {
   PlusCircle,
   Mic2,
   Truck,
-  ChevronDown
+  ChevronDown,
+  Building
 } from "lucide-react";
 import { VenueSelector } from "@/components/venue-selector";
 import { useQuery } from "@tanstack/react-query";
@@ -41,6 +42,7 @@ export function Sidebar({
   const navigation = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "Tours", href: "/tours", icon: Truck },
+    { name: "Venues", href: "/venues", icon: Building },
     { name: "Venue Network", href: "/venue-network", icon: Network },
     { name: "Calendar", href: "/calendar", icon: Calendar },
     { name: "Discover", href: "/discover", icon: Compass },
