@@ -11,14 +11,11 @@ import {
   Route
 } from 'lucide-react';
 
-// Tour Overview Tab Content
-import TourOverviewTab from './tabs/tour-overview-tab';
-// Route Planning Tab Content
-import RoutePlanningTab from './tabs/route-planning-tab';
-// Optimization Tab Content
-import OptimizationTab from './tabs/optimization-tab';
-// Venues Tab Content
-import VenuesTab from './tabs/venues-tab';
+// Importing tab content components
+import { TourOverviewTab } from './tabs/tour-overview-tab';
+import { RoutePlanningTab } from './tabs/route-planning-tab';
+import { OptimizationTab } from './tabs/optimization-tab';
+import { VenuesTab } from './tabs/venues-tab';
 
 interface TourDetailTabsProps {
   tour: any;

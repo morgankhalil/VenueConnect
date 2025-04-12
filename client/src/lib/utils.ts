@@ -90,6 +90,17 @@ export function calculateImprovement(oldValue: number, newValue: number): number
 }
 
 /**
+ * Calculate percentage improvement between original and optimized values
+ * @param original The original value (e.g., distance, time)
+ * @param optimized The optimized value
+ * @returns Percentage improvement (negative means decrease/improvement)
+ */
+export function calculatePercentageImprovement(original: number, optimized: number): number {
+  if (original === 0) return 0;
+  return Math.round(((optimized - original) / original) * 100);
+}
+
+/**
  * Calculate the distance between two points given their coordinates
  * Uses the Haversine formula
  * @param lat1 Latitude of first point

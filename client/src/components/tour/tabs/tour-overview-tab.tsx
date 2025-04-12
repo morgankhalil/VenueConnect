@@ -22,16 +22,18 @@ import {
 import { StatCard } from '../stat-card';
 import { formatCurrency, formatDate, formatDistance, formatTravelTime } from '@/lib/utils';
 
+interface TourStats {
+  totalVenues: number;
+  confirmedVenues: number;
+  potentialVenues: number;
+  estimatedDistance: number;
+  estimatedTravelTime: number;
+  budget: number;
+}
+
 interface TourOverviewTabProps {
   tour: any;
-  stats: {
-    totalVenues: number;
-    confirmedVenues: number;
-    potentialVenues: number;
-    estimatedDistance: number;
-    estimatedTravelTime: number;
-    budget: number;
-  };
+  stats: TourStats;
 }
 
 export function TourOverviewTab({ tour, stats }: TourOverviewTabProps) {
@@ -86,45 +88,45 @@ export function TourOverviewTab({ tour, stats }: TourOverviewTabProps) {
         <StatCard 
           title="Venues" 
           value={stats.totalVenues.toString()} 
-          description={`${stats.confirmedVenues} confirmed, ${stats.potentialVenues} potential`}
+          subtitle={`${stats.confirmedVenues} confirmed, ${stats.potentialVenues} potential`}
           icon={<Building className="h-4 w-4 text-muted-foreground" />}
         />
         <StatCard 
           title="Distance" 
           value={formatDistance(stats.estimatedDistance)} 
-          description="Estimated travel distance"
+          subtitle="Estimated travel distance"
           icon={<Route className="h-4 w-4 text-muted-foreground" />}
         />
         <StatCard 
           title="Travel Time" 
           value={formatTravelTime(stats.estimatedTravelTime)} 
-          description="Estimated time on the road"
+          subtitle="Estimated time on the road"
           icon={<Clock className="h-4 w-4 text-muted-foreground" />}
         />
         <StatCard 
           title="Budget" 
           value={formatCurrency(stats.budget)} 
-          description="Total tour budget"
+          subtitle="Total tour budget"
           icon={<Wallet className="h-4 w-4 text-muted-foreground" />}
         />
         <StatCard 
           title="Tour Type" 
           value={tour.type || 'Not specified'} 
-          description="Type of performances"
+          subtitle="Type of performances"
           icon={<Music className="h-4 w-4 text-muted-foreground" />}
         />
         {tour.optimizationScore ? (
           <StatCard 
             title="Optimization" 
             value={`${tour.optimizationScore}/100`} 
-            description="Route optimization score"
+            subtitle="Route optimization score"
             icon={<BarChart3 className="h-4 w-4 text-muted-foreground" />}
           />
         ) : (
           <StatCard 
             title="Optimization" 
             value="Not optimized" 
-            description="Route not yet optimized"
+            subtitle="Route not yet optimized"
             icon={<BarChart3 className="h-4 w-4 text-muted-foreground" />}
           />
         )}
@@ -157,5 +159,3 @@ export function TourOverviewTab({ tour, stats }: TourOverviewTabProps) {
     </div>
   );
 }
-
-export default TourOverviewTab;
