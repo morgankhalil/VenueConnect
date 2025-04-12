@@ -13,6 +13,13 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 import {
   ChevronDown,
   Map as MapIcon,
@@ -71,6 +78,7 @@ export function RoutePlanningTab({
 }: RoutePlanningTabProps) {
   const [isOptimizationOpen, setIsOptimizationOpen] = useState(false);
   const [showOptimizedRoute, setShowOptimizedRoute] = useState(false);
+  const [comparisonMode, setComparisonMode] = useState<'overlay' | 'sideBySide' | 'split'>('overlay');
   
   // If optimized sequence is available, enable the optimized route view toggle
   useEffect(() => {
