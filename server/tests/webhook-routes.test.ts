@@ -165,3 +165,14 @@ describe('Webhook Routes', () => {
     });
   });
 });
+import express from 'express';
+import webhookRouter from './webhooks/webhook-handler';
+
+const app = express();
+app.use(express.json()); // Middleware to parse JSON bodies
+app.use('/api', webhookRouter); // Prefix for your API routes
+
+const PORT = 5000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on http://0.0.0.0:${PORT}`);
+});
