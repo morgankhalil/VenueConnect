@@ -104,7 +104,7 @@ export class SeedManager {
   async clearDatabase() {
     this.logger.log('Starting database clear');
     // Clear tables in correct dependency order
-    const tables = ['events', 'tourVenues', 'tours', 'venueNetwork', 'artists', 'venues', 'users'];
+    const tables = ['events', 'tourVenues', 'tours', 'venueNetwork', 'artists', 'users', 'venues'];
     for (const table of tables) {
       await this.clearTable(table);
     }
