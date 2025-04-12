@@ -32,7 +32,7 @@ const searchQuerySchema = z.object({
 });
 
 // Event search endpoint
-router.get('/events/search', async (req, res) => {
+router.get('/search/events', async (req, res) => {
   try {
     // Validate query parameters
     const result = searchQuerySchema.safeParse(req.query);
@@ -171,7 +171,7 @@ router.get('/events/search', async (req, res) => {
 });
 
 // Artist search endpoint
-router.get('/artists/search', async (req, res) => {
+router.get('/search/artists', async (req, res) => {
   try {
     // Validate query parameters
     console.log('Artist search query params:', req.query);
@@ -392,7 +392,7 @@ router.get('/artists/search', async (req, res) => {
 });
 
 // Get all genres with hierarchical structure
-router.get('/genres', async (req, res) => {
+router.get('/search/genres', async (req, res) => {
   try {
     // Get all genres
     const allGenres = await db
