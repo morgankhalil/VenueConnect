@@ -506,13 +506,13 @@ export const tourVenues = pgTable("tour_venues", {
 export const tourGaps = pgTable("tour_gaps", {
   id: serial("id").primaryKey(),
   tourId: integer("tourId").references(() => tours.id).notNull(),
-  startDate: date("start_date").notNull(),
-  endDate: date("end_date").notNull(),
+  startDate: date("startDate").notNull(),
+  endDate: date("endDate").notNull(),
   previousVenueId: integer("previousVenueId").references(() => venues.id),
   nextVenueId: integer("nextVenueId").references(() => venues.id),
-  locationLatitude: real("location_latitude"),
-  locationLongitude: real("location_longitude"),
-  maxTravelDistance: real("max_travel_distance"),
+  locationLatitude: real("locationLatitude"),
+  locationLongitude: real("locationLongitude"),
+  maxTravelDistance: real("maxTravelDistance"),
   status: text("status").default("open"), // open, filled, skipped
   createdAt: timestamp("createdAt").defaultNow(),
 });
@@ -521,10 +521,10 @@ export const tourGapSuggestions = pgTable("tour_gap_suggestions", {
   id: serial("id").primaryKey(),
   gapId: integer("gapId").references(() => tourGaps.id).notNull(),
   venueId: integer("venueId").references(() => venues.id).notNull(),
-  suggestedDate: date("suggested_date").notNull(),
-  matchScore: integer("match_score").default(50),
-  travelDistanceFromPrevious: real("travel_distance_from_previous"),
-  travelDistanceToNext: real("travel_distance_to_next"),
+  suggestedDate: date("suggestedDate").notNull(),
+  matchScore: integer("matchScore").default(50),
+  travelDistanceFromPrevious: real("travelDistanceFromPrevious"),
+  travelDistanceToNext: real("travelDistanceToNext"),
   status: text("status").default("suggested"), // suggested, accepted, rejected
   createdAt: timestamp("createdAt").defaultNow(),
 });
@@ -532,14 +532,14 @@ export const tourGapSuggestions = pgTable("tour_gap_suggestions", {
 export const artistTourPreferences = pgTable("artist_tour_preferences", {
   id: serial("id").primaryKey(),
   artistId: integer("artistId").references(() => artists.id).notNull(),
-  preferredRegions: text("preferred_regions").array(),
-  preferredVenueTypes: text("preferred_venue_types").array(),
-  preferredVenueCapacity: jsonb("preferred_venue_capacity"), // { min, max }
-  maxTravelDistancePerDay: real("max_travel_distance_per_day"),
-  minDaysBetweenShows: integer("min_days_between_shows").default(0),
-  maxDaysBetweenShows: integer("max_days_between_shows"),
-  avoidDates: jsonb("avoid_dates").array(),
-  requiredDayOff: text("required_day_off").array(), // e.g., ["Sunday", "Monday"]
+  preferredRegions: text("preferredRegions").array(),
+  preferredVenueTypes: text("preferredVenueTypes").array(),
+  preferredVenueCapacity: jsonb("preferredVenueCapacity"), // { min, max }
+  maxTravelDistancePerDay: real("maxTravelDistancePerDay"),
+  minDaysBetweenShows: integer("minDaysBetweenShows").default(0),
+  maxDaysBetweenShows: integer("maxDaysBetweenShows"),
+  avoidDates: jsonb("avoidDates").array(),
+  requiredDayOff: text("requiredDayOff").array(), // e.g., ["Sunday", "Monday"]
   createdAt: timestamp("createdAt").defaultNow(),
   updatedAt: timestamp("updatedAt"),
 });
@@ -547,12 +547,12 @@ export const artistTourPreferences = pgTable("artist_tour_preferences", {
 export const venueTourPreferences = pgTable("venue_tour_preferences", {
   id: serial("id").primaryKey(),
   venueId: integer("venueId").references(() => venues.id).notNull(),
-  preferredGenres: genreEnum("preferred_genres").array(),
-  availableDates: jsonb("available_dates").array(),
-  minimumArtistPopularity: integer("minimum_artist_popularity"),
-  preferredNoticeTime: integer("preferred_notice_time_days"),
-  openToCollaboration: boolean("open_to_collaboration").default(true),
-  participationRadius: real("participation_radius"), // max distance in km for tour collaboration
+  preferredGenres: genreEnum("preferredGenres").array(),
+  availableDates: jsonb("availableDates").array(),
+  minimumArtistPopularity: integer("minimumArtistPopularity"),
+  preferredNoticeTime: integer("preferredNoticeTimeDays"),
+  openToCollaboration: boolean("openToCollaboration").default(true),
+  participationRadius: real("participationRadius"), // max distance in km for tour collaboration
   createdAt: timestamp("createdAt").defaultNow(),
   updatedAt: timestamp("updatedAt"),
 });
