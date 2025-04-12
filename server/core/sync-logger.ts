@@ -1,4 +1,3 @@
-
 import { db } from '../db';
 import { sql } from 'drizzle-orm';
 
@@ -11,7 +10,7 @@ export class SyncLogger {
 
   async log(message: string, level: 'info' | 'error' | 'warning' = 'info') {
     console.log(`[${this.context}] ${message}`);
-    
+
     try {
       await db.execute(sql`
         CREATE TABLE IF NOT EXISTS sync_logs (
@@ -21,7 +20,7 @@ export class SyncLogger {
           level TEXT NOT NULL,
           timestamp TIMESTAMPTZ DEFAULT NOW()
         );
-        
+
         INSERT INTO sync_logs (context, message, level, timestamp)
         VALUES (${this.context}, ${message}, ${level}, NOW())
       `);

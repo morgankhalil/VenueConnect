@@ -43,16 +43,23 @@ export class ConcertsApiSeeder {
     this.apiKey = apiKey;
   }
 
-  private async searchArtistEvents(artistName: string): Promise<ConcertsEvent[]> {
+  private async searchArtistEvents(artistName: string, retries = 3): Promise<ConcertsEvent[]> {
     try {
       const response = await axios.get(`https://api.concerts.com/v1/events/search`, {
         params: {
           artist: artistName,
           apikey: this.apiKey
-        }
+        },
+        timeout: 10000, // 10 second timeout
+        validateStatus: status => status < 500 // Only retry on 5xx errors
       });
       return response.data.events || [];
     } catch (error) {
+      if (retries > 0 && (axios.isAxiosError(error) && error.code === 'ETIMEDOUT')) {
+        this.logger.log(`Retry ${4-retries}/3 for ${artistName}`, 'info');
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+        return this.searchArtistEvents(artistName, retries - 1);
+      }
       this.logger.log(`Failed to fetch events for ${artistName}: ${error}`, 'error');
       return [];
     }

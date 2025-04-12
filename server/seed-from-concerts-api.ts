@@ -131,8 +131,21 @@ async function seedFromConcertsApi(artistNames: string[] = ['La Luz']) {
   const totalStats = {
     venues: 0,
     events: 0,
-    artists: 0
+    artists: 0,
+    errors: 0
   };
+
+  for (const artistName of artistNames) {
+    try {
+      const stats = await seeder.seedFromArtist(artistName);
+      totalStats.venues += stats.venues;
+      totalStats.events += stats.events;
+      totalStats.artists += stats.artists;
+    } catch (error) {
+      console.error(`Failed to process artist ${artistName}:`, error);
+      totalStats.errors++;
+    }
+  }
 
   for (const artistName of artistNames) {
     const stats = await seeder.seedFromArtist(artistName);
