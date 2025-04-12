@@ -1,158 +1,176 @@
-import { db } from "./db";
-import { venues, venueNetwork } from "../shared/schema";
-import { eq, and, not, isNotNull, sql } from "drizzle-orm";
+import { db } from './db';
+import { venues, venueNetwork } from '../shared/schema';
+import { and, eq, inArray, isNotNull, ne, sql } from 'drizzle-orm';
 
 /**
- * Seed the venue network with initial connections
- * This script creates logical connections between venues based on 
- * location, capacity, and market category
+ * Seed the venue network with connections between venues based on compatibility
+ * This creates a network of venue connections based on:
+ * 1. Geographic proximity
+ * 2. Compatible venue size
+ * 3. Similar genre focus
  */
 async function seedVenueNetwork() {
-  console.log("Starting venue network seeding...");
-  
   try {
-    // Get all venues with valid coordinates
-    const allVenues = await db
-      .select()
-      .from(venues)
-      .where(
-        and(
-          isNotNull(venues.latitude),
-          isNotNull(venues.longitude)
-        )
-      );
+    console.log('Starting venue network seeding...');
     
-    if (allVenues.length <= 1) {
-      console.log("Need at least 2 venues to create connections");
+    // Clear existing venue network connections
+    await db.delete(venueNetwork);
+    console.log('Cleared existing venue network connections');
+    
+    // Get all venues with valid coordinates
+    const allVenues = await db.query.venues.findMany({
+      where: and(
+        isNotNull(venues.latitude),
+        isNotNull(venues.longitude)
+      )
+    });
+    
+    console.log(`Found ${allVenues.length} venues with valid coordinates`);
+    
+    if (allVenues.length === 0) {
+      console.log('No venues found to create connections');
       return;
     }
     
-    console.log(`Found ${allVenues.length} venues to create network connections`);
+    // Track number of connections created
+    let connectionCount = 0;
+    const connections = [];
     
-    // Clear existing connections (optional - comment out if you want to keep existing connections)
-    await db.delete(venueNetwork);
-    console.log("Cleared existing venue network connections");
-    
-    let connectionsCreated = 0;
-    
-    // Create connections based on proximity
+    // Create connections between compatible venues
     for (let i = 0; i < allVenues.length; i++) {
-      const venue1 = allVenues[i];
+      const venue = allVenues[i];
       
-      // We'll connect each venue to up to 5 other venues
-      let connections = 0;
-      const maxConnections = 5;
+      // Skip venues without coordinates
+      if (!venue.latitude || !venue.longitude) continue;
       
-      // Calculate distances to all other venues
-      const venuesWithDistances = [];
-      
-      for (let j = 0; j < allVenues.length; j++) {
-        if (i === j) continue; // Skip self
+      // Find compatible venues
+      for (let j = i + 1; j < allVenues.length; j++) {
+        const otherVenue = allVenues[j];
         
-        const venue2 = allVenues[j];
+        // Skip venues without coordinates
+        if (!otherVenue.latitude || !otherVenue.longitude) continue;
         
-        // Calculate distance between venues
+        // Calculate compatibility score based on different factors
+        let compatibilityScore = 0;
+        
+        // 1. Geographic proximity (using Haversine formula)
         const distance = calculateDistance(
-          Number(venue1.latitude),
-          Number(venue1.longitude),
-          Number(venue2.latitude),
-          Number(venue2.longitude)
+          venue.latitude,
+          venue.longitude,
+          otherVenue.latitude,
+          otherVenue.longitude
         );
         
-        venuesWithDistances.push({
-          venue: venue2,
-          distance
-        });
-      }
-      
-      // Sort by distance (closest first)
-      venuesWithDistances.sort((a, b) => a.distance - b.distance);
-      
-      // Connect to closest venues, with some category-based rules
-      for (const { venue: venue2, distance } of venuesWithDistances) {
-        if (connections >= maxConnections) break;
-        
-        // Skip if distance is more than 250 miles for primary markets, 
-        // 150 miles for secondary, 100 miles for tertiary
-        let maxDistance = 250;
-        if (venue1.marketCategory === 'secondary') maxDistance = 150;
-        if (venue1.marketCategory === 'tertiary') maxDistance = 100;
-        
-        if (distance > maxDistance) continue;
-        
-        // Calculate trust score based on distance and market category
-        let trustScore = 100 - (distance / maxDistance) * 50;
-        
-        // Venues in the same market category have higher trust
-        if (venue1.marketCategory === venue2.marketCategory) {
-          trustScore += 10;
+        // Add connections for venues that are relatively close (within 500km)
+        if (distance < 500) {
+          compatibilityScore += (500 - distance) / 5; // Higher score for closer venues
+        } else {
+          continue; // Skip venues that are too far apart
         }
         
-        // Similar capacity venues have higher trust
-        if (venue1.capacityCategory === venue2.capacityCategory) {
-          trustScore += 10;
+        // 2. Similar size category
+        if (venue.capacityCategory === otherVenue.capacityCategory) {
+          compatibilityScore += 20;
+        } else if (
+          // Adjacent size categories (small - medium, medium - large)
+          (venue.capacityCategory === 'small' && otherVenue.capacityCategory === 'medium') ||
+          (venue.capacityCategory === 'medium' && otherVenue.capacityCategory === 'small') ||
+          (venue.capacityCategory === 'medium' && otherVenue.capacityCategory === 'large') ||
+          (venue.capacityCategory === 'large' && otherVenue.capacityCategory === 'medium')
+        ) {
+          compatibilityScore += 10;
         }
         
-        // Ensure trust score stays within bounds
-        trustScore = Math.min(Math.max(trustScore, 50), 95);
+        // 3. Similar genre focus
+        if (venue.primaryGenre === otherVenue.primaryGenre) {
+          compatibilityScore += 20;
+        }
         
-        // Calculate collaborative bookings (random for now)
-        const collaborativeBookings = Math.floor(Math.random() * 10) + 1;
+        // 4. Same market category
+        if (venue.marketCategory === otherVenue.marketCategory) {
+          compatibilityScore += 15;
+        }
         
-        // Create connection
-        await db.insert(venueNetwork).values({
-          venueId: venue1.id,
-          connectedVenueId: venue2.id,
-          status: 'active',
-          trustScore: Math.round(trustScore),
-          collaborativeBookings
-        });
+        // 5. Same venue type
+        if (venue.venueType === otherVenue.venueType) {
+          compatibilityScore += 15;
+        }
         
-        connectionsCreated++;
-        connections++;
+        // Only create connections if venues are compatible enough
+        if (compatibilityScore >= 30) {
+          // Convert compatibility score to trust score (50-100)
+          const trustScore = Math.min(Math.floor(50 + compatibilityScore / 2), 95);
+          
+          // Simulate some collaborative bookings based on compatibility
+          const collaborativeBookings = Math.floor(compatibilityScore / 20);
+          
+          // Add connection to the batch
+          connections.push({
+            venueId: venue.id,
+            connectedVenueId: otherVenue.id,
+            status: 'active',
+            trustScore,
+            collaborativeBookings,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+          
+          // Add reverse connection (bidirectional network)
+          connections.push({
+            venueId: otherVenue.id,
+            connectedVenueId: venue.id,
+            status: 'active',
+            trustScore,
+            collaborativeBookings,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+          
+          connectionCount += 2;
+        }
       }
     }
     
-    console.log(`Created ${connectionsCreated} venue network connections`);
+    // Insert connections in batches
+    if (connections.length > 0) {
+      const result = await db.insert(venueNetwork).values(connections);
+      
+      console.log(`Created ${connectionCount} venue network connections`);
+    } else {
+      console.log('No connections were generated based on compatibility criteria');
+    }
+    
+    console.log('Venue network seeding completed successfully');
   } catch (error) {
-    console.error("Error seeding venue network:", error);
-    throw error;
+    console.error('Error seeding venue network:', error);
   }
 }
 
 /**
- * Calculate distance between two coordinates in miles using Haversine formula
+ * Calculate the distance between two points on Earth in kilometers
+ * Uses the Haversine formula
  */
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 3958.8; // Earth's radius in miles
-  const dLat = toRadians(lat2 - lat1);
-  const dLon = toRadians(lon2 - lon1);
-  
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  const distance = R * c;
-  
+  const R = 6371; // Radius of the Earth in km
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c; // Distance in km
   return distance;
 }
 
-/**
- * Convert degrees to radians
- */
-function toRadians(degrees: number): number {
-  return degrees * Math.PI / 180;
+function deg2rad(deg: number): number {
+  return deg * (Math.PI / 180);
 }
 
-// Execute the script
+// Run the seeding function
 seedVenueNetwork()
-  .catch(error => {
-    console.error("Venue network seeding failed:", error);
+  .then(() => process.exit())
+  .catch((err) => {
+    console.error('Error in venue network seeding script:', err);
     process.exit(1);
-  })
-  .finally(() => {
-    console.log("Venue network seeding completed");
-    process.exit(0);
   });
