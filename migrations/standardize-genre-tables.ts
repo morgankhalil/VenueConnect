@@ -16,7 +16,7 @@ import { sql } from "drizzle-orm";
 /**
  * Main migration function
  */
-async function main() {
+export async function main() {
   console.log("Starting standardization of genre tables and columns to camelCase...");
 
   try {
@@ -97,8 +97,15 @@ async function main() {
   }
 }
 
-// Run the migration if this file is executed directly
-if (require.main === module) {
+// For direct execution
+// Check if this file is being executed directly
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const isMainModule = process.argv[1] === __filename;
+
+if (isMainModule) {
   main()
     .then(() => {
       console.log("Migration completed, exiting...");
@@ -108,7 +115,4 @@ if (require.main === module) {
       console.error("Migration failed:", error);
       process.exit(1);
     });
-} else {
-  // Export for use in other migration scripts
-  module.exports = { main };
 }
