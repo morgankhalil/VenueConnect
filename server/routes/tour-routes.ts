@@ -347,9 +347,8 @@ router.get('/', async (req, res) => {
         initialOptimizationScore: tours.initialOptimizationScore,
         initialTotalDistance: tours.initialTotalDistance,
         initialTravelTime: tours.initialTravelTime,
-        optimizationScore: tours.optimizationScore,
-        createdAt: tours.createdAt,
-        updatedAt: tours.updatedAt
+        optimizationScore: tours.optimizationScore
+        // Removed createdAt and updatedAt which might not exist in the database yet
       })
       .from(tours)
       .leftJoin(artists, eq(tours.artistId, artists.id));
