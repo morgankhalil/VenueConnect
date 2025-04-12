@@ -59,12 +59,16 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
     const endDate = new Date();
     endDate.setFullYear(endDate.getFullYear() + 2);
     
-    const response = await axios.get(`https://rest.bandsintown.com/artists/${encodeURIComponent(artistName)}/events?app_id=${apiKey}&date=${startDate.toISOString().split('T')[0]},${endDate.toISOString().split('T')[0]}`, {
+    const url = `https://rest.bandsintown.com/artists/${encodeURIComponent(artistName)}/events?app_id=${apiKey}&date=${startDate.toISOString().split('T')[0]},${endDate.toISOString().split('T')[0]}`;
+    console.log(`Making request to: ${url}`);
+    
+    const response = await axios.get(url, {
       headers: {
         'Accept': 'application/json'
       }
     });
 
+    console.log('Response data:', JSON.stringify(response.data, null, 2));
     return response.data;
   } catch (error) {
     console.error('Error fetching artist events:', error);
