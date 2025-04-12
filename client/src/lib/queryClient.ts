@@ -18,6 +18,27 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
       gcTime: 1000 * 60 * 10, // Cache for 10 minutes
+      // Default query function for all queries
+      queryFn: async ({ queryKey }) => {
+        // The first item in the queryKey should be the API endpoint path
+        if (Array.isArray(queryKey) && typeof queryKey[0] === 'string' && queryKey[0].startsWith('/api')) {
+          const endpoint = queryKey[0];
+          // Pass any parameters from the queryKey
+          const params = queryKey.slice(1).filter(item => 
+            typeof item === 'string' || 
+            typeof item === 'number'
+          );
+          
+          let url = endpoint;
+          // Append parameters to URL if they exist
+          if (params.length > 0) {
+            url = `${url}/${params.join('/')}`;
+          }
+          
+          return apiRequest(url);
+        }
+        throw new Error(`Invalid queryKey: ${JSON.stringify(queryKey)}`);
+      },
       // Add a one-time cache buster that doesn't change during a session
       queryKeyHashFn: (queryKey: any) => {
         // Special case for user data - use fixed key to prevent multiple calls

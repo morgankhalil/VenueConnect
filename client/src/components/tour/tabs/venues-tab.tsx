@@ -1,196 +1,222 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Building, Filter, Plus } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { VenueList } from '@/components/tour/venue-list';
+import React, { useState } from 'react';
+import { 
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
 import { VenueDetail } from '@/components/tour/venue-detail';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { formatDate } from '@/lib/utils';
+import { Check, ChevronsUpDown, Filter, MapPin, Building, Search, Calendar } from 'lucide-react';
 
 interface VenuesTabProps {
-  tour: any;
   venues: any[];
-  filteredVenues: any[];
-  showAllVenues: boolean;
-  setShowAllVenues: (show: boolean) => void;
-  selectedVenue: any;
-  onVenueClick: (venue: any) => void;
   tourId: number;
+  onVenueClick: (venue: any) => void;
   refetch: () => void;
 }
 
-export function VenuesTab({
-  tour,
-  venues,
-  filteredVenues,
-  showAllVenues,
-  setShowAllVenues,
-  selectedVenue,
-  onVenueClick,
-  tourId,
-  refetch
-}: VenuesTabProps) {
-  // Count venues by status
-  const confirmedCount = filteredVenues.filter(v => 
-    v.status?.toLowerCase() === 'confirmed' || 
-    v.status?.toLowerCase() === 'booked'
-  ).length;
-
-  const potentialCount = filteredVenues.filter(v => 
-    v.status?.toLowerCase() === 'potential' || 
-    v.status?.toLowerCase() === 'hold'
-  ).length;
-
-  const cancelledCount = filteredVenues.filter(v => 
-    v.status?.toLowerCase() === 'cancelled'
-  ).length;
-
-  // Count venues by type
-  const venueTypes = filteredVenues.reduce((acc: Record<string, number>, venue: any) => {
-    const type = venue.venueType || 'Unknown';
-    acc[type] = (acc[type] || 0) + 1;
-    return acc;
-  }, {});
-
-  const venueTypeEntries = Object.entries(venueTypes).sort((a, b) => b[1] - a[1]);
-
-  // Calculate average capacity
-  const averageCapacity = Math.round(
-    filteredVenues.reduce((sum, venue) => sum + (venue.capacity || 0), 0) / 
-    filteredVenues.length || 1
-  );
-
+export function VenuesTab({ venues, tourId, onVenueClick, refetch }: VenuesTabProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [selectedVenue, setSelectedVenue] = useState<any>(null);
+  
+  // Filter venues based on search query and status filter
+  const filteredVenues = venues.filter(venue => {
+    const matchesSearch = searchQuery === '' || 
+      venue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      venue.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      venue.region?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = statusFilter === null || venue.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+  
+  // Sort venues by status (confirmed first, then others)
+  const sortedVenues = [...filteredVenues].sort((a, b) => {
+    if (a.status === 'confirmed' && b.status !== 'confirmed') return -1;
+    if (a.status !== 'confirmed' && b.status === 'confirmed') return 1;
+    
+    // If same status, sort by performance date if available
+    if (a.performanceDate && b.performanceDate) {
+      return new Date(a.performanceDate).getTime() - new Date(b.performanceDate).getTime();
+    }
+    
+    // Otherwise, sort by name
+    return a.name.localeCompare(b.name);
+  });
+  
+  const handleVenueSelect = (venue: any) => {
+    setSelectedVenue(venue);
+    onVenueClick(venue);
+  };
+  
   return (
-    <div className="space-y-6">
-      {/* Venues Header */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <div>
-            <CardTitle className="flex items-center">
-              <Building className="mr-2 h-5 w-5 text-muted-foreground" />
-              Tour Venues
-            </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage venues included in this tour
-            </p>
-          </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Venues List */}
+      <div className="md:col-span-2 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold">Tour Venues</h2>
+          
           <div className="flex space-x-2">
-            <Button className="bg-primary">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Venue
-            </Button>
-            <Button variant="outline">
-              <Filter className="mr-2 h-4 w-4" />
-              Filter
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="border-t pt-4">
-          <div className="flex items-center">
-            <Switch
-              id="showAllVenues"
-              checked={showAllVenues}
-              onCheckedChange={setShowAllVenues}
-            />
-            <Label htmlFor="showAllVenues" className="ml-2 text-sm">
-              Show suggested venues
-            </Label>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Venue List and Detail */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* Venue List: 8 columns on md+ screens */}
-        <div className="md:col-span-8">
-          <Card className="h-[calc(100vh-300px)] overflow-hidden">
-            <CardHeader className="p-4 pb-0">
-              <CardTitle className="text-lg">
-                {filteredVenues.length} Venues
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0 h-full overflow-y-auto">
-              <VenueList
-                venues={filteredVenues}
-                onVenueClick={onVenueClick}
-                maxHeight={500}
-                selectedVenueId={selectedVenue?.id}
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search venues..."
+                className="pl-8 w-[200px]"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
-            </CardContent>
-          </Card>
+            </div>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Filter className="h-4 w-4 mr-1" />
+                  Filter
+                  {statusFilter && <Badge variant="secondary" className="ml-2">{statusFilter}</Badge>}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setStatusFilter(null)}>
+                  <div className="flex items-center justify-between w-full">
+                    All Venues
+                    {statusFilter === null && <Check className="h-4 w-4" />}
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('confirmed')}>
+                  <div className="flex items-center justify-between w-full">
+                    Confirmed
+                    {statusFilter === 'confirmed' && <Check className="h-4 w-4" />}
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('potential')}>
+                  <div className="flex items-center justify-between w-full">
+                    Potential
+                    {statusFilter === 'potential' && <Check className="h-4 w-4" />}
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('hold')}>
+                  <div className="flex items-center justify-between w-full">
+                    Hold
+                    {statusFilter === 'hold' && <Check className="h-4 w-4" />}
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('cancelled')}>
+                  <div className="flex items-center justify-between w-full">
+                    Cancelled
+                    {statusFilter === 'cancelled' && <Check className="h-4 w-4" />}
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
         
-        {/* Selected Venue Details: 4 columns on md+ screens */}
-        <div className="md:col-span-4">
-          {selectedVenue ? (
-            <VenueDetail 
-              venue={selectedVenue}
-              onEdit={() => {}}
-              refetch={refetch}
-              tourId={tourId}
-            />
-          ) : (
-            <Card className="flex items-center justify-center p-6 h-[400px]">
-              <div className="text-center">
-                <Building className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium mb-2">No Venue Selected</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Select a venue from the list to view details
-                </p>
-                <Button
-                  variant="outline"
-                  className="mx-auto"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add New Venue
-                </Button>
-              </div>
-            </Card>
-          )}
-        </div>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Venue</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Capacity</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedVenues.length > 0 ? (
+                  sortedVenues.map(venue => (
+                    <TableRow 
+                      key={venue.id}
+                      className={`cursor-pointer ${selectedVenue?.id === venue.id ? 'bg-primary/5' : ''}`}
+                      onClick={() => handleVenueSelect(venue)}
+                    >
+                      <TableCell className="font-medium">{venue.name}</TableCell>
+                      <TableCell>
+                        <Badge variant={
+                          venue.status === 'confirmed' ? 'default' :
+                          venue.status === 'potential' ? 'secondary' :
+                          venue.status === 'hold' ? 'outline' :
+                          venue.status === 'cancelled' ? 'destructive' :
+                          'outline'
+                        }>
+                          {venue.status || 'Unknown'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <MapPin className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
+                          {venue.city}{venue.region ? `, ${venue.region}` : ''}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {venue.performanceDate ? formatDate(venue.performanceDate) : 'Not scheduled'}
+                      </TableCell>
+                      <TableCell>{venue.capacity || 'Unknown'}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-6">
+                      {searchQuery || statusFilter 
+                        ? 'No venues match your filters'
+                        : 'No venues added to this tour yet'}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Venue Statistics */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Venue Statistics</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Total Venues</p>
-              <p className="text-2xl font-bold">{filteredVenues.length}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Confirmed</p>
-              <p className="text-2xl font-bold">{confirmedCount}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Potential</p>
-              <p className="text-2xl font-bold">{potentialCount}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Average Capacity</p>
-              <p className="text-2xl font-bold">{averageCapacity}</p>
-            </div>
-          </div>
-          
-          {venueTypeEntries.length > 0 && (
-            <div className="mb-4">
-              <h4 className="text-sm font-medium mb-2">Venue Categories</h4>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                {venueTypeEntries.slice(0, 5).map(([type, count]) => (
-                  <div key={type} className="bg-muted p-3 rounded-md flex justify-between">
-                    <span className="text-sm">{type}</span>
-                    <span className="font-medium">{count}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      
+      {/* Venue Details */}
+      <div className="md:col-span-1">
+        {selectedVenue ? (
+          <VenueDetail 
+            venue={selectedVenue} 
+            onEdit={() => console.log('Edit venue', selectedVenue.id)}
+            tourId={tourId}
+            refetch={refetch}
+          />
+        ) : (
+          <Card className="h-full flex flex-col items-center justify-center text-center p-6">
+            <Building className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">Select a Venue</h3>
+            <p className="text-muted-foreground">
+              Click on any venue from the list to view its details
+            </p>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

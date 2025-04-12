@@ -1,154 +1,281 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Building, 
-  Calendar, 
-  Edit, 
-  ExternalLink, 
-  Link, 
-  MapPin, 
-  Phone, 
-  UsersRound,
-  Clock
-} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { formatDate } from '@/lib/utils';
+import {
+  Building,
+  Calendar,
+  Clock,
+  DollarSign,
+  Edit2,
+  ExternalLink,
+  Info,
+  Mail,
+  MapPin,
+  Maximize2,
+  MessageSquare,
+  Music,
+  Phone,
+  Star,
+  Trash2,
+  User,
+} from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 interface VenueDetailProps {
   venue: any;
-  onEdit: () => void;
+  onEdit?: () => void;
   tourId: number;
   refetch: () => void;
 }
 
 export function VenueDetail({ venue, onEdit, tourId, refetch }: VenueDetailProps) {
-  if (!venue) return null;
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const { toast } = useToast();
 
-  const getStatusVariant = (status?: string) => {
-    if (!status) return 'outline';
-    
-    const statusLower = status.toLowerCase();
-    
-    if (statusLower === 'confirmed') return 'default';
-    if (statusLower === 'potential') return 'secondary';
-    if (statusLower === 'booked') return 'default';
-    if (statusLower === 'hold') return 'warning';
-    if (statusLower === 'cancelled') return 'destructive';
-    
-    return 'outline';
+  const handleStatusChange = async (newStatus: string) => {
+    setUpdating(true);
+    try {
+      await apiRequest(`/api/tours/${tourId}/venues/${venue.id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: newStatus }),
+      });
+      
+      toast({
+        title: 'Status updated',
+        description: `Venue status updated to ${newStatus}`,
+      });
+      
+      refetch();
+    } catch (error) {
+      toast({
+        title: 'Error updating status',
+        description: 'There was a problem updating the venue status',
+        variant: 'destructive',
+      });
+    }
+    setUpdating(false);
   };
-
+  
+  const handleRemoveVenue = async () => {
+    setUpdating(true);
+    try {
+      await apiRequest(`/api/tours/${tourId}/venues/${venue.id}`, {
+        method: 'DELETE',
+      });
+      
+      toast({
+        title: 'Venue removed',
+        description: 'Venue has been removed from the tour',
+      });
+      
+      refetch();
+    } catch (error) {
+      toast({
+        title: 'Error removing venue',
+        description: 'There was a problem removing the venue from the tour',
+        variant: 'destructive',
+      });
+    }
+    setUpdating(false);
+    setConfirmDelete(false);
+  };
+  
   return (
     <Card className="h-full">
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-        <div>
-          <CardTitle className="text-xl">{venue.name}</CardTitle>
-          <CardDescription className="flex items-center">
-            <MapPin className="mr-1 h-3 w-3" />
-            {venue.city}{venue.region ? `, ${venue.region}` : ''}
-          </CardDescription>
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <CardTitle>{venue.name}</CardTitle>
+          
+          <Badge variant={
+            venue.status === 'confirmed' ? 'default' :
+            venue.status === 'potential' ? 'secondary' :
+            venue.status === 'hold' ? 'outline' :
+            venue.status === 'cancelled' ? 'destructive' : 
+            'outline'
+          }>
+            {venue.status || 'Unknown'}
+          </Badge>
         </div>
-        <Badge variant={getStatusVariant(venue.status)}>
-          {venue.status || 'Unknown'}
-        </Badge>
+        <CardDescription className="flex items-center">
+          <MapPin className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
+          {venue.city}{venue.region ? `, ${venue.region}` : ''}{venue.country ? `, ${venue.country}` : ''}
+        </CardDescription>
       </CardHeader>
-      <CardContent>
+      
+      <CardContent className="pb-2">
         <div className="space-y-4">
-          {/* Performance Info */}
-          {venue.performanceDate && (
-            <div className="bg-muted p-3 rounded-md space-y-1">
-              <h4 className="text-sm font-medium flex items-center">
-                <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                Performance Date
-              </h4>
-              <p className="text-lg font-medium">{formatDate(venue.performanceDate)}</p>
-              {venue.performanceTime && (
-                <p className="text-sm text-muted-foreground flex items-center">
-                  <Clock className="h-3 w-3 mr-1 text-muted-foreground" />
-                  {venue.performanceTime}
-                </p>
-              )}
+          {/* Performance Details */}
+          <div className="space-y-2">
+            <h4 className="font-medium text-sm">Performance Details</h4>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center text-sm">
+                <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                {venue.performanceDate ? formatDate(venue.performanceDate) : 'No date set'}
+              </div>
+              <div className="flex items-center text-sm">
+                <Clock className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                {venue.performanceTime || 'No time set'}
+              </div>
+              <div className="flex items-center text-sm">
+                <DollarSign className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                {venue.fee ? `$${venue.fee}` : 'No fee set'}
+              </div>
+              <div className="flex items-center text-sm">
+                <Star className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                {venue.deal || 'No deal set'}
+              </div>
             </div>
-          )}
-
-          {/* Contact Info */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium">Contact Information</h4>
+          </div>
+          
+          <Separator />
+          
+          {/* Venue Information */}
+          <div className="space-y-2">
+            <h4 className="font-medium text-sm">Venue Information</h4>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center text-sm">
+                <Building className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                Capacity: {venue.capacity || 'Unknown'}
+              </div>
+              <div className="flex items-center text-sm">
+                <Music className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                {venue.venueType || 'Unknown type'}
+              </div>
+            </div>
+            
             {venue.website && (
               <div className="flex items-center text-sm">
-                <Link className="h-4 w-4 mr-2 text-muted-foreground" />
-                <a 
-                  href={venue.website.startsWith('http') ? venue.website : `https://${venue.website}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
+                <ExternalLink className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                <a href={venue.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate">
                   {venue.website}
                 </a>
               </div>
             )}
-            {venue.phoneNumber && (
-              <div className="flex items-center text-sm">
-                <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span>{venue.phoneNumber}</span>
-              </div>
-            )}
-            {venue.contactName && (
-              <div className="flex items-center text-sm">
-                <UsersRound className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span>{venue.contactName}{venue.contactEmail ? ` (${venue.contactEmail})` : ''}</span>
-              </div>
-            )}
           </div>
-
+          
           <Separator />
-
-          {/* Venue Details */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Capacity</p>
-              <p className="font-medium">{venue.capacity || 'Unknown'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Venue Type</p>
-              <p className="font-medium">{venue.venueType || 'Unknown'}</p>
-            </div>
-            {venue.bookedBy && (
-              <div>
-                <p className="text-sm text-muted-foreground">Booked By</p>
-                <p className="font-medium">{venue.bookedBy}</p>
+          
+          {/* Contact Information */}
+          <div className="space-y-2">
+            <h4 className="font-medium text-sm">Contact Information</h4>
+            {venue.contactName || venue.contactEmail || venue.contactPhone ? (
+              <div className="space-y-1">
+                {venue.contactName && (
+                  <div className="flex items-center text-sm">
+                    <User className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                    {venue.contactName}
+                  </div>
+                )}
+                {venue.contactEmail && (
+                  <div className="flex items-center text-sm">
+                    <Mail className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                    <a href={`mailto:${venue.contactEmail}`} className="text-primary hover:underline">
+                      {venue.contactEmail}
+                    </a>
+                  </div>
+                )}
+                {venue.contactPhone && (
+                  <div className="flex items-center text-sm">
+                    <Phone className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                    <a href={`tel:${venue.contactPhone}`} className="text-primary hover:underline">
+                      {venue.contactPhone}
+                    </a>
+                  </div>
+                )}
               </div>
-            )}
-            {venue.genre && (
-              <div>
-                <p className="text-sm text-muted-foreground">Genre Focus</p>
-                <p className="font-medium">{venue.genre}</p>
-              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No contact information available</p>
             )}
           </div>
-
+          
           {/* Notes */}
           {venue.notes && (
-            <div className="space-y-1">
-              <h4 className="text-sm font-medium">Notes</h4>
-              <p className="text-sm text-muted-foreground">{venue.notes}</p>
-            </div>
+            <>
+              <Separator />
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm flex items-center">
+                  <MessageSquare className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                  Notes
+                </h4>
+                <p className="text-sm">{venue.notes}</p>
+              </div>
+            </>
           )}
-
-          <div className="flex flex-col space-y-2 pt-4">
-            <Button onClick={onEdit} variant="outline" className="w-full">
-              <Edit className="mr-2 h-4 w-4" />
-              Edit Venue
-            </Button>
-            <Button variant="outline" className="w-full">
-              <ExternalLink className="mr-2 h-4 w-4" />
-              View Full Details
-            </Button>
-          </div>
         </div>
       </CardContent>
+      
+      <CardFooter className="flex justify-between pt-4">
+        <div className="space-x-2">
+          <Button variant="outline" size="sm" onClick={onEdit}>
+            <Edit2 className="h-3.5 w-3.5 mr-1.5" />
+            Edit
+          </Button>
+          
+          <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                Remove
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Remove Venue</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to remove {venue.name} from this tour? This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setConfirmDelete(false)}>Cancel</Button>
+                <Button variant="destructive" onClick={handleRemoveVenue} disabled={updating}>
+                  {updating ? 'Removing...' : 'Remove Venue'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+        
+        <div className="space-x-2">
+          {venue.status !== 'confirmed' && (
+            <Button size="sm" onClick={() => handleStatusChange('confirmed')} disabled={updating}>
+              Confirm Venue
+            </Button>
+          )}
+          
+          {venue.status !== 'potential' && (
+            <Button size="sm" variant="outline" onClick={() => handleStatusChange('potential')} disabled={updating}>
+              Mark as Potential
+            </Button>
+          )}
+          
+          {venue.status !== 'hold' && (
+            <Button size="sm" variant="outline" onClick={() => handleStatusChange('hold')} disabled={updating}>
+              Put on Hold
+            </Button>
+          )}
+        </div>
+      </CardFooter>
     </Card>
   );
 }
