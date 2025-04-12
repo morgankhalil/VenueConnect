@@ -32,22 +32,26 @@ async function main() {
 
     // Rename each foreign key constraint
     for (const constraint of foreignKeyConstraints.rows) {
-      const oldName = constraint.constraint_name;
+      const oldName = constraint.constraint_name as string;
+      const tableName = constraint.table_name as string;
+      const columnName = constraint.column_name as string;
+      const referencedTableName = constraint.referenced_table_name as string;
+      const referencedColumnName = constraint.referenced_column_name as string;
       
       // Convert to camelCase
       // Format: tableNameColumnNameReferencedTableNameReferencedColumnNameFk
       const newName = generateCamelCaseConstraintName(
-        constraint.table_name, 
-        constraint.column_name, 
-        constraint.referenced_table_name, 
-        constraint.referenced_column_name,
+        tableName, 
+        columnName, 
+        referencedTableName, 
+        referencedColumnName,
         'Fk'
       );
       
       logger.log(`Renaming constraint: ${oldName} to ${newName}`, 'info');
       
       // Execute the rename operation
-      await renameConstraint(constraint.table_name, oldName, newName);
+      await renameConstraint(tableName, oldName, newName);
     }
     
     // Get primary key constraints with snake_case naming
@@ -64,8 +68,8 @@ async function main() {
     
     // Rename each primary key constraint
     for (const constraint of primaryKeyConstraints.rows) {
-      const oldName = constraint.indexname;
-      const tableName = constraint.tablename;
+      const oldName = constraint.indexname as string;
+      const tableName = constraint.tablename as string;
       
       // Format: tableNamePkey
       const newName = `${tableName}Pkey`;
@@ -91,11 +95,11 @@ async function main() {
     
     // Rename each unique constraint
     for (const constraint of uniqueConstraints.rows) {
-      const oldName = constraint.indexname;
-      const tableName = constraint.tablename;
+      const oldName = constraint.indexname as string;
+      const tableName = constraint.tablename as string;
       
       // Extract column name from indexdef
-      const indexDef = constraint.indexdef;
+      const indexDef = constraint.indexdef as string;
       const columnMatch = indexDef.match(/btree \(([^)]+)\)/i);
       let columnName = columnMatch ? columnMatch[1].replace(/"/g, '') : 'unknown';
       

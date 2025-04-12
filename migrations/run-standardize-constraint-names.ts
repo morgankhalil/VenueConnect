@@ -18,8 +18,14 @@ async function main() {
     await import('./standardize-constraint-names');
     
     logger.log('Successfully ran constraint name standardization migration', 'info');
+    
+    // Execute fix-individual-constraints.ts
+    logger.log('Starting to fix individual constraints', 'info');
+    await import('./fix-individual-constraints');
+    
+    logger.log('Successfully fixed individual constraints', 'info');
   } catch (error) {
-    logger.log(`Error running constraint name standardization migration: ${error}`, 'error');
+    logger.log(`Error in migration process: ${error}`, 'error');
     console.error('Error:', error);
     process.exit(1);
   }

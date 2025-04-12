@@ -31,13 +31,13 @@ async function main() {
 }
 
 /**
- * Fix the tour_routes foreign key constraints which have a different format
+ * Fix the tourRoutes foreign key constraints which have a different format
  */
 async function fixTourRoutesConstraints() {
-  logger.log('Fixing tour_routes constraints', 'info');
+  logger.log('Fixing tourRoutes constraints', 'info');
   
   const constraints = [
-    { oldName: 'tour_routes_tour_id_fkey', newName: 'tourRoutesTourIdTourIdFk' },
+    { oldName: 'tour_routes_tour_id_fkey', newName: 'tourRoutesTourIdToursIdFk' },
     { oldName: 'tour_routes_start_venue_id_fkey', newName: 'tourRoutesStartVenueIdVenuesIdFk' },
     { oldName: 'tour_routes_end_venue_id_fkey', newName: 'tourRoutesEndVenueIdVenuesIdFk' }
   ];
