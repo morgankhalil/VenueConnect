@@ -47,6 +47,8 @@ import {
 } from 'lucide-react';
 import { MapEvent } from '@/types';
 import { VenueMap } from '@/components/maps/venue-map';
+import { TourComparisonView } from './tour-comparison-view';
+import { TourTimeline } from './tour-timeline';
 
 type TourDetailProps = {
   tourId: number | string;

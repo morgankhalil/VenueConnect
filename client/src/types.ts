@@ -12,6 +12,8 @@ export interface MapEvent {
   status: string;
   venue_id?: number;
   sequence?: number;
+  city?: string;
+  notes?: string;
 }
 
 export interface TourGroup {
