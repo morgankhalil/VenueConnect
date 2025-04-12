@@ -12,31 +12,23 @@ async function testApi() {
     process.exit(1);
   }
 
-  const provider = new ConcertsTrackerProvider(apiKey);
-
   try {
     console.log('Testing search endpoint...');
-    const response = await axios.get('https://concerts-artists-events-tracker.p.rapidapi.com/search', {
+    const response = await axios.get('https://concerts-artists-events-tracker.p.rapidapi.com/location', {
       params: {
-        keyword: 'metallica',
-        types: 'event'
+        name: 'New York',
+        minDate: '2024-04-12',
+        maxDate: '2024-12-31',
+        countryCode: 'US'
       },
       headers: {
         'X-RapidAPI-Key': apiKey,
         'X-RapidAPI-Host': 'concerts-artists-events-tracker.p.rapidapi.com'
       }
     });
-    console.log('Search results:', response.data);
-
-    console.log('\nTesting artist events...');
-    const events = await provider.getArtistEvents('Metallica');
-    console.log('Events found:', events.length);
-    console.log('Sample event:', events[0]);
-
-    console.log('\nTesting venue search...');
-    const venues = await provider.searchVenues('Seattle');
-    console.log('Venues found:', venues.length);
-    console.log('Sample venue:', venues[0]);
+    
+    console.log('Response status:', response.status);
+    console.log('Response data:', JSON.stringify(response.data, null, 2));
   } catch (error) {
     console.error('Test failed:', error);
   }
