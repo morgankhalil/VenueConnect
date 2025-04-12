@@ -21,6 +21,7 @@ const knownVenueIds: Record<string, string> = {
   'The Bug Jar': '10068739-the-bug-jar',
   'The Bowery Ballroom': '1847-the-bowery-ballroom',
   'The 9:30 Club': '209-9-30-club',
+  '9:30 Club': '209-9-30-club',  // Added to match our database
   'The Troubadour': '1941-the-troubadour',
   'The Fillmore': '1941-the-fillmore',
   'Red Rocks Amphitheatre': '598-red-rocks-amphitheatre',
