@@ -551,14 +551,36 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
                 </div>
 
                 <div className="flex space-x-2">
-                  <Button
+                  {hasEnoughVenuesForOptimization ? (
+                    <Button
                       variant="default"
                       size="sm"
-                      className="bg-gradient-to-r from-primary to-primary/80"
-                      title="View map in full detail"
+                      className="bg-gradient-to-r from-purple-600 to-purple-500"
+                      onClick={() => setShowOptimizer(true)}
+                      title="Optimize your tour route"
                     >
-                      <Map className="mr-2 h-4 w-4" />
-                      Full Map View
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Optimize Tour
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="bg-gradient-to-r from-gray-600 to-gray-500"
+                      disabled={true}
+                      title="Need at least 2 venues for optimization"
+                    >
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Optimize Tour
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    title="View map in full detail"
+                  >
+                    <Map className="mr-2 h-4 w-4" />
+                    Full Map View
                   </Button>
                 </div>
               </div>
@@ -683,6 +705,7 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
           onApplyChanges={() => {
             // Refresh the data after applying optimization
             refetch();
+            setShowOptimizer(false);
           }}
         />
       )}
