@@ -2,15 +2,55 @@
 
 // Define the interface for our API request helper
 interface ApiRequest {
-  get(url: string, options?: RequestInit): Promise<any>;
-  post(url: string, data?: any, options?: RequestInit): Promise<any>;
-  put(url: string, data?: any, options?: RequestInit): Promise<any>;
-  patch(url: string, data?: any, options?: RequestInit): Promise<any>;
-  delete(url: string, options?: RequestInit): Promise<any>;
+  get<T = any>(url: string, options?: RequestInit): Promise<T>;
+  post<T = any>(url: string, data?: any, options?: RequestInit): Promise<T>;
+  put<T = any>(url: string, data?: any, options?: RequestInit): Promise<T>;
+  patch<T = any>(url: string, data?: any, options?: RequestInit): Promise<T>;
+  delete<T = any>(url: string, options?: RequestInit): Promise<T>;
 }
 
-// Create axios-like request helpers
-export const apiRequest: ApiRequest = {
+/**
+ * Generic API request function that supports TypeScript types
+ * Similar to apiRequest object below but supports a more flexible interface
+ */
+export const apiRequest = async <T = any>({
+  url,
+  method = 'GET',
+  data = undefined,
+  headers = {},
+  ...options
+}: {
+  url: string;
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  data?: any;
+  headers?: Record<string, string>;
+  [key: string]: any;
+}): Promise<T> => {
+  const config: RequestInit = {
+    method,
+    headers: {
+      ...(data ? { 'Content-Type': 'application/json' } : {}),
+      ...headers,
+    },
+    ...options,
+  };
+
+  if (data && method !== 'GET') {
+    config.body = JSON.stringify(data);
+  }
+
+  const response = await fetch(url, config);
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || error.message || 'API request failed');
+  }
+  
+  return response.json();
+};
+
+// Legacy axios-like request helpers
+export const legacyApiRequest: ApiRequest = {
   async get(url: string, options?: RequestInit) {
     return fetch(url, {
       ...options,
@@ -83,23 +123,41 @@ export async function apiRequestLegacy(url: string, options?: RequestInit) {
 
 // Tour related API functions
 export async function getTour(tourId: number) {
-  return apiRequest.get(`/api/tours/${tourId}`);
+  return apiRequest({
+    url: `/api/tours/${tourId}`,
+    method: 'GET'
+  });
 }
 
 export async function getTourById(tourId: number) {
-  return apiRequest.get(`/api/tours/${tourId}`);
+  return apiRequest({
+    url: `/api/tours/${tourId}`,
+    method: 'GET'
+  });
 }
 
 export async function updateTour(tourId: number, data: any) {
-  return apiRequest.patch(`/api/tours/${tourId}`, data);
+  return apiRequest({
+    url: `/api/tours/${tourId}`,
+    method: 'PATCH', 
+    data
+  });
 }
 
 export async function optimizeTourRoute(tourId: number, options = {}) {
-  return apiRequest.post(`/api/tours/${tourId}/optimize`, options);
+  return apiRequest({
+    url: `/api/tours/${tourId}/optimize`,
+    method: 'POST',
+    data: options
+  });
 }
 
 export async function applyTourOptimization(tourId: number, optimizationResult: any) {
-  return apiRequest.post(`/api/tours/${tourId}/apply-optimization`, optimizationResult);
+  return apiRequest({
+    url: `/api/tours/${tourId}/apply-optimization`,
+    method: 'POST',
+    data: optimizationResult
+  });
 }
 
 // Venue network related functions
