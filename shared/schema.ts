@@ -102,17 +102,17 @@ export const genreEnum = pgEnum("genre", [
 ]);
 
 // Market category enum
-export const marketCategoryEnum = pgEnum("market_category", [
+export const marketCategoryEnum = pgEnum("marketCategory", [
   "primary", "secondary", "tertiary"
 ]);
 
 // Venue type enum
-export const venueTypeEnum = pgEnum("venue_type", [
+export const venueTypeEnum = pgEnum("venueType", [
   "club", "bar", "theater", "coffeehouse", "diy_space", "art_gallery", "college_venue", "community_center", "record_store"
 ]);
 
 // Venue capacity category enum
-export const capacityCategoryEnum = pgEnum("capacity_category", [
+export const capacityCategoryEnum = pgEnum("capacityCategory", [
   "tiny", "small", "medium", "large"
 ]);
 
