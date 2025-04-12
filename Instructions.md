@@ -1,4 +1,3 @@
-
 # Assistant Documentation Maintenance Prompt
 
 When working with this codebase, please follow these guidelines:
@@ -29,6 +28,8 @@ When working with this codebase, please follow these guidelines:
 - Follow the established API structure
 - Use existing UI components from client/src/components/ui/
 - Keep documentation updated with code changes
+- Utilize unified optimization approach for tour planning
+- Follow established data sync patterns for venue updates
 
 5. Testing Requirements
 - Add unit tests for new algorithms
@@ -42,95 +43,33 @@ When working with this codebase, please follow these guidelines:
   - Progress tracking in IMPLEMENTATION_TASK_TRACKER.md
   - Vision alignment in EXECUTIVE_SUMMARY.md if needed
 
-When you receive a request, please:
-1. Check if it aligns with existing documentation
-2. Propose necessary documentation updates
-3. Implement the requested changes
-4. Update relevant tracking information
-
-
-# Venue Data Seeding and Sync Implementation Plan
-
-## Current Issues
-1. Multiple redundant seeding scripts with overlapping functionality
-2. Inconsistent error handling across scripts
-3. No clear separation between initial seeding and ongoing sync
-4. Foreign key constraint violations during seeding
-5. Hard-coded venue IDs scattered across files
-
-## Proposed Architecture
-
-### 1. Core Seeding Module (server/core/seed-manager.ts)
-- Single source of truth for initial data seeding
-- Clear table dependencies and order
-- Configurable filters for venues (capacity, location)
-- Proper foreign key handling
-
-### 2. Sync Module (server/core/sync-manager.ts)
-- Handles ongoing data synchronization
-- Rate limiting for API calls
-- Proper error handling and logging
-- Retry mechanisms for failed syncs
-
-### 3. Implementation Steps
-
-1. Consolidate Existing Scripts:
-- Merge functionality from:
-  - seed.ts
-  - seed-events.ts
-  - seed-bandsintown.ts
-  - seed-venues-from-bandsintown.ts
-  - seed-events-then-artists.ts
-
-2. Create Clear Data Flow:
-```
-Initial Seed:
-1. Venues         (Base venue data)
-2. Venue Events   (Events at each venue)
-3. Event Artists  (Artists from those events)
-4. Venue Network  (Connect similar venues)
-
-Ongoing Sync:
-┌─ Venue Updates
-├─ Venue Event Updates
-└─ Event Artist Updates
-```
-
-The flow is designed this way because:
-- Venues are our primary data point
-- Events belong to venues and provide context
-- Artists are extracted from events
-- Venue network is built based on shared artists/events
-
-3. Add Proper Validation:
-- Validate venue data before insertion
-- Check for existing records
-- Handle API rate limits
-- Proper error handling
-
-4. Implement Retry Logic:
-- Exponential backoff for API calls
-- Skip failed items and continue processing
-- Log failures for manual review
+# Data Management and Seeding
 
 ## Table Clearing Order
+When clearing database tables, follow this specific order to maintain referential integrity:
 1. events
 2. tourVenues
 3. tours
 4. venueNetwork
 5. artists
-6. venues
-7. users
+6. users
+7. venues
+
+## Seeding Process
+The standard seeding workflow uses the "Seed Sample Data" workflow which:
+1. Clears all tables in the correct order
+2. Seeds fresh data from the Concerts API
+3. Additional data can be added using specific seeding scripts as needed
 
 ## API Integration
-- Move API keys to environment variables
+- Store API keys in environment variables
 - Implement proper rate limiting
 - Add request caching
-- Error handling with retries
+- Use error handling with retries
 
-Would you like me to start implementing any specific part of this plan?
+Would you like me to implement any specific part of this updated documentation?
+
 # Collaborative Development Prompt Template
-
 When working together on this codebase, please keep in mind these key documentation files that need to be kept in sync with any changes or new features:
 
 1. EXECUTIVE_SUMMARY.md - High-level vision and goals
