@@ -17,15 +17,22 @@ interface VenueSearchParams {
 
 async function searchVenues(params: VenueSearchParams) {
   const apiKey = process.env.BANDSINTOWN_API_KEY;
+  const appId = process.env.BANDSINTOWN_APP_ID;
+  
   if (!apiKey) {
     console.error('ERROR: BANDSINTOWN_API_KEY environment variable is not set');
+    process.exit(1);
+  }
+  
+  if (!appId) {
+    console.error('ERROR: BANDSINTOWN_APP_ID environment variable is not set');
     process.exit(1);
   }
 
   // Build query parameters
   const queryParams: Record<string, any> = {
     limit: params.limit || 50,
-    app_id: apiKey  // Using app_id as a query parameter instead of x-api-key in headers
+    app_id: appId  // Using app_id environment variable for this parameter
   };
 
   if (params.query) {
@@ -47,7 +54,8 @@ async function searchVenues(params: VenueSearchParams) {
   try {
     const response = await axios.get(`https://rest.bandsintown.com/venues/search`, {
       headers: {
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'x-api-key': apiKey  // Use the API key in the headers
       },
       params: queryParams
     });

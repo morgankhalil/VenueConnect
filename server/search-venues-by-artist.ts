@@ -15,8 +15,15 @@ interface ArtistSearchParams {
 
 async function getArtistEvents(params: ArtistSearchParams) {
   const apiKey = process.env.BANDSINTOWN_API_KEY;
+  const appId = process.env.BANDSINTOWN_APP_ID;
+  
   if (!apiKey) {
     console.error('ERROR: BANDSINTOWN_API_KEY environment variable is not set');
+    process.exit(1);
+  }
+  
+  if (!appId) {
+    console.error('ERROR: BANDSINTOWN_APP_ID environment variable is not set');
     process.exit(1);
   }
 
@@ -28,7 +35,7 @@ async function getArtistEvents(params: ArtistSearchParams) {
   
   // Build query parameters
   const queryParams: Record<string, any> = {
-    app_id: apiKey  // Use app_id instead of header authentication
+    app_id: appId  // Use the app_id environment variable for this parameter
   };
   
   if (params.date_range) {
@@ -42,11 +49,15 @@ async function getArtistEvents(params: ArtistSearchParams) {
   }
   
   console.log(`Using API endpoint: ${apiEndpoint} with app_id authentication`);
+  console.log(`Query parameters:`, queryParams);
   
   try {
     const response = await axios.get(apiEndpoint, { 
       params: queryParams,
-      headers: { 'Accept': 'application/json' }
+      headers: { 
+        'Accept': 'application/json',
+        'x-api-key': apiKey  // Use the API key in the headers
+      }
     });
     
     if (response.data && Array.isArray(response.data)) {

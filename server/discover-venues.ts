@@ -26,9 +26,21 @@ function prompt(question: string): Promise<string> {
 // Search venues directly by name, city, etc.
 async function searchVenuesByParameters(params: any) {
   const apiKey = process.env.BANDSINTOWN_API_KEY;
+  const appId = process.env.BANDSINTOWN_APP_ID;
+  
   if (!apiKey) {
     throw new Error('Bandsintown API key is not configured');
   }
+  
+  if (!appId) {
+    throw new Error('Bandsintown app_id is not configured');
+  }
+
+  // Add app_id to params
+  const searchParams = {
+    ...params,
+    app_id: appId
+  };
 
   try {
     const response = await axios.get(`https://rest.bandsintown.com/venues/search`, {
@@ -36,7 +48,7 @@ async function searchVenuesByParameters(params: any) {
         'Accept': 'application/json',
         'x-api-key': apiKey
       },
-      params: params
+      params: searchParams
     });
 
     return response.data;
@@ -49,8 +61,14 @@ async function searchVenuesByParameters(params: any) {
 // Get venues by artist
 async function getVenuesByArtist(artistName: string, dateRange?: string) {
   const apiKey = process.env.BANDSINTOWN_API_KEY;
+  const appId = process.env.BANDSINTOWN_APP_ID;
+  
   if (!apiKey) {
     throw new Error('Bandsintown API key is not configured');
+  }
+  
+  if (!appId) {
+    throw new Error('Bandsintown app_id is not configured');
   }
 
   // Sanitize artist name for URL
@@ -59,7 +77,7 @@ async function getVenuesByArtist(artistName: string, dateRange?: string) {
   try {
     // Build query parameters
     const queryParams: Record<string, any> = {
-      app_id: apiKey
+      app_id: appId  // Use the app_id environment variable here
     };
     
     if (dateRange) {
@@ -76,7 +94,10 @@ async function getVenuesByArtist(artistName: string, dateRange?: string) {
       `https://rest.bandsintown.com/artists/${encodedArtistName}/events`, 
       { 
         params: queryParams,
-        headers: { 'Accept': 'application/json' }
+        headers: { 
+          'Accept': 'application/json',
+          'x-api-key': apiKey  // Use the API key in the headers
+        }
       }
     );
     
