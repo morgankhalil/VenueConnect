@@ -20,9 +20,12 @@ router.get('/stats', async (req, res) => {
     
     const [tourCount] = await db.select({ count: count() }).from(tours);
     
-    const [confirmedCount] = await db.select({ count: count() })
-      .from(tourVenues)
-      .where(eq(tourVenues.status, 'confirmed'));
+    // Use SQL directly to avoid table name issues after renaming
+    const confirmedCountResult = await db.execute(sql`
+      SELECT COUNT(*) as count FROM "tourVenues" 
+      WHERE status = 'confirmed'
+    `);
+    const confirmedCount = { count: Number(confirmedCountResult.rows[0]?.count || 0) };
     
     return res.json({
       venueCount: venueCount.count,
