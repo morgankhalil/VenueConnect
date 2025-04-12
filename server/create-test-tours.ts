@@ -1,7 +1,83 @@
 import { db } from './db';
 import { tours, tourVenues, venues, artists } from '../shared/schema';
 import { eq } from 'drizzle-orm';
-import { calculateInitialTourScore } from '../shared/utils/initial-tour-score';
+import { calculateDistance, estimateTravelTime } from '../shared/utils/geo';
+
+/**
+ * Calculate initial optimization score for a tour
+ * This is a simplified version of the function in initial-tour-score.ts
+ * with direct geo utility imports to avoid circular dependencies
+ */
+function calculateInitialTourScore(
+  tourVenues: any[]
+): { 
+  optimizationScore: number, 
+  totalDistance: number, 
+  totalTravelTime: number
+} {
+  // Filter venues with coordinates and sort by date or sequence
+  const venuesWithCoordinates = tourVenues
+    .filter(tv => tv.venue && tv.venue.latitude && tv.venue.longitude)
+    .sort((a, b) => {
+      // Sort by date if available, otherwise by sequence
+      if (a.date && b.date) {
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+      }
+      return (a.sequence || 0) - (b.sequence || 0);
+    });
+
+  // If we don't have at least 2 venues with coordinates, we can't calculate a score
+  if (venuesWithCoordinates.length < 2) {
+    return {
+      optimizationScore: 40, // Base score for unoptimized tours with minimal data
+      totalDistance: 0,
+      totalTravelTime: 0
+    };
+  }
+
+  // Calculate total distance and travel time
+  let totalDistance = 0;
+  let totalTravelTime = 0;
+  
+  // Process consecutive pairs to calculate distance and travel time
+  for (let i = 0; i < venuesWithCoordinates.length - 1; i++) {
+    const current = venuesWithCoordinates[i];
+    const next = venuesWithCoordinates[i + 1];
+    
+    if (current.venue && next.venue && 
+        current.venue.latitude && current.venue.longitude && 
+        next.venue.latitude && next.venue.longitude) {
+      // Calculate distance between venues
+      const distance = calculateDistance(
+        Number(current.venue.latitude),
+        Number(current.venue.longitude),
+        Number(next.venue.latitude),
+        Number(next.venue.longitude)
+      );
+      
+      // Add to total distance
+      totalDistance += distance;
+      
+      // Calculate travel time
+      const travelTime = estimateTravelTime(distance);
+      totalTravelTime += travelTime;
+    }
+  }
+  
+  // Calculate the initial score (unoptimized)
+  // Start with a base score and apply distance penalties
+  const baseScore = 70; // Typical unoptimized tour starts around 70/100
+  const distancePenalty = Math.min(20, totalDistance / 150); // Distance penalty
+  
+  // Calculate final score
+  const optimizationScore = Math.max(30, Math.round(baseScore - distancePenalty));
+  
+  return {
+    optimizationScore,
+    totalDistance,
+    totalTravelTime
+  };
+}
 
 /**
  * Create specialized test tours for optimization testing
