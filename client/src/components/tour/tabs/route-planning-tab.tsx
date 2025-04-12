@@ -5,31 +5,20 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import {
-  ChevronDown,
-  Map as MapIcon,
   MapPin,
   Calendar,
-  List,
-  LayoutGrid,
   Route,
   AlertTriangle,
-  ArrowRight,
   InfoIcon,
   CheckCircle2,
   Clock4,
@@ -37,19 +26,16 @@ import {
   XCircle,
   BarChart,
   Sparkles,
+  CalendarClock,
+  Loader2,
+  RefreshCw,
 } from 'lucide-react';
 import { formatDate, formatDistance, formatTravelTime } from '@/lib/utils';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
-import * as L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-import { 
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleContent,
-} from "@/components/ui/collapsible"
-import { OptimizationPanel } from '../optimization-panel';
 import { SimplifiedRouteMap } from '../simplified-route-map';
+import { useOptimizeTour } from '@/hooks/use-optimize-tour';
+import { useToast } from '@/hooks/use-toast';
 
 interface RoutePlanningTabProps {
   tourId: number;
@@ -435,16 +421,90 @@ export function RoutePlanningTab({
     return deg * (Math.PI / 180);
   };
   
+  // Set up our optimization hook
+  const { 
+    optimize, 
+    applyOptimization, 
+    isOptimizing, 
+    error: optimizationError, 
+    optimizationResult, 
+    resetOptimization 
+  } = useOptimizeTour(tourId);
+  
+  // Optimization options
+  const [optimizationOptions, setOptimizationOptions] = useState({
+    // Unified options - no distinction between standard/AI for user
+    prioritizeDistance: true,
+    distanceWeight: 0.7,
+    optimizeForCapacity: true,
+    respectGenre: true,
+    includeMarketConsiderations: true,
+    preserveConfirmedDates: true,
+  });
+  
+  // Unified optimization function
+  const handleOptimizeTour = async () => {
+    // Get the optimization mode based on if advanced factors are selected
+    const useAdvancedFactors = 
+      optimizationOptions.optimizeForCapacity || 
+      optimizationOptions.respectGenre || 
+      optimizationOptions.includeMarketConsiderations;
+    
+    let result;
+    
+    if (useAdvancedFactors) {
+      // Use AI optimization if any advanced factors are selected
+      result = await optimize({
+        type: 'ai',
+        options: {
+          optimizeForCapacity: optimizationOptions.optimizeForCapacity,
+          respectGenre: optimizationOptions.respectGenre,
+          includeMarketConsiderations: optimizationOptions.includeMarketConsiderations,
+          preserveConfirmedDates: optimizationOptions.preserveConfirmedDates
+        }
+      });
+    } else {
+      // Use standard optimization for distance-only optimization
+      result = await optimize({
+        type: 'standard',
+        options: {
+          prioritizeDistance: optimizationOptions.prioritizeDistance,
+          distanceWeight: optimizationOptions.distanceWeight,
+          preserveConfirmedDates: optimizationOptions.preserveConfirmedDates,
+          optimizeFor: 'balanced'
+        }
+      });
+    }
+    
+    if (result) {
+      // Auto-show optimized route when result is received
+      setShowOptimizedRoute(true);
+    }
+  };
+  
+  // Handle applying optimization
+  const handleApplyOptimization = async () => {
+    if (!optimizationResult?.optimizedSequence) return;
+    
+    const suggestedDates = optimizationResult.suggestedDates || {};
+    await applyOptimization(optimizationResult.optimizedSequence, suggestedDates);
+    onApplyOptimization();
+    resetOptimization();
+  };
+  
+  // Toast for notifications
+  const { toast } = useToast();
+
   return (
     <div className="space-y-6">
-      {/* Route Overview Card */}
+      {/* Main Map View - New single map design */}
       <Card>
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <CardTitle>Route Planning</CardTitle>
               <CardDescription>
-                Plan and visualize your tour route
+                Plan and optimize your tour route
               </CardDescription>
             </div>
             
@@ -465,8 +525,7 @@ export function RoutePlanningTab({
               )}
               
               <Button 
-                variant="outline" 
-                size="sm"
+                variant={isOptimizationOpen ? "secondary" : "default"}
                 onClick={() => setIsOptimizationOpen(!isOptimizationOpen)}
                 className="flex items-center gap-1"
               >
@@ -475,9 +534,9 @@ export function RoutePlanningTab({
                 ) : (
                   <>
                     {tourData?.optimizationScore > 70 ? (
-                      <><CheckCircle2 className="h-4 w-4 text-green-600 mr-1" /> Optimized route</>
+                      <><CheckCircle2 className="h-4 w-4 mr-1" /> Optimize</>
                     ) : (
-                      <><BarChart className="h-4 w-4 mr-1" /> Optimize route</>
+                      <><Sparkles className="h-4 w-4 mr-1" /> Optimize Route</>
                     )}
                   </>
                 )}
@@ -485,8 +544,19 @@ export function RoutePlanningTab({
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          {/* Collapsible Optimization Panel */}
+        
+        <CardContent className="p-0">
+          {/* Route Map - The main visualization */}
+          <div className="h-[400px] relative">
+            <SimplifiedRouteMap 
+              originalVenues={originalSequenceVenues}
+              optimizedVenues={optimizedSequenceVenues}
+              onVenueClick={onVenueClick}
+              showOptimized={showOptimizedRoute}
+            />
+          </div>
+          
+          {/* Optimization Controls - Only shown when open */}
           <Collapsible
             open={isOptimizationOpen}
             onOpenChange={setIsOptimizationOpen}
