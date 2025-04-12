@@ -53,47 +53,9 @@ interface BandsInTownEvent {
  * List of artists to use for venue discovery
  * Including a mix of genres and popularity levels to maximize event coverage
  */
-const ARTISTS_TO_SEARCH = [
-  // Popular mainstream artists
-  'The Black Keys',
-  'Coldplay',
-  // Rock/Alternative
-  'The Killers',
-  'Cage The Elephant',
-  'Twenty One Pilots',
-  'Arctic Monkeys',
-  'The Strokes',
-  'Vampire Weekend',
-  // Indie/Folk
-  'Bon Iver',
-  'Fleet Foxes',
-  'The Lumineers',
-  'The Head and the Heart',
-  // Pop
-  'Harry Styles',
-  'Dua Lipa',
-  // Electronic/Dance
-  'Flume',
-  'ODESZA',
-  'Disclosure',
-  // Hip Hop
-  'Kendrick Lamar',
-  'Tyler, The Creator',
-  'Run The Jewels',
-  // Country/Americana
-  'Chris Stapleton',
-  'Sturgill Simpson',
-  'Jason Isbell',
-  // Legacy/Touring acts
-  'Dead & Company',
-  'Phish',
-  'Pearl Jam',
-  // Up and coming
-  'Phoebe Bridgers',
-  'Soccer Mommy',
-  'Japanese Breakfast',
-  'Snail Mail',
-];
+// Get artists from database
+const existingArtists = await db.select().from(artists);
+const artistsToSearch = existingArtists.map(artist => artist.name);
 
 /**
  * Fetch artist data from Bandsintown
