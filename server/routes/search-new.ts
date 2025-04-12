@@ -7,7 +7,16 @@ import {
 } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../db';
-import { artists, artistGenres, events, genres, venues } from '../../shared/schema';
+import { artists, events, genres, venues } from '../../shared/schema';
+import { 
+  getArtistGenres, 
+  getGenreBySlug, 
+  getGenreByName, 
+  getArtistsByGenre,
+  getGenreById,
+  findRelatedGenresByArtistOverlap,
+  getGenreWithChildren
+} from '../helpers/genre-utils';
 
 const router = Router();
 
@@ -122,28 +131,20 @@ router.get('/search/events', async (req, res) => {
       let targetGenreId = genreId;
       
       if (genre && !genreId) {
-        const genreResult = await db
-          .select({ id: genres.id })
-          .from(genres)
-          .where(or(
-            eq(genres.name, genre),
-            eq(genres.slug, genre.toLowerCase().replace(/\s+/g, '-'))
-          ))
-          .limit(1);
+        // Use genre utility function to find genre by name or slug
+        const foundGenre = genre.includes('-') 
+          ? await getGenreBySlug(genre) 
+          : await getGenreByName(genre);
         
-        if (genreResult.length > 0) {
-          targetGenreId = genreResult[0].id;
+        if (foundGenre) {
+          targetGenreId = foundGenre.id;
         }
       }
       
       if (targetGenreId) {
-        // Find all artists with this genre
-        const artistsWithGenre = await db
-          .select({ artistId: artistGenres.artistId })
-          .from(artistGenres)
-          .where(eq(artistGenres.genreId, targetGenreId));
-        
-        const artistIds = artistsWithGenre.map(a => a.artistId);
+        // Use the utility function to get all artists with this genre
+        const artistsWithGenre = await getArtistsByGenre(targetGenreId);
+        const artistIds = artistsWithGenre.map(a => a.id);
         
         if (artistIds.length > 0) {
           // Filter the events with artists in the genre
@@ -358,34 +359,16 @@ router.get('/search/artists', async (req, res) => {
     // Execute main query if not filtered by genre above
     const artistResults = await artistsQuery;
     
-    // For each artist, get their genres
+    // For each artist, get their genres using the utility function
     const artistsWithGenres = await Promise.all(
       artistResults.map(async (artist) => {
-        const genreRelations = await db
-          .select({
-            genreId: artistGenres.genreId
-          })
-          .from(artistGenres)
-          .where(eq(artistGenres.artistId, artist.id));
+        // Use the utility function to get all genres for this artist
+        const artistGenres = await getArtistGenres(artist.id);
         
-        if (genreRelations.length === 0) {
-          return { ...artist, genres: [] };
-        }
-        
-        const genreIds = genreRelations.map(rel => rel.genreId);
-        
-        const artistGenreInfo = await db
-          .select({
-            id: genres.id,
-            name: genres.name,
-            slug: genres.slug
-          })
-          .from(genres)
-          .where(inArray(genres.id, genreIds));
-        
+        // Return artist with genres
         return {
           ...artist,
-          genres: artistGenreInfo
+          genres: artistGenres
         };
       })
     );

@@ -8,7 +8,7 @@
  */
 
 import { db } from '../server/db';
-import { artists, genres, artistGenres } from '../shared/schema';
+import { artists, genres, artistGenres, venueGenres } from '../shared/schema';
 import { sql, eq, inArray } from 'drizzle-orm';
 
 // Helper function to convert genre enum values to match genre names in the genres table
@@ -206,7 +206,9 @@ async function main() {
   console.log(`- ${artistCount} artists needed fixing`);
   console.log(`- ${successCount} artists fixed successfully`);
   console.log(`- ${errorCount} artists had errors`);
-  console.log(`- ${venueCount} venues need fixing (not addressed in this migration)`);
+  console.log(`- ${venueCount} venues needed fixing`);
+  console.log(`- ${venueSuccessCount} venues fixed successfully`);
+  console.log(`- ${venueErrorCount} venues had errors`);
 }
 
 main()
