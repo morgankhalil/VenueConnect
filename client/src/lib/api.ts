@@ -1,7 +1,16 @@
 // API utilities
 
+// Define the interface for our API request helper
+interface ApiRequest {
+  get(url: string, options?: RequestInit): Promise<any>;
+  post(url: string, data?: any, options?: RequestInit): Promise<any>;
+  put(url: string, data?: any, options?: RequestInit): Promise<any>;
+  patch(url: string, data?: any, options?: RequestInit): Promise<any>;
+  delete(url: string, options?: RequestInit): Promise<any>;
+}
+
 // Create axios-like request helpers
-export const apiRequest = {
+export const apiRequest: ApiRequest = {
   async get(url: string, options?: RequestInit) {
     return fetch(url, {
       ...options,
@@ -135,132 +144,80 @@ export async function applyUnifiedOptimization(tourId: number, optimizedSequence
 
 // Messages API
 export async function getMessages() {
-  return apiRequest('/api/messages');
+  return apiRequest.get('/api/messages');
 }
 
 export async function sendMessage(message: { recipientId: number; content: string }) {
-  return apiRequest('/api/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(message),
-  });
+  return apiRequest.post('/api/messages', message);
 }
 
 // Admin and settings API
 export async function checkBandsintownApiKeyStatus() {
-  return apiRequest('/api/admin/bandsintown/status');
+  return apiRequest.get('/api/admin/bandsintown/status');
 }
 
 export async function setBandsintownApiKey(apiKey: string) {
-  return apiRequest('/api/admin/bandsintown/key', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ apiKey }),
-  });
+  return apiRequest.post('/api/admin/bandsintown/key', { apiKey });
 }
 
 export async function getSyncStatus() {
-  return apiRequest('/api/admin/sync/status');
+  return apiRequest.get('/api/admin/sync/status');
 }
 
 export async function triggerSync(type: string) {
-  return apiRequest('/api/admin/sync', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ type }),
-  });
+  return apiRequest.post('/api/admin/sync', { type });
 }
 
 // Event API
 export async function getEvents(filters?: any) {
-  return apiRequest(`/api/events${filters ? `?${new URLSearchParams(filters)}` : ''}`);
+  return apiRequest.get(`/api/events${filters ? `?${new URLSearchParams(filters)}` : ''}`);
 }
 
 export async function getEvent(eventId: number) {
-  return apiRequest(`/api/events/${eventId}`);
+  return apiRequest.get(`/api/events/${eventId}`);
 }
 
 export async function getEventsByVenue(venueId: number) {
-  return apiRequest(`/api/venues/${venueId}/events`);
+  return apiRequest.get(`/api/venues/${venueId}/events`);
 }
 
 export async function getVenue(venueId: number) {
-  return apiRequest(`/api/venues/${venueId}`);
+  return apiRequest.get(`/api/venues/${venueId}`);
 }
 
 export async function createEvent(event: any) {
-  return apiRequest('/api/events', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(event),
-  });
+  return apiRequest.post('/api/events', event);
 }
 
 export async function updateEvent(eventId: number, data: any) {
-  return apiRequest(`/api/events/${eventId}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
+  return apiRequest.patch(`/api/events/${eventId}`, data);
 }
 
 // Tour listing and management
 export async function getTours(filters?: any) {
-  return apiRequest(`/api/tours${filters ? `?${new URLSearchParams(filters)}` : ''}`);
+  return apiRequest.get(`/api/tours${filters ? `?${new URLSearchParams(filters)}` : ''}`);
 }
 
 export async function createTour(tour: any) {
-  return apiRequest('/api/tours', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(tour),
-  });
+  return apiRequest.post('/api/tours', tour);
 }
 
 export async function deleteTour(tourId: number) {
-  return apiRequest(`/api/tours/${tourId}`, {
-    method: 'DELETE',
-  });
+  return apiRequest.delete(`/api/tours/${tourId}`);
 }
 
 export async function getTourVenues(tourId: number) {
-  return apiRequest(`/api/tours/${tourId}/venues`);
+  return apiRequest.get(`/api/tours/${tourId}/venues`);
 }
 
 export async function addVenueToTour(tourId: number, data: any) {
-  return apiRequest(`/api/tours/${tourId}/venues`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
+  return apiRequest.post(`/api/tours/${tourId}/venues`, data);
 }
 
 export async function updateTourVenue(tourId: number, venueId: number, data: any) {
-  return apiRequest(`/api/tours/${tourId}/venues/${venueId}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
+  return apiRequest.patch(`/api/tours/${tourId}/venues/${venueId}`, data);
 }
 
 export async function removeTourVenue(tourId: number, venueId: number) {
-  return apiRequest(`/api/tours/${tourId}/venues/${venueId}`, {
-    method: 'DELETE',
-  });
+  return apiRequest.delete(`/api/tours/${tourId}/venues/${venueId}`);
 }
