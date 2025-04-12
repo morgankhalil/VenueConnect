@@ -507,16 +507,32 @@ export function RoutePlanningTab({
             <div className="mb-6">
               <div className="mb-3 flex justify-between items-center">
                 <h3 className="text-lg font-medium">Route Comparison</h3>
-                <Badge className="bg-purple-100 text-purple-700 flex items-center">
-                  <Sparkles className="h-3.5 w-3.5 mr-1" />
-                  Optimized view
-                </Badge>
+                <div className="flex items-center space-x-3">
+                  <Select 
+                    value={comparisonMode} 
+                    onValueChange={(value) => setComparisonMode(value as 'overlay' | 'sideBySide' | 'split')}
+                  >
+                    <SelectTrigger className="w-[150px] h-8">
+                      <SelectValue placeholder="Select view" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="overlay">Overlay</SelectItem>
+                      <SelectItem value="sideBySide">Side by Side</SelectItem>
+                      <SelectItem value="split">Split View</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Badge className="bg-purple-100 text-purple-700 flex items-center">
+                    <Sparkles className="h-3.5 w-3.5 mr-1" />
+                    Optimized view
+                  </Badge>
+                </div>
               </div>
               
               <RouteComparisonMap
                 originalVenues={originalSequenceVenues}
                 optimizedVenues={optimizedSequenceVenues}
                 showComparison={true}
+                comparisonMode={comparisonMode}
                 onVenueClick={onVenueClick}
               />
             </div>
