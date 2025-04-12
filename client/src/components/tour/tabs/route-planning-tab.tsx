@@ -78,7 +78,7 @@ export function RoutePlanningTab({
 }: RoutePlanningTabProps) {
   const [isOptimizationOpen, setIsOptimizationOpen] = useState(false);
   const [showOptimizedRoute, setShowOptimizedRoute] = useState(false);
-  const [comparisonMode, setComparisonMode] = useState<'overlay' | 'sideBySide' | 'split'>('overlay');
+  const [comparisonMode, setComparisonMode] = useState<'overlay' | 'sideBySide' | 'split'>('sideBySide');
   
   // If optimized sequence is available, enable the optimized route view toggle
   useEffect(() => {
