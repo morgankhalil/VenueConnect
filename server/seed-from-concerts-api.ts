@@ -121,7 +121,7 @@ async function addEventToDatabase(eventData: any, artistId: number, venueId: num
   console.log(`Added event on ${dateString}`);
 }
 
-async function seedFromConcertsApi(artistNames: string[] = ['La Luz']) {
+async function seedFromConcertsApi(artistNames: string[] = ['Taylor Swift', 'Coldplay', 'Adele', 'BTS', 'Ed Sheeran']) {
   console.log('Database connection initialized');
 
   const seeder = new ConcertsApiSeeder();
@@ -136,8 +136,8 @@ async function seedFromConcertsApi(artistNames: string[] = ['La Luz']) {
   // Define a delay function to respect rate limits
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  // Process only the first artist if rate limited
-  const artistsToProcess = artistNames.slice(0, 1);
+  // Process first 3 artists
+  const artistsToProcess = artistNames.slice(0, 3);
   console.log(`Processing ${artistsToProcess.length} artists due to API rate limits`);
 
   for (const artistName of artistsToProcess) {
