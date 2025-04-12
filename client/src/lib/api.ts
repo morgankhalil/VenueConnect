@@ -191,13 +191,43 @@ export async function applyAIOptimization(tourId: number, optimizedSequence: num
 }
 
 // Get unified optimization suggestions
-export async function getUnifiedOptimization(tourId: number, method: 'standard' | 'ai' | 'auto' = 'auto') {
-  return apiRequest.post(`/api/unified-optimizer/optimize/${tourId}`, { method });
+export async function getUnifiedOptimization(
+  tourId: number, 
+  options: {
+    method?: 'standard' | 'ai' | 'auto';
+    venuePriorities?: Record<number, number>;
+    respectFixedDates?: boolean;
+    optimizeFor?: 'distance' | 'time' | 'balanced';
+    preferredDates?: Record<number, string>;
+    avoidDates?: string[];
+    minDaysBetweenShows?: number;
+    maxDaysBetweenShows?: number;
+  } = {}
+) {
+  const { method = 'auto', ...otherOptions } = options;
+  return apiRequest({
+    url: `/api/unified-optimizer/optimize/${tourId}`,
+    method: 'POST',
+    data: { method, ...otherOptions }
+  });
 }
 
 // Apply unified optimization
-export async function applyUnifiedOptimization(tourId: number, optimizedSequence: number[], suggestedDates: Record<string, string> = {}) {
-  return apiRequest.post(`/api/unified-optimizer/apply/${tourId}`, { optimizedSequence, suggestedDates });
+export async function applyUnifiedOptimization(
+  tourId: number, 
+  optimizedSequence: number[], 
+  suggestedDates: Record<string, string> = {},
+  resolvedConflicts?: Record<number, string>
+) {
+  return apiRequest({
+    url: `/api/unified-optimizer/apply/${tourId}`,
+    method: 'POST',
+    data: { 
+      optimizedSequence, 
+      suggestedDates,
+      resolvedConflicts 
+    }
+  });
 }
 
 // Messages API
