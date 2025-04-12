@@ -43,6 +43,16 @@ This document serves as a prioritized task tracker for implementing all features
 
 ### Data Integration Framework
 | Task | Priority | Effort | Dependencies | Status |
+
+### Database Standardization
+| Task | Priority | Effort | Dependencies | Status |
+|------|----------|--------|--------------|--------|
+| Standardize ID field naming conventions | High | Medium | None | To Do |
+| Create database field naming guidelines | High | Low | None | To Do |
+| Update existing tables to follow conventions | High | High | Naming guidelines | To Do |
+| Document seeding procedures | Medium | Low | None | To Do |
+| Create automated field validation tests | Medium | Medium | Standardization | To Do |
+
 |------|----------|--------|--------------|--------|
 | Design API architecture for integrations | High | Medium | None | To Do |
 | Implement webhook receiver infrastructure | High | High | API architecture | To Do |

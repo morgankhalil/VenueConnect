@@ -745,3 +745,29 @@ export const calendarSyncEvents = pgTable("calendar_sync_events", {
 - Implement CSRF protection for forms
 - Use secure HTTP headers
 - Validate all data from external sources
+
+### Database Seeding and Standardization
+
+```typescript
+// Standard naming conventions for database fields:
+- Use camelCase for field names in code
+- Use snake_case for database column names
+- Common field patterns:
+  - artistId -> artist_id
+  - venueId -> venue_id
+  - createdAt -> created_at
+  - updatedAt -> updated_at
+
+// Example seeding workflow:
+1. Clear existing data:
+   npx tsx server/clear-all.ts
+
+2. Seed sample data:
+   npx tsx server/seed-from-concerts-api.ts
+
+// Standard relationships:
+- Tours -> Artists (artistId)
+- Events -> Artists and Venues (artistId, venueId)
+- TourVenues -> Tours and Venues (tourId, venueId)
+- VenueNetwork -> Venues (venueId, connectedVenueId)
+```
