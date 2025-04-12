@@ -1,5 +1,5 @@
 import { db } from '../db';
-import { venues, artists, events } from '../../shared/schema';
+import { venues, artists, events as eventsTable } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
 import axios from 'axios';
 import { SyncLogger } from './sync-logger';
@@ -108,12 +108,10 @@ export class ConcertsApiSeeder {
       const [newVenue] = await db.insert(venues).values({
         name: venue.title,
         city: venue.city,
-        state: venue.state,
+        region: venue.state,
         country: venue.country || 'US',
         latitude: venue.lat,
         longitude: venue.long,
-        address: venue.address,
-        zipCode: venue.postal_code,
         capacity: venue.capacity || Math.floor(Math.random() * 1000) + 200,
         description: `Music venue in ${venue.city}, ${venue.state}`
       }).returning();
@@ -209,7 +207,7 @@ export class ConcertsApiSeeder {
 
   async seedFromArtist(artistName: string) {
     this.logger.log(`Processing artist: ${artistName}`);
-    const events = await this.searchArtistEvents(artistName);
+    const artistEvents = await this.searchArtistEvents(artistName);
 
     let stats = {
       venues: 0,
@@ -217,33 +215,33 @@ export class ConcertsApiSeeder {
       artists: 0
     };
 
-    if (events.length === 0) {
+    if (artistEvents.length === 0) {
       this.logger.log(`No events found for ${artistName}`);
       return stats;
     }
 
     // Add artist
-    const artistData = events[0].artist;
+    const artistData = artistEvents[0].artist;
     const isVerified = await this.verifyArtist(artistName, artistData);
 
     if (isVerified) {
       const artistId = await this.addArtistToDatabase({
-        id: events[0].artist.id,
+        id: artistEvents[0].artist.id,
         name: artistName,
-        image_url: events[0].artist.image_url
+        image_url: artistEvents[0].artist.image_url
       });
       stats.artists++;
 
       // Process events
-      for (const event of events) {
+      for (const event of artistEvents) {
         if (!event.venue) continue;
 
         try {
           const venueId = await this.addVenueToDatabase(event.venue);
           stats.venues++;
 
-          // Add event
-          await db.insert(events).values({
+          // Add event to events table
+          await db.insert(eventsTable).values({
             artistId,
             venueId,
             date: event.datetime.split('T')[0],

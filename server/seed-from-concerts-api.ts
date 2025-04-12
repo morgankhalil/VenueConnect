@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import { db } from './db';
 import { ConcertsApiSeeder } from './core/concerts-api-seeder';
-import { venues, artists, events } from '../shared/schema';
+import { venues, artists, events as eventsTable } from '../shared/schema';
 import axios from 'axios';
 import { eq, and } from 'drizzle-orm';
 
@@ -74,15 +74,12 @@ async function addVenueToDatabase(venueData: any) {
   const newVenues = await db.insert(venues).values({
     name: venueData.name,
     city: venueData.city || '',
-    state: venueData.state || '',
+    region: venueData.state || '',
     country: venueData.country || 'US',
     latitude: venueData.latitude || null,
     longitude: venueData.longitude || null,
     capacity: Math.floor(Math.random() * 1000) + 100,
-    address: venueData.address || '',
-    zipCode: venueData.zipCode || '',
-    description: `Music venue in ${venueData.city || 'Unknown City'}`,
-    status: 'active'
+    description: `Music venue in ${venueData.city || 'Unknown City'}`
   }).returning();
 
   console.log(`Added venue: ${venueData.name}`);
@@ -95,12 +92,12 @@ async function addEventToDatabase(eventData: any, artistId: number, venueId: num
   const timeString = eventDate.toTimeString().split(' ')[0].substring(0, 5);
 
   const existingEvents = await db.select()
-    .from(events)
+    .from(eventsTable)
     .where(
       and(
-        eq(events.artistId, artistId),
-        eq(events.venueId, venueId),
-        eq(events.date, dateString)
+        eq(eventsTable.artistId, artistId),
+        eq(eventsTable.venueId, venueId),
+        eq(eventsTable.date, dateString)
       )
     )
     .limit(1);
@@ -110,7 +107,7 @@ async function addEventToDatabase(eventData: any, artistId: number, venueId: num
     return;
   }
 
-  await db.insert(events).values({
+  await db.insert(eventsTable).values({
     artistId,
     venueId,
     date: dateString,
