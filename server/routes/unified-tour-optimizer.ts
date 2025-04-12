@@ -30,8 +30,9 @@ import {
   calculateOptimizationScore
 } from '../../shared/utils/geo';
 
-// Import AI optimization client
+// Import AI optimization clients
 import { HfInference } from '@huggingface/inference';
+import OpenAI from 'openai';
 
 // Create router for the unified optimizer
 export const unifiedOptimizerRouter = Router();
@@ -345,8 +346,123 @@ Do not include any text before or after the JSON code block. Only include valid 
         (aiError?.message?.includes('exceeded your monthly included credits') || 
          aiError?.message?.includes('API key'))) {
       try {
-        // In future, we could implement OpenAI fallback here
-        console.log('Could implement OpenAI fallback in the future');
+        console.log('Attempting OpenAI fallback for AI optimization...');
+        
+        // Initialize OpenAI client
+        const openai = new OpenAI({
+          apiKey: process.env.OPENAI_API_KEY
+        });
+        
+        // Create the same prompt for OpenAI
+        const openAiPrompt = `
+You are an AI assistant specializing in tour optimization for artists and venues.
+
+# TOUR DATA
+Tour Name: ${tourData.tourName}
+Artist: ${tourData.artistName}
+Genres: ${tourData.artistGenres.join(', ')}
+Start Date: ${tourData.startDate || 'Not set'}
+End Date: ${tourData.endDate || 'Not set'}
+
+# CONFIRMED VENUES (fixed points that cannot be changed)
+${tourData.confirmedVenues.map((v: any, i: number) => 
+  `${i+1}. ${v.name} (${v.city}) - ${v.date ? new Date(v.date).toLocaleDateString() : 'No date'} - Coordinates: [${v.latitude}, ${v.longitude}] - ID: ${v.id}`
+).join('\n')}
+
+# POTENTIAL VENUES (can be reordered, included, or excluded)
+${tourData.potentialVenues.map((v: any, i: number) => 
+  `${i+1}. ${v.name} (${v.city}) - ${v.date ? new Date(v.date).toLocaleDateString() : 'No date'} - Coordinates: [${v.latitude}, ${v.longitude}] - ID: ${v.id}`
+).join('\n')}
+
+# TASK
+Analyze this tour data and provide optimization suggestions. Consider:
+
+1. Optimal venue sequence to minimize travel distance
+2. Suggested dates for venues without dates
+3. Venues that should be skipped
+4. New venues that should be added to fill geographical gaps
+
+# OUTPUT FORMAT INSTRUCTIONS
+Your response MUST be a valid JSON object with the following structure:
+{
+  "optimizedSequence": [1, 2, 3, 4, 5],
+  "suggestedDates": {"1": "2025-06-15", "3": "2025-07-03"},
+  "recommendedVenues": [1, 3],
+  "suggestedSkips": [],
+  "estimatedDistanceReduction": "15%",
+  "estimatedTimeSavings": "20%",
+  "reasoning": "The optimized sequence minimizes travel distance by placing venues in geographic order."
+}
+
+Only include valid venue_ids from the provided lists. For the optimizedSequence, include ALL venues that should be kept in the final tour (both confirmed and recommended potential venues).
+`;
+
+        // Call OpenAI API
+        const openAiResponse = await openai.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          messages: [
+            {
+              role: "system", 
+              content: "You are a specialized AI for optimizing music tours. Generate JSON responses based on venue and tour data."
+            },
+            {
+              role: "user",
+              content: openAiPrompt
+            }
+          ],
+          temperature: 0.7,
+        });
+        
+        // Extract content from OpenAI response
+        const openAiContent = openAiResponse.choices[0]?.message?.content || '';
+        console.log("OpenAI response:", openAiContent);
+        
+        // Parse the JSON response
+        let openAiSuggestions;
+        try {
+          // First try - direct JSON parse
+          openAiSuggestions = JSON.parse(openAiContent);
+        } catch (parseError) {
+          console.warn("Direct JSON parse failed, trying to extract JSON:", parseError);
+          
+          // Second try - extract JSON object using regex
+          const jsonMatch = openAiContent.match(/\{[\s\S]*?\}/);
+          if (jsonMatch) {
+            try {
+              openAiSuggestions = JSON.parse(jsonMatch[0]);
+            } catch (nestedError) {
+              console.error("Failed to parse JSON from OpenAI response:", nestedError);
+              throw new Error("Unable to parse OpenAI response");
+            }
+          } else {
+            throw new Error("No JSON object found in OpenAI response");
+          }
+        }
+        
+        // Calculate metrics for the OpenAI-optimized sequence
+        const aiOptimizedVenues = openAiSuggestions.optimizedSequence
+          .map((id: number) => tourData.allVenues.find((v: any) => v.id === id))
+          .filter(Boolean);
+        
+        // Re-calculate baseline metrics for consistency
+        const totalDistanceForOpenAI = calculateTotalDistance(tourData.allVenues);
+        const totalTravelTimeMinutesForOpenAI = estimateTravelTime(totalDistanceForOpenAI);
+        
+        const optimizedDistance = calculateTotalDistance(aiOptimizedVenues);
+        const optimizedTimeMinutes = estimateTravelTime(optimizedDistance);
+        
+        // Return successful OpenAI optimization
+        return {
+          optimizationMethod: 'ai',
+          ...openAiSuggestions,
+          calculatedMetrics: {
+            totalDistance: `${totalDistanceForOpenAI} km`,
+            totalTravelTimeMinutes: totalTravelTimeMinutesForOpenAI,
+            optimizedDistance: `${optimizedDistance} km`,
+            optimizedTimeMinutes
+          }
+        };
+        
       } catch (openaiError) {
         console.error("OpenAI fallback also failed:", openaiError);
       }
@@ -394,10 +510,11 @@ unifiedOptimizerRouter.post('/optimize/:tourId', async (req: Request, res: Respo
       default:
         // Try AI first, fall back to standard if needed
         try {
-          // Check if we have a Hugging Face API key
-          if (process.env.HUGGINGFACE_API_KEY) {
+          // Check if we have an OpenAI or Hugging Face API key
+          if (process.env.OPENAI_API_KEY || process.env.HUGGINGFACE_API_KEY) {
             result = await attemptAIOptimization(tourData);
           } else {
+            console.log("No AI service API keys found, using standard optimization");
             result = performStandardOptimization(tourData);
           }
         } catch (error) {
