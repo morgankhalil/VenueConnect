@@ -1,4 +1,3 @@
-
 import { db } from '../db';
 import { venues, artists, events } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
@@ -34,6 +33,8 @@ interface ConcertsEvent {
 export class ConcertsApiSeeder {
   private logger: SyncLogger;
   private apiKey: string;
+  private artistMap: Map<string, string> = new Map();
+  private readonly ARTIST_MAP_FILE = 'server/data/artist-mappings.json';
 
   constructor() {
     this.logger = new SyncLogger('ConcertsApiSeeder');
@@ -117,14 +118,57 @@ export class ConcertsApiSeeder {
     }
   }
 
+  private async loadArtistMap() {
+    try {
+      const fs = await import('fs/promises');
+      const data = await fs.readFile(this.ARTIST_MAP_FILE, 'utf-8');
+      const mappings = JSON.parse(data);
+      this.artistMap = new Map(Object.entries(mappings));
+    } catch (error) {
+      this.logger.log('No existing artist mappings found, creating new file');
+      this.artistMap = new Map();
+    }
+  }
+
+  private async saveArtistMap() {
+    const fs = await import('fs/promises');
+    const mappings = Object.fromEntries(this.artistMap);
+    await fs.writeFile(this.ARTIST_MAP_FILE, JSON.stringify(mappings, null, 2));
+  }
+
   private async verifyArtist(artistName: string, artistData: any): Promise<boolean> {
-    // Basic verification - exact name match
+    await this.loadArtistMap();
+
+    // Check existing mapping
+    if (this.artistMap.has(artistName)) {
+      return this.artistMap.get(artistName) === artistData.name;
+    }
+
+    // Exact match check
     if (artistData.name.toLowerCase() === artistName.toLowerCase()) {
+      this.artistMap.set(artistName, artistData.name);
+      await this.saveArtistMap();
       return true;
     }
-    
-    // Log warning for manual verification
-    this.logger.log(`Warning: Found artist "${artistData.name}" when searching for "${artistName}"`);
+
+    // Fuzzy match check
+    const fuzzysort = (await import('fuzzysort')).default;
+    const fuzzyResult = fuzzysort.single(artistName.toLowerCase(), artistData.name.toLowerCase());
+    const fuzzyScore = fuzzyResult ? fuzzyResult.score : -Infinity;
+    const isCloseMatch = fuzzyScore > -10; // Adjust threshold as needed
+
+    if (isCloseMatch) {
+      this.logger.log(`Found close match: "${artistData.name}" for "${artistName}" (score: ${fuzzyScore})`);
+
+      // In an interactive environment, you could prompt for confirmation
+      // For now, we'll accept close matches and log them
+      this.logger.log(`Accepting match: ${artistData.name} for ${artistName}`);
+      this.artistMap.set(artistName, artistData.name);
+      await this.saveArtistMap();
+      return true;
+    }
+
+    this.logger.log(`No match found for "${artistName}" (best match: "${artistData.name}")`);
     return false;
   }
 
@@ -135,8 +179,7 @@ export class ConcertsApiSeeder {
     let stats = {
       venues: 0,
       events: 0,
-      artists: 0,
-      skipped: false
+      artists: 0
     };
 
     if (events.length === 0) {
@@ -144,46 +187,45 @@ export class ConcertsApiSeeder {
       return stats;
     }
 
-    // Verify artist before proceeding
-    const isVerified = await this.verifyArtist(artistName, events[0].artist);
-    if (!isVerified) {
-      this.logger.log(`Skipping unverified artist match for: ${artistName}`);
-      stats.skipped = true;
-      return stats;
-    }
-
     // Add artist
-    const artistId = await this.addArtistToDatabase({
-      id: events[0].artist.id,
-      name: artistName,
-      image_url: events[0].artist.image_url
-    });
-    stats.artists++;
+    const artistData = events[0].artist;
+    const isVerified = await this.verifyArtist(artistName, artistData);
 
-    // Process events
-    for (const event of events) {
-      if (!event.venue) continue;
+    if (isVerified) {
+      const artistId = await this.addArtistToDatabase({
+        id: events[0].artist.id,
+        name: artistName,
+        image_url: events[0].artist.image_url
+      });
+      stats.artists++;
 
-      try {
-        const venueId = await this.addVenueToDatabase(event.venue);
-        stats.venues++;
+      // Process events
+      for (const event of events) {
+        if (!event.venue) continue;
 
-        // Add event
-        await db.insert(events).values({
-          artistId,
-          venueId,
-          date: event.datetime.split('T')[0],
-          startTime: event.datetime.split('T')[1].substring(0, 5),
-          status: event.status || 'confirmed',
-          sourceId: event.id,
-          sourceName: 'concerts-api'
-        });
-        
-        stats.events++;
-        this.logger.log(`Added event on ${event.datetime.split('T')[0]}`);
-      } catch (error) {
-        this.logger.log(`Failed to process event: ${error}`, 'error');
+        try {
+          const venueId = await this.addVenueToDatabase(event.venue);
+          stats.venues++;
+
+          // Add event
+          await db.insert(events).values({
+            artistId,
+            venueId,
+            date: event.datetime.split('T')[0],
+            startTime: event.datetime.split('T')[1].substring(0, 5),
+            status: event.status || 'confirmed',
+            sourceId: event.id,
+            sourceName: 'concerts-api'
+          });
+
+          stats.events++;
+          this.logger.log(`Added event on ${event.datetime.split('T')[0]}`);
+        } catch (error) {
+          this.logger.log(`Failed to process event: ${error}`, 'error');
+        }
       }
+    } else {
+      this.logger.log(`Artist verification failed for ${artistName}, skipping.`);
     }
 
     return stats;
