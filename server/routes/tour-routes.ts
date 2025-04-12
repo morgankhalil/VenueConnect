@@ -376,7 +376,8 @@ router.get('/', async (req, res) => {
 });
 
 /**
- * Get a single tour by ID with venues and gaps
+ * Get a single tour by ID with artist details (core data - more efficient JSON loading)
+ * The venues data is fetched separately via the /api/tours/:id/venues endpoint
  */
 router.get('/:id', async (req, res) => {
   try {
@@ -404,6 +405,52 @@ router.get('/:id', async (req, res) => {
     
     const artist = artistResult.length ? artistResult[0] : null;
     
+    // Get gap count only (not the full data) to keep response size manageable
+    const gapCount = await db
+      .select({ count: sql`count(*)` })
+      .from(tourGaps)
+      .where(eq(tourGaps.tourId, tourId));
+      
+    // Get venue count only (not the full data) to keep response size manageable
+    const venueCount = await db
+      .select({ count: sql`count(*)` })
+      .from(tourVenues)
+      .where(eq(tourVenues.tourId, tourId));
+    
+    // Return minimal data for the main tour endpoint
+    const result = {
+      ...tour,
+      artist,
+      gapCount: gapCount[0]?.count || 0,
+      venueCount: venueCount[0]?.count || 0,
+    };
+    
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching tour details:", error);
+    res.status(500).json({ error: "Failed to fetch tour details" });
+  }
+});
+
+/**
+ * Get venues for a specific tour ID
+ * This endpoint returns only venue data for a tour, reducing JSON payload size
+ */
+router.get('/:id/venues', async (req, res) => {
+  try {
+    const tourId = Number(req.params.id);
+    
+    // First check if tour exists
+    const tourExists = await db
+      .select({ id: tours.id })
+      .from(tours)
+      .where(eq(tours.id, tourId))
+      .limit(1);
+    
+    if (!tourExists.length) {
+      return res.status(404).json({ error: "Tour not found" });
+    }
+    
     // Get tour venues
     const tourVenuesResult = await db
       .select({
@@ -415,8 +462,39 @@ router.get('/:id', async (req, res) => {
       .where(eq(tourVenues.tourId, tourId))
       .orderBy(tourVenues.sequence);
     
-    // Since we can't join the same table twice with the same alias,
-    // we'll need to perform separate queries for gaps
+    // Transform the results to match the expected format
+    const result = tourVenuesResult.map(item => ({
+      id: item.venue.id,
+      tourVenue: item.tourVenue,
+      venue: item.venue
+    }));
+    
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching tour venues:", error);
+    res.status(500).json({ error: "Failed to fetch tour venues" });
+  }
+});
+
+/**
+ * Get tour gaps for a specific tour ID
+ */
+router.get('/:id/gaps', async (req, res) => {
+  try {
+    const tourId = Number(req.params.id);
+    
+    // First check if tour exists
+    const tourExists = await db
+      .select({ id: tours.id })
+      .from(tours)
+      .where(eq(tours.id, tourId))
+      .limit(1);
+    
+    if (!tourExists.length) {
+      return res.status(404).json({ error: "Tour not found" });
+    }
+    
+    // Get tour gaps data
     const tourGapsData = await db
       .select()
       .from(tourGaps)
@@ -472,18 +550,10 @@ router.get('/:id', async (req, res) => {
       })
     );
     
-    // Combine all data
-    const result = {
-      ...tour,
-      artist,
-      venues: tourVenuesResult,
-      gaps: gapsWithVenues
-    };
-    
-    res.json(result);
+    res.json(gapsWithVenues);
   } catch (error) {
-    console.error("Error fetching tour details:", error);
-    res.status(500).json({ error: "Failed to fetch tour details" });
+    console.error("Error fetching tour gaps:", error);
+    res.status(500).json({ error: "Failed to fetch tour gaps" });
   }
 });
 
