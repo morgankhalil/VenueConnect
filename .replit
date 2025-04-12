@@ -23,7 +23,7 @@ localPort = 5001
 externalPort = 3001
 
 [workflows]
-runButton = "Start Dev Server"
+runButton = "Seed Sample Data"
 
 [[workflows.workflow]]
 name = "Project"
