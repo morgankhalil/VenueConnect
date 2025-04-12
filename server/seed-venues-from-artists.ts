@@ -54,8 +54,22 @@ interface BandsInTownEvent {
  * Including a mix of genres and popularity levels to maximize event coverage
  */
 // Get artists from database
-const existingArtists = await db.select().from(artists);
-const artistsToSearch = existingArtists.map(artist => artist.name);
+let artistsToSearch: string[] = [];
+
+/**
+ * Initialize artist list from database
+ */
+async function initializeArtistList() {
+  const existingArtists = await db.select().from(artists);
+  artistsToSearch = existingArtists.map(artist => artist.name);
+  
+  if (artistsToSearch.length === 0) {
+    console.log('No artists found in database. Please seed artists first.');
+    process.exit(1);
+  }
+  
+  console.log(`Found ${artistsToSearch.length} artists in database`);
+}
 
 /**
  * Fetch artist data from Bandsintown
@@ -277,6 +291,9 @@ async function addEventToDatabase(eventData: BandsInTownEvent, artistId: number,
  */
 async function seedVenuesFromArtists() {
   try {
+    // Initialize artists from database
+    await initializeArtistList();
+    
     // Check for API key
     const apiKey = process.env.BANDSINTOWN_API_KEY;
     if (!apiKey) {
