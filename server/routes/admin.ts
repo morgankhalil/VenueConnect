@@ -198,7 +198,7 @@ adminRouter.post('/webhooks/unregister', requireAdmin, async (req, res) => {
 // Route to test a webhook connection
 adminRouter.post('/webhooks/test', requireAdmin, async (req, res) => {
   try {
-    const { callbackUrl } = req.body;
+    const { callbackUrl, webhookType } = req.body;
 
     if (!callbackUrl) {
       return res.status(400).json({ 
@@ -207,20 +207,29 @@ adminRouter.post('/webhooks/test', requireAdmin, async (req, res) => {
       });
     }
 
-    const apiKey = process.env.BANDSINTOWN_API_KEY;
-    if (!apiKey) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Bandsintown API key is not configured' 
-      });
+    // Test different webhook types based on the webhookType parameter
+    if (webhookType === 'concert-data') {
+      // Import the test function dynamically to avoid circular dependencies
+      const { testConcertDataWebhook } = await import('../webhooks/test-webhook');
+      const result = await testConcertDataWebhook(callbackUrl);
+      return res.json(result);
+    } else {
+      // Default to testing Bandsintown webhook
+      const apiKey = process.env.BANDSINTOWN_API_KEY;
+      if (!apiKey) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Bandsintown API key is not configured' 
+        });
+      }
+
+      const result = await verifyWebhookConnection(
+        callbackUrl, 
+        apiKey
+      );
+
+      return res.json(result);
     }
-
-    const result = await verifyWebhookConnection(
-      callbackUrl, 
-      apiKey
-    );
-
-    res.json(result);
   } catch (error) {
     console.error('Error testing webhook:', error);
     res.status(500).json({ 

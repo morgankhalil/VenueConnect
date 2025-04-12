@@ -14,7 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
 import { useToast } from '@/hooks/use-toast';
-import { AlertCircle, CheckCircle, Calendar, Users, Briefcase } from 'lucide-react';
+import { AlertCircle, CheckCircle, Calendar, Users, Briefcase, Music, Radio } from 'lucide-react';
 
 type WebhookConfiguration = {
   id: number;
@@ -37,8 +37,10 @@ const getIconForWebhookType = (type: string) => {
       return <Users className="w-5 h-5 mr-2" />;
     case 'venue_capacity':
       return <Briefcase className="w-5 h-5 mr-2" />;
+    case 'concert_data':
+      return <Music className="w-5 h-5 mr-2" />;
     default:
-      return null;
+      return <Radio className="w-5 h-5 mr-2" />;
   }
 };
 
@@ -83,10 +85,10 @@ export function WebhookSettings() {
 
   // Test webhook connection
   const testWebhookMutation = useMutation({
-    mutationFn: async (callbackUrl: string) => {
+    mutationFn: async ({ callbackUrl, webhookType }: { callbackUrl: string, webhookType: string }) => {
       return apiRequest('/api/admin/webhooks/test', {
         method: 'POST',
-        body: JSON.stringify({ callbackUrl }),
+        body: JSON.stringify({ callbackUrl, webhookType }),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -122,9 +124,16 @@ export function WebhookSettings() {
     toggleWebhookMutation.mutate({ id, enabled: !currentState });
   };
 
-  const handleTestWebhook = (id: number, callbackUrl: string) => {
+  const handleTestWebhook = (id: number, callbackUrl: string, type: string = 'bandsintown_events') => {
     setIsTestingWebhook(id);
-    testWebhookMutation.mutate(callbackUrl);
+    
+    // Map webhook type to the test handler type
+    let webhookType = 'bandsintown';
+    if (type === 'concert_data') {
+      webhookType = 'concert-data';
+    }
+    
+    testWebhookMutation.mutate({ callbackUrl, webhookType });
   };
 
   if (isLoading) {
@@ -204,7 +213,7 @@ export function WebhookSettings() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleTestWebhook(webhook.id, webhook.callbackUrl)}
+                  onClick={() => handleTestWebhook(webhook.id, webhook.callbackUrl, webhook.type)}
                   disabled={isTestingWebhook === webhook.id || testWebhookMutation.isPending}
                 >
                   {isTestingWebhook === webhook.id ? (
