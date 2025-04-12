@@ -4,7 +4,7 @@ import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { X, Mic2 } from "lucide-react";
+import { X, Mic2, LayoutDashboard, Truck, Network, Calendar, Compass, MessageSquare, Settings } from "lucide-react";
 import { useTheme } from "@/components/ui/theme-provider";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/context/auth-context";
