@@ -165,6 +165,10 @@ export async function getVenueNetworkGraph(filters?: any) {
   return apiRequest.get(`/api/venue-network/graph${filters ? `?${new URLSearchParams(filters)}` : ''}`);
 }
 
+export async function getAllVenuesForNetworkMap(filters?: any) {
+  return apiRequest.get(`/api/venue-network/all-venues${filters ? `?${new URLSearchParams(filters)}` : ''}`);
+}
+
 export async function getCollaborativeOpportunitiesByVenue(venueId: number) {
   return apiRequest.get(`/api/venue-network/opportunities/${venueId}`);
 }

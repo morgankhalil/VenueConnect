@@ -7,10 +7,19 @@ import { TabsContent, Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { getVenueNetworkGraph, getCollaborativeOpportunitiesByVenue, createVenueConnection, searchVenues } from "@/lib/api";
+import { 
+  getVenueNetworkGraph, 
+  getAllVenuesForNetworkMap, 
+  getCollaborativeOpportunitiesByVenue, 
+  createVenueConnection, 
+  searchVenues 
+} from "@/lib/api";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/context/auth-context";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { hasPermission } from "@/lib/permissions";
 
 export default function VenueNetwork() {
@@ -20,6 +29,14 @@ export default function VenueNetwork() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [selectedVenue, setSelectedVenue] = useState<any>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [showAllVenues, setShowAllVenues] = useState(false);
+  const [filters, setFilters] = useState({
+    genre: "",
+    capacity: "",
+    region: "",
+    marketCategory: "",
+    venueType: ""
+  });
   const queryClient = useQueryClient();
   
   // Get the current user from auth context
@@ -63,6 +80,17 @@ export default function VenueNetwork() {
     refetchOnWindowFocus: false,
     refetchOnMount: true,
     refetchOnReconnect: true,
+  });
+  
+  // Query to fetch all venues for the map
+  const { data: allVenuesData, isLoading: isLoadingAllVenues } = useQuery({
+    queryKey: ['/api/venue-network/all-venues', filters],
+    queryFn: async () => {
+      const data = await getAllVenuesForNetworkMap(filters);
+      return data;
+    },
+    enabled: showAllVenues,
+    refetchOnWindowFocus: false,
   });
   
   // Force a refetch when the venueId changes
@@ -111,6 +139,19 @@ export default function VenueNetwork() {
     setSearchResults([]);
     setSelectedVenue(null);
     setShowInviteDialog(true);
+  };
+  
+  // Handle filter changes
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+  
+  // Toggle between connected venues only and all venues
+  const toggleShowAllVenues = () => {
+    setShowAllVenues(prev => !prev);
   };
   
   // Handle search for venues
@@ -198,11 +239,154 @@ export default function VenueNetwork() {
           </TabsList>
 
           <TabsContent value="map" className="space-y-4">
-            <NetworkVisualization 
-              data={networkData || { nodes: [], links: [] }} 
-              onNodeClick={handleNodeClick}
-              onAddVenue={handleAddVenue}
-            />
+            <Card className="mb-4">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      id="show-all-venues" 
+                      checked={showAllVenues} 
+                      onCheckedChange={toggleShowAllVenues}
+                    />
+                    <Label htmlFor="show-all-venues">Show All Venues</Label>
+                  </div>
+                  {showAllVenues && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFilters({
+                        genre: "",
+                        capacity: "",
+                        region: "",
+                        marketCategory: "",
+                        venueType: ""
+                      })}
+                      disabled={!Object.values(filters).some(v => v !== "")}
+                    >
+                      Clear Filters
+                    </Button>
+                  )}
+                </div>
+                
+                {showAllVenues && (
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div>
+                      <Label htmlFor="genre-filter">Genre</Label>
+                      <Select
+                        value={filters.genre}
+                        onValueChange={(value) => handleFilterChange('genre', value)}
+                      >
+                        <SelectTrigger id="genre-filter">
+                          <SelectValue placeholder="All Genres" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">All Genres</SelectItem>
+                          <SelectItem value="rock">Rock</SelectItem>
+                          <SelectItem value="indie">Indie</SelectItem>
+                          <SelectItem value="electronic">Electronic</SelectItem>
+                          <SelectItem value="hip_hop">Hip Hop</SelectItem>
+                          <SelectItem value="jazz">Jazz</SelectItem>
+                          <SelectItem value="folk">Folk</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="capacity-filter">Capacity</Label>
+                      <Select
+                        value={filters.capacity}
+                        onValueChange={(value) => handleFilterChange('capacity', value)}
+                      >
+                        <SelectTrigger id="capacity-filter">
+                          <SelectValue placeholder="All Sizes" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">All Sizes</SelectItem>
+                          <SelectItem value="tiny">Tiny (&lt; 100)</SelectItem>
+                          <SelectItem value="small">Small (100-250)</SelectItem>
+                          <SelectItem value="medium">Medium (250-500)</SelectItem>
+                          <SelectItem value="large">Large (500+)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="region-filter">Region</Label>
+                      <Select
+                        value={filters.region}
+                        onValueChange={(value) => handleFilterChange('region', value)}
+                      >
+                        <SelectTrigger id="region-filter">
+                          <SelectValue placeholder="All Regions" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">All Regions</SelectItem>
+                          <SelectItem value="West">West</SelectItem>
+                          <SelectItem value="Midwest">Midwest</SelectItem>
+                          <SelectItem value="Northeast">Northeast</SelectItem>
+                          <SelectItem value="South">South</SelectItem>
+                          <SelectItem value="Southwest">Southwest</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="market-category-filter">Market Size</Label>
+                      <Select
+                        value={filters.marketCategory}
+                        onValueChange={(value) => handleFilterChange('marketCategory', value)}
+                      >
+                        <SelectTrigger id="market-category-filter">
+                          <SelectValue placeholder="All Markets" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">All Markets</SelectItem>
+                          <SelectItem value="primary">Primary</SelectItem>
+                          <SelectItem value="secondary">Secondary</SelectItem>
+                          <SelectItem value="tertiary">Tertiary</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="venue-type-filter">Venue Type</Label>
+                      <Select
+                        value={filters.venueType}
+                        onValueChange={(value) => handleFilterChange('venueType', value)}
+                      >
+                        <SelectTrigger id="venue-type-filter">
+                          <SelectValue placeholder="All Types" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">All Types</SelectItem>
+                          <SelectItem value="club">Club</SelectItem>
+                          <SelectItem value="bar">Bar</SelectItem>
+                          <SelectItem value="theater">Theater</SelectItem>
+                          <SelectItem value="coffeehouse">Coffeehouse</SelectItem>
+                          <SelectItem value="diy_space">DIY Space</SelectItem>
+                          <SelectItem value="art_gallery">Art Gallery</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            
+            {isLoadingAllVenues && showAllVenues ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="text-center">
+                  <p className="text-gray-500 mb-2">Loading venues...</p>
+                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
+                </div>
+              </div>
+            ) : (
+              <NetworkVisualization 
+                data={showAllVenues ? (allVenuesData || { nodes: [], links: [] }) : (networkData || { nodes: [], links: [] })} 
+                onNodeClick={handleNodeClick}
+                onAddVenue={handleAddVenue}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="list">
