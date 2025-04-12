@@ -455,15 +455,21 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
         <TourComparisonView
           tourId={Number(tourId)}
           originalVenues={
-            // Create a copy of venues sorted by latitude (original unoptimized sort)
-            [...mapEvents].sort((a, b) => 
-              a.latitude && b.latitude ? a.latitude - b.latitude : 0
-            )
+            // For original venues, create a completely different route that goes
+            // in simple longitudinal order (west to east) to show the difference
+            [...mapEvents]
+              .map(v => ({...v})) // create deep copy
+              .sort((a, b) => 
+                a.longitude && b.longitude ? a.longitude - b.longitude : 0
+              )
           }
-          optimizedVenues={filteredVenues}
-          originalDistance={tour.initialTotalDistance || tour.estimatedTravelDistance * 1.2}
+          optimizedVenues={
+            // The optimized venues are already in the correct sequence
+            filteredVenues
+          }
+          originalDistance={tour.initialTotalDistance || tour.estimatedTravelDistance * 1.3}
           optimizedDistance={tour.estimatedTravelDistance}
-          originalTravelTime={tour.initialTravelTime || tour.estimatedTravelTime * 1.2}
+          originalTravelTime={tour.initialTravelTime || tour.estimatedTravelTime * 1.3}
           optimizedTravelTime={tour.estimatedTravelTime}
           optimizationScore={tour.optimizationScore}
         />
