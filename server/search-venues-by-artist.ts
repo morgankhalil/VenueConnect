@@ -15,27 +15,21 @@ interface ArtistSearchParams {
 
 async function getArtistEvents(params: ArtistSearchParams) {
   const apiKey = process.env.BANDSINTOWN_API_KEY;
-  const appId = process.env.BANDSINTOWN_APP_ID;
   
   if (!apiKey) {
     console.error('ERROR: BANDSINTOWN_API_KEY environment variable is not set');
     process.exit(1);
   }
   
-  if (!appId) {
-    console.error('ERROR: BANDSINTOWN_APP_ID environment variable is not set');
-    process.exit(1);
-  }
-
   // Sanitize artist name for URL
   const encodedArtistName = encodeURIComponent(params.name.trim());
   const apiEndpoint = `https://rest.bandsintown.com/artists/${encodedArtistName}/events`;
   
   console.log(`Fetching events for artist '${params.name}'...`);
   
-  // Build query parameters
+  // Build query parameters - using API key as app_id as well
   const queryParams: Record<string, any> = {
-    app_id: appId  // Use the app_id environment variable for this parameter
+    app_id: apiKey  // Using the API key for the app_id parameter as well
   };
   
   if (params.date_range) {

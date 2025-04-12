@@ -26,20 +26,15 @@ function prompt(question: string): Promise<string> {
 // Search venues directly by name, city, etc.
 async function searchVenuesByParameters(params: any) {
   const apiKey = process.env.BANDSINTOWN_API_KEY;
-  const appId = process.env.BANDSINTOWN_APP_ID;
   
   if (!apiKey) {
     throw new Error('Bandsintown API key is not configured');
   }
   
-  if (!appId) {
-    throw new Error('Bandsintown app_id is not configured');
-  }
-
-  // Add app_id to params
+  // Use API key as app_id parameter as well
   const searchParams = {
     ...params,
-    app_id: appId
+    app_id: apiKey
   };
 
   try {
@@ -61,23 +56,18 @@ async function searchVenuesByParameters(params: any) {
 // Get venues by artist
 async function getVenuesByArtist(artistName: string, dateRange?: string) {
   const apiKey = process.env.BANDSINTOWN_API_KEY;
-  const appId = process.env.BANDSINTOWN_APP_ID;
   
   if (!apiKey) {
     throw new Error('Bandsintown API key is not configured');
   }
   
-  if (!appId) {
-    throw new Error('Bandsintown app_id is not configured');
-  }
-
   // Sanitize artist name for URL
   const encodedArtistName = encodeURIComponent(artistName.trim());
   
   try {
-    // Build query parameters
+    // Build query parameters - use API key for app_id as well
     const queryParams: Record<string, any> = {
-      app_id: appId  // Use the app_id environment variable here
+      app_id: apiKey  // Use the API key for the app_id parameter as well
     };
     
     if (dateRange) {
