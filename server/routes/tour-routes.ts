@@ -201,7 +201,11 @@ router.get('/venue-network/graph/:id', async (req, res) => {
  * This is kept for backward compatibility with existing code
  */
 function calculateDistanceInMiles(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  if (!lat1 || !lon1 || !lat2 || !lon2) return 9999;
+  if (!lat1 || !lon1 || !lat2 || !lon2 || 
+      Math.abs(lat1) > 90 || Math.abs(lat2) > 90 ||
+      Math.abs(lon1) > 180 || Math.abs(lon2) > 180) {
+    return 9999;
+  }
   
   // Use our new km-based distance calculator and convert to miles
   const distanceKm = calculateDistance(lat1, lon1, lat2, lon2);
