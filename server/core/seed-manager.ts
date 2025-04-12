@@ -203,6 +203,28 @@ export class SeedManager {
     }
   }
 
+  async seedArtists() {
+    this.logger.log('Starting artist seeding...');
+    const defaultArtists = [
+      {
+        name: "The Black Keys",
+        bandsintownId: "the-black-keys",
+        imageUrl: null,
+        popularity: 85
+      },
+      {
+        name: "Tame Impala",
+        bandsintownId: "tame-impala",
+        imageUrl: null,
+        popularity: 90
+      }
+    ];
+
+    for (const artistData of defaultArtists) {
+      await this.seedArtist(artistData);
+    }
+  }
+
 
   async getVenueEvents(venueId: string): Promise<EventData[]> {
     this.logger.log(`Fetching events for venue ${venueId}...`);
