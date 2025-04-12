@@ -12,11 +12,12 @@ async function testApi() {
   }
 
   try {
-    console.log('Testing search endpoint for Metallica events...');
+    console.log('Testing search endpoint for La Luz events...');
     const response = await axios.get('https://concerts-artists-events-tracker.p.rapidapi.com/search', {
       params: {
-        keyword: 'metallica',
-        types: 'event'
+        keyword: 'La Luz',
+        types: 'event,venue',
+        city: 'Rochester'
       },
       headers: {
         'X-RapidAPI-Key': apiKey,
