@@ -77,7 +77,7 @@ async function testArtistSearch(query: string) {
   try {
     console.log(`Testing artist search endpoint for "${query}"...`);
     const params = new URLSearchParams({
-      q: query,  // Using 'q' instead of 'query' to match artist-routes.ts implementation
+      query: query,  // Using 'query' parameter style for testing
       page: '1',
       limit: '10'
     });

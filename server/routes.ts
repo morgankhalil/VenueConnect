@@ -23,6 +23,10 @@ export function registerRoutes(app: Express): Server {
   // Create HTTP server
   const server = createServer(app);
   // Register routes with more specific prefixes to avoid conflicts with the Vite server
+  
+  // Search routes for events, artists, and genres (register first to take precedence)
+  app.use('/api', searchRoutes);
+  
   app.use('/api/tours', tourRoutes);
   app.use('/api/documentation', documentationRoutes);
   app.use('/api/tour-optimization', tourRouteOptimizationRouter);
@@ -32,16 +36,22 @@ export function registerRoutes(app: Express): Server {
   app.use('/api/users', userRoutes);
   app.use('/api/auth', authRoutes);
   app.use('/api/venues', venueRoutes);
-  app.use('/api/artists', artistRoutes);
+  // Register artist routes but exclude the search path to avoid conflicts
+  app.use('/api/artists', function(req, res, next) {
+    if (req.path === '/search') {
+      // Skip this router for /api/artists/search
+      next('route');
+    } else {
+      // Continue to artist routes for other paths
+      next();
+    }
+  }, artistRoutes);
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/venue-network', venueNetworkRoutes);
   
   // Webhook and admin routes
   app.use('/api/webhooks', webhookRoutes);
   app.use('/api/admin', adminRoutes);
-  
-  // Search routes for events, artists, and genres
-  app.use('/api', searchRoutes);
   
   // Both user-info and venue selection are now handled in their respective route files
   
