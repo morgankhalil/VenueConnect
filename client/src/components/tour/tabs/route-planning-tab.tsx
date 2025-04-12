@@ -275,7 +275,7 @@ export function RoutePlanningTab({
               </div>
               <div>
                 <h3 className="font-medium">Total Venues</h3>
-                <p className="text-muted-foreground text-sm">{venues.length} venues ({confirmedVenues.length} confirmed)</p>
+                <p className="text-muted-foreground text-sm">{venues?.length || 0} venues ({confirmedVenues?.length || 0} confirmed)</p>
               </div>
             </div>
             
@@ -286,7 +286,7 @@ export function RoutePlanningTab({
               <div>
                 <h3 className="font-medium">Route Coverage</h3>
                 <p className="text-muted-foreground text-sm">
-                  {venues.filter(v => v.longitude && v.latitude).length} venues with coordinates
+                  {venues?.filter(v => v.longitude && v.latitude)?.length || 0} venues with coordinates
                 </p>
               </div>
             </div>
