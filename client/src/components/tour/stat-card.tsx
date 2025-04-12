@@ -1,57 +1,68 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowDownIcon, ArrowUpIcon } from 'lucide-react';
+import { TrendingDown, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StatCardProps {
   title: string;
-  value: string;
-  subtitle?: string;
+  value: string | number;
+  description?: string;
   icon?: React.ReactNode;
-  improvement?: number;
+  trend?: 'up' | 'down' | 'neutral';
+  trendLabel?: string;
   className?: string;
 }
 
-export function StatCard({ 
-  title, 
-  value, 
-  subtitle, 
-  icon, 
-  improvement, 
-  className 
+export function StatCard({
+  title,
+  value,
+  description,
+  icon,
+  trend,
+  trendLabel,
+  className
 }: StatCardProps) {
-  const showImprovement = improvement !== undefined;
-  const isPositive = improvement && improvement > 0;
-  const isNegative = improvement && improvement < 0;
+  // Determine color based on trend
+  const trendColor = trend === 'up' 
+    ? 'text-green-500' 
+    : trend === 'down' 
+      ? 'text-red-500' 
+      : 'text-slate-500';
+  
+  // For optimization metrics, "down" is often good (reduced distance/time)
+  // but for other metrics like revenue, "up" is good
+  const showTrendIcon = trend !== 'neutral';
   
   return (
     <Card className={cn("overflow-hidden", className)}>
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
+      <CardContent className="p-6">
+        <div className="flex justify-between items-start">
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
             <div className="flex items-baseline">
-              <h3 className="text-2xl font-bold">{value}</h3>
+              <h3 className="text-2xl font-bold tracking-tight">{value}</h3>
               
-              {showImprovement && (
-                <div 
-                  className={cn(
-                    "flex items-center ml-2 text-sm font-medium",
-                    isPositive && "text-green-600",
-                    isNegative && "text-red-600",
-                    !isPositive && !isNegative && "text-muted-foreground"
+              {/* Trend indicator */}
+              {showTrendIcon && (
+                <div className={cn("flex items-center ml-2", trendColor)}>
+                  {trend === 'up' ? (
+                    <TrendingUp className="h-4 w-4 mr-1" />
+                  ) : (
+                    <TrendingDown className="h-4 w-4 mr-1" />
                   )}
-                >
-                  {isPositive && <ArrowUpIcon className="h-3 w-3 mr-1" />}
-                  {isNegative && <ArrowDownIcon className="h-3 w-3 mr-1" />}
-                  <span>{Math.abs(improvement)}%</span>
+                  {trendLabel && <span className="text-xs">{trendLabel}</span>}
                 </div>
               )}
             </div>
-            {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
+            
+            {description && (
+              <p className="text-xs text-muted-foreground">{description}</p>
+            )}
           </div>
+          
+          {/* Optional icon */}
           {icon && (
-            <div className="bg-primary/10 p-2 rounded-full">
+            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
               {icon}
             </div>
           )}
