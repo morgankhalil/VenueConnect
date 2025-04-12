@@ -1,4 +1,3 @@
-
 import dotenv from 'dotenv';
 import axios from 'axios';
 import { ConcertsTrackerProvider } from './data-sync/concerts-tracker-provider';
@@ -17,7 +16,7 @@ async function testApi() {
     const response = await axios.get('https://concerts-artists-events-tracker.p.rapidapi.com/search', {
       params: {
         keyword: 'Metallica',
-        type: 'event',
+        types: 'event',
         countryCode: 'US'
       },
       headers: {
@@ -25,7 +24,7 @@ async function testApi() {
         'X-RapidAPI-Host': 'concerts-artists-events-tracker.p.rapidapi.com'
       }
     });
-    
+
     console.log('Response status:', response.status);
     console.log('Response data:', JSON.stringify(response.data, null, 2));
   } catch (error) {
