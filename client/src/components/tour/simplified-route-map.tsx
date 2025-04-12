@@ -13,14 +13,17 @@ interface SimplifiedRouteMapProps {
   originalVenues: any[];
   optimizedVenues?: any[];
   onVenueClick?: (venue: any) => void;
+  showOptimized?: boolean;
+  onShowOptimizedChange?: (show: boolean) => void;
 }
 
 export function SimplifiedRouteMap({
   originalVenues = [],
   optimizedVenues = [],
-  onVenueClick
+  onVenueClick,
+  showOptimized = true,
+  onShowOptimizedChange
 }: SimplifiedRouteMapProps) {
-  const [showOptimized, setShowOptimized] = useState(true);
   
   // Filter out venues without coordinates
   const originalVenuesWithCoords = originalVenues.filter(venue => 
@@ -202,7 +205,7 @@ export function SimplifiedRouteMap({
               <Switch
                 id="show-optimized"
                 checked={showOptimized}
-                onCheckedChange={setShowOptimized}
+                onCheckedChange={(checked) => onShowOptimizedChange?.(checked)}
               />
               <Label htmlFor="show-optimized" className="text-sm font-medium cursor-pointer">
                 Show optimized route

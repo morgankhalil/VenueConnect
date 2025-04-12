@@ -14,10 +14,22 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from '@/components/ui/tabs';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   MapPin,
   Calendar,
   Route,
+  ArrowRight,
   AlertTriangle,
   InfoIcon,
   CheckCircle2,
@@ -31,9 +43,12 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { formatDate, formatDistance, formatTravelTime } from '@/lib/utils';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import * as L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 import { SimplifiedRouteMap } from '../simplified-route-map';
+import { OptimizationPanel } from '../optimization-panel';
 import { useOptimizeTour } from '@/hooks/use-optimize-tour';
 import { useToast } from '@/hooks/use-toast';
 
@@ -553,6 +568,7 @@ export function RoutePlanningTab({
               optimizedVenues={optimizedSequenceVenues}
               onVenueClick={onVenueClick}
               showOptimized={showOptimizedRoute}
+              onShowOptimizedChange={setShowOptimizedRoute}
             />
           </div>
           
@@ -575,14 +591,8 @@ export function RoutePlanningTab({
           
           {/* Main Grid Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Column: Map + Stats */}
+            {/* Left Column: Stats */}
             <div className="lg:col-span-8 space-y-4">
-              {/* Route map showing both original and optimized routes */}
-              <SimplifiedRouteMap
-                originalVenues={originalSequenceVenues}
-                optimizedVenues={showOptimizedRoute ? optimizedSequenceVenues : []}
-                onVenueClick={onVenueClick}
-              />
               
               {/* Stats section */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
