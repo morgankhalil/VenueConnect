@@ -13,12 +13,22 @@ const router = Router();
 
 // Search query validation schema
 const searchQuerySchema = z.object({
-  query: z.string().optional().default(''),
+  // Support both 'query' and 'q' parameter styles
+  query: z.string().optional(),
+  q: z.string().optional(), 
   genre: z.string().optional(),
   genreId: z.coerce.number().optional(),
   sort: z.enum(['date', 'name', 'relevance']).optional().default('relevance'),
   page: z.coerce.number().optional().default(1),
   limit: z.coerce.number().optional().default(20),
+})
+// Transform the parsed query to standardize on 'query' parameter
+.transform(data => {
+  // If q is provided but query isn't, use q as query
+  if (data.q && !data.query) {
+    return { ...data, query: data.q };
+  }
+  return data;
 });
 
 // Event search endpoint

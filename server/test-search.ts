@@ -88,6 +88,12 @@ async function testArtistSearch(query: string) {
     
     if (response.data.artists && response.data.artists.length > 0) {
       console.log('Found artists:', response.data.artists.map((a: any) => a.name).join(', '));
+      // Show detailed info about the first artist including genres
+      console.log('First artist details:', JSON.stringify(response.data.artists[0], null, 2));
+    } else if (Array.isArray(response.data) && response.data.length > 0) {
+      // Handle the format from the older API
+      console.log('Found artists:', response.data.map((a: any) => a.name).join(', '));
+      console.log('First artist details:', JSON.stringify(response.data[0], null, 2));
     } else {
       console.log('No artists found');
     }
