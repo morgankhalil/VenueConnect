@@ -28,7 +28,7 @@ async function getArtistEvents(params: ArtistSearchParams) {
   
   // Build query parameters
   const queryParams: Record<string, any> = {
-    app_id: apiKey
+    app_id: apiKey  // Use app_id instead of header authentication
   };
   
   if (params.date_range) {
@@ -40,6 +40,8 @@ async function getArtistEvents(params: ArtistSearchParams) {
     twoYearsFromNow.setFullYear(today.getFullYear() + 2);
     queryParams.date = `${today.toISOString().split('T')[0]},${twoYearsFromNow.toISOString().split('T')[0]}`;
   }
+  
+  console.log(`Using API endpoint: ${apiEndpoint} with app_id authentication`);
   
   try {
     const response = await axios.get(apiEndpoint, { 

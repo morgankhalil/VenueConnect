@@ -24,7 +24,8 @@ async function searchVenues(params: VenueSearchParams) {
 
   // Build query parameters
   const queryParams: Record<string, any> = {
-    limit: params.limit || 50
+    limit: params.limit || 50,
+    app_id: apiKey  // Using app_id as a query parameter instead of x-api-key in headers
   };
 
   if (params.query) {
@@ -40,11 +41,13 @@ async function searchVenues(params: VenueSearchParams) {
     queryParams.radius = params.radius || 25; // Default radius in miles
   }
 
+  console.log(`Using API endpoint: https://rest.bandsintown.com/venues/search with app_id authentication`);
+  console.log(`Search parameters:`, JSON.stringify(queryParams, null, 2));
+
   try {
     const response = await axios.get(`https://rest.bandsintown.com/venues/search`, {
       headers: {
-        'Accept': 'application/json',
-        'x-api-key': apiKey
+        'Accept': 'application/json'
       },
       params: queryParams
     });
