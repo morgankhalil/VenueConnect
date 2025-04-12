@@ -13,10 +13,10 @@ async function testApi() {
 
   try {
     console.log('Testing search endpoint for La Luz events...');
-    const response = await axios.get('https://concerts-artists-events-tracker.p.rapidapi.com/search', {
+    const response = await axios.get('https://concerts-artists-events-tracker.p.rapidapi.com/artist/events', {
       params: {
-        keyword: 'La Luz',
-        type: 'event,venue'
+        name: 'La Luz',
+        countryCode: 'US'
       },
       headers: {
         'X-RapidAPI-Key': apiKey,
