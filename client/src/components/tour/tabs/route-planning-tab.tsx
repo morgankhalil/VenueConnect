@@ -49,7 +49,7 @@ import {
   CollapsibleContent,
 } from "@/components/ui/collapsible"
 import { OptimizationPanel } from '../optimization-panel';
-import { RouteComparisonMap } from '../route-comparison-map';
+import { SimplifiedRouteMap } from '../simplified-route-map';
 
 interface RoutePlanningTabProps {
   tourId: number;
@@ -78,17 +78,6 @@ export function RoutePlanningTab({
 }: RoutePlanningTabProps) {
   const [isOptimizationOpen, setIsOptimizationOpen] = useState(false);
   const [showOptimizedRoute, setShowOptimizedRoute] = useState(false);
-  
-  // Initialize from localStorage or default to side-by-side
-  const [comparisonMode, setComparisonMode] = useState<'overlay' | 'sideBySide' | 'split'>(() => {
-    const savedMode = localStorage.getItem('routeComparisonMode');
-    return (savedMode as 'overlay' | 'sideBySide' | 'split') || 'sideBySide';
-  });
-  
-  // Save to localStorage when changed
-  useEffect(() => {
-    localStorage.setItem('routeComparisonMode', comparisonMode);
-  }, [comparisonMode]);
   
   // If optimized sequence is available, enable the optimized route view toggle
   useEffect(() => {
@@ -519,41 +508,14 @@ export function RoutePlanningTab({
             </CollapsibleContent>
           </Collapsible>
           
-          {/* Route comparison when optimized view is enabled */}
-          {showOptimizedRoute && optimizedSequenceVenues.length > 0 ? (
-            <div className="mb-6">
-              <div className="mb-3 flex justify-between items-center">
-                <h3 className="text-lg font-medium">Route Comparison</h3>
-                <div className="flex items-center space-x-3">
-                  <Select 
-                    value={comparisonMode} 
-                    onValueChange={(value) => setComparisonMode(value as 'overlay' | 'sideBySide' | 'split')}
-                  >
-                    <SelectTrigger className="w-[150px] h-8">
-                      <SelectValue placeholder="Select view" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="overlay">Overlay</SelectItem>
-                      <SelectItem value="sideBySide">Side by Side</SelectItem>
-                      <SelectItem value="split">Split View</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Badge className="bg-purple-100 text-purple-700 flex items-center">
-                    <Sparkles className="h-3.5 w-3.5 mr-1" />
-                    Optimized view
-                  </Badge>
-                </div>
-              </div>
-              
-              <RouteComparisonMap
-                originalVenues={originalSequenceVenues}
-                optimizedVenues={optimizedSequenceVenues}
-                showComparison={true}
-                comparisonMode={comparisonMode}
-                onVenueClick={onVenueClick}
-              />
-            </div>
-          ) : null}
+          {/* Route map showing both original and optimized routes */}
+          <div className="mb-6">
+            <SimplifiedRouteMap
+              originalVenues={originalSequenceVenues}
+              optimizedVenues={showOptimizedRoute ? optimizedSequenceVenues : []}
+              onVenueClick={onVenueClick}
+            />
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="flex items-start gap-3">
