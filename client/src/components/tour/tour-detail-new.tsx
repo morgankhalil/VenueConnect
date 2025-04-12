@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { VenueStatusBadge } from './venue-status-badge';
 import { StatCard } from './stat-card';
 import { VenueList } from './venue-list';
-import { UnifiedTourOptimizer } from './unified-tour-optimizer';
+import { TourOptimizationPanel } from './tour-optimization-panel';
 import { 
   getStatusInfo, 
   getStatusBadgeVariant,
