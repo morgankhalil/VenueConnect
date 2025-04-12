@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { EventProvider, SyncOptions } from './event-provider';
 
@@ -20,7 +19,8 @@ export class ConcertsTrackerProvider implements EventProvider {
         headers: {
           'X-RapidAPI-Key': this.apiKey,
           'X-RapidAPI-Host': 'concerts-artists-events-tracker.p.rapidapi.com'
-        }
+        },
+        timeout: 60000 // 60 second timeout
       });
 
       return response.data.data || [];
@@ -40,7 +40,8 @@ export class ConcertsTrackerProvider implements EventProvider {
         headers: {
           'X-RapidAPI-Key': this.apiKey,
           'X-RapidAPI-Host': 'concerts-artists-events-tracker.p.rapidapi.com'
-        }
+        },
+        timeout: 60000 // 60 second timeout
       });
 
       return response.data.data || [];
@@ -60,7 +61,8 @@ export class ConcertsTrackerProvider implements EventProvider {
         headers: {
           'X-RapidAPI-Key': this.apiKey,
           'X-RapidAPI-Host': 'concerts-artists-events-tracker.p.rapidapi.com'
-        }
+        },
+        timeout: 60000 // 60 second timeout
       });
 
       return response.data.data || [];
