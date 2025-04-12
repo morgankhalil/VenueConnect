@@ -7,16 +7,15 @@
 
 import { db } from '../db';
 import { webhookConfigurations } from '../../shared/schema';
+import { eq } from 'drizzle-orm';
 
 async function addConcertWebhook() {
   console.log('Adding concert data webhook configuration...');
 
   try {
     // Check if a concert data webhook already exists
-    const existingWebhooks = await db
-      .select()
-      .from(webhookConfigurations)
-      .where(webhook => webhook.type.equals('concert_data'));
+    const existingWebhooks = await db.select().from(webhookConfigurations)
+      .where(eq(webhookConfigurations.type, 'concert_data'));
 
     if (existingWebhooks.length > 0) {
       console.log('Concert data webhook already exists.');

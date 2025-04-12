@@ -13,6 +13,8 @@ import tourRouteOptimizationRouter from './routes/tour-route-optimization-fixed'
 import tourOptimizationEnhancedRouter from './routes/tour-optimization-enhanced';
 import { aiOptimizationRouter } from './routes/ai-tour-optimizer';
 import { unifiedOptimizerRouter } from './routes/unified-tour-optimizer';
+import webhookRoutes from './webhooks/webhook-routes';
+import adminRoutes from './routes/admin';
 import { type Express } from 'express';
 import { type Server } from 'http';
 
@@ -21,7 +23,7 @@ export function registerRoutes(app: Express): Server {
   const server = createServer(app);
   // Register routes with more specific prefixes to avoid conflicts with the Vite server
   app.use('/api/tours', tourRoutes);
-app.use('/api/documentation', documentationRoutes);
+  app.use('/api/documentation', documentationRoutes);
   app.use('/api/tour-optimization', tourRouteOptimizationRouter);
   app.use('/api/tour-optimization-enhanced', tourOptimizationEnhancedRouter);
   app.use('/api/ai-optimization', aiOptimizationRouter);
@@ -32,6 +34,10 @@ app.use('/api/documentation', documentationRoutes);
   app.use('/api/artists', artistRoutes);
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/venue-network', venueNetworkRoutes);
+  
+  // Webhook and admin routes
+  app.use('/api/webhooks', webhookRoutes);
+  app.use('/api/admin', adminRoutes);
   
   // Both user-info and venue selection are now handled in their respective route files
   
