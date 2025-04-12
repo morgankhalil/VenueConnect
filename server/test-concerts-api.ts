@@ -6,7 +6,7 @@
 import axios from 'axios';
 import { db } from './db';
 import { artists, genres, artistGenres } from '../shared/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, or } from 'drizzle-orm';
 
 // The Bandsintown app_id - this is a public identifier required by Bandsintown API
 const APP_ID = 'venueconnect';
