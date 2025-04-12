@@ -13,6 +13,7 @@ import tourRouteOptimizationRouter from './routes/tour-route-optimization-fixed'
 import tourOptimizationEnhancedRouter from './routes/tour-optimization-enhanced';
 import { aiOptimizationRouter } from './routes/ai-tour-optimizer';
 import { unifiedOptimizerRouter } from './routes/unified-tour-optimizer';
+import searchRoutes from './routes/search';
 import webhookRoutes from './webhooks/webhook-routes';
 import adminRoutes from './routes/admin';
 import { type Express } from 'express';
@@ -38,6 +39,9 @@ export function registerRoutes(app: Express): Server {
   // Webhook and admin routes
   app.use('/api/webhooks', webhookRoutes);
   app.use('/api/admin', adminRoutes);
+  
+  // Search routes for events, artists, and genres
+  app.use('/api', searchRoutes);
   
   // Both user-info and venue selection are now handled in their respective route files
   
