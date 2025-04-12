@@ -88,3 +88,46 @@ export function calculateImprovement(oldValue: number, newValue: number): number
   const change = oldValue - newValue;
   return Math.round((change / oldValue) * 100);
 }
+
+/**
+ * Calculate the distance between two points given their coordinates
+ * Uses the Haversine formula
+ * @param lat1 Latitude of first point
+ * @param lon1 Longitude of first point
+ * @param lat2 Latitude of second point
+ * @param lon2 Longitude of second point
+ * @returns Distance in kilometers
+ */
+export function calculateDistanceBetweenCoords(
+  lat1: number, 
+  lon1: number, 
+  lat2: number, 
+  lon2: number
+): number {
+  // Convert latitude and longitude from degrees to radians
+  const toRadians = (degrees: number) => degrees * (Math.PI / 180);
+  
+  const radLat1 = toRadians(lat1);
+  const radLon1 = toRadians(lon1);
+  const radLat2 = toRadians(lat2);
+  const radLon2 = toRadians(lon2);
+  
+  // Earth's radius in kilometers
+  const earthRadius = 6371;
+  
+  // Haversine formula
+  const dLat = radLat2 - radLat1;
+  const dLon = radLon2 - radLon1;
+  
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(radLat1) * Math.cos(radLat2) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  
+  // Distance in kilometers
+  const distance = earthRadius * c;
+  
+  return parseFloat(distance.toFixed(1));
+}
