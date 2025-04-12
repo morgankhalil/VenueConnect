@@ -314,7 +314,7 @@ async function seedVenuesFromArtists() {
     const processedVenues = new Set<string>();
 
     // Process each artist
-    for (const artistName of ARTISTS_TO_SEARCH) {
+    for (const artistName of artistsToSearch) {
       try {
         console.log(`\nProcessing artist: ${artistName}`);
         
@@ -375,7 +375,7 @@ async function seedVenuesFromArtists() {
 
     // Print summary
     console.log('\n== Seeding Complete ==');
-    console.log(`Artists processed: ${stats.artistsProcessed}/${ARTISTS_TO_SEARCH.length}`);
+    console.log(`Artists processed: ${stats.artistsProcessed}/${artistsToSearch.length}`);
     console.log(`Venues added: ${stats.venuesAdded}`);
     console.log(`Events added: ${stats.eventsAdded}`);
     
