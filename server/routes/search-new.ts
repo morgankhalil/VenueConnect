@@ -34,7 +34,7 @@ router.get('/events/search', async (req, res) => {
     const offset = (page - 1) * limit;
     
     // Base query - join events with artists and venues
-    const eventsData = await db
+    let eventsQuery = db
       .select({
         id: events.id,
         date: events.date,
@@ -49,8 +49,11 @@ router.get('/events/search', async (req, res) => {
       })
       .from(events)
       .innerJoin(artists, eq(events.artistId, artists.id))
-      .innerJoin(venues, eq(events.venueId, venues.id))
-      .where(
+      .innerJoin(venues, eq(events.venueId, venues.id));
+      
+    // Only apply query filter if query is not empty
+    if (query && query.trim() !== '') {
+      eventsQuery = eventsQuery.where(
         or(
           // Search by artist name
           ilike(artists.name, `%${query}%`),
@@ -58,6 +61,10 @@ router.get('/events/search', async (req, res) => {
           ilike(venues.name, `%${query}%`)
         )
       );
+    }
+    
+    // Execute the query
+    const eventsData = await eventsQuery;
       
     // Format the results
     let formattedEvents = eventsData.map(event => ({
@@ -174,8 +181,12 @@ router.get('/artists/search', async (req, res) => {
         popularity: artists.popularity,
         description: artists.description,
       })
-      .from(artists)
-      .where(ilike(artists.name, `%${query}%`));
+      .from(artists);
+      
+    // Only apply query filter if query is not empty
+    if (query && query.trim() !== '') {
+      artistsQuery = artistsQuery.where(ilike(artists.name, `%${query}%`));
+    }
     
     // Apply genre filter if specified
     if (genreId) {
@@ -223,7 +234,7 @@ router.get('/artists/search', async (req, res) => {
         
         if (artistIds.length > 0) {
           // Execute filtered query
-          const filteredArtists = await db
+          let filteredArtists = await db
             .select({
               id: artists.id,
               name: artists.name,
@@ -232,8 +243,14 @@ router.get('/artists/search', async (req, res) => {
               description: artists.description,
             })
             .from(artists)
-            .where(inArray(artists.id, artistIds))
-            .where(ilike(artists.name, `%${query}%`));
+            .where(inArray(artists.id, artistIds));
+            
+          // Only apply query filter if query is not empty
+          if (query && query.trim() !== '') {
+            filteredArtists = filteredArtists.filter(artist => 
+              artist.name.toLowerCase().includes(query.toLowerCase())
+            );
+          }
           
           // For each artist, get their genres
           const artistsWithGenres = await Promise.all(
