@@ -193,7 +193,14 @@ export function UnifiedTourOptimizer({ tourId, onApplyChanges }: UnifiedTourOpti
     if (isOpen) {
       // Reset the state when the dialog opens
       setShowMethodSelection(true);
-      setHasSelectedMethod(optimizationMethod !== 'auto'); // If a non-default method is already selected, enable the button
+      
+      // Enable the button immediately if a non-default method is selected
+      setHasSelectedMethod(optimizationMethod !== 'auto');
+      
+      // If method is auto but we have data from a previous run, keep button enabled
+      if (optimizationMethod === 'auto' && data) {
+        setHasSelectedMethod(true);
+      }
     } else {
       // Reset when dialog closes
       if (!data) {
@@ -204,12 +211,13 @@ export function UnifiedTourOptimizer({ tourId, onApplyChanges }: UnifiedTourOpti
 
   // States to track the UI flow
   const [showMethodSelection, setShowMethodSelection] = useState(true);
-  const [hasSelectedMethod, setHasSelectedMethod] = useState(false);
+  // Always enable the button, even for 'auto' selection
+  const [hasSelectedMethod, setHasSelectedMethod] = useState(true);
   
   // Handle optimization method change
   const handleMethodChange = (value: 'standard' | 'ai' | 'auto') => {
     setOptimizationMethod(value);
-    setHasSelectedMethod(true);
+    setHasSelectedMethod(value !== 'auto' || hasSelectedMethod);
     // Don't automatically run the optimization
   };
   

@@ -332,11 +332,31 @@ Do not include any text before or after the JSON code block. Only include valid 
   } catch (aiError: any) {
     console.error("Error calling AI service:", aiError);
     
+    // Create appropriate error message
+    let errorMessage = 'AI service unavailable, using fallback optimization';
+    
+    // For credits exceeded error, show more specific message
+    if (aiError?.message?.includes('exceeded your monthly included credits')) {
+      errorMessage = 'AI service credits exceeded, using fallback optimization';
+    }
+    
+    // If OpenAI is available but Hugging Face failed, try to use OpenAI
+    if (process.env.OPENAI_API_KEY && 
+        (aiError?.message?.includes('exceeded your monthly included credits') || 
+         aiError?.message?.includes('API key'))) {
+      try {
+        // In future, we could implement OpenAI fallback here
+        console.log('Could implement OpenAI fallback in the future');
+      } catch (openaiError) {
+        console.error("OpenAI fallback also failed:", openaiError);
+      }
+    }
+    
     // Fall back to standard optimization
     return { 
       ...performStandardOptimization(tourData),
       aiError: {
-        message: 'AI service unavailable, using fallback optimization',
+        message: errorMessage,
         details: aiError?.message || 'Unknown error'
       }
     };
