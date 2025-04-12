@@ -12,10 +12,10 @@ export class ConcertsTrackerProvider implements EventProvider {
 
   async getArtistEvents(artistName: string, options?: SyncOptions): Promise<any[]> {
     try {
-      const response = await axios.get(`${this.baseUrl}/artist/events`, {
+      const response = await axios.get(`${this.baseUrl}/search`, {
         params: {
-          name: artistName,
-          type: 'upcoming'
+          keyword: artistName,
+          type: 'event'
         },
         headers: {
           'X-RapidAPI-Key': this.apiKey,
@@ -23,7 +23,7 @@ export class ConcertsTrackerProvider implements EventProvider {
         }
       });
 
-      return response.data.events || [];
+      return response.data.data || [];
     } catch (error) {
       console.error('Error fetching artist events:', error);
       return [];
@@ -32,10 +32,10 @@ export class ConcertsTrackerProvider implements EventProvider {
 
   async getVenueEvents(venueId: string, options?: SyncOptions): Promise<any[]> {
     try {
-      const response = await axios.get(`${this.baseUrl}/venue`, {
+      const response = await axios.get(`${this.baseUrl}/search`, {
         params: {
-          name: venueId,
-          countryCode: 'US'
+          keyword: venueId,
+          type: 'venue'
         },
         headers: {
           'X-RapidAPI-Key': this.apiKey,
@@ -43,7 +43,7 @@ export class ConcertsTrackerProvider implements EventProvider {
         }
       });
 
-      return response.data.events || [];
+      return response.data.data || [];
     } catch (error) {
       console.error('Error fetching venue events:', error);
       return [];
@@ -63,7 +63,7 @@ export class ConcertsTrackerProvider implements EventProvider {
         }
       });
 
-      return response.data.venues || [];
+      return response.data.data || [];
     } catch (error) {
       console.error('Error searching venues:', error);
       return [];

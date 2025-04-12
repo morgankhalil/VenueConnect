@@ -1,3 +1,4 @@
+
 import dotenv from 'dotenv';
 import axios from 'axios';
 import { ConcertsTrackerProvider } from './data-sync/concerts-tracker-provider';
@@ -13,10 +14,10 @@ async function testApi() {
 
   try {
     console.log('Testing search endpoint for La Luz events...');
-    const response = await axios.get('https://concerts-artists-events-tracker.p.rapidapi.com/artist/events', {
+    const response = await axios.get('https://concerts-artists-events-tracker.p.rapidapi.com/search', {
       params: {
-        name: 'La Luz',
-        type: 'upcoming'
+        keyword: 'La Luz',
+        type: 'event'
       },
       headers: {
         'X-RapidAPI-Key': apiKey,
