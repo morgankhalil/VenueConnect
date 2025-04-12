@@ -30,15 +30,15 @@ export function TourDetailTabs({
   const [activeTab, setActiveTab] = useState('optimization');
   
   const hasVenues = venues && venues.length > 0;
-  const hasOptimizationScore = tourData.optimizationScore !== undefined;
+  const hasOptimizationScore = tourData && tourData.optimizationScore !== undefined;
   
   // Stats for the tour optimization
   const optimizationStats = {
     venueCount: venues?.length || 0,
     confirmedCount: venues?.filter(v => v.status === 'confirmed').length || 0,
     potentialCount: venues?.filter(v => v.status === 'potential').length || 0,
-    totalDistance: tourData.totalDistance || 0,
-    travelTimeMinutes: tourData.travelTimeMinutes || 0,
+    totalDistance: tourData && tourData.totalDistance || 0,
+    travelTimeMinutes: tourData && tourData.travelTimeMinutes || 0,
   };
   
   const showOptimizationAlert = venues?.length > 0 && venues?.filter(v => v.status === 'confirmed').length < 2;
@@ -75,7 +75,7 @@ export function TourDetailTabs({
       
       <TabsContent value="optimization" className="mt-4">
         {showOptimizationAlert && (
-          <Alert className="mb-6" variant="warning">
+          <Alert className="mb-6">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Not enough confirmed venues</AlertTitle>
             <AlertDescription>
