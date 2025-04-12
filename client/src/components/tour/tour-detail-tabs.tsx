@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { BarChart2, Route, Settings, Warehouse } from 'lucide-react';
-import { TourOverviewTab } from '@/components/tour/tabs/tour-overview-tab';
-import { RoutePlanningTab } from '@/components/tour/tabs/route-planning-tab';
-import { OptimizationTab } from '@/components/tour/tabs/optimization-tab';
-import { VenuesTab } from '@/components/tour/tabs/venues-tab';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { AlertCircle, RefreshCw } from 'lucide-react';
+import { TourOverviewTab } from './tabs/tour-overview-tab';
+import { RoutePlanningTab } from './tabs/route-planning-tab';
+import { OptimizationTab } from './tabs/optimization-tab';
+import { VenuesTab } from './tabs/venues-tab';
 
 interface TourDetailTabsProps {
   tourId: number;
@@ -13,6 +14,7 @@ interface TourDetailTabsProps {
   tourData: any;
   originalSequenceVenues: any[];
   optimizedSequenceVenues: any[];
+  selectedVenue: any;
   showAllVenues: boolean;
   setShowAllVenues: React.Dispatch<React.SetStateAction<boolean>>;
   onVenueClick: (venue: any) => void;
@@ -26,6 +28,7 @@ export function TourDetailTabs({
   tourData,
   originalSequenceVenues,
   optimizedSequenceVenues,
+  selectedVenue,
   showAllVenues,
   setShowAllVenues,
   onVenueClick,
@@ -33,77 +36,102 @@ export function TourDetailTabs({
   refetch
 }: TourDetailTabsProps) {
   const [activeTab, setActiveTab] = useState('overview');
-
-  if (!tourData) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>
-          Error loading tour data. Please try again later.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Handle tab change
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setError(null);
+  };
+  
+  // Handle venue status update
+  const handleVenueStatusUpdate = async () => {
+    setIsLoading(true);
+    try {
+      await refetch();
+    } catch (err: any) {
+      setError(err.message || 'Failed to update venues');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid grid-cols-4 mb-8">
-        <TabsTrigger value="overview" className="flex items-center gap-2">
-          <BarChart2 className="h-4 w-4" />
-          <span className="hidden sm:inline">Overview</span>
-        </TabsTrigger>
+    <div className="space-y-6">
+      {/* Error Alert */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            {error}
+            <div className="mt-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => refetch()}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Refreshing...
+                  </>
+                ) : (
+                  'Refresh Data'
+                )}
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {/* Main Tabs */}
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="route">Route Planning</TabsTrigger>
+          <TabsTrigger value="optimization">Optimization</TabsTrigger>
+          <TabsTrigger value="venues">Venues</TabsTrigger>
+        </TabsList>
         
-        <TabsTrigger value="route" className="flex items-center gap-2">
-          <Route className="h-4 w-4" />
-          <span className="hidden sm:inline">Route Planning</span>
-        </TabsTrigger>
+        <TabsContent value="overview" className="mt-6">
+          <TourOverviewTab 
+            tourData={tourData} 
+            venues={venues} 
+          />
+        </TabsContent>
         
-        <TabsTrigger value="optimization" className="flex items-center gap-2">
-          <Settings className="h-4 w-4" />
-          <span className="hidden sm:inline">Optimization</span>
-        </TabsTrigger>
+        <TabsContent value="route" className="mt-6">
+          <RoutePlanningTab 
+            venues={venues}
+            originalSequenceVenues={originalSequenceVenues}
+            optimizedSequenceVenues={optimizedSequenceVenues}
+            showAllVenues={showAllVenues}
+            setShowAllVenues={setShowAllVenues}
+            onVenueClick={onVenueClick}
+          />
+        </TabsContent>
         
-        <TabsTrigger value="venues" className="flex items-center gap-2">
-          <Warehouse className="h-4 w-4" />
-          <span className="hidden sm:inline">Venues</span>
-        </TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="overview" className="space-y-4">
-        <TourOverviewTab 
-          tourData={tourData} 
-          venues={venues} 
-        />
-      </TabsContent>
-      
-      <TabsContent value="route" className="space-y-4">
-        <RoutePlanningTab 
-          venues={venues}
-          originalSequenceVenues={originalSequenceVenues}
-          optimizedSequenceVenues={optimizedSequenceVenues}
-          showAllVenues={showAllVenues}
-          setShowAllVenues={setShowAllVenues}
-          onVenueClick={onVenueClick}
-        />
-      </TabsContent>
-      
-      <TabsContent value="optimization" className="space-y-4">
-        <OptimizationTab 
-          tourId={tourId}
-          venues={venues}
-          tourData={tourData}
-          onApplyOptimization={onApplyOptimization}
-          refetch={refetch}
-        />
-      </TabsContent>
-      
-      <TabsContent value="venues" className="space-y-4">
-        <VenuesTab 
-          venues={venues}
-          tourId={tourId}
-          onVenueClick={onVenueClick}
-          refetch={refetch}
-        />
-      </TabsContent>
-    </Tabs>
+        <TabsContent value="optimization" className="mt-6">
+          <OptimizationTab 
+            tourId={tourId}
+            venues={venues}
+            tourData={tourData}
+            onApplyOptimization={onApplyOptimization}
+            refetch={refetch}
+          />
+        </TabsContent>
+        
+        <TabsContent value="venues" className="mt-6">
+          <VenuesTab 
+            venues={venues} 
+            tourId={tourId}
+            onStatusUpdate={handleVenueStatusUpdate}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
