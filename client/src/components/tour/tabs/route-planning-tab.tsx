@@ -456,11 +456,6 @@ export function RoutePlanningTab({
                     checked={showOptimizedRoute}
                     onCheckedChange={(checked) => {
                       setShowOptimizedRoute(checked);
-                      // When turning on optimized route, ensure we're in a visual comparison mode
-                      if (checked && comparisonMode === 'overlay') {
-                        // Make sure we're showing the overlay view with both routes
-                        setComparisonMode('overlay');
-                      }
                     }}
                   />
                   <Label htmlFor="show-optimized" className="text-sm font-medium">
@@ -602,8 +597,9 @@ export function RoutePlanningTab({
                 <TabsContent value="optimize" className="mt-4">
                   <OptimizationPanel 
                     tourId={tourId}
+                    venues={venues}
                     tourData={tourData}
-                    onSuccess={refetch}
+                    refetch={refetch}
                     onApplyOptimization={onApplyOptimization}
                   />
                 </TabsContent>
