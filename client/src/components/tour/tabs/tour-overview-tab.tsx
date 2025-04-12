@@ -67,8 +67,8 @@ export function TourOverviewTab({ tourData, venues }: TourOverviewTabProps) {
     : 0;
   
   // Total distance and travel time
-  const totalDistance = tourData.totalDistance || 0;
-  const travelTime = tourData.travelTimeMinutes || 0;
+  const totalDistance = tourData.totalDistance || tourData.initial_total_distance || 0;
+  const travelTime = tourData.travelTimeMinutes || tourData.initial_travel_time_minutes || 0;
   
   // Revenue potential (very simple calculation)
   const estimatedRevenue = totalCapacity * 25; // $25 average ticket price
@@ -388,15 +388,18 @@ export function TourOverviewTab({ tourData, venues }: TourOverviewTabProps) {
               </div>
             )}
             
-            {tourData.createdAt && (
+            {confirmedVenues.length > 0 && (
               <div className="flex items-start gap-3 p-3 border rounded-md">
                 <div className="bg-primary/10 p-2 rounded-full">
-                  <Clock className="h-4 w-4 text-primary" />
+                  <Building className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-sm">Tour Created</h3>
+                  <h3 className="font-medium text-sm">Last Confirmed Venue</h3>
                   <p className="text-muted-foreground">
-                    {formatDate(tourData.createdAt)}
+                    {confirmedVenues[confirmedVenues.length - 1].tourVenue?.date ? formatDate(confirmedVenues[confirmedVenues.length - 1].tourVenue.date) : 'Date TBD'}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {confirmedVenues[confirmedVenues.length - 1].venue?.name}
                   </p>
                 </div>
               </div>

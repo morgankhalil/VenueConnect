@@ -46,7 +46,7 @@ export function RoutePlanningTab({
   setShowAllVenues,
   onVenueClick,
 }: RoutePlanningTabProps) {
-  const [viewMode, setViewMode] = useState<'timeline' | 'list' | 'map'>('timeline');
+  // Combined view of map and timeline
 
   // Get the confirmed and potential venues
   const confirmedVenues = venues?.filter(v => v.tourVenue?.status === 'confirmed') || [];
@@ -311,38 +311,7 @@ export function RoutePlanningTab({
         </CardContent>
       </Card>
       
-      {/* View Controls */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center bg-muted p-1 rounded-md">
-          <Button
-            variant={viewMode === 'timeline' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setViewMode('timeline')}
-            className="flex gap-1"
-          >
-            <Calendar className="h-4 w-4" />
-            <span className="hidden sm:inline">Timeline</span>
-          </Button>
-          <Button
-            variant={viewMode === 'list' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setViewMode('list')}
-            className="flex gap-1"
-          >
-            <List className="h-4 w-4" />
-            <span className="hidden sm:inline">List</span>
-          </Button>
-          <Button
-            variant={viewMode === 'map' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setViewMode('map')}
-            className="flex gap-1"
-          >
-            <Map className="h-4 w-4" />
-            <span className="hidden sm:inline">Map</span>
-          </Button>
-        </div>
-      </div>
+
       
       {/* Comparison Tab */}
       <Tabs defaultValue="current">
@@ -353,11 +322,24 @@ export function RoutePlanningTab({
         
         <TabsContent value="current" className="mt-6">
           {venues && venues.length > 0 ? (
-            <>
-              {viewMode === 'timeline' && <TimelineView sequence={showAllVenues ? venues : venues.filter(v => v.tourVenue?.status !== 'cancelled')} />}
-              {viewMode === 'list' && <ListView sequence={showAllVenues ? venues : venues.filter(v => v.tourVenue?.status !== 'cancelled')} />}
-              {viewMode === 'map' && <MapView sequence={showAllVenues ? venues : venues.filter(v => v.tourVenue?.status !== 'cancelled')} />}
-            </>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Map on the left/top */}
+              <div className="lg:col-span-8 border rounded-lg h-[400px] bg-muted/30 flex items-center justify-center">
+                <div className="text-center">
+                  <Map className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-muted-foreground">Interactive map would display here</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Showing {(showAllVenues ? venues : venues.filter(v => v.tourVenue?.status !== 'cancelled')).length} venues
+                  </p>
+                </div>
+              </div>
+              
+              {/* Timeline on the right/bottom */}
+              <div className="lg:col-span-4 overflow-auto max-h-[600px]">
+                <h3 className="text-sm font-medium mb-3">Tour Timeline</h3>
+                <TimelineView sequence={showAllVenues ? venues : venues.filter(v => v.tourVenue?.status !== 'cancelled')} />
+              </div>
+            </div>
           ) : (
             <Alert variant="default" className="bg-muted/50">
               <InfoIcon className="h-4 w-4" />
@@ -371,11 +353,24 @@ export function RoutePlanningTab({
         
         <TabsContent value="optimized" className="mt-6">
           {optimizedSequenceVenues?.length > 0 ? (
-            <>
-              {viewMode === 'timeline' && <TimelineView sequence={showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues?.filter(v => v.tourVenue?.status !== 'cancelled') || []} />}
-              {viewMode === 'list' && <ListView sequence={showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues?.filter(v => v.tourVenue?.status !== 'cancelled') || []} />}
-              {viewMode === 'map' && <MapView sequence={showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues?.filter(v => v.tourVenue?.status !== 'cancelled') || []} />}
-            </>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Map on the left/top */}
+              <div className="lg:col-span-8 border rounded-lg h-[400px] bg-muted/30 flex items-center justify-center">
+                <div className="text-center">
+                  <Map className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-muted-foreground">Interactive map would display here</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Showing {(showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues.filter(v => v.tourVenue?.status !== 'cancelled')).length} venues
+                  </p>
+                </div>
+              </div>
+              
+              {/* Timeline on the right/bottom */}
+              <div className="lg:col-span-4 overflow-auto max-h-[600px]">
+                <h3 className="text-sm font-medium mb-3">Optimized Timeline</h3>
+                <TimelineView sequence={showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues.filter(v => v.tourVenue?.status !== 'cancelled')} />
+              </div>
+            </div>
           ) : (
             <Alert>
               <AlertTriangle className="h-4 w-4" />
