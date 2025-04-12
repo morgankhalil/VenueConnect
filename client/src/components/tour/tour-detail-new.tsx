@@ -454,7 +454,12 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
       {tour.optimizationScore && tour.estimatedTravelDistance && (
         <TourComparisonView
           tourId={Number(tourId)}
-          originalVenues={mapEvents.sort((a, b) => (a.sequence || 0) - (b.sequence || 0))}
+          originalVenues={
+            // Create a copy of venues sorted by latitude (original unoptimized sort)
+            [...mapEvents].sort((a, b) => 
+              a.latitude && b.latitude ? a.latitude - b.latitude : 0
+            )
+          }
           optimizedVenues={filteredVenues}
           originalDistance={tour.initialTotalDistance || tour.estimatedTravelDistance * 1.2}
           optimizedDistance={tour.estimatedTravelDistance}

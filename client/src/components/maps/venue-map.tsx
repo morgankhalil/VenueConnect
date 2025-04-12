@@ -9,6 +9,57 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MapEvent } from '@/types';
 import { getStatusInfo, isPriorityHold } from '@/lib/tour-status';
 
+// Component to add arrows showing the direction of travel along the route
+interface ArrowDecoratorProps {
+  positions: [number, number][];
+  color?: string;
+}
+
+const ArrowDecorator: React.FC<ArrowDecoratorProps> = ({ positions, color = '#3b82f6' }) => {
+  if (positions.length < 2) return null;
+  
+  // Add arrows every few segments
+  const arrowInterval = Math.max(1, Math.floor(positions.length / 5)); // Show ~5 arrows max
+  
+  return (
+    <>
+      {positions.map((pos, idx) => {
+        // Only show arrows at intervals, not for every point
+        if (idx === 0 || idx % arrowInterval !== 0 || idx >= positions.length - 1) return null;
+        
+        // Get current and next point to calculate direction
+        const current = positions[idx];
+        const next = positions[idx + 1];
+        
+        // Calculate arrow angle
+        const angle = Math.atan2(next[0] - current[0], next[1] - current[1]) * (180 / Math.PI);
+        
+        // Create arrow marker
+        const arrowIcon = new DivIcon({
+          className: '',
+          iconSize: [16, 16],
+          iconAnchor: [8, 8],
+          html: `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" 
+                 style="transform: rotate(${angle}deg);">
+              <path d="M5 12h14M12 5l7 7-7 7" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          `
+        });
+        
+        return (
+          <Marker 
+            key={`arrow-${idx}`}
+            position={[current[0], current[1]]} 
+            icon={arrowIcon}
+            interactive={false}
+          />
+        );
+      })}
+    </>
+  );
+};
+
 // Map bounds helper component - fits the map to markers
 function FitBoundsToMarkers({ events }: { events: MapEvent[] }) {
   const map = useMap();
@@ -37,6 +88,9 @@ interface VenueMapProps {
   initialZoom?: number;
   className?: string;
   showRoute?: boolean;
+  routeColor?: string;
+  routeWidth?: number;
+  showRouteArrows?: boolean;
 }
 
 export function VenueMap({
@@ -48,7 +102,10 @@ export function VenueMap({
   initialCenter,
   initialZoom = 4,
   className = '',
-  showRoute = true
+  showRoute = true,
+  routeColor = '#3b82f6', // Default blue route
+  routeWidth = 3,
+  showRouteArrows = false
 }: VenueMapProps) {
   
   // Create custom marker icons based on status
@@ -112,12 +169,12 @@ export function VenueMap({
     return 0;
   });
   
-  // Create polyline for tour route
+  // Create polyline for tour route with custom styling
   const pathOptions = { 
-    color: '#3B82F6', 
-    weight: 3,
+    color: routeColor, 
+    weight: routeWidth,
     opacity: 0.8,
-    dashArray: '5, 10'
+    dashArray: showRouteArrows ? undefined : '5, 10'
   };
   
   // Map points for the polyline route
@@ -183,7 +240,11 @@ export function VenueMap({
         
         {/* Add route polyline if enabled and have multiple points */}
         {showRoute && sortedEvents.length > 1 && (
-          <Polyline positions={routePoints as any} pathOptions={pathOptions} />
+          <Polyline 
+            positions={routePoints as any} 
+            pathOptions={pathOptions} 
+            {...(showRouteArrows ? { children: <ArrowDecorator positions={routePoints as any} color={routeColor} /> } : {})}
+          />
         )}
         
         {/* Fit map to include all markers */}

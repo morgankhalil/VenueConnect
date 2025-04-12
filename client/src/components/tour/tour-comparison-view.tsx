@@ -71,15 +71,19 @@ export function TourComparisonView({
                 height={400}
                 showLegend={true}
                 showRoute={true}
+                routeColor="#f97316" // Orange color for original route
+                routeWidth={4}
+                showRouteArrows={true}
+                key="original-map-full"
               />
             </div>
             <div className="grid grid-cols-2 gap-4 mt-4">
-              <div className="bg-muted rounded-md p-3">
-                <div className="text-muted-foreground text-sm mb-1">Total Distance</div>
+              <div className="bg-orange-50 rounded-md p-3 border border-orange-100">
+                <div className="text-orange-800 text-sm mb-1 font-medium">Original Distance</div>
                 <div className="text-lg font-medium">{formatDistance(originalDistance)}</div>
               </div>
-              <div className="bg-muted rounded-md p-3">
-                <div className="text-muted-foreground text-sm mb-1">Travel Time</div>
+              <div className="bg-orange-50 rounded-md p-3 border border-orange-100">
+                <div className="text-orange-800 text-sm mb-1 font-medium">Original Travel Time</div>
                 <div className="text-lg font-medium">{formatTravelTime(originalTravelTime)}</div>
               </div>
             </div>
@@ -92,15 +96,19 @@ export function TourComparisonView({
                 height={400}
                 showLegend={true}
                 showRoute={true}
+                routeColor="#22c55e" // Green color for optimized route
+                routeWidth={4}
+                showRouteArrows={true}
+                key="optimized-map-full"
               />
             </div>
             <div className="grid grid-cols-2 gap-4 mt-4">
-              <div className="bg-muted rounded-md p-3">
-                <div className="text-muted-foreground text-sm mb-1">Optimized Distance</div>
+              <div className="bg-green-50 rounded-md p-3 border border-green-100">
+                <div className="text-green-800 text-sm mb-1 font-medium">Optimized Distance</div>
                 <div className="text-lg font-medium">{formatDistance(optimizedDistance)}</div>
               </div>
-              <div className="bg-muted rounded-md p-3">
-                <div className="text-muted-foreground text-sm mb-1">Optimized Travel Time</div>
+              <div className="bg-green-50 rounded-md p-3 border border-green-100">
+                <div className="text-green-800 text-sm mb-1 font-medium">Optimized Travel Time</div>
                 <div className="text-lg font-medium">{formatTravelTime(optimizedTravelTime)}</div>
               </div>
             </div>
@@ -117,6 +125,10 @@ export function TourComparisonView({
                   height={300}
                   showLegend={false}
                   showRoute={true}
+                  routeColor="#f97316" // Orange color for original route
+                  routeWidth={4}
+                  showRouteArrows={true}
+                  key="original-map"
                 />
               </div>
               <div className="h-[300px] relative">
@@ -128,6 +140,10 @@ export function TourComparisonView({
                   height={300}
                   showLegend={false}
                   showRoute={true}
+                  routeColor="#22c55e" // Green color for optimized route
+                  routeWidth={4}
+                  showRouteArrows={true}
+                  key="optimized-map"
                 />
               </div>
             </div>
