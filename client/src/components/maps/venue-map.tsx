@@ -18,31 +18,37 @@ interface ArrowDecoratorProps {
 const ArrowDecorator: React.FC<ArrowDecoratorProps> = ({ positions, color = '#3b82f6' }) => {
   if (positions.length < 2) return null;
   
-  // Add arrows every few segments
-  const arrowInterval = Math.max(1, Math.floor(positions.length / 5)); // Show ~5 arrows max
+  // Add arrows strategically - fewer arrows and positioned away from markers
+  // Show only ~3 arrows max and position them mid-segment
+  const arrowInterval = Math.max(1, Math.floor(positions.length / 3));
   
   return (
     <>
       {positions.map((pos, idx) => {
-        // Only show arrows at intervals, not for every point
-        if (idx === 0 || idx % arrowInterval !== 0 || idx >= positions.length - 1) return null;
+        // Skip first and last segments entirely
+        // Only place arrows at specific intervals and mid-way between points
+        if (idx === 0 || idx >= positions.length - 1 || idx % arrowInterval !== Math.floor(arrowInterval/2)) return null;
         
         // Get current and next point to calculate direction
         const current = positions[idx];
         const next = positions[idx + 1];
         
+        // Find midpoint between points to position arrow (away from markers)
+        const midLat = (current[0] + next[0]) / 2;
+        const midLng = (current[1] + next[1]) / 2;
+        
         // Calculate arrow angle
         const angle = Math.atan2(next[0] - current[0], next[1] - current[1]) * (180 / Math.PI);
         
-        // Create arrow marker
+        // Create smaller, more subtle arrow marker
         const arrowIcon = new DivIcon({
           className: '',
-          iconSize: [16, 16],
-          iconAnchor: [8, 8],
+          iconSize: [12, 12],
+          iconAnchor: [6, 6],
           html: `
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" 
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" 
                  style="transform: rotate(${angle}deg);">
-              <path d="M5 12h14M12 5l7 7-7 7" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8 12h8M12 8l4 4-4 4" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           `
         });
@@ -50,7 +56,7 @@ const ArrowDecorator: React.FC<ArrowDecoratorProps> = ({ positions, color = '#3b
         return (
           <Marker 
             key={`arrow-${idx}`}
-            position={[current[0], current[1]]} 
+            position={[midLat, midLng]} 
             icon={arrowIcon}
             interactive={false}
           />
@@ -131,24 +137,28 @@ export function VenueMap({
     }
     
     // Create a custom HTML element for the marker
+    // Make the marker larger and ensure number is clearly visible
     return new DivIcon({
       className: '',
-      iconSize: [30, 30],
-      iconAnchor: [15, 15],
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
       html: `
         <div style="
-          width: 30px;
-          height: 30px;
+          width: 36px;
+          height: 36px;
           border-radius: 50%;
           background-color: ${backgroundColor};
           border: ${borderStyle};
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          box-shadow: 0 2px 5px rgba(0,0,0,0.4);
           display: flex;
           align-items: center;
           justify-content: center;
           font-weight: bold;
           color: white;
-          font-size: 12px;
+          font-size: 15px;
+          text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+          z-index: 1000;
+          position: relative;
         ">
           ${index + 1}
         </div>
@@ -183,7 +193,9 @@ export function VenueMap({
     color: routeColor, 
     weight: routeWidth,
     opacity: 0.8,
-    dashArray: showRouteArrows ? undefined : '5, 10'
+    // Use a dashed line for all routes to make direction clearer
+    // with shorter dashes for routes with arrows
+    dashArray: showRouteArrows ? '3, 7' : '5, 10'
   };
   
   // Map points for the polyline route
