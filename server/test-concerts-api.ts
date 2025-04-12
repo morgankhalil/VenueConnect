@@ -12,12 +12,10 @@ async function testApi() {
   }
 
   try {
-    console.log('Testing search endpoint...');
-    const response = await axios.get('https://concerts-artists-events-tracker.p.rapidapi.com/search', {
+    console.log('Testing festival info endpoint...');
+    const response = await axios.get('https://concerts-artists-events-tracker.p.rapidapi.com/festival/infos', {
       params: {
-        keyword: 'Metallica',
-        types: 'event',
-        countryCode: 'US'
+        festival_id: '157318'
       },
       headers: {
         'X-RapidAPI-Key': apiKey,
