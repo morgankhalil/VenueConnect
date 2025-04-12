@@ -181,7 +181,7 @@ export async function createVenueConnection(data: { sourceVenueId: number; targe
 // These functions are kept for backwards compatibility but are deprecated
 export async function getAIOptimizationSuggestions(tourId: number) {
   console.warn('getAIOptimizationSuggestions is deprecated, use getUnifiedOptimization with method="ai" instead');
-  return getUnifiedOptimization(tourId, 'ai');
+  return getUnifiedOptimization(tourId, { method: 'ai' });
 }
 
 // Apply AI optimization (deprecated)
