@@ -187,12 +187,14 @@ async function addOrUpdateArtist(artistData: ConcertDataWebhookPayload['data']['
   }
 
   // Create new artist
+  // Note: We use a default genre and popularity since we don't have this data from the webhook
   const [newArtist] = await db.insert(artists).values({
     name: artistData.name,
     imageUrl: artistData.image_url,
     bandsintownId: artistData.id,
     genres: ['rock'], // Default genre
-    popularity: 50 // Default popularity
+    popularity: 50, // Default popularity
+    // Don't specify createdAt, it will use the default value
   }).returning();
 
   logger.log(`Added artist: ${artistData.name}`, 'info');
