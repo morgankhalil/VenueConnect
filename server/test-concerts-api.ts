@@ -14,11 +14,10 @@ async function testApi() {
 
   try {
     console.log('Testing search endpoint...');
-    const response = await axios.get('https://concerts-artists-events-tracker.p.rapidapi.com/location', {
+    const response = await axios.get('https://concerts-artists-events-tracker.p.rapidapi.com/search', {
       params: {
-        name: 'New York',
-        minDate: '2024-04-12',
-        maxDate: '2024-12-31',
+        keyword: 'Metallica',
+        type: 'event',
         countryCode: 'US'
       },
       headers: {
