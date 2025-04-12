@@ -1,5 +1,6 @@
 
 import dotenv from 'dotenv';
+import axios from 'axios';
 import { ConcertsTrackerProvider } from './data-sync/concerts-tracker-provider';
 
 dotenv.config();
