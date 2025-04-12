@@ -3,7 +3,7 @@
  */
 import { Router } from 'express';
 import { 
-  asc, count, desc, eq, inArray, ilike, or, and
+  asc, count, desc, eq, inArray, ilike, or, and, sql
 } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../db';
@@ -225,13 +225,9 @@ router.get('/search/artists', async (req, res) => {
     
     // Apply genre filter if specified
     if (genreId) {
-      // Use a subquery to find artists with this genre
-      const artistsWithGenre = await db
-        .select({ artistId: artistGenres.artistId })
-        .from(artistGenres)
-        .where(eq(artistGenres.genreId, genreId));
-      
-      const artistIds = artistsWithGenre.map(a => a.artistId);
+      // Use utility function to get artists with this genre
+      const artistsWithGenre = await getArtistsByGenre(genreId);
+      const artistIds = artistsWithGenre.map(a => a.id);
       
       if (artistIds.length > 0) {
         // Filter for artists with the specified genre
@@ -246,26 +242,15 @@ router.get('/search/artists', async (req, res) => {
         });
       }
     } else if (genre) {
-      // Look up genreId from name
-      const genreResult = await db
-        .select({ id: genres.id })
-        .from(genres)
-        .where(or(
-          eq(genres.name, genre),
-          eq(genres.slug, genre.toLowerCase().replace(/\s+/g, '-'))
-        ))
-        .limit(1);
+      // Look up genreId from name or slug using utility functions
+      const genreObj = genre.includes('-') 
+        ? await getGenreBySlug(genre) 
+        : await getGenreByName(genre);
       
-      if (genreResult.length > 0) {
-        const targetGenreId = genreResult[0].id;
-        
-        // Find all artists with this genre
-        const artistsWithGenre = await db
-          .select({ artistId: artistGenres.artistId })
-          .from(artistGenres)
-          .where(eq(artistGenres.genreId, targetGenreId));
-        
-        const artistIds = artistsWithGenre.map(a => a.artistId);
+      if (genreObj) {
+        // Use utility function to get artists with this genre
+        const artistsWithGenre = await getArtistsByGenre(genreObj.id);
+        const artistIds = artistsWithGenre.map(a => a.id);
         
         if (artistIds.length > 0) {
           // Execute filtered query
@@ -287,34 +272,14 @@ router.get('/search/artists', async (req, res) => {
             );
           }
           
-          // For each artist, get their genres
+          // For each artist, get their genres using utility function
           const artistsWithGenres = await Promise.all(
             filteredArtists.map(async (artist) => {
-              const genreRelations = await db
-                .select({
-                  genreId: artistGenres.genreId
-                })
-                .from(artistGenres)
-                .where(eq(artistGenres.artistId, artist.id));
-              
-              if (genreRelations.length === 0) {
-                return { ...artist, genres: [] };
-              }
-              
-              const genreIds = genreRelations.map(rel => rel.genreId);
-              
-              const artistGenreInfo = await db
-                .select({
-                  id: genres.id,
-                  name: genres.name,
-                  slug: genres.slug
-                })
-                .from(genres)
-                .where(inArray(genres.id, genreIds));
+              const artistGenres = await getArtistGenres(artist.id);
               
               return {
                 ...artist,
-                genres: artistGenreInfo
+                genres: artistGenres
               };
             })
           );
@@ -399,8 +364,8 @@ router.get('/search/artists', async (req, res) => {
 // Get all genres with hierarchical structure
 router.get('/search/genres', async (req, res) => {
   try {
-    // Get all genres
-    const allGenres = await db
+    // Get all root (parent) genres
+    const rootGenres = await db
       .select({
         id: genres.id,
         name: genres.name,
@@ -408,38 +373,27 @@ router.get('/search/genres', async (req, res) => {
         parentId: genres.parentId
       })
       .from(genres)
+      .where(sql`${genres.parentId} IS NULL`)
       .orderBy(asc(genres.name));
     
-    // Organize into a hierarchical structure
-    const genreMap = new Map();
-    const rootGenres = [];
-    
-    // First pass: create objects for each genre
-    allGenres.forEach(genre => {
-      genreMap.set(genre.id, {
-        ...genre,
-        subgenres: []
-      });
-    });
-    
-    // Second pass: build the hierarchy
-    allGenres.forEach(genre => {
-      const genreWithSubgenres = genreMap.get(genre.id);
-      
-      if (genre.parentId === null) {
-        // This is a root genre
-        rootGenres.push(genreWithSubgenres);
-      } else {
-        // This is a subgenre, add it to its parent
-        const parent = genreMap.get(genre.parentId);
-        if (parent) {
-          parent.subgenres.push(genreWithSubgenres);
-        }
-      }
-    });
+    // Enhance each root genre with its children
+    const genresWithSubgenres = await Promise.all(
+      rootGenres.map(async (rootGenre) => {
+        // Use utility function to get all subgenres for this parent genre
+        const allRelatedGenres = await getGenreWithChildren(rootGenre.id);
+        
+        // Filter out the parent genre from the results
+        const subgenres = allRelatedGenres.filter(genre => genre.id !== rootGenre.id);
+        
+        return {
+          ...rootGenre,
+          subgenres
+        };
+      })
+    );
     
     return res.json({
-      genres: rootGenres
+      genres: genresWithSubgenres
     });
   } catch (error) {
     console.error('Error fetching genres:', error);
