@@ -1,6 +1,6 @@
-
 import dotenv from 'dotenv';
 import { db } from './db';
+import { ConcertsApiSeeder } from './core/concerts-api-seeder';
 import { venues, artists, events } from '../shared/schema';
 import axios from 'axios';
 import { eq, and } from 'drizzle-orm';
@@ -124,54 +124,28 @@ async function addEventToDatabase(eventData: any, artistId: number, venueId: num
   console.log(`Added event on ${dateString}`);
 }
 
-async function seedFromConcertsAPI() {
-  const artistsToSearch = ['La Luz']; // Add more artists as needed
+async function seedFromConcertsApi(artistNames: string[] = ['La Luz']) {
+  console.log('Database connection initialized');
 
-  let stats = {
-    artists: 0,
+  const seeder = new ConcertsApiSeeder();
+  const totalStats = {
     venues: 0,
-    events: 0
+    events: 0,
+    artists: 0
   };
 
-  for (const artistName of artistsToSearch) {
-    console.log(`\nProcessing artist: ${artistName}`);
-    
-    const data = await searchArtistEvents(artistName);
-    if (!data) continue;
-
-    // Add artist
-    const artistId = await addArtistToDatabase({
-      name: artistName,
-      image: data.events?.[0]?.image
-    });
-    stats.artists++;
-
-    // Process events and venues
-    for (const event of data.events || []) {
-      if (!event.venue_id) continue;
-
-      const venueId = await addVenueToDatabase({
-        name: event.venue?.title || event.title?.split(' at ')?.[1] || 'Unknown Venue',
-        city: event.venue?.city || event.location?.city || '',
-        state: event.venue?.state || event.location?.state || '',
-        country: event.venue?.country || event.location?.country || 'US',
-        latitude: event.venue?.lat || event.location?.lat || null,
-        longitude: event.venue?.long || event.location?.long || null,
-        address: event.venue?.address || event.location?.address || '',
-        zipCode: event.venue?.postal_code || event.location?.postal_code || '',
-        description: event.venue?.description || `Music venue in ${event.venue?.city || event.location?.city || 'Unknown City'}`
-      });
-      stats.venues++;
-
-      await addEventToDatabase(event, artistId, venueId);
-      stats.events++;
-    }
+  for (const artistName of artistNames) {
+    const stats = await seeder.seedFromArtist(artistName);
+    totalStats.venues += stats.venues;
+    totalStats.events += stats.events;
+    totalStats.artists += stats.artists;
   }
 
   console.log('\nSeeding completed!');
-  console.log(`Added ${stats.artists} artists`);
-  console.log(`Added ${stats.venues} venues`);
-  console.log(`Added ${stats.events} events`);
+  console.log(`Added ${totalStats.artists} artists`);
+  console.log(`Added ${totalStats.venues} venues`);
+  console.log(`Added ${totalStats.events} events`);
 }
 
-seedFromConcertsAPI();
+// Run the seeder
+seedFromConcertsApi().catch(console.error);
