@@ -33,6 +33,7 @@ import { formatDate, formatDistance, formatTravelTime } from '@/lib/utils';
 import { SimplifiedRouteMap } from '../simplified-route-map';
 import { useUnifiedOptimizer } from '@/hooks/use-unified-optimizer';
 import { useToast } from '@/hooks/use-toast';
+import { TourOptimizationPanel } from '../tour-optimization-panel';
 
 interface RoutePlanningTabProps {
   tourId: number;
