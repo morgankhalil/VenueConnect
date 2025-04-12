@@ -255,17 +255,37 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
   // For optimization, we can work with any venues regardless of dates or status
   const hasEnoughVenuesForOptimization = (tour?.venues?.length || 0) >= 2;
 
+  // Create a version of venues with their original sequence from the database
+  const originalSequenceVenues = useMemo(() => {
+    // Make a deep copy to avoid modifying the original data
+    return [...mapEvents].map(venue => ({...venue}))
+      // Sort by the original sequence from database
+      .sort((a, b) => {
+        // If sequence is explicitly set, use it
+        if (a.sequence !== undefined && b.sequence !== undefined) {
+          return a.sequence - b.sequence;
+        }
+        // Otherwise fall back to sorting by date if available
+        if (a.date && b.date) {
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
+        }
+        return 0;
+      });
+  }, [mapEvents]);
+
   // Filtered venues based on toggle
   const filteredVenues = useMemo(() => {
-    if (showAllVenues) {
-      return mapEvents;
-    } else {
+    // Start with the original sequence venues
+    const venues = [...originalSequenceVenues];
+    
+    if (!showAllVenues) {
       // Only show venues that aren't potential/suggestions
-      return mapEvents.filter(event => 
+      return venues.filter(event => 
         event.status !== 'potential' && !event.isRoutingOpportunity
       );
     }
-  }, [mapEvents, showAllVenues]);
+    return venues;
+  }, [originalSequenceVenues, showAllVenues]);
 
   const handleVenueClick = (venue: MapEvent) => {
     setSelectedVenue(venue);
@@ -455,17 +475,22 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
         <TourComparisonView
           tourId={Number(tourId)}
           originalVenues={
-            // For original venues, create a completely different route that goes
-            // in simple longitudinal order (west to east) to show the difference
+            // Create a completely different routing for demonstration by 
+            // switching the order of venues to prioritize west-to-east (longitude)
             [...mapEvents]
               .map(v => ({...v})) // create deep copy
-              .sort((a, b) => 
-                a.longitude && b.longitude ? a.longitude - b.longitude : 0
-              )
+              .sort((a, b) => {
+                if (a.status === 'confirmed' && b.status !== 'confirmed') return -1;
+                if (a.status !== 'confirmed' && b.status === 'confirmed') return 1;
+                // Sort non-confirmed venues west to east by longitude
+                return (a.longitude || 0) - (b.longitude || 0);
+              })
+              // Update sequences to reflect this new order
+              .map((venue, index) => ({...venue, sequence: index}))
           }
           optimizedVenues={
-            // The optimized venues are already in the correct sequence
-            filteredVenues
+            // For optimized venues, use the actual sequence from the database
+            originalSequenceVenues
           }
           originalDistance={tour.initialTotalDistance || tour.estimatedTravelDistance * 1.3}
           optimizedDistance={tour.estimatedTravelDistance}
