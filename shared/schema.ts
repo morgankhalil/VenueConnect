@@ -139,9 +139,8 @@ export const venues = pgTable("venues", {
   
   // Booking details for indie venues
   bookingContactName: text("booking_contact_name"),
-  bookingEmail: text("booking_email"),
+  bookingEmail: text("booking_email"), // Primary contact email for venue
   contactPhone: text("contact_phone"),
-  contactEmail: text("contact_email"),
   typicalBookingLeadTime: integer("typical_booking_lead_time_days"), // How many days in advance they typically book
   paymentStructure: text("payment_structure"), // guarantee, door split, etc.
   soundSystem: text("sound_system"), // Description of sound system quality
@@ -153,7 +152,7 @@ export const venues = pgTable("venues", {
   // Additional venue information
   description: text("description"),
   ageRestriction: text("age_restriction"), // All-ages, 18+, 21+
-  websiteUrl: text("website_url"),
+  websiteUrl: text("website_url"), // Primary website URL for the venue
   imageUrl: text("image_url"),
   socialMediaLinks: jsonb("social_media_links"),
   
