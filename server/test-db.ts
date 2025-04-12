@@ -1,27 +1,42 @@
 import { db } from './db';
 import { tours, venues, artists, events } from '../shared/schema';
+import { eq } from 'drizzle-orm/expressions';
 
 async function testDatabaseConnection() {
   console.log('Testing database connection and queries...');
   try {
-    // Test venue query
+    // Test venue query with specific fields
     console.log('Testing venue query...');
-    const venuesResult = await db.select().from(venues).limit(5);
+    const venuesResult = await db.select({
+      id: venues.id,
+      name: venues.name,
+      city: venues.city,
+      country: venues.country
+    }).from(venues).limit(5);
     console.log(`Found ${venuesResult.length} venues`);
     
-    // Test artist query
+    // Test artist query with specific fields
     console.log('Testing artist query...');
-    const artistsResult = await db.select().from(artists).limit(5);
+    const artistsResult = await db.select({
+      id: artists.id,
+      name: artists.name
+    }).from(artists).limit(5);
     console.log(`Found ${artistsResult.length} artists`);
     
-    // Test events query
+    // Test events query with specific fields
     console.log('Testing events query...');
-    const eventsResult = await db.select().from(events).limit(5);
+    const eventsResult = await db.select({
+      id: events.id,
+      date: events.date
+    }).from(events).limit(5);
     console.log(`Found ${eventsResult.length} events`);
     
-    // Test tours query
+    // Test tours query with specific fields
     console.log('Testing tours query...');
-    const toursResult = await db.select().from(tours).limit(5);
+    const toursResult = await db.select({
+      id: tours.id,
+      name: tours.name
+    }).from(tours).limit(5);
     console.log(`Found ${toursResult.length} tours`);
     
     // Join query to test relations
@@ -33,8 +48,8 @@ async function testDatabaseConnection() {
       venueName: venues.name
     })
     .from(events)
-    .leftJoin(artists, events.artistId, artists.id)
-    .leftJoin(venues, events.venueId, venues.id)
+    .leftJoin(artists, eq(events.artistId, artists.id))
+    .leftJoin(venues, eq(events.venueId, venues.id))
     .limit(5);
     
     console.log(`Found ${eventsWithVenueAndArtist.length} events with venue and artist information`);

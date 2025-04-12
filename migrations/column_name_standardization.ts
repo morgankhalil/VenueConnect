@@ -43,6 +43,21 @@ async function main() {
     await safeRenameColumn('venues', 'venue_type', 'venueType');
     await safeRenameColumn('venues', 'capacity_category', 'capacityCategory');
     await safeRenameColumn('venues', 'secondary_genres', 'secondaryGenres');
+    await safeRenameColumn('venues', 'booking_contact_name', 'bookingContactName');
+    await safeRenameColumn('venues', 'booking_email', 'bookingEmail');
+    await safeRenameColumn('venues', 'contact_phone', 'contactPhone');
+    await safeRenameColumn('venues', 'typical_booking_lead_time_days', 'typicalBookingLeadTimeDays');
+    await safeRenameColumn('venues', 'payment_structure', 'paymentStructure');
+    await safeRenameColumn('venues', 'sound_system', 'soundSystem');
+    await safeRenameColumn('venues', 'local_accommodation', 'localAccommodation');
+    await safeRenameColumn('venues', 'local_promotion', 'localPromotion');
+    await safeRenameColumn('venues', 'age_restriction', 'ageRestriction');
+    await safeRenameColumn('venues', 'website_url', 'websiteUrl');
+    await safeRenameColumn('venues', 'image_url', 'imageUrl');
+    await safeRenameColumn('venues', 'social_media_links', 'socialMediaLinks');
+    await safeRenameColumn('venues', 'bandsintown_id', 'bandsintownId');
+    await safeRenameColumn('venues', 'songkick_id', 'songkickId');
+    await safeRenameColumn('venues', 'owner_id', 'ownerId');
     
     // Events table
     console.log('Updating events table columns...');
