@@ -280,7 +280,7 @@ export default function VenueNetwork() {
                           <SelectValue placeholder="All Genres" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">All Genres</SelectItem>
+                          <SelectItem value="all">All Genres</SelectItem>
                           <SelectItem value="rock">Rock</SelectItem>
                           <SelectItem value="indie">Indie</SelectItem>
                           <SelectItem value="electronic">Electronic</SelectItem>
@@ -301,7 +301,7 @@ export default function VenueNetwork() {
                           <SelectValue placeholder="All Sizes" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">All Sizes</SelectItem>
+                          <SelectItem value="all">All Sizes</SelectItem>
                           <SelectItem value="tiny">Tiny (&lt; 100)</SelectItem>
                           <SelectItem value="small">Small (100-250)</SelectItem>
                           <SelectItem value="medium">Medium (250-500)</SelectItem>
@@ -320,7 +320,7 @@ export default function VenueNetwork() {
                           <SelectValue placeholder="All Regions" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">All Regions</SelectItem>
+                          <SelectItem value="all">All Regions</SelectItem>
                           <SelectItem value="West">West</SelectItem>
                           <SelectItem value="Midwest">Midwest</SelectItem>
                           <SelectItem value="Northeast">Northeast</SelectItem>
@@ -340,7 +340,7 @@ export default function VenueNetwork() {
                           <SelectValue placeholder="All Markets" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">All Markets</SelectItem>
+                          <SelectItem value="all">All Markets</SelectItem>
                           <SelectItem value="primary">Primary</SelectItem>
                           <SelectItem value="secondary">Secondary</SelectItem>
                           <SelectItem value="tertiary">Tertiary</SelectItem>
@@ -358,7 +358,7 @@ export default function VenueNetwork() {
                           <SelectValue placeholder="All Types" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">All Types</SelectItem>
+                          <SelectItem value="all">All Types</SelectItem>
                           <SelectItem value="club">Club</SelectItem>
                           <SelectItem value="bar">Bar</SelectItem>
                           <SelectItem value="theater">Theater</SelectItem>
