@@ -14,6 +14,14 @@ export class SyncLogger {
     
     try {
       await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS sync_logs (
+          id SERIAL PRIMARY KEY,
+          context TEXT NOT NULL,
+          message TEXT NOT NULL,
+          level TEXT NOT NULL,
+          timestamp TIMESTAMPTZ DEFAULT NOW()
+        );
+        
         INSERT INTO sync_logs (context, message, level, timestamp)
         VALUES (${this.context}, ${message}, ${level}, NOW())
       `);
