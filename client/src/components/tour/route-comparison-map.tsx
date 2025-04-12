@@ -598,35 +598,37 @@ export function RouteComparisonMap({
             </div>
           </div>
           
-          {/* View mode controls */}
-          <div className="flex justify-end space-x-2">
-            <TabsList className="h-8">
-              <TabsTrigger 
-                value="overlay" 
-                className={`h-8 px-3 data-[state=active]:bg-muted ${viewMode === 'overlay' ? 'data-[state=active]:text-foreground' : ''}`}
-                onClick={() => setViewMode('overlay')}
-                data-state={viewMode === 'overlay' ? 'active' : 'inactive'}
-              >
-                Overlay
-              </TabsTrigger>
-              <TabsTrigger 
-                value="sideBySide" 
-                className={`h-8 px-3 data-[state=active]:bg-muted ${viewMode === 'sideBySide' ? 'data-[state=active]:text-foreground' : ''}`}
-                onClick={() => setViewMode('sideBySide')}
-                data-state={viewMode === 'sideBySide' ? 'active' : 'inactive'}
-              >
-                Side by Side
-              </TabsTrigger>
-              <TabsTrigger 
-                value="split" 
-                className={`h-8 px-3 data-[state=active]:bg-muted ${viewMode === 'split' ? 'data-[state=active]:text-foreground' : ''}`}
-                onClick={() => setViewMode('split')}
-                data-state={viewMode === 'split' ? 'active' : 'inactive'}
-              >
-                Split View
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          {/* View mode controls - show only in component, hide when parent is controlling */}
+          {!comparisonMode && (
+            <div className="flex justify-end space-x-2">
+              <TabsList className="h-8">
+                <TabsTrigger 
+                  value="overlay" 
+                  className={`h-8 px-3 data-[state=active]:bg-muted ${viewMode === 'overlay' ? 'data-[state=active]:text-foreground' : ''}`}
+                  onClick={() => setViewMode('overlay')}
+                  data-state={viewMode === 'overlay' ? 'active' : 'inactive'}
+                >
+                  Overlay
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="sideBySide" 
+                  className={`h-8 px-3 data-[state=active]:bg-muted ${viewMode === 'sideBySide' ? 'data-[state=active]:text-foreground' : ''}`}
+                  onClick={() => setViewMode('sideBySide')}
+                  data-state={viewMode === 'sideBySide' ? 'active' : 'inactive'}
+                >
+                  Side by Side
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="split" 
+                  className={`h-8 px-3 data-[state=active]:bg-muted ${viewMode === 'split' ? 'data-[state=active]:text-foreground' : ''}`}
+                  onClick={() => setViewMode('split')}
+                  data-state={viewMode === 'split' ? 'active' : 'inactive'}
+                >
+                  Split View
+                </TabsTrigger>
+              </TabsList>
+            </div>
+          )}
         </div>
       )}
       
