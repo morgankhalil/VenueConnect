@@ -3,7 +3,7 @@
  */
 import { Router } from 'express';
 import { 
-  asc, count, desc, eq, inArray, ilike, or 
+  asc, count, desc, eq, inArray, ilike, or, and
 } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../db';
@@ -18,6 +18,8 @@ const searchQuerySchema = z.object({
   q: z.string().optional(), 
   genre: z.string().optional(),
   genreId: z.coerce.number().optional(),
+  artistId: z.coerce.number().optional(),
+  artistName: z.string().optional(),
   sort: z.enum(['date', 'name', 'relevance']).optional().default('relevance'),
   page: z.coerce.number().optional().default(1),
   limit: z.coerce.number().optional().default(20),
@@ -40,7 +42,7 @@ router.get('/search/events', async (req, res) => {
       return res.status(400).json({ error: 'Invalid search parameters', details: result.error });
     }
     
-    const { query, genre, genreId, sort, page, limit } = result.data;
+    const { query, genre, genreId, artistId, artistName, sort, page, limit } = result.data;
     const offset = (page - 1) * limit;
     
     // Base query - join events with artists and venues
@@ -61,15 +63,35 @@ router.get('/search/events', async (req, res) => {
       .innerJoin(artists, eq(events.artistId, artists.id))
       .innerJoin(venues, eq(events.venueId, venues.id));
       
-    // Only apply query filter if query is not empty
+    // Apply filters
+    const conditions = [];
+    
+    // Search by query string
     if (query && query.trim() !== '') {
-      eventsQuery = eventsQuery.where(
+      conditions.push(
         or(
           // Search by artist name
           ilike(artists.name, `%${query}%`),
           // Search by venue name
           ilike(venues.name, `%${query}%`)
         )
+      );
+    }
+    
+    // Filter by artist ID if provided
+    if (artistId) {
+      conditions.push(eq(artists.id, artistId));
+    }
+    
+    // Filter by artist name if provided
+    if (artistName && artistName.trim() !== '') {
+      conditions.push(ilike(artists.name, `%${artistName}%`));
+    }
+    
+    // Apply the where conditions if any exist
+    if (conditions.length > 0) {
+      eventsQuery = eventsQuery.where(
+        conditions.length === 1 ? conditions[0] : and(...conditions)
       );
     }
     
