@@ -61,7 +61,7 @@ async function main() {
 }
 
 // Import needed for joins
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 main()
   .then(() => process.exit(0))
