@@ -24,13 +24,30 @@ export function RouteComparisonMap({
   onVenueClick
 }: RouteComparisonMapProps) {
   const mapRef = useRef<L.Map | null>(null);
-  // Keep local state synced with the prop
-  const [viewMode, setViewMode] = useState<'overlay' | 'sideBySide' | 'split'>(comparisonMode);
+  // Initialize from localStorage or from props
+  const [viewMode, setViewMode] = useState<'overlay' | 'sideBySide' | 'split'>(() => {
+    // If comparisonMode is provided, use it
+    if (comparisonMode !== 'overlay') {
+      return comparisonMode;
+    }
+    // Otherwise try to load from localStorage
+    const savedMode = localStorage.getItem('routeComparisonMode');
+    return (savedMode as 'overlay' | 'sideBySide' | 'split') || 'overlay';
+  });
   
   // Update viewMode when comparisonMode prop changes
   useEffect(() => {
-    setViewMode(comparisonMode);
+    if (comparisonMode !== 'overlay') {
+      setViewMode(comparisonMode);
+    }
   }, [comparisonMode]);
+  
+  // Save to localStorage when changed (only if not controlled by parent)
+  useEffect(() => {
+    if (!comparisonMode || comparisonMode === 'overlay') {
+      localStorage.setItem('routeComparisonMode', viewMode);
+    }
+  }, [viewMode, comparisonMode]);
   
   // Filter out venues without coordinates
   const originalVenuesWithCoords = originalVenues.filter(venue => 

@@ -78,7 +78,17 @@ export function RoutePlanningTab({
 }: RoutePlanningTabProps) {
   const [isOptimizationOpen, setIsOptimizationOpen] = useState(false);
   const [showOptimizedRoute, setShowOptimizedRoute] = useState(false);
-  const [comparisonMode, setComparisonMode] = useState<'overlay' | 'sideBySide' | 'split'>('sideBySide');
+  
+  // Initialize from localStorage or default to side-by-side
+  const [comparisonMode, setComparisonMode] = useState<'overlay' | 'sideBySide' | 'split'>(() => {
+    const savedMode = localStorage.getItem('routeComparisonMode');
+    return (savedMode as 'overlay' | 'sideBySide' | 'split') || 'sideBySide';
+  });
+  
+  // Save to localStorage when changed
+  useEffect(() => {
+    localStorage.setItem('routeComparisonMode', comparisonMode);
+  }, [comparisonMode]);
   
   // If optimized sequence is available, enable the optimized route view toggle
   useEffect(() => {
