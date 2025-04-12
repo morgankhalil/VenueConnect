@@ -49,8 +49,8 @@ export function RoutePlanningTab({
   const [viewMode, setViewMode] = useState<'timeline' | 'list' | 'map'>('timeline');
 
   // Get the confirmed and potential venues
-  const confirmedVenues = venues.filter(v => v.status === 'confirmed');
-  const potentialVenues = venues.filter(v => v.status === 'potential' || v.status === 'hold');
+  const confirmedVenues = venues?.filter(v => v.status === 'confirmed') || [];
+  const potentialVenues = venues?.filter(v => v.status === 'potential' || v.status === 'hold') || [];
   
   // Render status badge
   const renderStatusBadge = (status: string) => {
