@@ -297,6 +297,14 @@ export async function getVenue(venueId: number) {
   });
 }
 
+export async function getAllVenues(params?: { limit?: number; offset?: number }) {
+  const queryParams = params ? `?${new URLSearchParams(params as any)}` : '';
+  return apiRequest({
+    url: `/api/venues${queryParams}`,
+    method: 'GET' as const
+  });
+}
+
 export async function createEvent(event: any) {
   return apiRequest({
     url: '/api/events',

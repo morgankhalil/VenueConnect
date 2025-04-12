@@ -9,6 +9,7 @@ import Dashboard from "@/pages/dashboard";
 import VenueNetwork from "@/pages/venue-network";
 import Calendar from "@/pages/calendar";
 import Discover from "@/pages/discover";
+import Venues from "@/pages/venues";
 import Messages from "@/pages/messages";
 import Settings from "@/pages/settings";
 import AdminSettings from "@/pages/admin/settings";
@@ -35,6 +36,7 @@ function Router() {
       <Route path="/venue-network" component={VenueNetwork} />
       <Route path="/calendar" component={Calendar} />
       <Route path="/discover" component={Discover} />
+      <Route path="/venues" component={Venues} />
       <Route path="/messages" component={Messages} />
       <Route path="/settings" component={Settings} />
       <Route path="/venues/:id" component={VenueDetails} />
