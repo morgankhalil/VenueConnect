@@ -243,26 +243,30 @@ router.get('/all-venues', async (req, res) => {
     // Get query parameters for filtering
     const { genre, capacity, region, marketCategory, venueType } = req.query;
     
+    console.log('Received venue network filter request with params:', { 
+      genre, capacity, region, marketCategory, venueType 
+    });
+    
     // Build the where clause based on filters
     let whereClause = isNotNull(venues.latitude) && isNotNull(venues.longitude);
     
-    if (genre) {
+    if (genre && genre !== 'all') {
       whereClause = and(whereClause, eq(venues.primaryGenre, genre as string));
     }
     
-    if (capacity) {
+    if (capacity && capacity !== 'all') {
       whereClause = and(whereClause, eq(venues.capacityCategory, capacity as string));
     }
     
-    if (region) {
+    if (region && region !== 'all') {
       whereClause = and(whereClause, eq(venues.region, region as string));
     }
     
-    if (marketCategory) {
+    if (marketCategory && marketCategory !== 'all') {
       whereClause = and(whereClause, eq(venues.marketCategory, marketCategory as string));
     }
     
-    if (venueType) {
+    if (venueType && venueType !== 'all') {
       whereClause = and(whereClause, eq(venues.venueType, venueType as string));
     }
     
@@ -284,7 +288,10 @@ router.get('/all-venues', async (req, res) => {
       }
     });
     
+    console.log(`Found ${allVenues.length} venues matching filters:`, req.query);
+    
     if (allVenues.length === 0) {
+      console.log('No venues found with the selected filters');
       return res.json({
         nodes: [],
         links: []
