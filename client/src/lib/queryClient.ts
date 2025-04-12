@@ -65,7 +65,7 @@ export const queryClient = new QueryClient({
   },
 });
 
-// Enhanced API request function with performance tracking
+// Enhanced API request function with performance tracking and improved error handling
 export async function apiRequest(
   endpoint: string,
   options?: RequestInit
@@ -76,6 +76,7 @@ export async function apiRequest(
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
     },
     credentials: 'include', // This enables sending cookies with cross-origin requests
   };
@@ -86,8 +87,20 @@ export async function apiRequest(
   const startTime = performance.now();
   
   try {
-    console.log(`Making fetch request to ${url} with options:`, fetchOptions);
-    const response = await fetch(url, fetchOptions);
+    console.log(`Making fetch request to ${url}`);
+    
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
+    const response = await fetch(url, {
+      ...fetchOptions,
+      signal: controller.signal
+    });
+    
+    // Clear the timeout
+    clearTimeout(timeoutId);
+    
     console.log(`Response status from ${url}:`, response.status, response.statusText);
 
     if (!response.ok) {
@@ -95,9 +108,18 @@ export async function apiRequest(
       throw new Error(`API error: ${response.status}`);
     }
 
-    // Parse response
-    const data = await response.json();
-    console.log(`Parsed response data from ${url}:`, data);
+    // Get text response first
+    const text = await response.text();
+    
+    // Try to parse as JSON
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (parseError) {
+      console.error(`JSON parse error for ${url}:`, parseError);
+      console.error(`Response content (first 500 chars): ${text.substring(0, 500)}...`);
+      throw new SyntaxError(`Failed to parse JSON response: ${parseError.message}`);
+    }
     
     // Calculate and store response time
     const endTime = performance.now();
@@ -108,16 +130,32 @@ export async function apiRequest(
     if (process.env.NODE_ENV === 'development' || responseTime > 1000) {
       console.log(`API ${endpoint} response time: ${responseTime.toFixed(0)}ms`);
       
-      // Only log full response in development to avoid excessive logging
+      // Only log compact response summary in development to avoid excessive logging
       if (process.env.NODE_ENV === 'development') {
-        console.log('API Response:', JSON.stringify(data, null, 2));
+        if (typeof data === 'object' && data !== null) {
+          // Log a summary for large objects
+          const keys = Object.keys(data);
+          console.log(`API Response (${keys.length} keys):`, keys);
+          
+          // For arrays, log the length and first item
+          if (Array.isArray(data)) {
+            console.log(`Array length: ${data.length}`, data.length > 0 ? data[0] : 'empty');
+          }
+        } else {
+          console.log('API Response:', data);
+        }
       }
     }
     
     return data;
-  } catch (error) {
+  } catch (error: any) {
     const endTime = performance.now();
     console.error(`API ${endpoint} failed after ${(endTime - startTime).toFixed(0)}ms:`, error);
+    
+    // Enhanced error handling
+    if (error.name === 'AbortError') {
+      throw new Error(`Request timeout for ${endpoint} - response took too long`);
+    }
     
     // Rethrow for proper error handling in React Query
     throw error;

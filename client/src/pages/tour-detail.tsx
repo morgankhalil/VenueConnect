@@ -16,6 +16,62 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 
+// Define type for a venue
+interface Venue {
+  id: number;
+  tourVenue: {
+    id: number;
+    tourId: number;
+    venueId: number;
+    date: string | null;
+    status: string;
+    sequence: number | null;
+    notes: string | null;
+    statusUpdatedAt: string;
+    createdAt: string;
+  };
+  venue: {
+    id: number;
+    name: string;
+    city: string;
+    region: string | null;
+    country: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    capacity: number | null;
+    [key: string]: any; // For other venue properties
+  };
+  [key: string]: any; // For flexibility
+}
+
+// Define tour type
+interface Tour {
+  id: number;
+  name: string;
+  artistId: number;
+  startDate: string | null;
+  endDate: string | null;
+  status: string;
+  description: string | null;
+  totalBudget: number | null;
+  estimatedTravelDistance: number | null;
+  estimatedTravelTime: number | null;
+  initialOptimizationScore: number | null;
+  initialTotalDistance: number | null;
+  initialTravelTime: number | null;
+  optimizationScore: number | null;
+  createdAt: string;
+  updatedAt: string | null;
+  artist: {
+    id: number;
+    name: string;
+    genres: string[];
+    [key: string]: any;
+  };
+  optimizedVenues?: number[]; // IDs of venues in optimized order
+  [key: string]: any; // For flexibility
+}
+
 export default function TourDetailPage() {
   const [, setLocation] = useLocation();
   const { id } = useParams<{ id: string }>();
@@ -25,37 +81,41 @@ export default function TourDetailPage() {
 
   // Fetch tour details
   const { 
-    data: tour, 
+    data: tour = {} as Tour, 
     isLoading: isTourLoading, 
     error: tourError,
     refetch: refetchTour
-  } = useQuery({
+  } = useQuery<Tour>({
     queryKey: ['/api/tours', tourId],
     enabled: !isNaN(tourId),
   });
 
   // Fetch tour venues
   const {
-    data: venues = [],
+    data: venues = [] as Venue[],
     isLoading: isVenuesLoading,
     error: venuesError
-  } = useQuery({
+  } = useQuery<Venue[]>({
     queryKey: ['/api/tours', tourId, 'venues'],
     enabled: !isNaN(tourId),
   });
 
   // Define venues in order (original sequence)
-  const originalSequenceVenues = venues ? [...venues].sort((a, b) => 
-    (a.sequence || Infinity) - (b.sequence || Infinity)
-  ) : [];
+  const originalSequenceVenues = venues && venues.length > 0 
+    ? [...venues].sort((a, b) => {
+        const seqA = a.tourVenue?.sequence !== undefined ? a.tourVenue.sequence : Infinity;
+        const seqB = b.tourVenue?.sequence !== undefined ? b.tourVenue.sequence : Infinity;
+        return (seqA || Infinity) - (seqB || Infinity);
+      })
+    : [];
 
   // Define optimized sequence venues (if available)
-  const optimizedSequenceVenues = venues ? (
-    tour?.optimizedVenues?.length ? 
-      tour.optimizedVenues.map((venueId: number) => 
-        venues.find(v => v.id === venueId)).filter(Boolean) 
-      : [...originalSequenceVenues]
-  ) : [];
+  const optimizedSequenceVenues = venues && venues.length > 0
+    ? (tour.optimizedVenues && Array.isArray(tour.optimizedVenues) && tour.optimizedVenues.length > 0
+        ? tour.optimizedVenues.map((venueId: number) => 
+            venues.find(v => v.id === venueId)).filter(Boolean) as Venue[]
+        : [...originalSequenceVenues])
+    : [];
 
   // Handle venue click
   const handleVenueClick = (venue: any) => {
@@ -83,13 +143,26 @@ export default function TourDetailPage() {
   }
 
   if (error) {
+    console.error('Error in tour-detail.tsx:', error);
+    let errorMessage = String(error);
+    
+    // Add more specific error handling
+    if (error instanceof SyntaxError) {
+      errorMessage = `JSON Parse Error: ${error.message}. This is likely due to a malformed response from the server.`;
+    } else if (error instanceof TypeError) {
+      errorMessage = `Type Error: ${error.message}. This might be due to accessing a property on an undefined value.`;
+    }
+    
     return (
       <div className="container px-4 md:px-6 py-6 space-y-6 max-w-7xl mx-auto">
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>
-            Error loading tour: {String(error)}
+            <div className="mb-2">Error loading tour: {errorMessage}</div>
+            <div className="p-2 bg-muted rounded text-xs max-h-32 overflow-y-auto">
+              {String(error.stack || '')}
+            </div>
             <div className="mt-2">
               <Button 
                 variant="outline" 
