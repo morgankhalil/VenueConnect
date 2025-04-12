@@ -64,8 +64,8 @@ export function OptimizationTab({
   const [preferredDates, setPreferredDates] = useState<string>('');
   
   // Filter venues that can be optimized (not cancelled)
-  const optimizableVenues = venues.filter(venue => venue.status !== 'cancelled');
-  const confirmedVenues = venues.filter(venue => venue.status === 'confirmed');
+  const optimizableVenues = venues?.filter(venue => venue.status !== 'cancelled') || [];
+  const confirmedVenues = venues?.filter(venue => venue.status === 'confirmed') || [];
   
   // Calculate current stats
   const currentTotalDistance = tourData?.totalDistance || 0;
