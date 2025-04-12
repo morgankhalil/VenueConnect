@@ -100,23 +100,23 @@ export const genres = pgTable("genres", {
   name: text("name").notNull().unique(),
   slug: text("slug").notNull().unique(),
   description: text("description"),
-  parentId: integer("parent_id").references(() => genres.id),
-  createdAt: timestamp("created_at").defaultNow(),
+  parentId: integer("parentId").references(() => genres.id),
+  createdAt: timestamp("createdAt").defaultNow(),
 });
 
 // Artist-Genre junction table for many-to-many relationship
-export const artistGenres = pgTable("artist_genres", {
-  artistId: integer("artist_id").notNull().references(() => artists.id, { onDelete: "cascade" }),
-  genreId: integer("genre_id").notNull().references(() => genres.id, { onDelete: "cascade" }),
+export const artistGenres = pgTable("artistGenres", {
+  artistId: integer("artistId").notNull().references(() => artists.id, { onDelete: "cascade" }),
+  genreId: integer("genreId").notNull().references(() => genres.id, { onDelete: "cascade" }),
 }, (t) => ({
   pk: primaryKey({ columns: [t.artistId, t.genreId] })
 }));
 
 // Venue-Genre junction table for many-to-many relationship
-export const venueGenres = pgTable("venue_genres", {
-  venueId: integer("venue_id").notNull().references(() => venues.id, { onDelete: "cascade" }),
-  genreId: integer("genre_id").notNull().references(() => genres.id, { onDelete: "cascade" }),
-  isPrimary: boolean("is_primary").default(false),
+export const venueGenres = pgTable("venueGenres", {
+  venueId: integer("venueId").notNull().references(() => venues.id, { onDelete: "cascade" }),
+  genreId: integer("genreId").notNull().references(() => genres.id, { onDelete: "cascade" }),
+  isPrimary: boolean("isPrimary").default(false),
 }, (t) => ({
   pk: primaryKey({ columns: [t.venueId, t.genreId] })
 }));
