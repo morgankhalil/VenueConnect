@@ -14,8 +14,21 @@ async function testApi() {
   const provider = new ConcertsTrackerProvider(apiKey);
 
   try {
-    console.log('Testing artist events...');
-    const events = await provider.getArtistEvents('La Luz');
+    console.log('Testing search endpoint...');
+    const response = await axios.get('https://concerts-artists-events-tracker.p.rapidapi.com/search', {
+      params: {
+        keyword: 'metallica',
+        types: 'event'
+      },
+      headers: {
+        'X-RapidAPI-Key': apiKey,
+        'X-RapidAPI-Host': 'concerts-artists-events-tracker.p.rapidapi.com'
+      }
+    });
+    console.log('Search results:', response.data);
+
+    console.log('\nTesting artist events...');
+    const events = await provider.getArtistEvents('Metallica');
     console.log('Events found:', events.length);
     console.log('Sample event:', events[0]);
 
