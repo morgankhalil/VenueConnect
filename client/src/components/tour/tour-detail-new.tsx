@@ -72,7 +72,7 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
     refetch 
   } = useQuery({
     queryKey: ['/api/tours', tourId],
-    queryFn: () => getTour(Number(tourId)),
+    queryFn: () => getTour(typeof tourId === 'string' ? parseInt(tourId) : tourId),
   });
 
   // Create map events from tour venues (even without optimization)
@@ -341,7 +341,7 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
             <div className="flex space-x-2">
               {hasEnoughVenuesForOptimization ? (
                 <UnifiedTourOptimizer 
-                  tourId={tourId} 
+                  tourId={typeof tourId === 'string' ? parseInt(tourId) : tourId} 
                   onApplyChanges={() => {
                     // Refresh the data after applying optimization
                     refetch();
@@ -450,6 +450,20 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
         </CardContent>
       </Card>
 
+      {/* Tour Comparison View (before/after optimization) */}
+      {tour.optimizationScore && tour.estimatedTravelDistance && (
+        <TourComparisonView
+          tourId={Number(tourId)}
+          originalVenues={mapEvents.sort((a, b) => (a.sequence || 0) - (b.sequence || 0))}
+          optimizedVenues={filteredVenues}
+          originalDistance={tour.initialTotalDistance || tour.estimatedTravelDistance * 1.2}
+          optimizedDistance={tour.estimatedTravelDistance}
+          originalTravelTime={tour.initialTravelTime || tour.estimatedTravelTime * 1.2}
+          optimizedTravelTime={tour.estimatedTravelTime}
+          optimizationScore={tour.optimizationScore}
+        />
+      )}
+
       {/* Map and Venue List Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Map Section: 2/3 width on large screens */}
@@ -478,7 +492,7 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
                 <div className="flex space-x-2">
                   {hasEnoughVenuesForOptimization ? (
                     <UnifiedTourOptimizer 
-                      tourId={tourId} 
+                      tourId={typeof tourId === 'string' ? parseInt(tourId) : tourId} 
                       onApplyChanges={() => {
                         // Refresh the data after applying optimization
                         refetch();
@@ -549,6 +563,13 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
               )}
             </CardContent>
           </Card>
+
+          {/* Tour Timeline */}
+          {mapEvents.length > 1 && (
+            <div className="mt-6">
+              <TourTimeline venues={filteredVenues} />
+            </div>
+          )}
         </div>
 
         {/* Venue List Section: 1/3 width on large screens */}
