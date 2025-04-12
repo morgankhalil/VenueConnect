@@ -465,7 +465,14 @@ export function RoutePlanningTab({
                   <Switch
                     id="show-optimized"
                     checked={showOptimizedRoute}
-                    onCheckedChange={setShowOptimizedRoute}
+                    onCheckedChange={(checked) => {
+                      setShowOptimizedRoute(checked);
+                      // When turning on optimized route, ensure we're in a visual comparison mode
+                      if (checked && comparisonMode === 'overlay') {
+                        // Make sure we're showing the overlay view with both routes
+                        setComparisonMode('overlay');
+                      }
+                    }}
                   />
                   <Label htmlFor="show-optimized" className="text-sm font-medium">
                     Show optimized route

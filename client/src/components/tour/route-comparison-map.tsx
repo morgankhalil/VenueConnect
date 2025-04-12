@@ -189,112 +189,136 @@ export function RouteComparisonMap({
   
   // Create a single map view with overlay or just the original route
   const renderOverlayMap = () => {
+    // Calculate if we should show optimized route 
+    const showOptimizedOverlay = showComparison && optimizedVenuesWithCoords.length > 0;
+    
     return (
       <div className="border rounded-lg h-[400px] overflow-hidden">
-        <MapContainer
-          center={[39.5, -98.0]} // Default center (US)
-          zoom={4}
-          style={{ height: '100%', width: '100%' }}
-          zoomControl={true}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          
-          {/* Auto-fit bounds */}
-          <MapBoundsUpdater />
-          
-          {/* Original route path */}
-          {originalRoutePoints.length > 1 && (
-            <Polyline 
-              positions={originalRoutePoints as any} 
-              pathOptions={{ 
-                color: '#3b82f6', 
-                weight: 3,
-                opacity: 0.8,
-                dashArray: showComparison ? '5, 5' : undefined
-              }} 
+        {/* Map header with route info */}
+        {showOptimizedOverlay && (
+          <div className="flex justify-between items-center bg-gray-50 p-2 text-xs">
+            <div className="flex items-center">
+              <span className="inline-block w-3 h-3 rounded-full bg-blue-500 mr-1"></span>
+              <span className="text-gray-600">Original: {formatDistance(calculateTotalDistance(originalVenuesWithCoords))}</span>
+            </div>
+            <div className="flex items-center">
+              <span className="inline-block w-3 h-3 rounded-full bg-purple-500 mr-1"></span>
+              <span className="text-gray-600">Optimized: {formatDistance(calculateTotalDistance(optimizedVenuesWithCoords))}</span>
+              {distanceImprovement > 0 && (
+                <Badge className="bg-green-100 hover:bg-green-100 text-green-700 ml-1">
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  {distanceImprovement}% Better
+                </Badge>
+              )}
+            </div>
+          </div>
+        )}
+        <div className={showOptimizedOverlay ? "h-[372px]" : "h-[400px]"}>
+          <MapContainer
+            center={[39.5, -98.0]} // Default center (US)
+            zoom={4}
+            style={{ height: '100%', width: '100%' }}
+            zoomControl={true}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-          )}
+            
+            {/* Auto-fit bounds */}
+            <MapBoundsUpdater />
+            
+            {/* Original route path */}
+            {originalRoutePoints.length > 1 && (
+              <Polyline 
+                positions={originalRoutePoints as any} 
+                pathOptions={{ 
+                  color: '#3b82f6', 
+                  weight: showOptimizedOverlay ? 3 : 4,
+                  opacity: 0.8,
+                  dashArray: showOptimizedOverlay ? '5, 5' : undefined
+                }} 
+              />
+            )}
+            
+            {/* Optimized route path */}
+            {showOptimizedOverlay && optimizedRoutePoints.length > 1 && (
+              <Polyline 
+                positions={optimizedRoutePoints as any} 
+                pathOptions={{ 
+                  color: '#8b5cf6', 
+                  weight: 4,
+                  opacity: 0.8
+                }} 
+              />
+            )}
           
-          {/* Optimized route path */}
-          {showComparison && optimizedRoutePoints.length > 1 && (
-            <Polyline 
-              positions={optimizedRoutePoints as any} 
-              pathOptions={{ 
-                color: '#8b5cf6', 
-                weight: 4,
-                opacity: 0.8
-              }} 
-            />
-          )}
-          
-          {/* Original venue markers */}
-          {originalVenuesWithCoords.map((venue, index) => (
-            <Marker 
-              key={`original-${venue.id}`}
-              position={[venue.venue.latitude, venue.venue.longitude]}
-              icon={createMarkerIcon(index, false)}
-              eventHandlers={{
-                click: () => onVenueClick && onVenueClick(venue)
-              }}
-            >
-              <Popup>
-                <div className="font-sans">
-                  <div className="font-semibold text-base mb-1">{venue.venue?.name}</div>
-                  <div className="text-sm mb-1">
-                    {venue.venue?.city}{venue.venue?.region ? `, ${venue.venue.region}` : ''}
+            {/* Original venue markers */}
+            {originalVenuesWithCoords.map((venue, index) => (
+              <Marker 
+                key={`original-${venue.id}`}
+                position={[venue.venue.latitude, venue.venue.longitude]}
+                icon={createMarkerIcon(index, false)}
+                eventHandlers={{
+                  click: () => onVenueClick && onVenueClick(venue)
+                }}
+              >
+                <Popup>
+                  <div className="font-sans">
+                    <div className="font-semibold text-base mb-1">{venue.venue?.name}</div>
+                    <div className="text-sm mb-1">
+                      {venue.venue?.city}{venue.venue?.region ? `, ${venue.venue.region}` : ''}
+                    </div>
+                    <div className="text-xs text-gray-500 mb-1">
+                      {venue.tourVenue?.date 
+                        ? new Date(venue.tourVenue?.date).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric'
+                          }) 
+                        : 'Date TBD'} · Stop #{index + 1}
+                    </div>
+                    <div className="mt-1 text-xs font-medium text-blue-600">
+                      Original Route
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-500 mb-1">
-                    {venue.tourVenue?.date 
-                      ? new Date(venue.tourVenue?.date).toLocaleDateString(undefined, {
-                          month: 'short',
-                          day: 'numeric'
-                        }) 
-                      : 'Date TBD'} · Stop #{index + 1}
+                </Popup>
+              </Marker>
+            ))}
+            
+            {/* Optimized venue markers - only show if comparison is enabled */}
+            {showComparison && optimizedVenuesWithCoords.map((venue, index) => (
+              <Marker 
+                key={`optimized-${venue.id}`}
+                position={[venue.venue.latitude, venue.venue.longitude]}
+                icon={createMarkerIcon(index, true)}
+                eventHandlers={{
+                  click: () => onVenueClick && onVenueClick(venue)
+                }}
+                opacity={0.9}
+              >
+                <Popup>
+                  <div className="font-sans">
+                    <div className="font-semibold text-base mb-1">{venue.venue?.name}</div>
+                    <div className="text-sm mb-1">
+                      {venue.venue?.city}{venue.venue?.region ? `, ${venue.venue.region}` : ''}
+                    </div>
+                    <div className="text-xs text-gray-500 mb-1">
+                      {venue.tourVenue?.date 
+                        ? new Date(venue.tourVenue?.date).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric'
+                          }) 
+                        : 'Date TBD'} · Stop #{index + 1}
+                    </div>
+                    <div className="mt-1 text-xs font-medium text-purple-600">
+                      Optimized Route
+                    </div>
                   </div>
-                  <div className="mt-1 text-xs font-medium text-blue-600">
-                    Original Route
-                  </div>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-          
-          {/* Optimized venue markers - only show if comparison is enabled */}
-          {showComparison && optimizedVenuesWithCoords.map((venue, index) => (
-            <Marker 
-              key={`optimized-${venue.id}`}
-              position={[venue.venue.latitude, venue.venue.longitude]}
-              icon={createMarkerIcon(index, true)}
-              eventHandlers={{
-                click: () => onVenueClick && onVenueClick(venue)
-              }}
-              opacity={0.9}
-            >
-              <Popup>
-                <div className="font-sans">
-                  <div className="font-semibold text-base mb-1">{venue.venue?.name}</div>
-                  <div className="text-sm mb-1">
-                    {venue.venue?.city}{venue.venue?.region ? `, ${venue.venue.region}` : ''}
-                  </div>
-                  <div className="text-xs text-gray-500 mb-1">
-                    {venue.tourVenue?.date 
-                      ? new Date(venue.tourVenue?.date).toLocaleDateString(undefined, {
-                          month: 'short',
-                          day: 'numeric'
-                        }) 
-                      : 'Date TBD'} · Stop #{index + 1}
-                  </div>
-                  <div className="mt-1 text-xs font-medium text-purple-600">
-                    Optimized Route
-                  </div>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+        </div>
       </div>
     );
   };
@@ -546,82 +570,37 @@ export function RouteComparisonMap({
             </MapContainer>
           </div>
           <div className="mt-2 flex justify-center items-center">
-            <div className="flex items-center">
-              <span className="text-sm text-muted-foreground mr-2">
-                Total Distance: {formatDistance(calculateTotalDistance(optimizedVenuesWithCoords))}
-              </span>
+            <span className="text-sm text-muted-foreground">
+              Total Distance: {formatDistance(calculateTotalDistance(optimizedVenuesWithCoords))}
               {distanceImprovement > 0 && (
-                <Badge className="bg-green-100 hover:bg-green-100 text-green-700">
+                <Badge className="bg-green-100 hover:bg-green-100 text-green-700 ml-2">
                   <Sparkles className="h-3 w-3 mr-1" />
-                  {distanceImprovement}% Improvement
+                  {distanceImprovement}% Better than original
                 </Badge>
               )}
-            </div>
+            </span>
           </div>
         </TabsContent>
         
         <TabsContent value="comparison" className="mt-2">
-          {renderOverlayMap()}
-          <div className="mt-2 flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-blue-500 mr-1"></div>
-                <span className="text-sm">Original: {formatDistance(calculateTotalDistance(originalVenuesWithCoords))}</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-purple-500 mr-1"></div>
-                <span className="text-sm">Optimized: {formatDistance(calculateTotalDistance(optimizedVenuesWithCoords))}</span>
-              </div>
-            </div>
-            {distanceImprovement > 0 && (
-              <Badge className="bg-green-100 hover:bg-green-100 text-green-700">
-                <Sparkles className="h-3 w-3 mr-1" />
-                {distanceImprovement}% Improvement
-              </Badge>
-            )}
-          </div>
+          {renderSideBySideMaps()}
         </TabsContent>
       </Tabs>
     );
   };
-
+  
   return (
-    <div className="space-y-4">
-      {/* Comparison stats */}
+    <div className="route-comparison-map">
+      {/* View Mode Switcher */}
       {showComparison && optimizedVenuesWithCoords.length > 0 && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
-            <div className="flex items-center justify-between p-3 border rounded-md">
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
-                <span className="font-medium">Original Route:</span>
-              </div>
-              <span>{formatDistance(calculateTotalDistance(originalVenuesWithCoords))}</span>
-            </div>
-            
-            <div className="flex items-center justify-between p-3 border rounded-md">
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-purple-500 mr-2"></div>
-                <span className="font-medium">Optimized Route:</span>
-              </div>
-              <div className="flex items-center">
-                <span>{formatDistance(calculateTotalDistance(optimizedVenuesWithCoords))}</span>
-                {distanceImprovement > 0 && (
-                  <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-700">
-                    -{distanceImprovement}%
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          {/* View mode controls - show only in component, hide when parent is controlling */}
-          {!comparisonMode && (
-            <div className="flex justify-end space-x-2">
-              <TabsList className="h-8">
+        <div className="mb-4">
+          <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
+            <h3 className="text-sm font-medium">Route Comparison View</h3>
+            <div className="inline-flex items-center rounded-md border border-input bg-transparent p-1 text-xs">
+              <TabsList className="grid w-full grid-cols-3 h-7 bg-muted/50">
                 <TabsTrigger 
                   value="overlay" 
-                  className={`h-8 px-3 data-[state=active]:bg-muted ${viewMode === 'overlay' ? 'data-[state=active]:text-foreground' : ''}`}
+                  className={`h-6 px-3 data-[state=active]:bg-muted ${viewMode === 'overlay' ? 'data-[state=active]:text-foreground' : ''}`}
                   onClick={() => setViewMode('overlay')}
                   data-state={viewMode === 'overlay' ? 'active' : 'inactive'}
                 >
@@ -629,7 +608,7 @@ export function RouteComparisonMap({
                 </TabsTrigger>
                 <TabsTrigger 
                   value="sideBySide" 
-                  className={`h-8 px-3 data-[state=active]:bg-muted ${viewMode === 'sideBySide' ? 'data-[state=active]:text-foreground' : ''}`}
+                  className={`h-6 px-3 data-[state=active]:bg-muted ${viewMode === 'sideBySide' ? 'data-[state=active]:text-foreground' : ''}`}
                   onClick={() => setViewMode('sideBySide')}
                   data-state={viewMode === 'sideBySide' ? 'active' : 'inactive'}
                 >
@@ -637,7 +616,7 @@ export function RouteComparisonMap({
                 </TabsTrigger>
                 <TabsTrigger 
                   value="split" 
-                  className={`h-8 px-3 data-[state=active]:bg-muted ${viewMode === 'split' ? 'data-[state=active]:text-foreground' : ''}`}
+                  className={`h-6 px-3 data-[state=active]:bg-muted ${viewMode === 'split' ? 'data-[state=active]:text-foreground' : ''}`}
                   onClick={() => setViewMode('split')}
                   data-state={viewMode === 'split' ? 'active' : 'inactive'}
                 >
@@ -645,7 +624,7 @@ export function RouteComparisonMap({
                 </TabsTrigger>
               </TabsList>
             </div>
-          )}
+          </div>
         </div>
       )}
       
