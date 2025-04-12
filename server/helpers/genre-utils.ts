@@ -7,7 +7,7 @@
 
 import { db } from '../db';
 import { artists, venues, genres, artistGenres, venueGenres } from '../../shared/schema';
-import { eq, inArray, sql } from 'drizzle-orm';
+import { eq, inArray, sql, desc } from 'drizzle-orm';
 
 /**
  * Get all genres for an artist using the junction table
@@ -243,6 +243,7 @@ export async function getGenresByIds(genreIds: number[]) {
 
 /**
  * Find related genres based on artist overlap
+ * Returns genres that share artists with the specified genre
  */
 export async function findRelatedGenresByArtistOverlap(genreId: number, limit: number = 5) {
   // Get artists with this genre
@@ -256,17 +257,26 @@ export async function findRelatedGenresByArtistOverlap(genreId: number, limit: n
   const artistIds = artistsWithGenre.map(a => a.artistId);
 
   // Find other genres these artists have
-  return db
+  const relatedGenres = await db
     .select({
-      genreId: artistGenres.genreId,
-      genreName: genres.name,
-      count: sql<number>`COUNT(${artistGenres.artistId})`.as('count')
+      id: genres.id,
+      name: genres.name,
+      slug: genres.slug,
+      overlapCount: sql<number>`COUNT(${artistGenres.artistId})`.as('overlapCount')
     })
     .from(artistGenres)
     .innerJoin(genres, eq(artistGenres.genreId, genres.id))
     .where(inArray(artistGenres.artistId, artistIds))
     .where(sql`${artistGenres.genreId} != ${genreId}`)
-    .groupBy(artistGenres.genreId, genres.name)
-    .orderBy(sql`count DESC`)
+    .groupBy(genres.id, genres.name, genres.slug)
+    .orderBy(desc(sql<number>`COUNT(${artistGenres.artistId})`))
     .limit(limit);
+    
+  // Map the result to the desired format with the correct property names
+  return relatedGenres.map(genre => ({
+    id: genre.id,
+    name: genre.name,
+    slug: genre.slug,
+    overlap: genre.overlapCount ? Number(genre.overlapCount) : 0
+  }));
 }
