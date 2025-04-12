@@ -508,113 +508,110 @@ export function RoutePlanningTab({
             </CollapsibleContent>
           </Collapsible>
           
-          {/* Route map showing both original and optimized routes */}
-          <div className="mb-6">
-            <SimplifiedRouteMap
-              originalVenues={originalSequenceVenues}
-              optimizedVenues={showOptimizedRoute ? optimizedSequenceVenues : []}
-              onVenueClick={onVenueClick}
-            />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex items-start gap-3">
-              <div className="bg-primary/10 p-2 rounded-full">
-                <MapPin className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-medium">Total Venues</h3>
-                <p className="text-muted-foreground text-sm">{venues?.length || 0} venues ({venues?.filter(v => v.tourVenue?.status === 'confirmed')?.length || 0} confirmed)</p>
+          {/* Main Grid Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left Column: Map + Stats */}
+            <div className="lg:col-span-8 space-y-4">
+              {/* Route map showing both original and optimized routes */}
+              <SimplifiedRouteMap
+                originalVenues={originalSequenceVenues}
+                optimizedVenues={showOptimizedRoute ? optimizedSequenceVenues : []}
+                onVenueClick={onVenueClick}
+              />
+              
+              {/* Stats section */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <MapPin className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium">Total Venues</h3>
+                    <p className="text-muted-foreground text-sm">{venues?.length || 0} venues ({venues?.filter(v => v.tourVenue?.status === 'confirmed')?.length || 0} confirmed)</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <Route className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium">Route Coverage</h3>
+                    <p className="text-muted-foreground text-sm">
+                      {venues?.filter(v => v.venue?.longitude && v.venue?.latitude)?.length || 0} venues with coordinates
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="show-all-venues"
+                      checked={showAllVenues}
+                      onCheckedChange={setShowAllVenues}
+                    />
+                    <label htmlFor="show-all-venues" className="text-sm cursor-pointer">
+                      Show all venues
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
             
-            <div className="flex items-start gap-3">
-              <div className="bg-primary/10 p-2 rounded-full">
-                <Route className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-medium">Route Coverage</h3>
-                <p className="text-muted-foreground text-sm">
-                  {venues?.filter(v => v.venue?.longitude && v.venue?.latitude)?.length || 0} venues with coordinates
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3 ml-auto">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="show-all-venues"
-                  checked={showAllVenues}
-                  onCheckedChange={setShowAllVenues}
-                />
-                <label htmlFor="show-all-venues" className="text-sm cursor-pointer">
-                  Show all venues (including cancelled)
-                </label>
-              </div>
+            {/* Right Column: Route Timeline + Optimization Controls */}
+            <div className="lg:col-span-4">
+              <Tabs defaultValue="timeline" className="w-full">
+                <TabsList className="w-full grid grid-cols-2">
+                  <TabsTrigger value="timeline">Timeline</TabsTrigger>
+                  <TabsTrigger value="optimize">Optimize</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="timeline" className="mt-4">
+                  <h3 className="text-sm font-medium mb-3 flex items-center justify-between">
+                    <span>
+                      {showOptimizedRoute && optimizedSequenceVenues.length > 0 
+                        ? 'Optimized Timeline' 
+                        : 'Current Timeline'}
+                    </span>
+                    
+                    {optimizedSequenceVenues.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          id="show-optimized"
+                          checked={showOptimizedRoute}
+                          onCheckedChange={setShowOptimizedRoute}
+                        />
+                        <Label htmlFor="show-optimized" className="text-xs font-medium">
+                          Show optimized 
+                        </Label>
+                      </div>
+                    )}
+                  </h3>
+                  
+                  <div className="overflow-auto max-h-[550px]">
+                    <TimelineView 
+                      sequence={
+                        showOptimizedRoute && optimizedSequenceVenues.length > 0
+                          ? (showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues.filter(v => v.tourVenue?.status !== 'cancelled'))
+                          : (showAllVenues ? venues : venues.filter(v => v.tourVenue?.status !== 'cancelled'))
+                      } 
+                    />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="optimize" className="mt-4">
+                  <OptimizationPanel 
+                    tourId={tourId}
+                    tourData={tourData}
+                    onSuccess={refetch}
+                    onApplyOptimization={onApplyOptimization}
+                  />
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         </CardContent>
       </Card>
-      
-
-      
-      {/* Comparison Tab */}
-      <Tabs defaultValue="current">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="current">Current Route</TabsTrigger>
-          <TabsTrigger value="optimized">Optimized Route</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="current" className="mt-6">
-          {venues && venues.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Map on the left/top */}
-              <div className="lg:col-span-8 border rounded-lg h-[400px] overflow-hidden">
-                <MapView sequence={showAllVenues ? venues : venues.filter(v => v.tourVenue?.status !== 'cancelled')} />
-              </div>
-              
-              {/* Timeline on the right/bottom */}
-              <div className="lg:col-span-4 overflow-auto max-h-[600px]">
-                <h3 className="text-sm font-medium mb-3">Tour Timeline</h3>
-                <TimelineView sequence={showAllVenues ? venues : venues.filter(v => v.tourVenue?.status !== 'cancelled')} />
-              </div>
-            </div>
-          ) : (
-            <Alert variant="default" className="bg-muted/50">
-              <InfoIcon className="h-4 w-4" />
-              <AlertTitle>No ordered venues</AlertTitle>
-              <AlertDescription>
-                There are no ordered venues in the current route.
-              </AlertDescription>
-            </Alert>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="optimized" className="mt-6">
-          {optimizedSequenceVenues?.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Map on the left/top */}
-              <div className="lg:col-span-8 border rounded-lg h-[400px] overflow-hidden">
-                <MapView sequence={showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues.filter(v => v.tourVenue?.status !== 'cancelled')} />
-              </div>
-              
-              {/* Timeline on the right/bottom */}
-              <div className="lg:col-span-4 overflow-auto max-h-[600px]">
-                <h3 className="text-sm font-medium mb-3">Optimized Timeline</h3>
-                <TimelineView sequence={showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues.filter(v => v.tourVenue?.status !== 'cancelled')} />
-              </div>
-            </div>
-          ) : (
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>No optimized route</AlertTitle>
-              <AlertDescription>
-                The tour hasn't been optimized yet. Go to the Optimization tab to optimize your tour route.
-              </AlertDescription>
-            </Alert>
-          )}
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }
