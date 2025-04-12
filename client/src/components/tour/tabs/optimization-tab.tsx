@@ -85,8 +85,8 @@ export function OptimizationTab({
     : 0;
   
   // Check if optimization is possible
-  const canOptimize = optimizableVenues.length >= 3;
-  const hasDates = venues.some(venue => venue.date);
+  const canOptimize = optimizableVenues?.length >= 3;
+  const hasDates = venues?.some(venue => venue.date) || false;
   
   // Handler for running standard optimization
   const handleRunStandardOptimization = async () => {
