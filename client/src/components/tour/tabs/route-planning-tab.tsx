@@ -348,11 +348,11 @@ export function RoutePlanningTab({
         </TabsList>
         
         <TabsContent value="current" className="mt-6">
-          {originalSequenceVenues.length > 0 ? (
+          {originalSequenceVenues?.length > 0 ? (
             <>
-              {viewMode === 'timeline' && <TimelineView sequence={showAllVenues ? originalSequenceVenues : originalSequenceVenues.filter(v => v.status !== 'cancelled')} />}
-              {viewMode === 'list' && <ListView sequence={showAllVenues ? originalSequenceVenues : originalSequenceVenues.filter(v => v.status !== 'cancelled')} />}
-              {viewMode === 'map' && <MapView sequence={showAllVenues ? originalSequenceVenues : originalSequenceVenues.filter(v => v.status !== 'cancelled')} />}
+              {viewMode === 'timeline' && <TimelineView sequence={showAllVenues ? originalSequenceVenues : originalSequenceVenues?.filter(v => v.status !== 'cancelled') || []} />}
+              {viewMode === 'list' && <ListView sequence={showAllVenues ? originalSequenceVenues : originalSequenceVenues?.filter(v => v.status !== 'cancelled') || []} />}
+              {viewMode === 'map' && <MapView sequence={showAllVenues ? originalSequenceVenues : originalSequenceVenues?.filter(v => v.status !== 'cancelled') || []} />}
             </>
           ) : (
             <Alert variant="default" className="bg-muted/50">
@@ -366,11 +366,11 @@ export function RoutePlanningTab({
         </TabsContent>
         
         <TabsContent value="optimized" className="mt-6">
-          {optimizedSequenceVenues.length > 0 ? (
+          {optimizedSequenceVenues?.length > 0 ? (
             <>
-              {viewMode === 'timeline' && <TimelineView sequence={showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues.filter(v => v.status !== 'cancelled')} />}
-              {viewMode === 'list' && <ListView sequence={showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues.filter(v => v.status !== 'cancelled')} />}
-              {viewMode === 'map' && <MapView sequence={showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues.filter(v => v.status !== 'cancelled')} />}
+              {viewMode === 'timeline' && <TimelineView sequence={showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues?.filter(v => v.status !== 'cancelled') || []} />}
+              {viewMode === 'list' && <ListView sequence={showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues?.filter(v => v.status !== 'cancelled') || []} />}
+              {viewMode === 'map' && <MapView sequence={showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues?.filter(v => v.status !== 'cancelled') || []} />}
             </>
           ) : (
             <Alert>
