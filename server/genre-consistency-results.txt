@@ -1,0 +1,230 @@
+Database connection initialized
+Genre Data Consistency Check
+===========================
+
+---- Artist Genre Consistency Check ----
+Found 19 artists with array genres
+
+❌ Artist "The Midnight Echo" (178) has array genres but NO junction table entries
+  Array genres: rock, indie
+
+❌ Artist "Lunar Wave" (179) has array genres but NO junction table entries
+  Array genres: electronic, ambient
+
+❌ Artist "Crimson Heights" (180) has array genres but NO junction table entries
+  Array genres: rock, alternative
+
+❌ Artist "Velvet Skies" (181) has array genres but NO junction table entries
+  Array genres: indie, pop
+
+⚠️ Artist "La Luz" (182) has inconsistent genres:
+  In array but not junction: other
+  In junction but not array: indie rock, surf rock, psychedelic rock
+
+⚠️ Artist "Snail Mail" (183) has inconsistent genres:
+  In array but not junction: other
+  In junction but not array: alternative, indie rock, lo fi
+
+⚠️ Artist "Japanese Breakfast" (184) has inconsistent genres:
+  In array but not junction: other
+  In junction but not array: experimental, indie pop, dream pop
+
+⚠️ Artist "The Beths" (185) has inconsistent genres:
+  In array but not junction: other
+  In junction but not array: alternative, indie rock, power pop
+
+⚠️ Artist "Alvvays" (186) has inconsistent genres:
+  In array but not junction: other
+  In junction but not array: indie pop, dream pop, jangle pop
+
+⚠️ Artist "Lucy Dacus" (187) has inconsistent genres:
+  In array but not junction: other
+  In junction but not array: alternative, indie rock, folk rock
+
+⚠️ Artist "Courtney Barnett" (188) has inconsistent genres:
+  In array but not junction: other
+  In junction but not array: indie rock, folk rock, garage rock
+
+⚠️ Artist "Big Thief" (189) has inconsistent genres:
+  In array but not junction: other
+  In junction but not array: alternative, indie rock, indie folk
+
+⚠️ Artist "HAIM" (190) has inconsistent genres:
+  In array but not junction: other
+  In junction but not array: indie pop, soft rock
+
+⚠️ Artist "Mitski" (191) has inconsistent genres:
+  In array but not junction: other
+  In junction but not array: experimental, indie rock, art pop
+
+⚠️ Artist "Soccer Mommy" (192) has inconsistent genres:
+  In array but not junction: other
+  In junction but not array: indie rock, lo fi, bedroom pop
+
+⚠️ Artist "Waxahatchee" (193) has inconsistent genres:
+  In array but not junction: other
+  In junction but not array: indie rock, indie folk, alternative country
+
+⚠️ Artist "Angel Olsen" (194) has inconsistent genres:
+  In array but not junction: other
+  In junction but not array: indie folk, art pop, alternative country
+
+⚠️ Artist "Sharon Van Etten" (195) has inconsistent genres:
+  In array but not junction: other
+  In junction but not array: alternative, indie rock, indie folk
+
+⚠️ Artist "Phoebe Bridgers" (196) has inconsistent genres:
+  In array but not junction: other
+  In junction but not array: indie rock, indie folk, emo
+
+Found 0 artists with junction genres but empty array genres
+
+Summary:
+- 15 artists have inconsistent genres between storage methods
+- 4 artists have array genres but no junction entries
+- 0 artists have junction entries but no array genres
+
+---- Venue Genre Consistency Check ----
+Found 35 venues with primary genre set
+
+⚠️ Venue "The Middle East" (282) has inconsistent secondary genres:
+  In array but not junction: rock, hip hop
+
+⚠️ Venue "Great Scott" (283) has inconsistent secondary genres:
+  In array but not junction: rock, electronic
+
+⚠️ Venue "Baby's All Right" (284) has inconsistent secondary genres:
+  In array but not junction: electronic, pop, hip hop
+
+⚠️ Venue "Union Pool" (285) has inconsistent secondary genres:
+  In array but not junction: rock, folk
+
+⚠️ Venue "Johnny Brenda's" (286) has inconsistent secondary genres:
+  In array but not junction: rock, folk
+
+⚠️ Venue "Empty Bottle" (287) has inconsistent secondary genres:
+  In array but not junction: rock, experimental
+
+⚠️ Venue "Schubas Tavern" (288) has inconsistent secondary genres:
+  In array but not junction: folk, rock
+
+❌ Venue "7th St Entry" (289) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: rock, punk
+
+❌ Venue "The Loving Touch" (290) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: rock, electronic
+
+❌ Venue "Ace of Cups" (291) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: rock, punk
+
+❌ Venue "9:30 Club" (292) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: rock, hip_hop, electronic
+
+❌ Venue "Cat's Cradle" (293) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: rock, folk
+
+❌ Venue "The Earl" (294) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: rock, punk
+
+❌ Venue "The EARL" (295) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: rock, country
+
+❌ Venue "Saturn" (296) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: rock, electronic
+
+❌ Venue "Neumos" (297) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: rock, electronic
+
+❌ Venue "Doug Fir Lounge" (298) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: folk, rock
+
+❌ Venue "The Independent" (299) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: rock, electronic
+
+❌ Venue "The Echo" (300) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: rock, electronic
+
+❌ Venue "Treefort Music Hall" (301) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: folk, experimental
+
+❌ Venue "The Bishop" (302) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: rock, folk
+
+❌ Venue "The Blind Pig" (303) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: rock, punk
+
+❌ Venue "40 Watt Club" (304) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: rock, alternative
+
+❌ Venue "The Depot" (305) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: rock, electronic
+
+❌ Venue "The Cavern Club" (306) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: rock, folk
+
+❌ Venue "Silent Barn" (307) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: experimental, punk
+
+❌ Venue "The Vera Project" (308) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: punk, experimental
+
+❌ Venue "Subterranean Arthouse" (309) has primary/secondary genres but NO junction table entries
+  Primary genre: experimental
+  Secondary genres: folk, world
+
+❌ Venue "Rubber Gloves" (310) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: punk, experimental
+
+❌ Venue "Charm City Art Space" (311) has primary/secondary genres but NO junction table entries
+  Primary genre: punk
+  Secondary genres: indie, experimental
+
+❌ Venue "Sonic Lunch" (312) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: folk, rock
+
+❌ Venue "Drkmttr Collective" (313) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: punk, experimental
+
+❌ Venue "Cafe Mustache" (314) has primary/secondary genres but NO junction table entries
+  Primary genre: folk
+  Secondary genres: indie, experimental
+
+❌ Venue "Grimey's" (315) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: folk, rock
+
+❌ Venue "Mississippi Studios" (316) has primary/secondary genres but NO junction table entries
+  Primary genre: indie
+  Secondary genres: folk, rock
+
+Found 0 venues with junction genres but no primary genre
+
+Summary:
+- 7 venues have inconsistent genres between storage methods
+- 28 venues have column genres but no junction entries
+- 0 venues have junction entries but no column genres
+
+Check complete!
