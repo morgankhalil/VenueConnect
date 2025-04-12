@@ -153,12 +153,13 @@ export function MainLayout({ children }: MainLayoutProps) {
 
             <nav className="space-y-1.5">
               {[
-                { name: "Dashboard", href: "/" },
-                { name: "Calendar", href: "/calendar" },
-                { name: "Discover", href: "/discover" },
-                { name: "Venue Network", href: "/venue-network" },
-                { name: "Messages", href: "/messages" },
-                { name: "Settings", href: "/settings" },
+                { name: "Dashboard", href: "/", icon: LayoutDashboard },
+                { name: "Tours", href: "/tours", icon: Truck },
+                { name: "Venue Network", href: "/venue-network", icon: Network },
+                { name: "Calendar", href: "/calendar", icon: Calendar },
+                { name: "Discover", href: "/discover", icon: Compass },
+                { name: "Messages", href: "/messages", icon: MessageSquare },
+                { name: "Settings", href: "/settings", icon: Settings },
               ].map((item) => {
                 const [location] = useLocation();
                 const isActive = item.href === "/" 

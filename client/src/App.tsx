@@ -67,19 +67,30 @@ function App() {
   // Check if we're on an authentication page
   const isAuthPage = location.startsWith('/auth/');
   
-  // Special case for map test page
-  if (location === '/map-test') {
-    return (
-      <ThemeProvider defaultTheme="system">
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <MapTest />
-            <Toaster />
-          </AuthProvider>
-        </QueryClientProvider>
-      </ThemeProvider>
-    );
-  }
+  // Handle auth pages and main app layout
+  const isAuthPage = location.startsWith('/auth/');
+  const isMapTestPage = location === '/map-test';
+  
+  return (
+    <ThemeProvider defaultTheme="system">
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          {isAuthPage ? (
+            <Router />
+          ) : isMapTestPage ? (
+            <MainLayout hideNav>
+              <MapTest />
+            </MainLayout>
+          ) : (
+            <MainLayout>
+              <Router />
+            </MainLayout>
+          )}
+          <Toaster />
+        </AuthProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
+  );
   
   return (
     <ThemeProvider defaultTheme="system">
