@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { getUnifiedOptimization, applyUnifiedOptimization } from '@/lib/api';
 import { queryClient } from '@/lib/queryClient';
@@ -98,11 +98,26 @@ export function UnifiedTourOptimizer({ tourId, onApplyChanges }: UnifiedTourOpti
   const [optimizationMethod, setOptimizationMethod] = useState<'standard' | 'ai' | 'auto'>('auto');
   const { toast } = useToast();
 
+  // Advanced optimization options
+  const [optimizationOptions, setOptimizationOptions] = useState({
+    method: optimizationMethod,
+    respectFixedDates: true,
+    optimizeFor: 'balanced' as 'balanced' | 'distance' | 'time'
+  });
+
+  // Update optimization options when method changes
+  React.useEffect(() => {
+    setOptimizationOptions(prev => ({
+      ...prev,
+      method: optimizationMethod
+    }));
+  }, [optimizationMethod]);
+
   // Fetch optimization suggestions
   const { data, isLoading, isError, error, refetch } = useQuery<UnifiedOptimizationResponse>({
-    queryKey: ['unified-tour-optimization', tourId, optimizationMethod],
+    queryKey: ['unified-tour-optimization', tourId, optimizationOptions],
     queryFn: async () => {
-      const response = await getUnifiedOptimization(tourId, optimizationMethod);
+      const response = await getUnifiedOptimization(tourId, optimizationOptions);
       return response;
     },
     enabled: false, // Don't fetch on component mount
