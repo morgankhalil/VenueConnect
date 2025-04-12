@@ -151,10 +151,15 @@ async function seedFromConcertsAPI() {
       if (!event.venue_id) continue;
 
       const venueId = await addVenueToDatabase({
-        name: event.venue_name || 'Unknown Venue',
-        city: event.venue_city,
-        state: event.venue_state,
-        country: event.venue_country
+        name: event.venue?.name || event.venue_name || 'Unknown Venue',
+        city: event.venue?.city || event.venue_city || '',
+        state: event.venue?.region || event.venue_state || '',
+        country: event.venue?.country || event.venue_country || 'US',
+        latitude: event.venue?.latitude || null,
+        longitude: event.venue?.longitude || null,
+        address: event.venue?.address || '',
+        zipCode: event.venue?.postal_code || '',
+        description: event.venue?.description || `Music venue in ${event.venue?.city || 'Unknown City'}`
       });
       stats.venues++;
 
