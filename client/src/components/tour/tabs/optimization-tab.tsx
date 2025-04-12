@@ -94,15 +94,22 @@ export function OptimizationTab({
     setError(null);
     
     try {
-      const response = await apiRequest(`/api/tours/${tourId}/optimize`, 'POST', {
-          preserveConfirmedDates,
-          optimizeFor,
-          preferredDates: preferredDates ? preferredDates.split(',').map(date => date.trim()) : [],
-          type: 'standard'
+      const response = await apiRequest(`/api/tours/${tourId}/optimize`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            preserveConfirmedDates,
+            optimizeFor,
+            preferredDates: preferredDates ? preferredDates.split(',').map(date => date.trim()) : [],
+            type: 'standard'
+          }),
       });
       
       setOptimizationResult(response);
     } catch (err: any) {
+      console.error('Optimization error:', err);
       setError(err.message || 'Failed to optimize tour');
     } finally {
       setIsOptimizing(false);
@@ -115,14 +122,21 @@ export function OptimizationTab({
     setError(null);
     
     try {
-      const response = await apiRequest(`/api/tours/${tourId}/optimize`, 'POST', {
-          preserveConfirmedDates,
-          preferredDates: preferredDates ? preferredDates.split(',').map(date => date.trim()) : [],
-          type: 'ai'
+      const response = await apiRequest(`/api/unified-optimizer/optimize/${tourId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            method: 'ai',
+            preserveConfirmedDates,
+            preferredDates: preferredDates ? preferredDates.split(',').map(date => date.trim()) : []
+          }),
       });
       
-      setOptimizationResult(response);
+      setOptimizationResult(response.optimizationResult);
     } catch (err: any) {
+      console.error('AI Optimization error:', err);
       setError(err.message || 'Failed to optimize tour with AI');
     } finally {
       setIsOptimizing(false);
@@ -134,8 +148,14 @@ export function OptimizationTab({
     if (!optimizationResult) return;
     
     try {
-      await apiRequest(`/api/tours/${tourId}/apply-optimization`, 'POST', {
-          optimizationId: optimizationResult.id
+      await apiRequest(`/api/tours/${tourId}/apply-optimization`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            optimizationId: optimizationResult.id
+          }),
       });
       
       // Refresh tour data and notify parent
@@ -143,6 +163,7 @@ export function OptimizationTab({
       onApplyOptimization();
       setOptimizationResult(null);
     } catch (err: any) {
+      console.error('Apply optimization error:', err);
       setError(err.message || 'Failed to apply optimization');
     }
   };
