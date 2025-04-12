@@ -26,6 +26,16 @@ This document serves as a prioritized task tracker for implementing all features
 | Create venue grouping functionality | Low | Medium | Enhanced visualization | To Do |
 | Add network analytics dashboard | Low | Medium | None | To Do |
 
+### Industry Data Management
+| Task | Priority | Effort | Dependencies | Status |
+|------|----------|--------|--------------|--------|
+| Design record label & management schema | High | Medium | None | Done |
+| Create seeding script for industry data | High | Medium | Schema design | Done |
+| Implement artist-industry relationships | High | Medium | Seeding script | To Do |
+| Add industry data admin interface | Medium | High | Relationships | To Do |
+| Create industry analytics dashboard | Low | High | Admin interface | To Do |
+| Build industry network visualization | Low | Medium | Analytics | To Do |
+
 ### Data Integration Framework
 | Task | Priority | Effort | Dependencies | Status |
 |------|----------|--------|--------------|--------|
