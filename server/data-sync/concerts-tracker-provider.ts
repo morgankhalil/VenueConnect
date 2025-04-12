@@ -12,10 +12,10 @@ export class ConcertsTrackerProvider implements EventProvider {
 
   async getArtistEvents(artistName: string, options?: SyncOptions): Promise<any[]> {
     try {
-      const response = await axios.get(`${this.baseUrl}/artist`, {
+      const response = await axios.get(`${this.baseUrl}/search`, {
         params: {
-          name: artistName,
-          countryCode: 'US' // Can make configurable later
+          keyword: artistName,
+          type: 'event,venue'
         },
         headers: {
           'X-RapidAPI-Key': this.apiKey,
@@ -52,10 +52,10 @@ export class ConcertsTrackerProvider implements EventProvider {
 
   async searchVenues(query: string, options?: SyncOptions): Promise<any[]> {
     try {
-      const response = await axios.get(`${this.baseUrl}/location`, {
+      const response = await axios.get(`${this.baseUrl}/search`, {
         params: {
-          city: query,
-          countryCode: 'US'
+          keyword: query,
+          type: 'venue'
         },
         headers: {
           'X-RapidAPI-Key': this.apiKey,
