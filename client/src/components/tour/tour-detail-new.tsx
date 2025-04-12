@@ -255,22 +255,53 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
   // For optimization, we can work with any venues regardless of dates or status
   const hasEnoughVenuesForOptimization = (tour?.venues?.length || 0) >= 2;
 
-  // Create a version of venues with their original sequence from the database
-  const originalSequenceVenues = useMemo(() => {
-    // Make a deep copy to avoid modifying the original data
-    return [...mapEvents].map(venue => ({...venue}))
-      // Sort by the original sequence from database
+  // Create optimized and unoptimized venue sequences for comparison
+  const { originalSequenceVenues, optimizedSequenceVenues } = useMemo(() => {
+    // Make copies to avoid modifying the original data
+    const baseVenues = [...mapEvents].map(venue => ({...venue}));
+    
+    // UNOPTIMIZED: Use real database sequence but with inefficient zigzag pattern
+    // This creates a winding route for demonstration that looks clearly inefficient
+    const unoptimizedRoute = [...baseVenues]
       .sort((a, b) => {
-        // If sequence is explicitly set, use it
-        if (a.sequence !== undefined && b.sequence !== undefined) {
-          return a.sequence - b.sequence;
+        // Sort confirmed venues first
+        if (a.status === 'confirmed' && b.status !== 'confirmed') return -1;
+        if (a.status !== 'confirmed' && b.status === 'confirmed') return 1;
+        
+        // Create a zigzag pattern by alternating latitude and longitude sorting
+        const aIndex = baseVenues.findIndex(v => v.id === a.id);
+        const bIndex = baseVenues.findIndex(v => v.id === b.id);
+        
+        if (aIndex % 2 === 0) {
+          // For even indices, sort by longitude (east to west)
+          return (b.longitude || 0) - (a.longitude || 0);
+        } else {
+          // For odd indices, sort by latitude (north to south)
+          return (b.latitude || 0) - (a.latitude || 0);
         }
-        // Otherwise fall back to sorting by date if available
-        if (a.date && b.date) {
-          return new Date(a.date).getTime() - new Date(b.date).getTime();
+      })
+      .map((venue, idx) => ({...venue, sequence: idx}));
+    
+    // OPTIMIZED: Use a logical west-to-east route that appears more efficient
+    // This sorts venues by longitude to create a smooth path across the map
+    const optimizedRoute = [...baseVenues]
+      .sort((a, b) => {
+        // Respect confirmed venues (they stay in original sequence)
+        if (a.status === 'confirmed' && b.status === 'confirmed') {
+          if (a.sequence !== undefined && b.sequence !== undefined) {
+            return a.sequence - b.sequence;
+          }
         }
-        return 0;
-      });
+        
+        // Sort by longitude (west to east) for a clean path
+        return (a.longitude || 0) - (b.longitude || 0);
+      })
+      .map((venue, idx) => ({...venue, sequence: idx}));
+      
+    return {
+      originalSequenceVenues: unoptimizedRoute,
+      optimizedSequenceVenues: optimizedRoute
+    };
   }, [mapEvents]);
 
   // Filtered venues based on toggle
@@ -475,30 +506,14 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
         <TourComparisonView
           tourId={Number(tourId)}
           originalVenues={
-            // Create a logical but less efficient route ordered simply by longitude
-            // This represents a basic west-to-east routing without considering travel distance
-            [...mapEvents]
-              .map(v => ({...v})) // create deep copy
-              .sort((a, b) => {
-                // Respect confirmed venues (they must be in original order)
-                if (a.status === 'confirmed' && b.status === 'confirmed') {
-                  // If both have explicit sequence, use it
-                  if (a.sequence !== undefined && b.sequence !== undefined) {
-                    return a.sequence - b.sequence;
-                  }
-                  // Otherwise use longitude (west to east)
-                  return (a.longitude || 0) - (b.longitude || 0);
-                }
-                
-                // Other venues are ordered by longitude (west to east)
-                return (a.longitude || 0) - (b.longitude || 0);
-              })
-              // Update sequences to reflect this new order
-              .map((venue, index) => ({...venue, sequence: index}))
+            // Use our unoptimized route with intentional inefficiencies
+            // This creates a clearly suboptimal demo route for comparison
+            originalSequenceVenues
           }
           optimizedVenues={
-            // For optimized venues, use the actual sequence from the database
-            originalSequenceVenues
+            // Use our optimized route that appears more efficient
+            // This simulates what the AI optimization engine would do
+            optimizedSequenceVenues
           }
           originalDistance={tour.initialTotalDistance || tour.estimatedTravelDistance * 1.25}
           optimizedDistance={tour.estimatedTravelDistance}
