@@ -94,14 +94,11 @@ export function OptimizationTab({
     setError(null);
     
     try {
-      const response = await apiRequest(`/api/tours/${tourId}/optimize`, {
-        method: 'POST',
-        data: {
+      const response = await apiRequest(`/api/tours/${tourId}/optimize`, 'POST', {
           preserveConfirmedDates,
           optimizeFor,
           preferredDates: preferredDates ? preferredDates.split(',').map(date => date.trim()) : [],
           type: 'standard'
-        }
       });
       
       setOptimizationResult(response);
@@ -118,13 +115,10 @@ export function OptimizationTab({
     setError(null);
     
     try {
-      const response = await apiRequest(`/api/tours/${tourId}/optimize`, {
-        method: 'POST',
-        data: {
+      const response = await apiRequest(`/api/tours/${tourId}/optimize`, 'POST', {
           preserveConfirmedDates,
           preferredDates: preferredDates ? preferredDates.split(',').map(date => date.trim()) : [],
           type: 'ai'
-        }
       });
       
       setOptimizationResult(response);
@@ -140,11 +134,8 @@ export function OptimizationTab({
     if (!optimizationResult) return;
     
     try {
-      await apiRequest(`/api/tours/${tourId}/apply-optimization`, {
-        method: 'POST',
-        data: {
+      await apiRequest(`/api/tours/${tourId}/apply-optimization`, 'POST', {
           optimizationId: optimizationResult.id
-        }
       });
       
       // Refresh tour data and notify parent
