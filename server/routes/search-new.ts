@@ -1,25 +1,24 @@
 /**
  * Search routes for events, artists, and venues with genre filtering
  */
-
 import { Router } from 'express';
-import { db } from '../db';
-import { artists, events, venues, genres, artistGenres, venueGenres } from '../../shared/schema';
-import { eq, and, inArray, like, or, ilike, count, sql, desc, asc } from 'drizzle-orm';
+import { 
+  asc, count, desc, eq, inArray, ilike, or 
+} from 'drizzle-orm';
 import { z } from 'zod';
+import { db } from '../db';
+import { artists, artistGenres, events, genres, venues } from '../../shared/schema';
 
 const router = Router();
 
-// Search query schema
+// Search query validation schema
 const searchQuerySchema = z.object({
-  query: z.string().min(1).max(100),
+  query: z.string().default(''),
   genre: z.string().optional(),
-  genreId: z.coerce.number().optional(),
-  venueType: z.string().optional(),
-  regionFilter: z.string().optional(),
-  sort: z.enum(['relevance', 'date', 'name']).optional().default('relevance'),
-  page: z.coerce.number().optional().default(1),
-  limit: z.coerce.number().min(1).max(100).optional().default(20),
+  genreId: z.number().optional(),
+  sort: z.enum(['date', 'name', 'relevance']).default('relevance'),
+  page: z.number().default(1),
+  limit: z.number().default(20),
 });
 
 // Event search endpoint
@@ -53,8 +52,9 @@ router.get('/events/search', async (req, res) => {
       .innerJoin(venues, eq(events.venueId, venues.id))
       .where(
         or(
-          ilike(events.name, `%${query}%`),
+          // Search by artist name
           ilike(artists.name, `%${query}%`),
+          // Search by venue name
           ilike(venues.name, `%${query}%`)
         )
       );
@@ -139,23 +139,10 @@ router.get('/events/search', async (req, res) => {
     const paginatedEvents = formattedEvents.slice(offset, offset + limit);
     
     // Get total count for pagination
-    const totalCountResult = await db
-      .select({ count: count() })
-      .from(events)
-      .innerJoin(artists, eq(events.artistId, artists.id))
-      .innerJoin(venues, eq(events.venueId, venues.id))
-      .where(
-        or(
-          ilike(events.name, `%${query}%`),
-          ilike(artists.name, `%${query}%`),
-          ilike(venues.name, `%${query}%`)
-        )
-      );
-    
-    const total = totalCountResult[0]?.count || 0;
+    const totalCount = formattedEvents.length;
     
     return res.json({
-      total,
+      total: totalCount,
       page,
       limit,
       events: paginatedEvents
@@ -191,25 +178,41 @@ router.get('/artists/search', async (req, res) => {
       .where(ilike(artists.name, `%${query}%`));
     
     // Apply genre filter if specified
-    if (genre || genreId) {
-      let targetGenreId = genreId;
+    if (genreId) {
+      // Use a subquery to find artists with this genre
+      const artistsWithGenre = await db
+        .select({ artistId: artistGenres.artistId })
+        .from(artistGenres)
+        .where(eq(artistGenres.genreId, genreId));
       
-      if (genre && !genreId) {
-        const genreResult = await db
-          .select({ id: genres.id })
-          .from(genres)
-          .where(or(
-            eq(genres.name, genre),
-            eq(genres.slug, genre.toLowerCase().replace(/\s+/g, '-'))
-          ))
-          .limit(1);
-        
-        if (genreResult.length > 0) {
-          targetGenreId = genreResult[0].id;
-        }
+      const artistIds = artistsWithGenre.map(a => a.artistId);
+      
+      if (artistIds.length > 0) {
+        // Filter for artists with the specified genre
+        artistsQuery = artistsQuery.where(inArray(artists.id, artistIds));
+      } else {
+        // No artists with this genre, return empty result
+        return res.json({
+          total: 0,
+          page,
+          limit,
+          artists: []
+        });
       }
+    } else if (genre) {
+      // Look up genreId from name
+      const genreResult = await db
+        .select({ id: genres.id })
+        .from(genres)
+        .where(or(
+          eq(genres.name, genre),
+          eq(genres.slug, genre.toLowerCase().replace(/\s+/g, '-'))
+        ))
+        .limit(1);
       
-      if (targetGenreId) {
+      if (genreResult.length > 0) {
+        const targetGenreId = genreResult[0].id;
+        
         // Find all artists with this genre
         const artistsWithGenre = await db
           .select({ artistId: artistGenres.artistId })
@@ -219,7 +222,68 @@ router.get('/artists/search', async (req, res) => {
         const artistIds = artistsWithGenre.map(a => a.artistId);
         
         if (artistIds.length > 0) {
-          artistsQuery = artistsQuery.where(inArray(artists.id, artistIds));
+          // Execute filtered query
+          const filteredArtists = await db
+            .select({
+              id: artists.id,
+              name: artists.name,
+              imageUrl: artists.imageUrl,
+              popularity: artists.popularity,
+              description: artists.description,
+            })
+            .from(artists)
+            .where(inArray(artists.id, artistIds))
+            .where(ilike(artists.name, `%${query}%`));
+          
+          // For each artist, get their genres
+          const artistsWithGenres = await Promise.all(
+            filteredArtists.map(async (artist) => {
+              const genreRelations = await db
+                .select({
+                  genreId: artistGenres.genreId
+                })
+                .from(artistGenres)
+                .where(eq(artistGenres.artistId, artist.id));
+              
+              if (genreRelations.length === 0) {
+                return { ...artist, genres: [] };
+              }
+              
+              const genreIds = genreRelations.map(rel => rel.genreId);
+              
+              const artistGenreInfo = await db
+                .select({
+                  id: genres.id,
+                  name: genres.name,
+                  slug: genres.slug
+                })
+                .from(genres)
+                .where(inArray(genres.id, genreIds));
+              
+              return {
+                ...artist,
+                genres: artistGenreInfo
+              };
+            })
+          );
+          
+          // Apply sorting
+          if (sort === 'name') {
+            artistsWithGenres.sort((a, b) => a.name.localeCompare(b.name));
+          } else {
+            // Default sort by popularity
+            artistsWithGenres.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+          }
+          
+          // Apply pagination
+          const paginatedArtists = artistsWithGenres.slice(offset, offset + limit);
+          
+          return res.json({
+            total: artistsWithGenres.length,
+            page,
+            limit,
+            artists: paginatedArtists
+          });
         } else {
           // No artists with this genre, return empty result
           return res.json({
@@ -229,21 +293,18 @@ router.get('/artists/search', async (req, res) => {
             artists: []
           });
         }
+      } else {
+        // Genre not found, return empty result
+        return res.json({
+          total: 0,
+          page,
+          limit,
+          artists: []
+        });
       }
     }
     
-    // Apply sorting
-    if (sort === 'name') {
-      artistsQuery = artistsQuery.orderBy(asc(artists.name));
-    } else {
-      // Default sort by popularity
-      artistsQuery = artistsQuery.orderBy(desc(artists.popularity));
-    }
-    
-    // Apply pagination
-    artistsQuery = artistsQuery.limit(limit).offset(offset);
-    
-    // Execute query
+    // Execute main query if not filtered by genre above
     const artistResults = await artistsQuery;
     
     // For each artist, get their genres
@@ -278,19 +339,22 @@ router.get('/artists/search', async (req, res) => {
       })
     );
     
-    // Get total count for pagination
-    const totalCountResult = await db
-      .select({ count: count() })
-      .from(artists)
-      .where(ilike(artists.name, `%${query}%`));
+    // Apply sorting directly to results
+    if (sort === 'name') {
+      artistsWithGenres.sort((a, b) => a.name.localeCompare(b.name));
+    } else {
+      // Default sort by popularity
+      artistsWithGenres.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+    }
     
-    const total = totalCountResult[0]?.count || 0;
+    // Apply pagination
+    const paginatedArtists = artistsWithGenres.slice(offset, offset + limit);
     
     return res.json({
-      total,
+      total: artistsWithGenres.length,
       page,
       limit,
-      artists: artistsWithGenres
+      artists: paginatedArtists
     });
   } catch (error) {
     console.error('Error searching artists:', error);
