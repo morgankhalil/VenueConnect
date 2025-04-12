@@ -50,7 +50,7 @@ export class ConcertsApiSeeder {
           artist: artistName,
           apikey: this.apiKey
         },
-        timeout: 10000, // 10 second timeout
+        timeout: 30000, // 30 second timeout
         validateStatus: status => status < 500 // Only retry on 5xx errors
       });
       return response.data.events || [];

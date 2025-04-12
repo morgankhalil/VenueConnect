@@ -147,13 +147,6 @@ async function seedFromConcertsApi(artistNames: string[] = ['La Luz']) {
     }
   }
 
-  for (const artistName of artistNames) {
-    const stats = await seeder.seedFromArtist(artistName);
-    totalStats.venues += stats.venues;
-    totalStats.events += stats.events;
-    totalStats.artists += stats.artists;
-  }
-
   console.log('\nSeeding completed!');
   console.log(`Added ${totalStats.artists} artists`);
   console.log(`Added ${totalStats.venues} venues`);
