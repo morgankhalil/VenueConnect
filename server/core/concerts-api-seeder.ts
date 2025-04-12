@@ -117,6 +117,17 @@ export class ConcertsApiSeeder {
     }
   }
 
+  private async verifyArtist(artistName: string, artistData: any): Promise<boolean> {
+    // Basic verification - exact name match
+    if (artistData.name.toLowerCase() === artistName.toLowerCase()) {
+      return true;
+    }
+    
+    // Log warning for manual verification
+    this.logger.log(`Warning: Found artist "${artistData.name}" when searching for "${artistName}"`);
+    return false;
+  }
+
   async seedFromArtist(artistName: string) {
     this.logger.log(`Processing artist: ${artistName}`);
     const events = await this.searchArtistEvents(artistName);
@@ -124,11 +135,20 @@ export class ConcertsApiSeeder {
     let stats = {
       venues: 0,
       events: 0,
-      artists: 0
+      artists: 0,
+      skipped: false
     };
 
     if (events.length === 0) {
       this.logger.log(`No events found for ${artistName}`);
+      return stats;
+    }
+
+    // Verify artist before proceeding
+    const isVerified = await this.verifyArtist(artistName, events[0].artist);
+    if (!isVerified) {
+      this.logger.log(`Skipping unverified artist match for: ${artistName}`);
+      stats.skipped = true;
       return stats;
     }
 
