@@ -475,14 +475,22 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
         <TourComparisonView
           tourId={Number(tourId)}
           originalVenues={
-            // Create a completely different routing for demonstration by 
-            // switching the order of venues to prioritize west-to-east (longitude)
+            // Create a logical but less efficient route ordered simply by longitude
+            // This represents a basic west-to-east routing without considering travel distance
             [...mapEvents]
               .map(v => ({...v})) // create deep copy
               .sort((a, b) => {
-                if (a.status === 'confirmed' && b.status !== 'confirmed') return -1;
-                if (a.status !== 'confirmed' && b.status === 'confirmed') return 1;
-                // Sort non-confirmed venues west to east by longitude
+                // Respect confirmed venues (they must be in original order)
+                if (a.status === 'confirmed' && b.status === 'confirmed') {
+                  // If both have explicit sequence, use it
+                  if (a.sequence !== undefined && b.sequence !== undefined) {
+                    return a.sequence - b.sequence;
+                  }
+                  // Otherwise use longitude (west to east)
+                  return (a.longitude || 0) - (b.longitude || 0);
+                }
+                
+                // Other venues are ordered by longitude (west to east)
                 return (a.longitude || 0) - (b.longitude || 0);
               })
               // Update sequences to reflect this new order
@@ -492,9 +500,9 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
             // For optimized venues, use the actual sequence from the database
             originalSequenceVenues
           }
-          originalDistance={tour.initialTotalDistance || tour.estimatedTravelDistance * 1.3}
+          originalDistance={tour.initialTotalDistance || tour.estimatedTravelDistance * 1.25}
           optimizedDistance={tour.estimatedTravelDistance}
-          originalTravelTime={tour.initialTravelTime || tour.estimatedTravelTime * 1.3}
+          originalTravelTime={tour.initialTravelTime || tour.estimatedTravelTime * 1.25}
           optimizedTravelTime={tour.estimatedTravelTime}
           optimizationScore={tour.optimizationScore}
         />

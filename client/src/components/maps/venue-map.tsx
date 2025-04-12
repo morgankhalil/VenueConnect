@@ -157,16 +157,25 @@ export function VenueMap({
   };
   
   // Sort events by sequence first (if available), then by date as fallback
+  // This is critical for showing the correct route order on the map
   const sortedEvents = [...events].sort((a, b) => {
-    // If both have sequence, sort by sequence
+    // Always prioritize sequence number when available
     if (a.sequence !== undefined && b.sequence !== undefined) {
       return a.sequence - b.sequence;
+    }
+    // If only one has a sequence, prioritize the one with a sequence
+    else if (a.sequence !== undefined) {
+      return -1;
+    }
+    else if (b.sequence !== undefined) {
+      return 1;
     }
     // Otherwise, if both have dates, sort by date
     else if (a.date && b.date) {
       return new Date(a.date).getTime() - new Date(b.date).getTime();
     }
-    return 0;
+    // If all else fails, sort by ID for consistency
+    return (a.id || 0) - (b.id || 0);
   });
   
   // Create polyline for tour route with custom styling

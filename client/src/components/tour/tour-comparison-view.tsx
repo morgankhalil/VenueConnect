@@ -49,7 +49,7 @@ export function TourComparisonView({
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center">
             <Map className="mr-2 h-5 w-5" />
-            Tour Route Comparison
+            Before/After Optimization Comparison
           </div>
           <Badge variant="outline" className="ml-2 bg-primary/10">
             Score: {optimizationScore.toFixed(0)}/100
@@ -59,9 +59,9 @@ export function TourComparisonView({
       <CardContent className="p-0">
         <Tabs defaultValue="comparison" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="original">Original Route</TabsTrigger>
-            <TabsTrigger value="comparison">Comparison</TabsTrigger>
-            <TabsTrigger value="optimized">Optimized Route</TabsTrigger>
+            <TabsTrigger value="original" className="text-orange-600">Unoptimized Route</TabsTrigger>
+            <TabsTrigger value="comparison">Side-by-Side</TabsTrigger>
+            <TabsTrigger value="optimized" className="text-green-600">Optimized Route</TabsTrigger>
           </TabsList>
           
           <TabsContent value="original" className="p-4">
@@ -79,11 +79,11 @@ export function TourComparisonView({
             </div>
             <div className="grid grid-cols-2 gap-4 mt-4">
               <div className="bg-orange-50 rounded-md p-3 border border-orange-100">
-                <div className="text-orange-800 text-sm mb-1 font-medium">Original Distance</div>
+                <div className="text-orange-800 text-sm mb-1 font-medium">Unoptimized Distance</div>
                 <div className="text-lg font-medium">{formatDistance(originalDistance)}</div>
               </div>
               <div className="bg-orange-50 rounded-md p-3 border border-orange-100">
-                <div className="text-orange-800 text-sm mb-1 font-medium">Original Travel Time</div>
+                <div className="text-orange-800 text-sm mb-1 font-medium">Unoptimized Travel Time</div>
                 <div className="text-lg font-medium">{formatTravelTime(originalTravelTime)}</div>
               </div>
             </div>
@@ -118,7 +118,7 @@ export function TourComparisonView({
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="h-[300px] relative">
                 <div className="bg-orange-50 p-2 text-sm font-medium text-orange-800 rounded-t-md">
-                  Original Route
+                  Unoptimized Route (Inefficient)
                 </div>
                 <VenueMap 
                   events={originalVenues}
@@ -133,7 +133,7 @@ export function TourComparisonView({
               </div>
               <div className="h-[300px] relative">
                 <div className="bg-green-50 p-2 text-sm font-medium text-green-800 rounded-t-md">
-                  Optimized Route
+                  Optimized Route (Efficient)
                 </div>
                 <VenueMap 
                   events={optimizedVenues}
