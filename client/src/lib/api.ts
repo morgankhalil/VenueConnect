@@ -11,7 +11,7 @@ interface ApiRequest {
 
 /**
  * Generic API request function that supports TypeScript types
- * Similar to apiRequest object below but supports a more flexible interface
+ * This is the preferred way to make API requests throughout the application
  */
 export const apiRequest = async <T = any>({
   url,
@@ -50,55 +50,26 @@ export const apiRequest = async <T = any>({
 };
 
 // Legacy axios-like request helpers
+// This is kept for reference but we're standardizing on the apiRequest format above
 export const legacyApiRequest: ApiRequest = {
   async get(url: string, options?: RequestInit) {
-    return fetch(url, {
-      ...options,
-      method: 'GET',
-    }).then(handleResponse);
+    return apiRequest({ url, method: 'GET' as const, ...options });
   },
   
   async post(url: string, data?: any, options?: RequestInit) {
-    return fetch(url, {
-      ...options,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
-      body: JSON.stringify(data),
-    }).then(handleResponse);
+    return apiRequest({ url, method: 'POST' as const, data, ...options });
   },
   
   async put(url: string, data?: any, options?: RequestInit) {
-    return fetch(url, {
-      ...options,
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
-      body: JSON.stringify(data),
-    }).then(handleResponse);
+    return apiRequest({ url, method: 'PUT' as const, data, ...options });
   },
   
   async patch(url: string, data?: any, options?: RequestInit) {
-    return fetch(url, {
-      ...options,
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
-      body: JSON.stringify(data),
-    }).then(handleResponse);
+    return apiRequest({ url, method: 'PATCH' as const, data, ...options });
   },
   
   async delete(url: string, options?: RequestInit) {
-    return fetch(url, {
-      ...options,
-      method: 'DELETE',
-    }).then(handleResponse);
+    return apiRequest({ url, method: 'DELETE' as const, ...options });
   },
 };
 
@@ -125,14 +96,14 @@ export async function apiRequestLegacy(url: string, options?: RequestInit) {
 export async function getTour(tourId: number) {
   return apiRequest({
     url: `/api/tours/${tourId}`,
-    method: 'GET'
+    method: 'GET' as const
   });
 }
 
 export async function getTourById(tourId: number) {
   return apiRequest({
     url: `/api/tours/${tourId}`,
-    method: 'GET'
+    method: 'GET' as const
   });
 }
 
@@ -162,23 +133,39 @@ export async function applyTourOptimization(tourId: number, optimizationResult: 
 
 // Venue network related functions
 export async function getVenueNetworkGraph(filters?: any) {
-  return apiRequest.get(`/api/venue-network/graph${filters ? `?${new URLSearchParams(filters)}` : ''}`);
+  return apiRequest({
+    url: `/api/venue-network/graph${filters ? `?${new URLSearchParams(filters)}` : ''}`,
+    method: 'GET'
+  });
 }
 
 export async function getAllVenuesForNetworkMap(filters?: any) {
-  return apiRequest.get(`/api/venue-network/all-venues${filters ? `?${new URLSearchParams(filters)}` : ''}`);
+  return apiRequest({
+    url: `/api/venue-network/all-venues${filters ? `?${new URLSearchParams(filters)}` : ''}`,
+    method: 'GET'
+  });
 }
 
 export async function getCollaborativeOpportunitiesByVenue(venueId: number) {
-  return apiRequest.get(`/api/venue-network/opportunities/${venueId}`);
+  return apiRequest({
+    url: `/api/venue-network/opportunities/${venueId}`,
+    method: 'GET'
+  });
 }
 
 export async function searchVenues(query: string) {
-  return apiRequest.get(`/api/venues/search?query=${encodeURIComponent(query)}`);
+  return apiRequest({
+    url: `/api/venues/search?query=${encodeURIComponent(query)}`,
+    method: 'GET'
+  });
 }
 
 export async function createVenueConnection(data: { sourceVenueId: number; targetVenueId: number; connectionType: string }) {
-  return apiRequest.post(`/api/venue-network/connections`, data);
+  return apiRequest({
+    url: `/api/venue-network/connections`,
+    method: 'POST',
+    data
+  });
 }
 
 // Note: AI optimization functions have been consolidated into the unified optimizer API
@@ -236,80 +223,168 @@ export async function applyUnifiedOptimization(
 
 // Messages API
 export async function getMessages() {
-  return apiRequest.get('/api/messages');
+  return apiRequest({
+    url: '/api/messages',
+    method: 'GET'
+  });
 }
 
 export async function sendMessage(message: { recipientId: number; content: string }) {
-  return apiRequest.post('/api/messages', message);
+  return apiRequest({
+    url: '/api/messages',
+    method: 'POST',
+    data: message
+  });
 }
 
 // Admin and settings API
 export async function checkBandsintownApiKeyStatus() {
-  return apiRequest.get('/api/admin/bandsintown/status');
+  return apiRequest({
+    url: '/api/admin/bandsintown/status',
+    method: 'GET'
+  });
 }
 
 export async function setBandsintownApiKey(apiKey: string) {
-  return apiRequest.post('/api/admin/bandsintown/key', { apiKey });
+  return apiRequest({
+    url: '/api/admin/bandsintown/key',
+    method: 'POST',
+    data: { apiKey }
+  });
 }
 
 export async function getSyncStatus() {
-  return apiRequest.get('/api/admin/sync/status');
+  return apiRequest({
+    url: '/api/admin/sync/status',
+    method: 'GET'
+  });
 }
 
 export async function triggerSync(type: string) {
-  return apiRequest.post('/api/admin/sync', { type });
+  return apiRequest({
+    url: '/api/admin/sync',
+    method: 'POST',
+    data: { type }
+  });
 }
 
 // Event API
 export async function getEvents(filters?: any) {
-  return apiRequest.get(`/api/events${filters ? `?${new URLSearchParams(filters)}` : ''}`);
+  return apiRequest({
+    url: `/api/events${filters ? `?${new URLSearchParams(filters)}` : ''}`,
+    method: 'GET'
+  });
 }
 
 export async function getEvent(eventId: number) {
-  return apiRequest.get(`/api/events/${eventId}`);
+  return apiRequest({
+    url: `/api/events/${eventId}`,
+    method: 'GET'
+  });
 }
 
 export async function getEventsByVenue(venueId: number) {
-  return apiRequest.get(`/api/venues/${venueId}/events`);
+  return apiRequest({
+    url: `/api/venues/${venueId}/events`,
+    method: 'GET'
+  });
 }
 
 export async function getVenue(venueId: number) {
-  return apiRequest.get(`/api/venues/${venueId}`);
+  return apiRequest({
+    url: `/api/venues/${venueId}`,
+    method: 'GET'
+  });
 }
 
 export async function createEvent(event: any) {
-  return apiRequest.post('/api/events', event);
+  return apiRequest({
+    url: '/api/events',
+    method: 'POST',
+    data: event
+  });
 }
 
 export async function updateEvent(eventId: number, data: any) {
-  return apiRequest.patch(`/api/events/${eventId}`, data);
+  return apiRequest({
+    url: `/api/events/${eventId}`,
+    method: 'PATCH',
+    data
+  });
 }
 
 // Tour listing and management
 export async function getTours(filters?: any) {
-  return apiRequest.get(`/api/tours${filters ? `?${new URLSearchParams(filters)}` : ''}`);
+  return apiRequest({
+    url: `/api/tours${filters ? `?${new URLSearchParams(filters)}` : ''}`,
+    method: 'GET'
+  });
 }
 
 export async function createTour(tour: any) {
-  return apiRequest.post('/api/tours', tour);
+  return apiRequest({
+    url: '/api/tours',
+    method: 'POST',
+    data: tour
+  });
 }
 
 export async function deleteTour(tourId: number) {
-  return apiRequest.delete(`/api/tours/${tourId}`);
+  return apiRequest({
+    url: `/api/tours/${tourId}`,
+    method: 'DELETE'
+  });
 }
 
 export async function getTourVenues(tourId: number) {
-  return apiRequest.get(`/api/tours/${tourId}/venues`);
+  return apiRequest({
+    url: `/api/tours/${tourId}/venues`,
+    method: 'GET'
+  });
 }
 
 export async function addVenueToTour(tourId: number, data: any) {
-  return apiRequest.post(`/api/tours/${tourId}/venues`, data);
+  return apiRequest({
+    url: `/api/tours/${tourId}/venues`,
+    method: 'POST',
+    data
+  });
 }
 
 export async function updateTourVenue(tourId: number, venueId: number, data: any) {
-  return apiRequest.patch(`/api/tours/${tourId}/venues/${venueId}`, data);
+  return apiRequest({
+    url: `/api/tours/${tourId}/venues/${venueId}`,
+    method: 'PATCH',
+    data
+  });
 }
 
 export async function removeTourVenue(tourId: number, venueId: number) {
-  return apiRequest.delete(`/api/tours/${tourId}/venues/${venueId}`);
+  return apiRequest({
+    url: `/api/tours/${tourId}/venues/${venueId}`,
+    method: 'DELETE'
+  });
+}
+
+// Artist-related API functions
+export async function getArtists(params?: { limit?: number; offset?: number }) {
+  const queryParams = params ? `?${new URLSearchParams(params as any)}` : '';
+  return apiRequest({
+    url: `/api/artists${queryParams}`,
+    method: 'GET'
+  });
+}
+
+export async function searchArtists(query: string) {
+  return apiRequest({
+    url: `/api/artists/search?query=${encodeURIComponent(query)}`,
+    method: 'GET'
+  });
+}
+
+export async function getArtistById(artistId: number) {
+  return apiRequest({
+    url: `/api/artists/${artistId}`,
+    method: 'GET'
+  });
 }
