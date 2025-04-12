@@ -391,13 +391,15 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
             </div>
             <div className="flex space-x-2">
               {hasEnoughVenuesForOptimization ? (
-                <UnifiedTourOptimizer 
-                  tourId={typeof tourId === 'string' ? parseInt(tourId) : tourId} 
-                  onApplyChanges={() => {
-                    // Refresh the data after applying optimization
-                    refetch();
-                  }} 
-                />
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="bg-gradient-to-r from-primary to-primary/80"
+                  onClick={() => setShowOptimizer(!showOptimizer)}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  {showOptimizer ? "Hide Optimizer" : "Optimize Tour"}
+                </Button>
               ) : (
                 <Button
                   variant="default"
@@ -549,26 +551,15 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
                 </div>
 
                 <div className="flex space-x-2">
-                  {hasEnoughVenuesForOptimization ? (
-                    <UnifiedTourOptimizer 
-                      tourId={typeof tourId === 'string' ? parseInt(tourId) : tourId} 
-                      onApplyChanges={() => {
-                        // Refresh the data after applying optimization
-                        refetch();
-                      }} 
-                    />
-                  ) : (
-                    <Button
+                  <Button
                       variant="default"
                       size="sm"
                       className="bg-gradient-to-r from-primary to-primary/80"
-                      disabled={true}
-                      title="Need at least 2 venues for optimization"
+                      title="View map in full detail"
                     >
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Optimize Tour
-                    </Button>
-                  )}
+                      <Map className="mr-2 h-4 w-4" />
+                      Full Map View
+                  </Button>
                 </div>
               </div>
             </CardHeader>
@@ -685,89 +676,16 @@ export function TourDetailNew({ tourId }: TourDetailProps) {
           </Card>
         </div>
       </div>
-      <Dialog open={showOptimizer} onOpenChange={setShowOptimizer}>
-                <DialogContent className="sm:max-w-[600px]">
-                  <DialogHeader>
-                    <DialogTitle>Tour Optimization</DialogTitle>
-                  </DialogHeader>
-
-                  {!optimizationResult ? (
-                    <div className="space-y-4 py-4">
-                      <p className="text-sm text-muted-foreground">
-                        Optimize your tour route to minimize travel time and maximize efficiency
-                      </p>
-                      <Button 
-                        onClick={() => {
-                          setOptimizing(true);
-                          optimizeMutation.mutate();
-                        }}
-                        disabled={optimizing}
-                        className="w-full"
-                      >
-                        {optimizing ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Optimizing...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="mr-2 h-4 w-4" />
-                            Start Optimization
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-6 py-4">
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="bg-muted p-4 rounded-lg">
-                          <h4 className="font-medium text-sm mb-2">Score</h4>
-                          <p className="text-2xl font-bold">{optimizationResult.optimizationScore}</p>
-                        </div>
-                        <div className="bg-muted p-4 rounded-lg">
-                          <h4 className="font-medium text-sm mb-2">Distance</h4>
-                          <p className="text-2xl font-bold">{Math.round(optimizationResult.totalDistance)} km</p>
-                        </div>
-                        <div className="bg-muted p-4 rounded-lg">
-                          <h4 className="font-medium text-sm mb-2">Time</h4>
-                          <p className="text-2xl font-bold">{Math.round(optimizationResult.totalTravelTime / 60)} hrs</p>
-                        </div>
-                      </div>
-
-                      {optimizationResult.potentialFillVenues?.length > 0 && (
-                        <div className="space-y-2">
-                          <h4 className="font-medium">Recommended Venues</h4>
-                          <div className="space-y-2">
-                            {optimizationResult.potentialFillVenues.map((venue: any) => (
-                              <div key={venue.venue.id} className="flex justify-between items-center bg-muted p-2 rounded">
-                                <span>{venue.venue.name}</span>
-                                <span className="text-sm text-muted-foreground">
-                                  {new Date(venue.suggestedDate).toLocaleDateString()}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="flex justify-end space-x-2">
-                        <Button variant="outline" onClick={() => {
-                          setShowOptimizer(false);
-                          setOptimizationResult(null);
-                        }}>
-                          Cancel
-                        </Button>
-                        <Button onClick={() => {
-                          applyMutation.mutate();
-                          setShowOptimizer(false);
-                        }}>
-                          Apply Changes
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </DialogContent>
-              </Dialog>
+      {/* Show the optimization panel when the user clicks the optimize button */}
+      {showOptimizer && (
+        <TourOptimizationPanel
+          tourId={typeof tourId === 'string' ? parseInt(tourId) : tourId}
+          onApplyChanges={() => {
+            // Refresh the data after applying optimization
+            refetch();
+          }}
+        />
+      )}
     </div>
   );
 }
