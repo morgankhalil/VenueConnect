@@ -44,10 +44,11 @@ import {
 interface VenueDetailProps {
   venue: any;
   tourId: number;
-  onStatusUpdate: () => void;
+  onUpdate: () => void;
+  onClose?: () => void;
 }
 
-export function VenueDetail({ venue, tourId, onStatusUpdate }: VenueDetailProps) {
+export function VenueDetail({ venue, tourId, onUpdate, onClose }: VenueDetailProps) {
   const [status, setStatus] = useState(venue.status || 'potential');
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -67,7 +68,7 @@ export function VenueDetail({ venue, tourId, onStatusUpdate }: VenueDetailProps)
         description: `${venue.name} status updated to ${status}`,
       });
 
-      onStatusUpdate();
+      onUpdate();
     } catch (error) {
       console.error('Error updating venue status:', error);
       toast({
@@ -94,7 +95,7 @@ export function VenueDetail({ venue, tourId, onStatusUpdate }: VenueDetailProps)
         description: `${venue.name} has been removed from the tour`,
       });
 
-      onStatusUpdate();
+      onUpdate();
     } catch (error) {
       console.error('Error removing venue:', error);
       toast({

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { TourDetailTabs } from '@/components/tour/tour-detail-tabs';
@@ -13,32 +13,119 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 export default function TourDetailPage() {
   const [, setLocation] = useLocation();
   const { id } = useParams<{ id: string }>();
   const tourId = parseInt(id);
+  const [showAllVenues, setShowAllVenues] = useState(false);
+  const [selectedVenue, setSelectedVenue] = useState<any>(null);
 
   // Fetch tour details
-  const { data: tour, isLoading, error } = useQuery({
+  const { 
+    data: tour, 
+    isLoading: isTourLoading, 
+    error: tourError,
+    refetch: refetchTour
+  } = useQuery({
     queryKey: ['/api/tours', tourId],
     enabled: !isNaN(tourId),
   });
 
+  // Fetch tour venues
+  const {
+    data: venues = [],
+    isLoading: isVenuesLoading,
+    error: venuesError
+  } = useQuery({
+    queryKey: ['/api/tours', tourId, 'venues'],
+    enabled: !isNaN(tourId),
+  });
+
+  // Define venues in order (original sequence)
+  const originalSequenceVenues = venues ? [...venues].sort((a, b) => 
+    (a.sequence || Infinity) - (b.sequence || Infinity)
+  ) : [];
+
+  // Define optimized sequence venues (if available)
+  const optimizedSequenceVenues = venues ? (
+    tour?.optimizedVenues?.length ? 
+      tour.optimizedVenues.map((venueId: number) => 
+        venues.find(v => v.id === venueId)).filter(Boolean) 
+      : [...originalSequenceVenues]
+  ) : [];
+
+  // Handle venue click
+  const handleVenueClick = (venue: any) => {
+    setSelectedVenue(venue);
+  };
+
+  // Handle apply optimization
+  const handleApplyOptimization = async () => {
+    try {
+      await refetchTour();
+    } catch (error) {
+      console.error('Failed to apply optimization:', error);
+    }
+  };
+
   if (isNaN(tourId)) {
     return <div>Invalid tour ID</div>;
   }
+
+  const isLoading = isTourLoading || isVenuesLoading;
+  const error = tourError || venuesError;
 
   if (isLoading) {
     return <TourDetailSkeleton />;
   }
 
   if (error) {
-    return <div>Error loading tour: {String(error)}</div>;
+    return (
+      <div className="container px-4 md:px-6 py-6 space-y-6 max-w-7xl mx-auto">
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            Error loading tour: {String(error)}
+            <div className="mt-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => refetchTour()}
+              >
+                Try Again
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
   if (!tour) {
-    return <div>Tour not found</div>;
+    return (
+      <div className="container px-4 md:px-6 py-6 space-y-6 max-w-7xl mx-auto">
+        <Alert variant="default">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Tour Not Found</AlertTitle>
+          <AlertDescription>
+            The requested tour could not be found.
+            <div className="mt-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setLocation('/tours')}
+              >
+                Go Back to Tours
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
   return (
@@ -76,7 +163,9 @@ export default function TourDetailPage() {
           <div className="flex items-center text-muted-foreground mt-1">
             <Calendar className="mr-1 h-4 w-4" />
             <span>
-              {formatDate(tour.startDate)} - {formatDate(tour.endDate)}
+              {tour.startDate && formatDate(tour.startDate)} 
+              {tour.startDate && tour.endDate && ' - '}
+              {tour.endDate && formatDate(tour.endDate)}
             </span>
           </div>
         </div>
@@ -97,7 +186,19 @@ export default function TourDetailPage() {
       </div>
 
       {/* Tour Tabs */}
-      <TourDetailTabs tourId={tourId} />
+      <TourDetailTabs 
+        tourId={tourId}
+        venues={venues || []}
+        tourData={tour}
+        originalSequenceVenues={originalSequenceVenues}
+        optimizedSequenceVenues={optimizedSequenceVenues}
+        selectedVenue={selectedVenue}
+        showAllVenues={showAllVenues}
+        setShowAllVenues={setShowAllVenues}
+        onVenueClick={handleVenueClick}
+        onApplyOptimization={handleApplyOptimization}
+        refetch={refetchTour}
+      />
     </div>
   );
 }
