@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import {
-  Map,
+  Map as MapIcon,
   MapPin,
   Calendar,
   List,
@@ -28,6 +28,9 @@ import {
   XCircle,
 } from 'lucide-react';
 import { formatDate, formatDistance, formatTravelTime } from '@/lib/utils';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import * as L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 interface RoutePlanningTabProps {
   venues: any[];
@@ -223,7 +226,7 @@ export function RoutePlanningTab({
         <div className="space-y-4">
           <div className="border rounded-lg h-[400px] bg-muted/30 flex items-center justify-center">
             <div className="text-center">
-              <Map className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+              <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
               <p className="text-muted-foreground">No venues with coordinates found</p>
               <p className="text-xs text-muted-foreground mt-1">Add venue locations to see the map</p>
             </div>
@@ -231,10 +234,6 @@ export function RoutePlanningTab({
         </div>
       );
     }
-    
-    // Import here to avoid SSR issues
-    const { MapContainer, TileLayer, Marker, Popup, Polyline } = require('react-leaflet');
-    const L = require('leaflet');
     
     // Create markers for each venue
     const markers = venuesWithCoords.map((venue, index) => {
@@ -250,7 +249,7 @@ export function RoutePlanningTab({
       };
       
       // Create custom icon
-      const customIcon = new L.DivIcon({
+      const customIcon = L.divIcon({
         className: '',
         iconSize: [24, 24],
         iconAnchor: [12, 12],
@@ -314,7 +313,7 @@ export function RoutePlanningTab({
     
     // Calculate bounds for auto-fitting map
     const MapBoundsUpdater = () => {
-      const map = require('react-leaflet').useMap();
+      const map = useMap();
       
       React.useEffect(() => {
         if (venuesWithCoords.length === 0) return;
