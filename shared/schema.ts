@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, date, pgEnum, real, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, date, pgEnum, real, jsonb, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -94,20 +94,39 @@ export const users = pgTable("users", {
   createdAt: timestamp("createdAt").defaultNow(),
 });
 
-// Genres enum
+// Genres table - replacing the enum with a flexible table structure
+export const genres = pgTable("genres", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  slug: text("slug").notNull().unique(),
+  description: text("description"),
+  parentId: integer("parent_id").references(() => genres.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Artist-Genre junction table for many-to-many relationship
+export const artistGenres = pgTable("artist_genres", {
+  artistId: integer("artist_id").notNull().references(() => artists.id, { onDelete: "cascade" }),
+  genreId: integer("genre_id").notNull().references(() => genres.id, { onDelete: "cascade" }),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.artistId, t.genreId] })
+}));
+
+// Venue-Genre junction table for many-to-many relationship
+export const venueGenres = pgTable("venue_genres", {
+  venueId: integer("venue_id").notNull().references(() => venues.id, { onDelete: "cascade" }),
+  genreId: integer("genre_id").notNull().references(() => genres.id, { onDelete: "cascade" }),
+  isPrimary: boolean("is_primary").default(false),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.venueId, t.genreId] })
+}));
+
+// For backward compatibility until migration is complete
 export const genreEnum = pgEnum("genre", [
   // Base genres from original list
   "rock", "indie", "hip_hop", "electronic", "pop", "folk", "metal", "jazz", "blues", 
   "world", "classical", "country", "punk", "experimental", "alternative", "rnb", "soul",
   "reggae", "ambient", "techno", "house", "disco", "funk",
-  
-  // Extended indie/rock sub-genres
-  "indie_rock", "indie_pop", "indie_folk", "surf_rock", "psychedelic_rock", "lo_fi",
-  "dream_pop", "power_pop", "jangle_pop", "folk_rock", "garage_rock", "art_pop",
-  "bedroom_pop", "alternative_country", "emo", "soft_rock", "post_punk", "art_rock",
-  "slacker_rock", "shoegaze", "noise_rock", "math_rock", "post_rock", "krautrock",
-  
-  // Catchall
   "other"
 ]);
 
@@ -264,6 +283,39 @@ export const collaborativeParticipants = pgTable("collaborativeParticipants", {
   createdAt: timestamp("createdAt").defaultNow(),
 });
 
+// Genre relations
+export const genresRelations = relations(genres, ({ one, many }) => ({
+  parent: one(genres, {
+    fields: [genres.parentId],
+    references: [genres.id],
+  }),
+  childGenres: many(genres),
+  artists: many(artistGenres),
+  venues: many(venueGenres),
+}));
+
+export const artistGenresRelations = relations(artistGenres, ({ one }) => ({
+  artist: one(artists, {
+    fields: [artistGenres.artistId],
+    references: [artists.id],
+  }),
+  genre: one(genres, {
+    fields: [artistGenres.genreId],
+    references: [genres.id],
+  }),
+}));
+
+export const venueGenresRelations = relations(venueGenres, ({ one }) => ({
+  venue: one(venues, {
+    fields: [venueGenres.venueId],
+    references: [venues.id],
+  }),
+  genre: one(genres, {
+    fields: [venueGenres.genreId],
+    references: [genres.id],
+  }),
+}));
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({}));
 
@@ -276,11 +328,13 @@ export const venuesRelations = relations(venues, ({ one, many }) => ({
   predictionsAsVenue: many(predictions),
   venueConnections: many(venueNetwork, { relationName: "venueConnections" }),
   connectedByVenues: many(venueNetwork, { relationName: "connectedByVenues" }),
+  genreConnections: many(venueGenres),
 }));
 
 export const artistsRelations = relations(artists, ({ many }) => ({
   events: many(events),
   predictions: many(predictions),
+  genreConnections: many(artistGenres),
 }));
 
 export const eventsRelations = relations(events, ({ one }) => ({
@@ -414,6 +468,26 @@ export const insertEventSchema = createInsertSchema(events).omit({
   id: true,
   createdAt: true,
 });
+
+// Insert schemas for genres and genre relationships
+export const insertGenreSchema = createInsertSchema(genres).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertArtistGenreSchema = createInsertSchema(artistGenres);
+
+export const insertVenueGenreSchema = createInsertSchema(venueGenres);
+
+// Types for genres
+export type Genre = typeof genres.$inferSelect;
+export type InsertGenre = z.infer<typeof insertGenreSchema>;
+
+export type ArtistGenre = typeof artistGenres.$inferSelect;
+export type InsertArtistGenre = z.infer<typeof insertArtistGenreSchema>;
+
+export type VenueGenre = typeof venueGenres.$inferSelect;
+export type InsertVenueGenre = z.infer<typeof insertVenueGenreSchema>;
 
 export const insertVenueNetworkSchema = createInsertSchema(venueNetwork).omit({
   id: true,
