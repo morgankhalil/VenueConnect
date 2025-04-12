@@ -487,7 +487,7 @@ export const tourVenueStatusEnum = pgEnum("tour_venue_status", [
   "cancelled"     // No longer part of the tour
 ]);
 
-export const tourVenues = pgTable("tour_venues", {
+export const tourVenues = pgTable("tourVenues", {
   id: serial("id").primaryKey(),
   tourId: integer("tourId").references(() => tours.id).notNull(),
   venueId: integer("venueId").references(() => venues.id).notNull(),
@@ -503,7 +503,7 @@ export const tourVenues = pgTable("tour_venues", {
   createdAt: timestamp("createdAt").defaultNow(),
 });
 
-export const tourGaps = pgTable("tour_gaps", {
+export const tourGaps = pgTable("tourGaps", {
   id: serial("id").primaryKey(),
   tourId: integer("tourId").references(() => tours.id).notNull(),
   startDate: date("startDate").notNull(),
@@ -517,7 +517,7 @@ export const tourGaps = pgTable("tour_gaps", {
   createdAt: timestamp("createdAt").defaultNow(),
 });
 
-export const tourGapSuggestions = pgTable("tour_gap_suggestions", {
+export const tourGapSuggestions = pgTable("tourGapSuggestions", {
   id: serial("id").primaryKey(),
   gapId: integer("gapId").references(() => tourGaps.id).notNull(),
   venueId: integer("venueId").references(() => venues.id).notNull(),
