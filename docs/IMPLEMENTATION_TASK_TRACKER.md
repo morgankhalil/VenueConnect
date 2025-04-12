@@ -12,9 +12,14 @@ This document serves as a prioritized task tracker for implementing all features
 | Add gap analysis functionality | High | Medium | Routing algorithm | Done |
 | Create API endpoints for optimization | High | Medium | Routing algorithm | Done |
 | Build tour route visualization component | Medium | High | API endpoints | Done |
-| Implement constraints input UI | Medium | Medium | None | In Progress |
+| Implement constraints input UI | Medium | Medium | None | Done |
 | Add travel cost estimation | Low | Medium | Routing algorithm | Done |
-| Create AI-Powered Route Optimization Wizard | High | High | Routing algorithm, API endpoints | To Do |
+| Create AI-Powered Route Optimization Wizard | High | High | Routing algorithm, API endpoints | Done |
+| Integrate optimization UI into route planning tab | High | Medium | UI components, API endpoints | To Do |
+| Create collapsible optimization panel | High | Medium | Integration plan | To Do |
+| Enhance map visualization with comparison views | High | High | Route visualization | To Do |
+| Add visual indicators for optimization improvements | Medium | Medium | Comparison views | To Do |
+| Implement unified state management | Medium | High | Component restructuring | To Do |
 
 ### Enhanced Venue Network
 | Task | Priority | Effort | Dependencies | Status |
