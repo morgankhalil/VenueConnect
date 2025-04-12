@@ -52,17 +52,17 @@ export function VenuesTab({ venues, tourId, onStatusUpdate }: VenuesTabProps) {
   // State for venue detail dialog
   const [selectedVenue, setSelectedVenue] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  
+
   // Status state for filtering
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
-  
+
   // Search term
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Sort state
   const [sortField, setSortField] = useState<string>('sequence');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  
+
   // Status badge
   const renderStatusBadge = (status: string) => {
     switch (status) {
@@ -98,23 +98,23 @@ export function VenuesTab({ venues, tourId, onStatusUpdate }: VenuesTabProps) {
         return <Badge variant="outline">{status || 'Unknown'}</Badge>;
     }
   };
-  
+
   // Filter venues by status and search term
-  const filteredVenues = venues.filter(venue => {
+  const filteredVenues = (venues || []).filter(venue => {
     const matchesSearch = 
       searchTerm === '' || 
-      venue.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      venue.city?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      (venue?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (venue?.city || '').toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesStatus = statusFilter.length === 0 || statusFilter.includes(venue.status);
-    
+
     return matchesSearch && matchesStatus;
   });
-  
+
   // Sort venues
   const sortedVenues = [...filteredVenues].sort((a, b) => {
     let valueA, valueB;
-    
+
     switch (sortField) {
       case 'name':
         valueA = a.name || '';
@@ -138,13 +138,13 @@ export function VenuesTab({ venues, tourId, onStatusUpdate }: VenuesTabProps) {
         valueB = b.sequence || 0;
         break;
     }
-    
+
     // Compare values
     if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
     if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
     return 0;
   });
-  
+
   // Handle sorting
   const handleSort = (field: string) => {
     if (field === sortField) {
@@ -154,7 +154,7 @@ export function VenuesTab({ venues, tourId, onStatusUpdate }: VenuesTabProps) {
       setSortDirection('asc');
     }
   };
-  
+
   // Handle status filter
   const handleStatusFilter = (status: string) => {
     if (statusFilter.includes(status)) {
@@ -163,25 +163,25 @@ export function VenuesTab({ venues, tourId, onStatusUpdate }: VenuesTabProps) {
       setStatusFilter([...statusFilter, status]);
     }
   };
-  
+
   // Open venue detail
   const handleOpenVenueDetail = (venue: any) => {
     setSelectedVenue(venue);
     setIsDetailOpen(true);
   };
-  
+
   // Close venue detail
   const handleCloseVenueDetail = () => {
     setIsDetailOpen(false);
     setSelectedVenue(null);
   };
-  
+
   // Venue detail update callback
   const handleVenueUpdate = () => {
     setIsDetailOpen(false);
     onStatusUpdate();
   };
-  
+
   return (
     <div className="space-y-6">
       {/* Venues Overview Card */}
@@ -194,13 +194,13 @@ export function VenuesTab({ venues, tourId, onStatusUpdate }: VenuesTabProps) {
                 Manage and view all venues for this tour
               </CardDescription>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Badge variant="outline">
-                {venues.length} venues
+                {venues?.length || 0} venues
               </Badge>
               <Badge className="bg-green-100 text-green-700">
-                {venues.filter(v => v.status === 'confirmed').length} confirmed
+                {venues?.filter(v => v.status === 'confirmed')?.length || 0} confirmed
               </Badge>
             </div>
           </div>
@@ -217,7 +217,7 @@ export function VenuesTab({ venues, tourId, onStatusUpdate }: VenuesTabProps) {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            
+
             <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
               <Popover>
                 <PopoverTrigger asChild>
@@ -252,7 +252,7 @@ export function VenuesTab({ venues, tourId, onStatusUpdate }: VenuesTabProps) {
                         </div>
                       ))}
                     </div>
-                    
+
                     {statusFilter.length > 0 && (
                       <>
                         <Separator />
@@ -269,7 +269,7 @@ export function VenuesTab({ venues, tourId, onStatusUpdate }: VenuesTabProps) {
                   </div>
                 </PopoverContent>
               </Popover>
-              
+
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -309,7 +309,7 @@ export function VenuesTab({ venues, tourId, onStatusUpdate }: VenuesTabProps) {
               </Popover>
             </div>
           </div>
-          
+
           {/* Venues Table */}
           <div className="border rounded-md">
             <Table>
@@ -420,7 +420,7 @@ export function VenuesTab({ venues, tourId, onStatusUpdate }: VenuesTabProps) {
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Venue Detail Dialog */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
         <DialogContent className="max-w-3xl h-[80vh] overflow-y-auto p-0">

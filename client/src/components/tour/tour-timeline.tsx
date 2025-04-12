@@ -28,7 +28,7 @@ export function TourTimeline({ venues }: TourTimelineProps) {
     }
     return 0;
   });
-  
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -41,25 +41,25 @@ export function TourTimeline({ venues }: TourTimelineProps) {
         <div className="relative">
           {/* Timeline vertical line */}
           <div className="absolute top-0 bottom-0 left-[20px] w-[2px] bg-primary/30 z-0"></div>
-          
+
           {/* Timeline items */}
           <div className="space-y-5 mb-5">
-            {sortedVenues.map((venue, index) => {
+            {(sortedVenues || []).map((venue, index) => {
               // Calculate distance from previous venue if any
               let distanceFromPrevious = 0;
               let travelTimeMinutes = 0;
-              
+
               if (index > 0) {
                 const prevVenue = sortedVenues[index - 1];
                 distanceFromPrevious = calculateDistanceBetweenCoords(
                   prevVenue.latitude, prevVenue.longitude,
                   venue.latitude, venue.longitude
                 );
-                
+
                 // Estimate travel time (rough calculation)
                 travelTimeMinutes = Math.round(distanceFromPrevious / 80 * 60); // Assuming 80 km/h avg speed
               }
-              
+
               // Format date if available
               const formattedDate = venue.date 
                 ? new Date(venue.date).toLocaleDateString(undefined, {
@@ -69,10 +69,10 @@ export function TourTimeline({ venues }: TourTimelineProps) {
                     year: 'numeric'
                   })
                 : 'Date not set';
-                
+
               // Get status info  
               const statusInfo = getStatusInfo(venue.status || 'confirmed');
-              
+
               return (
                 <div className="relative pl-10" key={venue.id}>
                   {/* Timeline dot */}
@@ -92,7 +92,7 @@ export function TourTimeline({ venues }: TourTimelineProps) {
                   >
                     {index + 1}
                   </div>
-                  
+
                   {/* Timeline content box */}
                   <div className="bg-card border rounded-md p-3">
                     {/* Travel info from previous venue */}
@@ -104,7 +104,7 @@ export function TourTimeline({ venues }: TourTimelineProps) {
                         <span>{formatTravelTime(travelTimeMinutes)}</span>
                       </div>
                     )}
-                    
+
                     {/* Venue header */}
                     <div className="flex justify-between items-start">
                       <div>
@@ -112,7 +112,7 @@ export function TourTimeline({ venues }: TourTimelineProps) {
                         <div className="flex items-center text-muted-foreground text-sm mt-0.5">
                           <MapPin className="h-3 w-3 mr-1" />
                           <span>{venue.city || 'Unknown location'}</span>
-                          
+
                           {venue.date && (
                             <>
                               <span className="mx-1">•</span>
@@ -128,7 +128,7 @@ export function TourTimeline({ venues }: TourTimelineProps) {
                         {statusInfo.displayName}
                       </Badge>
                     </div>
-                    
+
                     {/* Notes here if needed */}
                     {venue.notes && (
                       <div className="mt-2 text-sm text-muted-foreground">
