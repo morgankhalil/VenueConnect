@@ -12,7 +12,7 @@ export class ConcertsTrackerProvider implements EventProvider {
 
   async getArtistEvents(artistName: string, options?: SyncOptions): Promise<any[]> {
     try {
-      const response = await axios.get(`${this.baseUrl}/events`, {
+      const response = await axios.get(`${this.baseUrl}/artist/events`, {
         params: {
           name: artistName,
           type: 'upcoming'
