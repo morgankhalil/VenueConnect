@@ -13,7 +13,7 @@ async function testApi() {
 
   try {
     console.log('Testing search endpoint for La Luz events...');
-    const response = await axios.get('https://concerts-artists-events-tracker.p.rapidapi.com/event', {
+    const response = await axios.get('https://concerts-artists-events-tracker.p.rapidapi.com/events', {
       params: {
         name: 'La Luz',
         type: 'upcoming'
