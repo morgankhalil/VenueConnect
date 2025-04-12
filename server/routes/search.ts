@@ -35,23 +35,19 @@ router.get('/events/search', async (req, res) => {
     const offset = (page - 1) * limit;
     
     // Base query - join events with artists and venues
-    let eventsQuery = db
+    const eventsData = await db
       .select({
         id: events.id,
-        name: events.name,
+        eventName: events.name,
         date: events.date,
         ticketLink: events.ticketLink,
-        artist: {
-          id: artists.id,
-          name: artists.name,
-          imageUrl: artists.imageUrl,
-        },
-        venue: {
-          id: venues.id,
-          name: venues.name,
-          city: venues.city,
-          region: venues.region,
-        },
+        artistId: artists.id,
+        artistName: artists.name,
+        artistImage: artists.imageUrl,
+        venueId: venues.id,
+        venueName: venues.name,
+        venueCity: venues.city,
+        venueRegion: venues.region,
       })
       .from(events)
       .innerJoin(artists, eq(events.artistId, artists.id))
@@ -63,6 +59,25 @@ router.get('/events/search', async (req, res) => {
           ilike(venues.name, `%${query}%`)
         )
       );
+      
+    // Format the results
+    let formattedEvents = eventsData.map(event => ({
+      id: event.id,
+      name: event.eventName,
+      date: event.date,
+      ticketLink: event.ticketLink,
+      artist: {
+        id: event.artistId,
+        name: event.artistName,
+        imageUrl: event.artistImage
+      },
+      venue: {
+        id: event.venueId,
+        name: event.venueName,
+        city: event.venueCity,
+        region: event.venueRegion
+      }
+    }));
     
     // Apply genre filter if specified
     if (genre || genreId) {
@@ -94,7 +109,12 @@ router.get('/events/search', async (req, res) => {
         const artistIds = artistsWithGenre.map(a => a.artistId);
         
         if (artistIds.length > 0) {
-          eventsQuery = eventsQuery.where(inArray(events.artistId, artistIds));
+          // Filter the events with artists in the genre
+          const filteredEvents = formattedEvents.filter(event => 
+            artistIds.includes(event.artist.id)
+          );
+          
+          formattedEvents = filteredEvents;
         } else {
           // No artists with this genre, return empty result
           return res.json({
@@ -109,19 +129,16 @@ router.get('/events/search', async (req, res) => {
     
     // Apply sorting
     if (sort === 'date') {
-      eventsQuery = eventsQuery.orderBy(asc(events.date));
+      formattedEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     } else if (sort === 'name') {
-      eventsQuery = eventsQuery.orderBy(asc(events.name));
+      formattedEvents.sort((a, b) => a.name.localeCompare(b.name));
     } else {
       // Default relevance sort - newest events first
-      eventsQuery = eventsQuery.orderBy(desc(events.date));
+      formattedEvents.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }
     
     // Apply pagination
-    eventsQuery = eventsQuery.limit(limit).offset(offset);
-    
-    // Execute query
-    const eventResults = await eventsQuery;
+    const paginatedEvents = formattedEvents.slice(offset, offset + limit);
     
     // Get total count for pagination
     const totalCountResult = await db
@@ -143,7 +160,7 @@ router.get('/events/search', async (req, res) => {
       total,
       page,
       limit,
-      events: eventResults
+      events: paginatedEvents
     });
   } catch (error) {
     console.error('Error searching events:', error);
