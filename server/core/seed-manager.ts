@@ -225,6 +225,67 @@ export class SeedManager {
     }
   }
 
+  async seedEvents() {
+    this.logger.log('Starting events seeding...');
+    const venues = await db.select().from(venues);
+    const artists = await db.select().from(artists);
+    
+    for (const venue of venues) {
+      for (const artist of artists) {
+        const eventDate = new Date();
+        eventDate.setDate(eventDate.getDate() + Math.floor(Math.random() * 30));
+        
+        await db.insert(events).values({
+          artistId: artist.id,
+          venueId: venue.id,
+          date: eventDate.toISOString().split('T')[0],
+          startTime: '20:00',
+          status: 'confirmed',
+          sourceId: `seed-${venue.id}-${artist.id}`,
+          sourceName: 'seed'
+        });
+      }
+    }
+  }
+
+  async seedTours() {
+    this.logger.log('Starting tours seeding...');
+    const artists = await db.select().from(artists);
+    const venues = await db.select().from(venues);
+
+    if (artists.length === 0 || venues.length === 0) {
+      this.logger.log('No artists or venues found, skipping tour seeding');
+      return;
+    }
+
+    for (const artist of artists) {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() + 30);
+      
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 45);
+
+      const [tour] = await db.insert(tours).values({
+        name: `${artist.name} Summer Tour`,
+        artistId: artist.id,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        status: 'planning',
+        totalBudget: 100000,
+        description: 'Sample tour'
+      }).returning();
+
+      // Add some venues to the tour
+      for (const venue of venues.slice(0, 3)) {
+        await db.insert(tourVenues).values({
+          tourId: tour.id,
+          venueId: venue.id,
+          status: 'pending',
+          order: venues.indexOf(venue)
+        });
+      }
+    }
+  }
 
   async getVenueEvents(venueId: string): Promise<EventData[]> {
     this.logger.log(`Fetching events for venue ${venueId}...`);
