@@ -16,8 +16,7 @@ async function testApi() {
     const response = await axios.get('https://concerts-artists-events-tracker.p.rapidapi.com/search', {
       params: {
         keyword: 'La Luz',
-        types: 'event,venue',
-        city: 'Rochester'
+        types: 'event,venue'
       },
       headers: {
         'X-RapidAPI-Key': apiKey,
