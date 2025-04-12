@@ -1,144 +1,194 @@
 /**
- * Test script for concert event fetching
- * This script allows testing without requiring actual API keys
+ * Test script for Bandsintown API integration
+ * This script tests fetching artist events from Bandsintown
  */
 
 import axios from 'axios';
 import { db } from './db';
-import { artists, events, artistGenres, genres } from '../shared/schema';
-import { eq, and, inArray, gt, sql } from 'drizzle-orm';
-import * as dotenv from 'dotenv';
-import * as cheerio from 'cheerio';
+import { artists, genres, artistGenres } from '../shared/schema';
+import { eq, sql } from 'drizzle-orm';
 
-dotenv.config();
+// The Bandsintown app_id - this is a public identifier required by Bandsintown API
+const APP_ID = 'venueconnect';
 
-// Test artist to look up
-const TEST_ARTIST_NAME = "La Luz";
-
-/**
- * Get artist info with their genre relationships
- */
-async function getArtistWithGenres(artistName: string) {
+// Test fetching artist events from Bandsintown
+async function testArtistEvents(artistName: string) {
   try {
-    // Get the artist
-    const artist = await db.query.artists.findFirst({
-      where: eq(artists.name, artistName)
-    });
-    
-    if (!artist) {
-      console.error(`Artist "${artistName}" not found in database`);
-      return null;
-    }
-    
-    // Get the artist's genres
-    const artistGenreRelations = await db
-      .select({
-        genreId: artistGenres.genreId
-      })
-      .from(artistGenres)
-      .where(eq(artistGenres.artistId, artist.id));
-    
-    const genreIds = artistGenreRelations.map(relation => relation.genreId);
-    
-    let artistGenreInfo = [];
-    if (genreIds.length > 0) {
-      // Get genre details
-      artistGenreInfo = await db
-        .select({
-          id: genres.id,
-          name: genres.name,
-          slug: genres.slug,
-          parentId: genres.parentId
-        })
-        .from(genres)
-        .where(inArray(genres.id, genreIds));
-    }
-    
-    return {
-      artist,
-      genres: artistGenreInfo
-    };
-  } catch (error) {
-    console.error('Error getting artist with genres:', error);
-    return null;
-  }
-}
-
-/**
- * Search SongKick for artist events
- * This is a web scraping fallback when we don't have API keys
- */
-async function searchSongkickEvents(artistName: string) {
-  try {
-    console.log(`Searching Songkick for ${artistName} events...`);
+    console.log(`Testing artist events for: ${artistName}`);
     const encodedName = encodeURIComponent(artistName);
-    const url = `https://www.songkick.com/search?query=${encodedName}&type=upcoming`;
+    const url = `https://rest.bandsintown.com/artists/${encodedName}/events?app_id=${APP_ID}`;
     
+    console.log(`Requesting URL: ${url}`);
     const response = await axios.get(url);
-    const $ = cheerio.load(response.data);
     
-    // Find all event listings
-    const events = [];
-    $('.event-listings .event-listing').each((i, el) => {
-      const eventDate = $(el).find('.event-listing-date').text().trim();
-      const eventVenue = $(el).find('.event-listing-venue').text().trim();
-      const eventLocation = $(el).find('.event-listing-location').text().trim();
-      
-      events.push({
-        date: eventDate,
-        venue: eventVenue,
-        location: eventLocation,
-        url: 'https://www.songkick.com' + $(el).find('a.event-link').attr('href')
-      });
-    });
+    console.log(`Response status: ${response.status}`);
+    console.log(`Events count: ${response.data.length}`);
     
-    return events;
-  } catch (error) {
-    console.error('Error scraping Songkick:', error.message);
+    // Log a sample of the first event if available
+    if (response.data.length > 0) {
+      const firstEvent = response.data[0];
+      console.log('\nSample event data:');
+      console.log(JSON.stringify(firstEvent, null, 2));
+    }
+    
+    return response.data;
+  } catch (error: any) {
+    console.error(`Error fetching artist events: ${error.message}`);
+    if (error.response) {
+      console.error(`Response status: ${error.response.status}`);
+      console.error(`Response data: ${JSON.stringify(error.response.data)}`);
+    }
     return [];
   }
 }
 
-/**
- * Test search endpoint for artist events
- */
-async function testSearchEndpoint(artistName: string) {
+// Test artist information from Bandsintown
+async function testArtistInfo(artistName: string) {
   try {
-    console.log(`Testing search endpoint for ${artistName} events`);
+    console.log(`Testing artist info for: ${artistName}`);
+    const encodedName = encodeURIComponent(artistName);
+    const url = `https://rest.bandsintown.com/artists/${encodedName}?app_id=${APP_ID}`;
     
-    // Call the local search API endpoint
-    const response = await axios.get('http://localhost:5000/api/events/search', {
-      params: { query: artistName }
-    });
+    console.log(`Requesting URL: ${url}`);
+    const response = await axios.get(url);
     
     console.log(`Response status: ${response.status}`);
-    console.log(`Response data:`, response.data);
+    console.log('\nArtist data:');
+    console.log(JSON.stringify(response.data, null, 2));
     
     return response.data;
-  } catch (error) {
-    console.error('Test failed:', error.message);
+  } catch (error: any) {
+    console.error(`Error fetching artist info: ${error.message}`);
+    if (error.response) {
+      console.error(`Response status: ${error.response.status}`);
+      console.error(`Response data: ${JSON.stringify(error.response.data)}`);
+    }
     return null;
   }
 }
 
-/**
- * Main function to test artist event fetching
- */
-async function main() {
-  console.log(`Testing artist events for: ${TEST_ARTIST_NAME}`);
-  
-  // Get artist with genre info
-  const artistInfo = await getArtistWithGenres(TEST_ARTIST_NAME);
-  console.log('Artist info:', artistInfo);
-  
-  // Try SongKick as a fallback for getting concert data
-  const songkickEvents = await searchSongkickEvents(TEST_ARTIST_NAME);
-  console.log('Songkick events:', songkickEvents);
-  
-  // Test our search endpoint which uses Bandsintown data if available
-  await testSearchEndpoint(TEST_ARTIST_NAME);
-  
-  process.exit(0);
+// Test search endpoint for an artist's events
+async function testSearchEndpoint(artistName: string) {
+  try {
+    console.log(`Testing search endpoint for ${artistName} events`);
+    
+    // First get the artist ID from our database
+    const artistResult = await db
+      .select()
+      .from(artists)
+      .where(eq(artists.name, artistName));
+    
+    if (artistResult.length === 0) {
+      console.log(`Artist ${artistName} not found in database`);
+      return;
+    }
+    
+    const artistId = artistResult[0].id;
+    console.log(`Found artist ID: ${artistId}`);
+    
+    // Test our search endpoint
+    const url = `http://localhost:5000/api/search/events?artistId=${artistId}`;
+    console.log(`Requesting URL: ${url}`);
+    
+    const response = await axios.get(url);
+    console.log(`Response status: ${response.status}`);
+    console.log(`Response data: ${JSON.stringify(response.data)}`);
+    
+    return response.data;
+  } catch (error: any) {
+    console.error(`Error testing search endpoint: ${error.message}`);
+    if (error.response) {
+      console.error(`Response status: ${error.response.status}`);
+      console.error(`Response data: ${JSON.stringify(error.response.data)}`);
+    }
+    return null;
+  }
 }
 
-main();
+// Get artist genres
+async function getArtistGenres(artistName: string) {
+  try {
+    console.log(`\nGetting genres for artist: ${artistName}`);
+    
+    // Get artist ID
+    const artistResult = await db
+      .select()
+      .from(artists)
+      .where(eq(artists.name, artistName));
+    
+    if (artistResult.length === 0) {
+      console.log(`Artist ${artistName} not found in database`);
+      return [];
+    }
+    
+    const artistId = artistResult[0].id;
+    
+    // Get genres for this artist
+    const artistGenresResult = await db
+      .select({
+        genreId: artistGenres.genreId
+      })
+      .from(artistGenres)
+      .where(eq(artistGenres.artistId, artistId));
+    
+    if (artistGenresResult.length === 0) {
+      console.log(`No genres found for artist ${artistName}`);
+      return [];
+    }
+    
+    // Get genre details
+    const genreIds = artistGenresResult.map(ag => ag.genreId);
+    
+    // Use multiple OR conditions for each genreId
+    let query = db.select().from(genres);
+    
+    if (genreIds.length > 0) {
+      const conditions = genreIds.map(id => eq(genres.id, id));
+      query = query.where(or(...conditions));
+    }
+    
+    const genreDetails = await query;
+    
+    console.log(`Found ${genreDetails.length} genres for ${artistName}:`);
+    genreDetails.forEach(g => console.log(`- ${g.name} (ID: ${g.id})`));
+    
+    return genreDetails;
+  } catch (error) {
+    console.error(`Error getting artist genres: ${error}`);
+    return [];
+  }
+}
+
+// Main function
+async function main() {
+  // Check if artistName was provided
+  const artistName = process.argv[2] || 'La Luz';
+  
+  console.log(`Running tests for artist: ${artistName}`);
+  
+  // Get artist genres first
+  await getArtistGenres(artistName);
+  
+  // Test artist information
+  console.log('\n--- Testing Artist Info ---');
+  await testArtistInfo(artistName);
+  
+  // Test artist events
+  console.log('\n--- Testing Artist Events ---');
+  await testArtistEvents(artistName);
+  
+  // Test search endpoint
+  console.log('\n--- Testing Search Endpoint ---');
+  await testSearchEndpoint(artistName);
+}
+
+// Run the main function
+main()
+  .then(() => {
+    console.log('\nAll tests completed');
+    process.exit(0);
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    process.exit(1);
+  });

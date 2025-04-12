@@ -334,14 +334,14 @@ const specificVenueName = process.argv[2];
 async function run() {
   if (specificVenueName) {
     // Process just one venue for testing
-    const venues = await db.select().from(venues).where(eq(venues.name, specificVenueName));
+    const venueResults = await db.select().from(venues).where(eq(venues.name, specificVenueName));
     
-    if (venues.length === 0) {
+    if (venueResults.length === 0) {
       console.error(`Venue not found: ${specificVenueName}`);
       process.exit(1);
     }
     
-    const venue = venues[0];
+    const venue = venueResults[0];
     console.log(`Testing with single venue: ${venue.name}`);
     
     // Search for venue on Songkick

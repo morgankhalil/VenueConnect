@@ -1,375 +1,307 @@
 /**
- * Fetch artist events from Bandsintown API
- * This script fetches upcoming events for artists in our database
+ * Artist-centric event data collection script
+ * 
+ * This script fetches events for artists using the Bandsintown API:
+ * 1. Retrieves artists from our database 
+ * 2. Fetches upcoming events for each artist from Bandsintown
+ * 3. Matches events with our venues based on venue name similarity
+ * 4. Creates events in our database
  */
 
 import axios from 'axios';
 import { db } from './db';
-import { artists, events, venues, genres, artistGenres } from '../shared/schema';
-import { eq, and, inArray, gt } from 'drizzle-orm';
-import * as dotenv from 'dotenv';
+import { artists, venues, events, artistGenres, genres } from '../shared/schema';
+import { eq, and, like, ilike, or, sql } from 'drizzle-orm';
+import { setTimeout } from 'timers/promises';
 
-dotenv.config();
+// The Bandsintown app_id - this is a public identifier required by Bandsintown API
+// We use 'venueconnect' as our app_id
+const APP_ID = 'venueconnect';
 
-// Bandsintown API base URL
-const BANDSINTOWN_APP_ID = process.env.BANDSINTOWN_APP_ID || 'venueconnect';
-const BANDSINTOWN_API_KEY = process.env.BANDSINTOWN_API_KEY;
-const BANDSINTOWN_BASE_URL = 'https://rest.bandsintown.com/artists';
-
-// Venue matching threshold (0-1)
-const VENUE_MATCH_THRESHOLD = 0.8;
-
-interface BandsintownEvent {
-  id: string;
-  artist_id: string;
-  url: string;
-  on_sale_datetime: string;
-  datetime: string;
-  venue: {
-    name: string;
-    latitude: string;
-    longitude: string;
-    city: string;
-    region: string;
-    country: string;
-  };
-  lineup: string[];
-  offers: Array<{
-    type: string;
-    url: string;
-    status: string;
-  }>;
-}
-
-/**
- * Fetch events for a specific artist from Bandsintown
- */
-async function fetchArtistEvents(artistName: string): Promise<BandsintownEvent[]> {
+// Fetch artist events from Bandsintown
+async function fetchArtistEvents(artistName: string) {
   try {
-    // Encode the artist name for the URL
-    const encodedArtistName = encodeURIComponent(artistName);
-    const url = `${BANDSINTOWN_BASE_URL}/${encodedArtistName}/events`;
+    console.log(`Fetching events for artist: ${artistName}`);
+    const encodedName = encodeURIComponent(artistName);
+    const url = `https://rest.bandsintown.com/artists/${encodedName}/events?app_id=${APP_ID}`;
     
-    let headers = {};
-    if (BANDSINTOWN_API_KEY) {
-      headers = {
-        'Authorization': `Bearer ${BANDSINTOWN_API_KEY}`
-      };
-    }
-    
-    // Make the API request
-    const response = await axios.get(url, {
-      params: {
-        app_id: BANDSINTOWN_APP_ID,
-        date: 'upcoming'
-      },
-      headers
-    });
-    
-    console.log(`Found ${response.data.length} events for artist ${artistName}`);
-    return response.data;
+    const response = await axios.get(url);
+    return response.data || [];
   } catch (error) {
-    console.error(`Error fetching events for artist ${artistName}:`, error.response?.data || error.message);
+    console.error(`Error fetching events for artist ${artistName}:`, error);
     return [];
   }
 }
 
-/**
- * Normalize venue name for better matching
- */
-function normalizeVenueName(name: string): string {
+// Format venue name for better matching
+function formatVenueName(name: string): string {
   return name
     .toLowerCase()
-    .replace(/the /g, '')
-    .replace(/\s+/g, ' ')
+    .replace(/^the\s+/, '') // Remove "The" prefix
+    .replace(/&/g, 'and')    // Replace & with and
+    .replace(/[^\w\s]/g, '') // Remove special characters
     .trim();
 }
 
-/**
- * Calculate similarity between two venue names
- * @return Score between 0 and 1
- */
-function getVenueNameSimilarity(name1: string, name2: string): number {
-  const normalizedName1 = normalizeVenueName(name1);
-  const normalizedName2 = normalizeVenueName(name2);
-  
-  // Exact match
-  if (normalizedName1 === normalizedName2) {
-    return 1;
-  }
-  
-  // Check if one is a substring of the other
-  if (normalizedName1.includes(normalizedName2) || normalizedName2.includes(normalizedName1)) {
-    const lengthRatio = Math.min(normalizedName1.length, normalizedName2.length) / 
-                         Math.max(normalizedName1.length, normalizedName2.length);
-    return 0.8 * lengthRatio;
-  }
-  
-  // Here we could implement Levenshtein distance or other string
-  // similarity algorithms, but for now we'll use a simple approach
-  
-  // Count matching words
-  const words1 = normalizedName1.split(' ');
-  const words2 = normalizedName2.split(' ');
-  
-  const matchingWords = words1.filter(word => words2.includes(word)).length;
-  const totalUniqueWords = new Set([...words1, ...words2]).size;
-  
-  return matchingWords / totalUniqueWords;
-}
-
-/**
- * Find the best matching venue from our database
- */
-async function findMatchingVenue(eventVenue: BandsintownEvent['venue']): Promise<number | null> {
-  // Get all venues from our database
-  const allVenues = await db.select().from(venues);
-  
-  let bestMatch = {
-    id: null,
-    score: 0
-  };
-  
-  for (const venue of allVenues) {
-    // Skip venues without names
-    if (!venue.name) continue;
-    
-    // Calculate name similarity
-    const nameSimilarity = getVenueNameSimilarity(eventVenue.name, venue.name);
-    
-    // Calculate location similarity if coordinates are available
-    let locationSimilarity = 0;
-    if (
-      venue.latitude && 
-      venue.longitude && 
-      eventVenue.latitude && 
-      eventVenue.longitude
-    ) {
-      // Calculate distance
-      const venueLatLng = { lat: Number(venue.latitude), lng: Number(venue.longitude) };
-      const eventLatLng = { lat: Number(eventVenue.latitude), lng: Number(eventVenue.longitude) };
-      
-      // Calculate distance in km using haversine formula
-      const distance = calculateDistance(venueLatLng, eventLatLng);
-      
-      // Distance less than 0.5km is considered same venue
-      if (distance < 0.5) {
-        locationSimilarity = 1;
-      } else if (distance < 2) {
-        locationSimilarity = 0.8;
-      } else if (distance < 5) {
-        locationSimilarity = 0.5;
-      }
-    }
-    
-    // Calculate city/region match
-    let regionSimilarity = 0;
-    if (
-      venue.city && 
-      venue.region && 
-      eventVenue.city && 
-      eventVenue.region
-    ) {
-      if (
-        normalizeVenueName(venue.city) === normalizeVenueName(eventVenue.city) &&
-        normalizeVenueName(venue.region) === normalizeVenueName(eventVenue.region)
-      ) {
-        regionSimilarity = 1;
-      } else if (normalizeVenueName(venue.city) === normalizeVenueName(eventVenue.city)) {
-        regionSimilarity = 0.8;
-      } else if (normalizeVenueName(venue.region) === normalizeVenueName(eventVenue.region)) {
-        regionSimilarity = 0.3;
-      }
-    }
-    
-    // Calculate overall score (weighted)
-    const score = (nameSimilarity * 0.6) + (locationSimilarity * 0.3) + (regionSimilarity * 0.1);
-    
-    // Update best match if this venue has a higher score
-    if (score > bestMatch.score) {
-      bestMatch = {
-        id: venue.id,
-        score
-      };
-    }
-  }
-  
-  // Return the best match if it's above our threshold
-  if (bestMatch.score >= VENUE_MATCH_THRESHOLD) {
-    return bestMatch.id;
-  }
-  
-  return null;
-}
-
-/**
- * Calculate distance between two points in km using the Haversine formula
- */
-function calculateDistance(
-  point1: { lat: number, lng: number }, 
-  point2: { lat: number, lng: number }
-): number {
-  const R = 6371; // Earth's radius in km
-  const dLat = (point2.lat - point1.lat) * Math.PI / 180;
-  const dLon = (point2.lng - point1.lng) * Math.PI / 180;
-  
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(point1.lat * Math.PI / 180) * Math.cos(point2.lat * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  const distance = R * c;
-  
-  return distance;
-}
-
-/**
- * Save an event to our database
- */
-async function saveEvent(
-  artistId: number, 
-  event: BandsintownEvent, 
-  venueId: number | null
-): Promise<void> {
+// Find the best venue match from our database
+async function findMatchingVenue(venueName: string, venueCity: string, venueRegion: string) {
   try {
-    // Format the event date
-    const eventDate = new Date(event.datetime);
-    
-    // Check if this event already exists
-    const existingEvent = await db
+    // First try exact name and location match
+    const exactMatches = await db
       .select()
-      .from(events)
+      .from(venues)
       .where(
         and(
-          eq(events.artistId, artistId),
-          eq(events.date, eventDate)
+          eq(venues.name, venueName),
+          or(
+            eq(venues.city, venueCity),
+            venues.region ? eq(venues.region, venueRegion) : sql`1=1`
+          )
         )
       );
     
-    if (existingEvent.length > 0) {
-      console.log(`Event already exists for artist ${artistId} on ${eventDate}`);
-      return;
+    if (exactMatches.length > 0) {
+      return exactMatches[0];
     }
     
-    // Only save events with matching venues
-    if (!venueId) {
-      console.log(`No matching venue found for event at ${event.venue.name}, skipping`);
-      return;
+    // Try fuzzy name match with location match
+    const formattedName = formatVenueName(venueName);
+    const fuzzyMatches = await db
+      .select()
+      .from(venues)
+      .where(
+        and(
+          or(
+            ilike(venues.name, `%${formattedName}%`),
+            ilike(venues.name, `%${venueName}%`)
+          ),
+          or(
+            ilike(venues.city, `%${venueCity}%`),
+            venues.region ? ilike(venues.region, `%${venueRegion}%`) : sql`1=1`
+          )
+        )
+      );
+    
+    if (fuzzyMatches.length > 0) {
+      return fuzzyMatches[0];
     }
     
-    // Insert the new event
-    await db.insert(events).values({
-      artistId,
-      venueId,
-      name: `${event.lineup[0]} at ${event.venue.name}`,
-      date: eventDate,
-      ticketLink: event.url,
-      externalId: event.id
-    });
-    
-    console.log(`Saved event for artist ${artistId} at venue ${venueId} on ${eventDate}`);
-  } catch (error) {
-    console.error('Error saving event:', error);
-  }
-}
-
-/**
- * Sync events for a specific artist
- */
-async function syncArtistEvents(artistId: number, artistName: string): Promise<void> {
-  try {
-    console.log(`Syncing events for artist ${artistName}`);
-    
-    // Fetch events from Bandsintown
-    const artistEvents = await fetchArtistEvents(artistName);
-    
-    if (artistEvents.length === 0) {
-      console.log(`No events found for artist ${artistName}`);
-      return;
-    }
-    
-    // Process each event
-    for (const event of artistEvents) {
-      // Find a matching venue in our database
-      const matchingVenueId = await findMatchingVenue(event.venue);
-      
-      // Save the event if we have a matching venue
-      if (matchingVenueId) {
-        await saveEvent(artistId, event, matchingVenueId);
-      }
-    }
-    
-    console.log(`Completed sync for artist ${artistName}`);
-  } catch (error) {
-    console.error(`Error syncing artist ${artistName}:`, error);
-  }
-}
-
-/**
- * Sync events for all artists in the database
- */
-async function syncAllArtistEvents(): Promise<void> {
-  try {
-    console.log('Starting event sync from Bandsintown');
-    
-    // Get all artists from our database
-    const dbArtists = await db.select().from(artists);
-    console.log(`Found ${dbArtists.length} artists in database`);
-    
-    // Process each artist
-    for (const artist of dbArtists) {
-      await syncArtistEvents(artist.id, artist.name);
-    }
-    
-    console.log('Event sync completed!');
-  } catch (error) {
-    console.error('Error syncing events:', error);
-  }
-}
-
-/**
- * Sync events for specific artist names
- */
-async function syncSpecificArtists(artistNames: string[]): Promise<void> {
-  try {
-    console.log(`Using provided artist names: ${artistNames.join(', ')}`);
-    console.log('Starting Bandsintown artist and event sync...');
-    
-    for (const artistName of artistNames) {
-      // Check if artist exists
-      const existingArtist = await db
+    // Try location match only for very similar names
+    if (formattedName.length > 5) {
+      const locationMatches = await db
         .select()
-        .from(artists)
-        .where(eq(artists.name, artistName));
+        .from(venues)
+        .where(
+          and(
+            or(
+              ilike(venues.name, `%${formattedName.substring(0, 5)}%`),
+              ilike(venues.name, `%${venueName.substring(0, 5)}%`)
+            ),
+            or(
+              eq(venues.city, venueCity),
+              venues.region ? eq(venues.region, venueRegion) : sql`1=1`
+            )
+          )
+        );
       
-      if (existingArtist.length > 0) {
-        // Artist exists, sync events
-        await syncArtistEvents(existingArtist[0].id, artistName);
-      } else {
-        console.log(`Artist ${artistName} not found in database, skipping`);
+      if (locationMatches.length > 0) {
+        return locationMatches[0];
       }
     }
     
-    console.log('Event sync completed!');
+    return null;
   } catch (error) {
-    console.error('Error syncing events:', error);
+    console.error(`Error finding matching venue for ${venueName}:`, error);
+    return null;
   }
 }
 
-// Main execution
-async function main() {
-  // Get artist names from command line arguments, if any
-  const artistNames = process.argv.slice(2);
-  
-  if (artistNames.length > 0) {
-    await syncSpecificArtists(artistNames);
-  } else {
-    await syncAllArtistEvents();
+// Create event in database
+async function createEvent(venueId: number, artistId: number, date: string, time: string = '20:00', status: string = 'confirmed') {
+  try {
+    // Check if event already exists
+    const existingEvent = await db
+      .select()
+      .from(events)
+      .where(and(
+        eq(events.venueId, venueId),
+        eq(events.artistId, artistId),
+        eq(events.date, date)
+      ));
+    
+    if (existingEvent.length > 0) {
+      console.log(`Event already exists: ${date}`);
+      return existingEvent[0];
+    }
+    
+    // Create new event
+    console.log(`Creating new event on ${date}`);
+    const [newEvent] = await db.insert(events).values({
+      venueId,
+      artistId,
+      date,
+      status,
+      startTime: time,
+      sourceName: 'bandsintown'
+    }).returning();
+    
+    return newEvent;
+  } catch (error) {
+    console.error(`Error creating event:`, error);
+    throw error;
   }
-  
-  // Exit
-  process.exit(0);
 }
 
-main();
+// Main function to fetch events for artists
+async function fetchArtistsEvents(artistNames?: string[]) {
+  try {
+    console.log('Starting Bandsintown events and artists seeding');
+    
+    // Get artists from database or use provided names
+    let artistsToProcess: { id: number, name: string }[] = [];
+    
+    if (artistNames && artistNames.length > 0) {
+      console.log('Using provided artist names:', artistNames);
+      
+      // Find these artists in our database
+      for (const name of artistNames) {
+        const existingArtists = await db
+          .select({ id: artists.id, name: artists.name })
+          .from(artists)
+          .where(eq(artists.name, name));
+        
+        if (existingArtists.length > 0) {
+          artistsToProcess.push(existingArtists[0]);
+        } else {
+          console.log(`Artist not found in database: ${name}`);
+        }
+      }
+    } else {
+      // Get all artists from database, ordered by popularity
+      artistsToProcess = await db
+        .select({ id: artists.id, name: artists.name })
+        .from(artists)
+        .orderBy(sql`RANDOM()`)
+        .limit(20); // Process a subset of random artists
+        
+      console.log(`Found ${artistsToProcess.length} artists in database`);
+    }
+    
+    let processedArtists = 0;
+    let eventsCreated = 0;
+    let venuesFound = 0;
+    let venuesNotFound = 0;
+    
+    // Process artists in batches to avoid API rate limits
+    const BATCH_SIZE = 2;
+    
+    for (let i = 0; i < artistsToProcess.length; i += BATCH_SIZE) {
+      const artistBatch = artistsToProcess.slice(i, i + BATCH_SIZE);
+      
+      // Process artists sequentially within the batch
+      for (const artist of artistBatch) {
+        console.log(`\nProcessing artist ${artist.id}: ${artist.name}`);
+        
+        // Fetch artist events from Bandsintown
+        const artistEvents = await fetchArtistEvents(artist.name);
+        
+        if (!Array.isArray(artistEvents) || artistEvents.length === 0) {
+          console.log(`No upcoming events found for artist: ${artist.name}`);
+          continue;
+        }
+        
+        console.log(`Found ${artistEvents.length} events for ${artist.name}`);
+        
+        // Process each event
+        for (const eventData of artistEvents) {
+          try {
+            // Extract venue information
+            const venue = eventData.venue;
+            if (!venue) continue;
+            
+            const venueName = venue.name;
+            const venueCity = venue.city;
+            const venueRegion = venue.region || '';
+            const venueCountry = venue.country;
+            
+            // Skip non-US events for now
+            if (venueCountry !== 'United States') {
+              console.log(`Skipping non-US event in ${venueCity}, ${venueCountry}`);
+              continue;
+            }
+            
+            console.log(`Checking venue: ${venueName} in ${venueCity}, ${venueRegion}`);
+            
+            // Find matching venue in our database
+            const matchingVenue = await findMatchingVenue(venueName, venueCity, venueRegion);
+            
+            if (!matchingVenue) {
+              console.log(`No matching venue found for: ${venueName} in ${venueCity}, ${venueRegion}`);
+              venuesNotFound++;
+              continue;
+            }
+            
+            venuesFound++;
+            console.log(`Found matching venue ID ${matchingVenue.id}: ${matchingVenue.name}`);
+            
+            // Extract event date and time
+            const eventDate = eventData.datetime ? new Date(eventData.datetime) : new Date(eventData.date);
+            const date = eventDate.toISOString().split('T')[0]; // YYYY-MM-DD
+            
+            // Format time (if available)
+            let time = '20:00'; // Default time if not specified
+            if (eventData.datetime) {
+              const dateObj = new Date(eventData.datetime);
+              time = dateObj.toTimeString().substring(0, 5); // HH:MM
+            }
+            
+            // Create event in our database
+            await createEvent(matchingVenue.id, artist.id, date, time);
+            eventsCreated++;
+            
+          } catch (error) {
+            console.error(`Error processing event for ${artist.name}:`, error);
+          }
+        }
+        
+        processedArtists++;
+        console.log(`Completed processing artist: ${artist.name}`);
+        
+        // Be nice to the API - add a delay between artists
+        await setTimeout(1000);
+      }
+      
+      // Add a delay between batches
+      if (i + BATCH_SIZE < artistsToProcess.length) {
+        console.log(`\nCompleted batch ${Math.floor(i/BATCH_SIZE) + 1}. Waiting before next batch...`);
+        await setTimeout(3000);
+      }
+    }
+    
+    // Print summary
+    console.log('\nArtist event fetching completed!');
+    console.log(`Processed ${processedArtists} artists`);
+    console.log(`Created ${eventsCreated} new events`);
+    console.log(`Found ${venuesFound} matching venues`);
+    console.log(`Could not find matches for ${venuesNotFound} venues`);
+    
+  } catch (error) {
+    console.error('Error in artist event fetching:', error);
+  }
+}
+
+// Run the main function
+// Check for specific artist names in arguments
+const artistNames = process.argv.slice(2);
+
+// Main function
+async function run() {
+  await fetchArtistsEvents(artistNames.length > 0 ? artistNames : undefined);
+}
+
+run()
+  .then(() => process.exit(0))
+  .catch(error => {
+    console.error('Error:', error);
+    process.exit(1);
+  });
