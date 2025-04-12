@@ -75,3 +75,16 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "tsx server/utils/doc-automation.ts --watch"
+
+[[workflows.workflow]]
+name = "Seed Sample Data"
+author = 37567996
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx tsx server/clear-all.ts"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx tsx server/seed-unified.ts"
