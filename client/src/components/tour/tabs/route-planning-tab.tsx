@@ -210,16 +210,159 @@ export function RoutePlanningTab({
     );
   };
   
-  // Map view component (placeholder for actual map implementation)
+  // Map view component using Leaflet
   const MapView = ({ sequence }: { sequence: any[] }) => {
+    // Filter out venues without coordinates
+    const venuesWithCoords = sequence.filter(venue => 
+      venue.venue?.latitude && venue.venue?.longitude
+    );
+    
+    // If no venues have coordinates, show a placeholder
+    if (venuesWithCoords.length === 0) {
+      return (
+        <div className="space-y-4">
+          <div className="border rounded-lg h-[400px] bg-muted/30 flex items-center justify-center">
+            <div className="text-center">
+              <Map className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+              <p className="text-muted-foreground">No venues with coordinates found</p>
+              <p className="text-xs text-muted-foreground mt-1">Add venue locations to see the map</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    // Import here to avoid SSR issues
+    const { MapContainer, TileLayer, Marker, Popup, Polyline } = require('react-leaflet');
+    const L = require('leaflet');
+    
+    // Create markers for each venue
+    const markers = venuesWithCoords.map((venue, index) => {
+      // Define custom marker icon based on venue status
+      const getMarkerColor = (status: string | undefined) => {
+        switch (status) {
+          case 'confirmed': return '#10B981'; // Green
+          case 'hold': return '#F59E0B'; // Amber
+          case 'potential': return '#3B82F6'; // Blue
+          case 'cancelled': return '#EF4444'; // Red
+          default: return '#6B7280'; // Gray
+        }
+      };
+      
+      // Create custom icon
+      const customIcon = new L.DivIcon({
+        className: '',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+        html: `
+          <div style="
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: ${getMarkerColor(venue.tourVenue?.status)};
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 12px;
+          ">
+            ${index + 1}
+          </div>
+        `
+      });
+      
+      return (
+        <Marker 
+          key={venue.id} 
+          position={[venue.venue.latitude, venue.venue.longitude]}
+          icon={customIcon}
+          eventHandlers={{
+            click: () => onVenueClick(venue)
+          }}
+        >
+          <Popup>
+            <div className="font-sans">
+              <div className="font-semibold text-base mb-1">{venue.venue?.name}</div>
+              <div className="text-sm mb-1">
+                {venue.venue?.city}{venue.venue?.region ? `, ${venue.venue.region}` : ''}
+              </div>
+              <div className="text-xs text-gray-500 mb-2">
+                {venue.tourVenue?.date 
+                  ? new Date(venue.tourVenue?.date).toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric'
+                    }) 
+                  : 'Date TBD'} · Stop #{index + 1}
+              </div>
+              <div className="mt-2">
+                {renderStatusBadge(venue.tourVenue?.status)}
+              </div>
+            </div>
+          </Popup>
+        </Marker>
+      );
+    });
+    
+    // Create polyline for route
+    const routePoints = venuesWithCoords.map(venue => [
+      venue.venue.latitude, 
+      venue.venue.longitude
+    ]);
+    
+    // Calculate bounds for auto-fitting map
+    const MapBoundsUpdater = () => {
+      const map = require('react-leaflet').useMap();
+      
+      React.useEffect(() => {
+        if (venuesWithCoords.length === 0) return;
+        
+        const bounds = new L.LatLngBounds([]);
+        venuesWithCoords.forEach(venue => {
+          bounds.extend(new L.LatLng(venue.venue.latitude, venue.venue.longitude));
+        });
+        
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }, []);
+      
+      return null;
+    };
+    
     return (
       <div className="space-y-4">
-        <div className="border rounded-lg h-[400px] bg-muted/30 flex items-center justify-center">
-          <div className="text-center">
-            <Map className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-            <p className="text-muted-foreground">Interactive map would display here</p>
-            <p className="text-xs text-muted-foreground mt-1">Showing {sequence.length} venues</p>
-          </div>
+        <div className="border rounded-lg h-[400px] overflow-hidden">
+          <MapContainer
+            center={[39.5, -98.0]} // Default center (US)
+            zoom={4}
+            style={{ height: '100%', width: '100%' }}
+            zoomControl={true}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            
+            {/* Auto-fit bounds */}
+            <MapBoundsUpdater />
+            
+            {/* Venue markers */}
+            {markers}
+            
+            {/* Route path */}
+            {venuesWithCoords.length > 1 && (
+              <Polyline 
+                positions={routePoints as any} 
+                pathOptions={{ 
+                  color: '#3B82F6', 
+                  weight: 3,
+                  opacity: 0.8,
+                  dashArray: '5, 10'
+                }} 
+              />
+            )}
+          </MapContainer>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mt-4">
@@ -324,14 +467,8 @@ export function RoutePlanningTab({
           {venues && venues.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Map on the left/top */}
-              <div className="lg:col-span-8 border rounded-lg h-[400px] bg-muted/30 flex items-center justify-center">
-                <div className="text-center">
-                  <Map className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-muted-foreground">Interactive map would display here</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Showing {(showAllVenues ? venues : venues.filter(v => v.tourVenue?.status !== 'cancelled')).length} venues
-                  </p>
-                </div>
+              <div className="lg:col-span-8 border rounded-lg h-[400px] overflow-hidden">
+                <MapView sequence={showAllVenues ? venues : venues.filter(v => v.tourVenue?.status !== 'cancelled')} />
               </div>
               
               {/* Timeline on the right/bottom */}
@@ -355,14 +492,8 @@ export function RoutePlanningTab({
           {optimizedSequenceVenues?.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Map on the left/top */}
-              <div className="lg:col-span-8 border rounded-lg h-[400px] bg-muted/30 flex items-center justify-center">
-                <div className="text-center">
-                  <Map className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-muted-foreground">Interactive map would display here</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Showing {(showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues.filter(v => v.tourVenue?.status !== 'cancelled')).length} venues
-                  </p>
-                </div>
+              <div className="lg:col-span-8 border rounded-lg h-[400px] overflow-hidden">
+                <MapView sequence={showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues.filter(v => v.tourVenue?.status !== 'cancelled')} />
               </div>
               
               {/* Timeline on the right/bottom */}
