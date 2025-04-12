@@ -45,22 +45,50 @@ export class ConcertsApiSeeder {
 
   private async searchArtistEvents(artistName: string, retries = 3): Promise<ConcertsEvent[]> {
     try {
-      const response = await axios.get(`https://api.concerts.com/v1/events/search`, {
+      this.logger.log(`Requesting events for artist: ${artistName}`);
+      
+      // Use RapidAPI endpoint with proper API key
+      const response = await axios.get('https://concerts-artists-events-tracker.p.rapidapi.com/search', {
         params: {
-          artist: artistName,
-          apikey: this.apiKey
+          keyword: artistName,
+          type: 'event'
         },
-        timeout: 60000, // 60 second timeout
+        headers: {
+          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY!,
+          'X-RapidAPI-Host': 'concerts-artists-events-tracker.p.rapidapi.com'
+        },
+        timeout: 30000, // 30 second timeout (shorter to fail faster on issues)
         validateStatus: status => status < 500 // Only retry on 5xx errors
       });
-      return response.data.events || [];
-    } catch (error) {
-      if (retries > 0 && (axios.isAxiosError(error) && error.code === 'ETIMEDOUT')) {
-        this.logger.log(`Retry ${4-retries}/3 for ${artistName}`, 'info');
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+      
+      if (!response.data || !response.data.data) {
+        this.logger.log(`No data returned for ${artistName}`, 'warning');
+        return [];
+      }
+      
+      this.logger.log(`Found ${response.data.data.length} events for ${artistName}`);
+      return response.data.data || [];
+    } catch (error: any) {
+      // Check for rate limiting specifically
+      if (axios.isAxiosError(error) && error.response && (error.response.status === 429 || error.response.status === 403)) {
+        this.logger.log(`API rate limit reached for ${artistName}. Status: ${error.response.status}`, 'error');
+        
+        if (retries > 0) {
+          // Rate limit - wait longer before retrying (exponential backoff)
+          const waitTime = 2000 * Math.pow(2, 4-retries);
+          this.logger.log(`Rate limit hit. Waiting ${waitTime}ms before retry ${4-retries}/3`, 'info');
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          return this.searchArtistEvents(artistName, retries - 1);
+        }
+      } else if (retries > 0 && (axios.isAxiosError(error) && 
+                (error.code === 'ETIMEDOUT' || error.code === 'ECONNRESET'))) {
+        // Network issues - retry with backoff
+        this.logger.log(`Network error: ${error.code}. Retry ${4-retries}/3 for ${artistName}`, 'info');
+        await new Promise(resolve => setTimeout(resolve, 2000));
         return this.searchArtistEvents(artistName, retries - 1);
       }
-      this.logger.log(`Failed to fetch events for ${artistName}: ${error}`, 'error');
+      
+      this.logger.log(`Failed to fetch events for ${artistName}: ${error.message || error}`, 'error');
       return [];
     }
   }

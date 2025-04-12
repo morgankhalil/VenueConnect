@@ -17,17 +17,16 @@ export class SyncLogger {
       await db.execute(sql`
         CREATE TABLE IF NOT EXISTS sync_logs (
           id SERIAL PRIMARY KEY,
-          context TEXT NOT NULL,
-          message TEXT NOT NULL,
-          level TEXT NOT NULL,
-          timestamp TIMESTAMPTZ DEFAULT NOW()
+          context VARCHAR NOT NULL,
+          log_message TEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT NOW()
         );
       `);
 
       // Insert the log message
       await db.execute(sql`
-        INSERT INTO sync_logs (context, message, level, timestamp)
-        VALUES (${this.context}, ${message}, ${level}, NOW());
+        INSERT INTO sync_logs (context, log_message, created_at)
+        VALUES (${this.context}, ${message}, NOW());
       `);
     } catch (error: any) {
       console.error('Error writing to sync_logs:', error);
@@ -38,16 +37,15 @@ export class SyncLogger {
           await db.execute(sql`
             CREATE TABLE IF NOT EXISTS sync_logs (
               id SERIAL PRIMARY KEY,
-              context TEXT NOT NULL,
-              message TEXT NOT NULL,
-              level TEXT NOT NULL,
-              timestamp TIMESTAMPTZ DEFAULT NOW()
+              context VARCHAR NOT NULL,
+              log_message TEXT NOT NULL,
+              created_at TIMESTAMP DEFAULT NOW()
             );
           `);
           // Try inserting again after table creation
           await db.execute(sql`
-            INSERT INTO sync_logs (context, message, level, timestamp)
-            VALUES (${this.context}, ${message}, ${level}, NOW());
+            INSERT INTO sync_logs (context, log_message, created_at)
+            VALUES (${this.context}, ${message}, NOW());
           `);
         } catch (createError) {
           console.error('Failed to create sync_logs table:', createError);

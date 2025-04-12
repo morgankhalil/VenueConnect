@@ -132,25 +132,57 @@ async function seedFromConcertsApi(artistNames: string[] = ['La Luz']) {
     venues: 0,
     events: 0,
     artists: 0,
-    errors: 0
+    errors: 0,
+    skipped: 0
   };
 
-  for (const artistName of artistNames) {
+  // Define a delay function to respect rate limits
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  // Process only the first artist if rate limited
+  const artistsToProcess = artistNames.slice(0, 1);
+  console.log(`Processing ${artistsToProcess.length} artists due to API rate limits`);
+
+  for (const artistName of artistsToProcess) {
     try {
+      console.log(`Starting to process artist: ${artistName}`);
+      
+      // Add delay before API call to avoid rate limits
+      await delay(1000);
+      
       const stats = await seeder.seedFromArtist(artistName);
+      
       totalStats.venues += stats.venues;
       totalStats.events += stats.events;
       totalStats.artists += stats.artists;
-    } catch (error) {
+      
+      console.log(`Successfully processed artist: ${artistName}`);
+      console.log(`Current stats - Artists: ${totalStats.artists}, Venues: ${totalStats.venues}, Events: ${totalStats.events}`);
+    } catch (error: any) {
       console.error(`Failed to process artist ${artistName}:`, error);
-      totalStats.errors++;
+      
+      // Check if it's a rate limit error
+      if (error.response && (error.response.status === 429 || error.response.status === 403)) {
+        console.log('API rate limit reached. Waiting before continuing...');
+        totalStats.skipped++;
+        
+        // Wait longer for rate limit errors
+        await delay(5000);
+      } else {
+        totalStats.errors++;
+      }
     }
+    
+    // Add delay between artists to prevent rate limiting
+    await delay(2000);
   }
 
   console.log('\nSeeding completed!');
   console.log(`Added ${totalStats.artists} artists`);
   console.log(`Added ${totalStats.venues} venues`);
   console.log(`Added ${totalStats.events} events`);
+  console.log(`Errors: ${totalStats.errors}`);
+  console.log(`Skipped due to rate limits: ${totalStats.skipped}`);
 }
 
 // Run the seeder
