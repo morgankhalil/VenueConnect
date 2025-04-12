@@ -164,9 +164,11 @@ router.get('/events/search', async (req, res) => {
 router.get('/artists/search', async (req, res) => {
   try {
     // Validate query parameters
+    console.log('Artist search query params:', req.query);
     const result = searchQuerySchema.safeParse(req.query);
     if (!result.success) {
-      return res.status(400).json({ error: 'Invalid search parameters', details: result.error });
+      console.error('Validation error details:', result.error.format());
+      return res.status(400).json({ error: 'Invalid search parameters', details: result.error.format() });
     }
     
     const { query, genre, genreId, sort, page, limit } = result.data;
