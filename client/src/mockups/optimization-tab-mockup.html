@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Optimization Tab Mockup</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .tab-active {
+      color: #6b46c1;
+      border-bottom: 2px solid #6b46c1;
+      background-color: rgba(124, 58, 237, 0.1);
+    }
+    .card {
+      background: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    .map-placeholder {
+      background-color: #f3f4f6;
+      background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h100v100H0z' fill='%23e5e7eb'/%3E%3Cpath d='M30 20h40v60H30z' fill='%239ca3af'/%3E%3Ccircle cx='30' cy='50' r='5' fill='%23ef4444'/%3E%3Ccircle cx='70' cy='50' r='5' fill='%23ef4444'/%3E%3Cpath d='M30 50h40' stroke='%23ef4444' stroke-width='2' stroke-dasharray='4'/%3E%3C/svg%3E");
+      background-size: 100px 100px;
+    }
+    .progress-bar {
+      height: 8px;
+      border-radius: 4px;
+      background: #e5e7eb;
+      overflow: hidden;
+    }
+    .progress-value {
+      height: 100%;
+      background: linear-gradient(to right, #8b5cf6, #6d28d9);
+      border-radius: 4px;
+    }
+    .optimization-score {
+      position: relative;
+      height: 120px;
+      width: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+    .optimization-score::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 50%;
+      border: 10px solid #e5e7eb;
+    }
+    .optimization-score::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 50%;
+      border: 10px solid transparent;
+      border-bottom-color: #6b46c1;
+      border-left-color: #6b46c1;
+      transform: rotate(45deg);
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="max-w-7xl mx-auto p-6">
+    <!-- Back Navigation -->
+    <button class="flex items-center text-gray-600 mb-4 hover:text-gray-900">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Back to Tours
+    </button>
+
+    <!-- Tabs -->
+    <div class="mb-6 border-b border-gray-200">
+      <div class="flex">
+        <button class="px-4 py-2 text-gray-600 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Overview
+        </button>
+        <button class="px-4 py-2 text-gray-600 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>
+          Route Planning
+        </button>
+        <button class="tab-active px-4 py-2 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+          </svg>
+          Optimization
+        </button>
+        <button class="px-4 py-2 text-gray-600 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+          Venues
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab Content: Optimization -->
+    <div class="space-y-6">
+      <!-- Optimization Header -->
+      <div class="card">
+        <div class="p-6">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="font-semibold flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+                Tour Optimizer
+              </h3>
+              <p class="text-sm text-gray-500 mt-1">Optimize your tour route to minimize travel time and maximize efficiency</p>
+            </div>
+
+            <button class="bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-md px-4 py-2 text-sm flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+              </svg>
+              Start Optimization
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Optimization Results -->
+      <div class="card p-6">
+        <h3 class="font-semibold mb-4">Optimization Results</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h4 class="text-sm font-medium text-gray-500 mb-2">Optimization Score</h4>
+            <div class="flex items-center">
+              <p class="text-2xl font-bold mr-2">80/100</p>
+              <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Optimized</span>
+            </div>
+          </div>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h4 class="text-sm font-medium text-gray-500 mb-2">Distance Savings</h4>
+            <div class="flex items-center">
+              <p class="text-2xl font-bold mr-2">25%</p>
+              <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">7,920 km</span>
+            </div>
+          </div>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h4 class="text-sm font-medium text-gray-500 mb-2">Time Savings</h4>
+            <div class="flex items-center">
+              <p class="text-2xl font-bold mr-2">22%</p>
+              <span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">119 hrs</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="space-y-3 mb-6">
+          <h4 class="font-medium">Optimization Benefits</h4>
+          <div class="space-y-2">
+            <div class="flex items-start">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <div>
+                <p class="font-medium">Reduced travel distance by 25%</p>
+                <p class="text-sm text-gray-600">Your optimized route is 7,920 km shorter</p>
+              </div>
+            </div>
+            <div class="flex items-start">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <div>
+                <p class="font-medium">Saved 119 hours of travel time</p>
+                <p class="text-sm text-gray-600">Spend less time on the road and more time preparing for shows</p>
+              </div>
+            </div>
+            <div class="flex items-start">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <div>
+                <p class="font-medium">Optimized venue sequence</p>
+                <p class="text-sm text-gray-600">Your venues are now arranged in the most efficient order</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex justify-end space-x-2">
+          <button class="border border-gray-300 text-gray-700 rounded-md px-4 py-2 text-sm">Revert Changes</button>
+          <button class="bg-purple-600 text-white rounded-md px-4 py-2 text-sm">Apply Changes</button>
+        </div>
+      </div>
+
+      <!-- Before/After Comparison -->
+      <div class="card">
+        <div class="p-4 border-b">
+          <h3 class="font-semibold">Before/After Comparison</h3>
+          <p class="text-sm text-gray-500">Compare your original route with the optimized version</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+          <!-- Original Route -->
+          <div>
+            <h4 class="text-sm font-medium mb-2 flex items-center">
+              <span class="w-3 h-3 rounded-full bg-orange-500 mr-2"></span>
+              Original Route (31,680 km)
+            </h4>
+            <div class="map-placeholder h-64 rounded-md relative overflow-hidden">
+              <!-- Sample Markers and Lines -->
+              <div class="absolute top-1/4 left-1/4 w-4 h-4 bg-orange-500 rounded-full"></div>
+              <div class="absolute top-1/3 left-1/2 w-4 h-4 bg-orange-500 rounded-full"></div>
+              <div class="absolute top-1/2 left-3/4 w-4 h-4 bg-orange-500 rounded-full"></div>
+              <div class="absolute top-2/3 left-1/3 w-4 h-4 bg-orange-500 rounded-full"></div>
+              <div class="absolute top-3/4 left-1/2 w-4 h-4 bg-orange-500 rounded-full"></div>
+            </div>
+          </div>
+          
+          <!-- Optimized Route -->
+          <div>
+            <h4 class="text-sm font-medium mb-2 flex items-center">
+              <span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span>
+              Optimized Route (23,760 km)
+            </h4>
+            <div class="map-placeholder h-64 rounded-md relative overflow-hidden">
+              <!-- Sample Markers and Lines -->
+              <div class="absolute top-1/4 left-1/4 w-4 h-4 bg-green-500 rounded-full"></div>
+              <div class="absolute top-1/3 left-1/3 w-4 h-4 bg-green-500 rounded-full"></div>
+              <div class="absolute top-1/2 left-1/2 w-4 h-4 bg-green-500 rounded-full"></div>
+              <div class="absolute top-2/3 left-2/3 w-4 h-4 bg-green-500 rounded-full"></div>
+              <div class="absolute top-3/4 left-3/4 w-4 h-4 bg-green-500 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="p-4 border-t">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Original Tour Statistics -->
+            <div>
+              <h4 class="text-sm font-medium mb-3">Original Tour Statistics</h4>
+              <div class="space-y-3">
+                <div>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span>Total Distance</span>
+                    <span class="font-medium">31,680 km</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-value" style="width: 100%;"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span>Travel Time</span>
+                    <span class="font-medium">543 hours</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-value" style="width: 100%;"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span>Avg. Distance Between Venues</span>
+                    <span class="font-medium">1,089 km</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-value" style="width: 100%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Optimized Tour Statistics -->
+            <div>
+              <h4 class="text-sm font-medium mb-3">Optimized Tour Statistics</h4>
+              <div class="space-y-3">
+                <div>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span>Total Distance</span>
+                    <span class="font-medium text-green-600">23,760 km (-25%)</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-value bg-green-500" style="width: 75%;"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span>Travel Time</span>
+                    <span class="font-medium text-green-600">424 hours (-22%)</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-value bg-green-500" style="width: 78%;"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span>Avg. Distance Between Venues</span>
+                    <span class="font-medium text-green-600">819 km (-25%)</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-value bg-green-500" style="width: 75%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Optimization Insights (Optional) -->
+      <div class="card p-6">
+        <h3 class="font-semibold mb-4 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+          AI Optimization Insights
+        </h3>
+        
+        <div class="bg-purple-50 border border-purple-100 rounded-lg p-4 mb-4">
+          <p class="text-sm text-gray-700">
+            Our AI analysis identified several opportunities to optimize your tour route. By reordering venues and adjusting dates, we created a more efficient path that reduces travel distance by 25% and saves approximately 119 hours of travel time.
+          </p>
+        </div>
+        
+        <div class="space-y-4">
+          <div class="flex items-start">
+            <div class="bg-purple-100 p-2 rounded-md mr-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
+            <div>
+              <h4 class="font-medium">Regional Grouping</h4>
+              <p class="text-sm text-gray-600">We grouped venues by geographic region to minimize long-distance travel between shows.</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start">
+            <div class="bg-purple-100 p-2 rounded-md mr-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <h4 class="font-medium">Date Adjustments</h4>
+              <p class="text-sm text-gray-600">We suggested adjusted dates for non-fixed venues to create a smoother flow between locations.</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start">
+            <div class="bg-purple-100 p-2 rounded-md mr-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+            </div>
+            <div>
+              <h4 class="font-medium">Route Reconfiguration</h4>
+              <p class="text-sm text-gray-600">We eliminated inefficient zigzag patterns in your original route to create a more direct path.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview tabs button bar - just for demonstration purposes -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex justify-center gap-3">
+    <button class="bg-gray-200 text-gray-700 rounded-md px-4 py-2 text-sm">Overview Tab</button>
+    <button class="bg-gray-200 text-gray-700 rounded-md px-4 py-2 text-sm">Route Planning Tab</button>
+    <button class="bg-purple-600 text-white rounded-md px-4 py-2 text-sm">Optimization Tab</button>
+    <button class="bg-gray-200 text-gray-700 rounded-md px-4 py-2 text-sm">Venues Tab</button>
+  </div>
+</body>
+</html>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tour Detail Tabbed Interface Mockup</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .tab-active {
+      color: #6b46c1;
+      border-bottom: 2px solid #6b46c1;
+      background-color: rgba(124, 58, 237, 0.1);
+    }
+    .card {
+      background: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    .timeline-item {
+      position: relative;
+    }
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 25px;
+      bottom: -10px;
+      width: 2px;
+      background: #e5e7eb;
+    }
+    .timeline-item:last-child::before {
+      display: none;
+    }
+    .timeline-marker {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      position: relative;
+      border: 2px solid white;
+    }
+    .venue-card:hover {
+      background: #f9fafb;
+    }
+    .optimization-score {
+      position: relative;
+      height: 100px;
+      width: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+    .optimization-score::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 50%;
+      border: 8px solid #e5e7eb;
+    }
+    .optimization-score::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 50%;
+      border: 8px solid transparent;
+      border-bottom-color: #6b46c1;
+      border-left-color: #6b46c1;
+      transform: rotate(45deg);
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="max-w-7xl mx-auto p-6">
+    <!-- Back Navigation -->
+    <button class="flex items-center text-gray-600 mb-4 hover:text-gray-900">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Back to Tours
+    </button>
+
+    <!-- Tabs -->
+    <div class="mb-6 border-b border-gray-200">
+      <div class="flex">
+        <button class="tab-active px-4 py-2 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Overview
+        </button>
+        <button class="px-4 py-2 text-gray-600 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>
+          Route Planning
+        </button>
+        <button class="px-4 py-2 text-gray-600 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+          </svg>
+          Optimization
+        </button>
+        <button class="px-4 py-2 text-gray-600 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+          Venues
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab Content: Overview -->
+    <div class="space-y-6">
+      <!-- Tour Header -->
+      <div class="card p-6">
+        <div class="flex justify-between items-start">
+          <div>
+            <h1 class="text-2xl font-bold">Large Dataset Test Tour</h1>
+            <p class="text-gray-600 flex items-center mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+              </svg>
+              The Crystal Method
+              <span class="mx-2">•</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Jul 15, 2025 - Oct 15, 2025
+            </p>
+          </div>
+          <div class="flex items-center">
+            <span class="bg-purple-100 text-purple-800 text-xs px-3 py-1 rounded-full">
+              Planning
+            </span>
+            <button class="ml-3 text-gray-600 border border-gray-300 px-3 py-1 rounded-md text-sm flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit
+            </button>
+          </div>
+        </div>
+        <p class="mt-4 text-gray-600">
+          This tour has many venues to test optimization performance with large datasets.
+        </p>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="card p-6">
+          <div class="flex justify-between">
+            <div>
+              <p class="text-sm text-gray-500">Venues</p>
+              <p class="text-2xl font-bold mt-1">30</p>
+              <p class="text-xs text-gray-500 mt-1">2 confirmed, 28 potential</p>
+            </div>
+            <div class="bg-gray-100 rounded-md p-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="card p-6">
+          <div class="flex justify-between">
+            <div>
+              <p class="text-sm text-gray-500">Distance</p>
+              <p class="text-2xl font-bold mt-1">31,680 km</p>
+              <p class="text-xs text-gray-500 mt-1">Estimated travel distance</p>
+            </div>
+            <div class="bg-gray-100 rounded-md p-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="card p-6">
+          <div class="flex justify-between">
+            <div>
+              <p class="text-sm text-gray-500">Travel Time</p>
+              <p class="text-2xl font-bold mt-1">543 hours</p>
+              <p class="text-xs text-gray-500 mt-1">Estimated time on the road</p>
+            </div>
+            <div class="bg-gray-100 rounded-md p-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="card p-6">
+          <div class="flex justify-between">
+            <div>
+              <p class="text-sm text-gray-500">Budget</p>
+              <p class="text-2xl font-bold mt-1">$150,000</p>
+              <p class="text-xs text-gray-500 mt-1">Total tour budget</p>
+            </div>
+            <div class="bg-gray-100 rounded-md p-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="card p-6">
+          <div class="flex justify-between">
+            <div>
+              <p class="text-sm text-gray-500">Tour Type</p>
+              <p class="text-2xl font-bold mt-1">Headline</p>
+              <p class="text-xs text-gray-500 mt-1">Type of performances</p>
+            </div>
+            <div class="bg-gray-100 rounded-md p-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="card p-6">
+          <div class="flex justify-between">
+            <div>
+              <p class="text-sm text-gray-500">Optimization</p>
+              <p class="text-2xl font-bold mt-1">80/100</p>
+              <p class="text-xs text-gray-500 mt-1">Route optimization score</p>
+            </div>
+            <div class="bg-gray-100 rounded-md p-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card p-6">
+        <h3 class="font-semibold mb-4">Quick Actions</h3>
+        <div class="flex flex-wrap gap-2">
+          <button class="border border-gray-300 rounded-md px-3 py-1 text-sm flex items-center text-gray-700 hover:bg-gray-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Edit Tour Details
+          </button>
+          <button class="border border-gray-300 rounded-md px-3 py-1 text-sm flex items-center text-gray-700 hover:bg-gray-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            Add Venue
+          </button>
+          <button class="border border-gray-300 rounded-md px-3 py-1 text-sm flex items-center text-gray-700 hover:bg-gray-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            Invite Team Members
+          </button>
+          <button class="border border-gray-300 rounded-md px-3 py-1 text-sm flex items-center text-gray-700 hover:bg-gray-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Export Calendar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Content: Route Planning (hidden in this mockup) -->
+    <!-- <div class="space-y-6"> ... route planning content here ... </div> -->
+
+    <!-- Tab Content: Optimization (hidden in this mockup) -->
+    <!-- <div class="space-y-6"> ... optimization content here ... </div> -->
+
+    <!-- Tab Content: Venues (hidden in this mockup) -->
+    <!-- <div class="space-y-6"> ... venues content here ... </div> -->
+  </div>
+
+  <!-- Preview tabs button bar - just for demonstration purposes -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex justify-center gap-3">
+    <button class="bg-purple-600 text-white rounded-md px-4 py-2 text-sm">Overview Tab</button>
+    <button class="bg-gray-200 text-gray-700 rounded-md px-4 py-2 text-sm">Route Planning Tab</button>
+    <button class="bg-gray-200 text-gray-700 rounded-md px-4 py-2 text-sm">Optimization Tab</button>
+    <button class="bg-gray-200 text-gray-700 rounded-md px-4 py-2 text-sm">Venues Tab</button>
+  </div>
+</body>
+</html>
