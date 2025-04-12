@@ -1,8 +1,8 @@
 /**
  * Unified Tour Optimizer
  * 
- * This module merges the standard optimization and AI optimization approaches
- * to provide a consistent interface for tour optimization.
+ * This module provides a consistent interface for tour optimization using
+ * OpenAI for AI-powered optimization with fallback to standard optimization.
  */
 
 import { Router, Request, Response } from 'express';
@@ -30,22 +30,11 @@ import {
   calculateOptimizationScore
 } from '../../shared/utils/geo';
 
-// Import AI optimization clients
-import { HfInference } from '@huggingface/inference';
+// Import OpenAI client
 import OpenAI from 'openai';
 
 // Create router for the unified optimizer
 export const unifiedOptimizerRouter = Router();
-
-// Get Hugging Face API token with fallback
-function getHfToken(): string {
-  const token = process.env.HUGGINGFACE_API_KEY;
-  if (!token) {
-    console.warn('HUGGINGFACE_API_KEY not found. AI optimization will fall back to utility-based optimization.');
-    return 'hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
-  }
-  return token;
-}
 
 // Format tour data for optimization
 async function formatTourDataForOptimization(tourId: number) {
@@ -158,203 +147,25 @@ function performStandardOptimization(tourData: any) {
   };
 }
 
-// Attempt AI optimization with fallback to standard optimization
+// Perform AI optimization with OpenAI
 async function attemptAIOptimization(tourData: any) {
   try {
     // Calculate baseline metrics
     const totalDistance = calculateTotalDistance(tourData.allVenues);
     const totalTravelTimeMinutes = estimateTravelTime(totalDistance);
     
-    // Create inference client with API key
-    const hf = new HfInference(getHfToken());
+    // Check if OpenAI API key is available
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key not found');
+    }
     
-    // Define prompt for the AI model
-    const prompt = `
-You are an AI assistant specializing in tour optimization for artists and venues.
-
-# TOUR DATA
-Tour Name: ${tourData.tourName}
-Artist: ${tourData.artistName}
-Genres: ${tourData.artistGenres.join(', ')}
-Start Date: ${tourData.startDate || 'Not set'}
-End Date: ${tourData.endDate || 'Not set'}
-
-# CONFIRMED VENUES (fixed points that cannot be changed)
-${tourData.confirmedVenues.map((v: any, i: number) => 
-  `${i+1}. ${v.name} (${v.city}) - ${v.date ? new Date(v.date).toLocaleDateString() : 'No date'} - Coordinates: [${v.latitude}, ${v.longitude}] - ID: ${v.id}`
-).join('\n')}
-
-# POTENTIAL VENUES (can be reordered, included, or excluded)
-${tourData.potentialVenues.map((v: any, i: number) => 
-  `${i+1}. ${v.name} (${v.city}) - ${v.date ? new Date(v.date).toLocaleDateString() : 'No date'} - Coordinates: [${v.latitude}, ${v.longitude}] - ID: ${v.id}`
-).join('\n')}
-
-# TASK
-Analyze this tour data and provide optimization suggestions. Consider:
-
-1. Optimal venue sequence to minimize travel distance
-2. Suggested dates for venues without dates
-3. Venues that should be skipped
-4. New venues that should be added to fill geographical gaps
-
-# OUTPUT FORMAT INSTRUCTIONS
-Your response MUST include ONLY a valid JSON object enclosed in triple backticks with the json tag.
-Example:
-\`\`\`json
-{
-  "optimizedSequence": [1, 2, 3, 4, 5],
-  "suggestedDates": {"1": "2025-06-15", "3": "2025-07-03"},
-  "recommendedVenues": [1, 3],
-  "suggestedSkips": [],
-  "estimatedDistanceReduction": "15%",
-  "estimatedTimeSavings": "20%",
-  "reasoning": "The optimized sequence minimizes travel distance by placing venues in geographic order."
-}
-\`\`\`
-
-Do not include any text before or after the JSON code block. Only include valid venue_ids from the provided lists. For the optimizedSequence, include ALL venues that should be kept in the final tour (both confirmed and recommended potential venues).
-`;
-    
-    // Call Hugging Face API
-    const response = await hf.textGeneration({
-      // Use a more widely accessible model
-      model: "mistralai/Mistral-7B-Instruct-v0.2",
-      inputs: prompt,
-      parameters: {
-        max_new_tokens: 1500,
-        temperature: 0.7,
-        return_full_text: false
-      }
+    // Initialize OpenAI client
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
     });
-
-    // Extract JSON from the response
-    const text = response.generated_text;
-    let aiSuggestions;
     
-    try {
-      // Try to find a JSON object in the response
-      console.log("Raw AI response:", text);
-      
-      // First attempt: Look for code block with JSON - This addresses multi-line JSON responses
-      // that might be formatted as Markdown code blocks
-      let jsonMatch = text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
-      if (jsonMatch) {
-        try {
-          aiSuggestions = JSON.parse(jsonMatch[1]);
-          console.log("Successfully parsed JSON from code block");
-        } catch (err) {
-          console.warn("Error parsing JSON from code block:", err);
-          jsonMatch = null; // Reset to try other methods
-        }
-      }
-      
-      // Second attempt: Look for a JSON object with the expected fields
-      if (!aiSuggestions) {
-        jsonMatch = text.match(/\{[\s\S]*?"optimizedSequence"[\s\S]*?\}/);
-        if (jsonMatch) {
-          try {
-            aiSuggestions = JSON.parse(jsonMatch[0]);
-            console.log("Successfully parsed JSON with optimizedSequence field");
-          } catch (err) {
-            console.warn("Error parsing JSON with optimizedSequence field:", err);
-          }
-        }
-      }
-      
-      // Third attempt: Look for any JSON object
-      if (!aiSuggestions) {
-        jsonMatch = text.match(/\{[\s\S]*?\}/);
-        if (jsonMatch) {
-          try {
-            aiSuggestions = JSON.parse(jsonMatch[0]);
-            console.log("Successfully parsed generic JSON object");
-          } catch (err) {
-            console.warn("Error parsing generic JSON object:", err);
-          }
-        }
-      }
-      
-      // If no JSON could be parsed, create a fallback response
-      if (!aiSuggestions) {
-        // Extract the sequence from the text based on common patterns
-        // Often the model will describe the sequence in natural language first
-        const sequenceMatch = text.match(/optimal sequence(?:.*?)(?:is|:)(?:.*?)([0-9][0-9,\s]*[0-9])/i);
-        if (sequenceMatch) {
-          const sequence = sequenceMatch[1].split(/[,\s]+/).map(s => parseInt(s.trim())).filter(n => !isNaN(n));
-          if (sequence.length > 0) {
-            console.log("Extracted sequence from text:", sequence);
-            aiSuggestions = {
-              optimizedSequence: sequence,
-              suggestedDates: {},
-              recommendedVenues: [],
-              suggestedSkips: [],
-              estimatedDistanceReduction: "10%",
-              estimatedTimeSavings: "15%",
-              reasoning: "Extracted from AI natural language response"
-            };
-          }
-        }
-      }
-      
-      if (!aiSuggestions) {
-        throw new Error("Failed to parse AI response");
-      }
-    } catch (parseError: any) {
-      console.error("Error processing AI response:", parseError);
-      // Fall back to standard optimization if parsing fails
-      return { 
-        ...performStandardOptimization(tourData),
-        aiError: {
-          message: 'Error parsing AI response, using fallback optimization',
-          details: parseError?.message || 'Unknown parsing error'
-        }
-      };
-    }
-
-    // Calculate metrics for the AI-optimized sequence
-    const aiOptimizedVenues = aiSuggestions.optimizedSequence
-      .map((id: number) => tourData.allVenues.find((v: any) => v.id === id))
-      .filter(Boolean);
-    
-    const optimizedDistance = calculateTotalDistance(aiOptimizedVenues);
-    const optimizedTimeMinutes = estimateTravelTime(optimizedDistance);
-
-    // Return successful AI optimization
-    return {
-      optimizationMethod: 'ai',
-      ...aiSuggestions,
-      calculatedMetrics: {
-        totalDistance: `${totalDistance} km`,
-        totalTravelTimeMinutes,
-        optimizedDistance: `${optimizedDistance} km`,
-        optimizedTimeMinutes
-      }
-    };
-  } catch (aiError: any) {
-    console.error("Error calling AI service:", aiError);
-    
-    // Create appropriate error message
-    let errorMessage = 'AI service unavailable, using fallback optimization';
-    
-    // For credits exceeded error, show more specific message
-    if (aiError?.message?.includes('exceeded your monthly included credits')) {
-      errorMessage = 'AI service credits exceeded, using fallback optimization';
-    }
-    
-    // If OpenAI is available but Hugging Face failed, try to use OpenAI
-    if (process.env.OPENAI_API_KEY && 
-        (aiError?.message?.includes('exceeded your monthly included credits') || 
-         aiError?.message?.includes('API key'))) {
-      try {
-        console.log('Attempting OpenAI fallback for AI optimization...');
-        
-        // Initialize OpenAI client
-        const openai = new OpenAI({
-          apiKey: process.env.OPENAI_API_KEY
-        });
-        
-        // Create the same prompt for OpenAI
-        const openAiPrompt = `
+    // Create prompt for OpenAI
+    const openAiPrompt = `
 You are an AI assistant specializing in tour optimization for artists and venues.
 
 # TOUR DATA
@@ -397,106 +208,104 @@ Your response MUST be a valid JSON object with the following structure:
 Only include valid venue_ids from the provided lists. For the optimizedSequence, include ALL venues that should be kept in the final tour (both confirmed and recommended potential venues).
 `;
 
-        // Call OpenAI API
-        const openAiResponse = await openai.chat.completions.create({
-          model: "gpt-3.5-turbo",
-          messages: [
-            {
-              role: "system", 
-              content: "You are a specialized AI for optimizing music tours. Generate JSON responses based on venue and tour data."
-            },
-            {
-              role: "user",
-              content: openAiPrompt
-            }
-          ],
-          temperature: 0.7,
-        });
-        
-        // Extract content from OpenAI response
-        const openAiContent = openAiResponse.choices[0]?.message?.content || '';
-        console.log("OpenAI response:", openAiContent);
-        
-        // Parse the JSON response
-        let openAiSuggestions;
+    // Call OpenAI API
+    const openAiResponse = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system", 
+          content: "You are a specialized AI for optimizing music tours. Generate JSON responses based on venue and tour data."
+        },
+        {
+          role: "user",
+          content: openAiPrompt
+        }
+      ],
+      temperature: 0.7,
+    });
+    
+    // Extract content from OpenAI response
+    const openAiContent = openAiResponse.choices[0]?.message?.content || '';
+    console.log("OpenAI response:", openAiContent);
+    
+    // Parse the JSON response
+    let openAiSuggestions;
+    try {
+      // First try - direct JSON parse
+      openAiSuggestions = JSON.parse(openAiContent);
+    } catch (parseError) {
+      console.warn("Direct JSON parse failed, trying to extract JSON:", parseError);
+      
+      // Second try - try to extract code block
+      const codeBlockMatch = openAiContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+      if (codeBlockMatch && codeBlockMatch[1]) {
         try {
-          // First try - direct JSON parse
-          openAiSuggestions = JSON.parse(openAiContent);
-        } catch (parseError) {
-          console.warn("Direct JSON parse failed, trying to extract JSON:", parseError);
+          openAiSuggestions = JSON.parse(codeBlockMatch[1]);
+        } catch (codeBlockError) {
+          console.error("Failed to parse JSON from code block:", codeBlockError);
           
-          // Second try - try to extract code block
-          const codeBlockMatch = openAiContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
-          if (codeBlockMatch && codeBlockMatch[1]) {
+          // Third try - extract JSON object using regex
+          const jsonMatch = openAiContent.match(/\{[\s\S]*?\}/);
+          if (jsonMatch) {
             try {
-              openAiSuggestions = JSON.parse(codeBlockMatch[1]);
-            } catch (codeBlockError) {
-              console.error("Failed to parse JSON from code block:", codeBlockError);
-              
-              // Third try - extract JSON object using regex
-              const jsonMatch = openAiContent.match(/\{[\s\S]*?\}/);
-              if (jsonMatch) {
-                try {
-                  openAiSuggestions = JSON.parse(jsonMatch[0]);
-                } catch (nestedError) {
-                  console.error("Failed to parse JSON from OpenAI response:", nestedError);
-                  throw new Error("Unable to parse OpenAI response");
-                }
-              } else {
-                throw new Error("No JSON object found in OpenAI response");
-              }
+              openAiSuggestions = JSON.parse(jsonMatch[0]);
+            } catch (nestedError) {
+              console.error("Failed to parse JSON from OpenAI response:", nestedError);
+              throw new Error("Unable to parse OpenAI response");
             }
           } else {
-            // Try simple JSON extraction if no code block found
-            const jsonMatch = openAiContent.match(/\{[\s\S]*?\}/);
-            if (jsonMatch) {
-              try {
-                openAiSuggestions = JSON.parse(jsonMatch[0]);
-              } catch (nestedError) {
-                console.error("Failed to parse JSON from OpenAI response:", nestedError);
-                throw new Error("Unable to parse OpenAI response");
-              }
-            } else {
-              throw new Error("No JSON object found in OpenAI response");
-            }
+            throw new Error("No JSON object found in OpenAI response");
           }
         }
-        
-        // Calculate metrics for the OpenAI-optimized sequence
-        const aiOptimizedVenues = openAiSuggestions.optimizedSequence
-          .map((id: number) => tourData.allVenues.find((v: any) => v.id === id))
-          .filter(Boolean);
-        
-        // Re-calculate baseline metrics for consistency
-        const totalDistanceForOpenAI = calculateTotalDistance(tourData.allVenues);
-        const totalTravelTimeMinutesForOpenAI = estimateTravelTime(totalDistanceForOpenAI);
-        
-        const optimizedDistance = calculateTotalDistance(aiOptimizedVenues);
-        const optimizedTimeMinutes = estimateTravelTime(optimizedDistance);
-        
-        // Return successful OpenAI optimization
-        return {
-          optimizationMethod: 'ai',
-          ...openAiSuggestions,
-          calculatedMetrics: {
-            totalDistance: `${totalDistanceForOpenAI} km`,
-            totalTravelTimeMinutes: totalTravelTimeMinutesForOpenAI,
-            optimizedDistance: `${optimizedDistance} km`,
-            optimizedTimeMinutes
+      } else {
+        // Try simple JSON extraction if no code block found
+        const jsonMatch = openAiContent.match(/\{[\s\S]*?\}/);
+        if (jsonMatch) {
+          try {
+            openAiSuggestions = JSON.parse(jsonMatch[0]);
+          } catch (nestedError) {
+            console.error("Failed to parse JSON from OpenAI response:", nestedError);
+            throw new Error("Unable to parse OpenAI response");
           }
-        };
-        
-      } catch (openaiError) {
-        console.error("OpenAI fallback also failed:", openaiError);
+        } else {
+          throw new Error("No JSON object found in OpenAI response");
+        }
       }
     }
+    
+    // Calculate metrics for the OpenAI-optimized sequence
+    const aiOptimizedVenues = openAiSuggestions.optimizedSequence
+      .map((id: number) => tourData.allVenues.find((v: any) => v.id === id))
+      .filter(Boolean);
+    
+    // Re-calculate baseline metrics for consistency
+    const totalDistanceForOpenAI = calculateTotalDistance(tourData.allVenues);
+    const totalTravelTimeMinutesForOpenAI = estimateTravelTime(totalDistanceForOpenAI);
+    
+    const optimizedDistance = calculateTotalDistance(aiOptimizedVenues);
+    const optimizedTimeMinutes = estimateTravelTime(optimizedDistance);
+    
+    // Return successful OpenAI optimization
+    return {
+      optimizationMethod: 'ai',
+      ...openAiSuggestions,
+      calculatedMetrics: {
+        totalDistance: `${totalDistanceForOpenAI} km`,
+        totalTravelTimeMinutes: totalTravelTimeMinutesForOpenAI,
+        optimizedDistance: `${optimizedDistance} km`,
+        optimizedTimeMinutes
+      }
+    };
+    
+  } catch (error: any) {
+    console.error("OpenAI optimization error:", error);
     
     // Fall back to standard optimization
     return { 
       ...performStandardOptimization(tourData),
       aiError: {
-        message: errorMessage,
-        details: aiError?.message || 'Unknown error'
+        message: 'OpenAI optimization failed, using fallback optimization',
+        details: error?.message || 'Unknown error'
       }
     };
   }
@@ -533,11 +342,11 @@ unifiedOptimizerRouter.post('/optimize/:tourId', async (req: Request, res: Respo
       default:
         // Try AI first, fall back to standard if needed
         try {
-          // Check if we have an OpenAI or Hugging Face API key
-          if (process.env.OPENAI_API_KEY || process.env.HUGGINGFACE_API_KEY) {
+          // Check if we have an OpenAI API key
+          if (process.env.OPENAI_API_KEY) {
             result = await attemptAIOptimization(tourData);
           } else {
-            console.log("No AI service API keys found, using standard optimization");
+            console.log("No OpenAI API key found, using standard optimization");
             result = performStandardOptimization(tourData);
           }
         } catch (error) {
