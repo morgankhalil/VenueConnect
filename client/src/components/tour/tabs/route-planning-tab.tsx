@@ -455,6 +455,23 @@ export function RoutePlanningTab({
         </div>
       </div>
       
+      {/* Advanced Optimization Panel */}
+      {hasEnoughVenues && (
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold mb-3">Advanced Optimization Options</h3>
+          <TourOptimizationPanel 
+            tourId={tourId} 
+            onApplyChanges={() => {
+              refetch();
+              toast({
+                title: "Optimization applied",
+                description: "Tour has been optimized with advanced settings",
+              });
+            }} 
+          />
+        </div>
+      )}
+      
       {/* Timeline section */}
       <div className="mb-2 mt-6">
         <div className="flex items-center justify-between mb-3">
