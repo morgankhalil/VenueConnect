@@ -148,14 +148,31 @@ export function OptimizationTab({
     if (!optimizationResult) return;
     
     try {
-      await apiRequest(`/api/tours/${tourId}/apply-optimization`, {
+      // Determine which API to use based on the optimization type
+      let applyEndpoint = '';
+      let payload = {};
+      
+      // If AI optimization was used (and we have the special optimizationResult.optimizationMethod field)
+      if (optimizationResult.optimizationMethod === 'ai') {
+        applyEndpoint = `/api/unified-optimizer/apply/${tourId}`;
+        payload = {
+          optimizedSequence: optimizationResult.optimizedSequence,
+          suggestedDates: optimizationResult.suggestedDates || {}
+        };
+      } else {
+        // Standard optimization
+        applyEndpoint = `/api/tours/${tourId}/apply-optimization`;
+        payload = {
+          optimizationData: optimizationResult
+        };
+      }
+      
+      await apiRequest(applyEndpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            optimizationId: optimizationResult.id
-          }),
+          body: JSON.stringify(payload),
       });
       
       // Refresh tour data and notify parent
