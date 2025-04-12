@@ -1,0 +1,274 @@
+Database connection initialized
+Found 34 artists in database
+
+Processing artist: The Midnight
+Fetching artist data for 'The Midnight'...
+Successfully retrieved data for artist The Midnight
+Artist 'The Midnight' already exists in database
+Fetching events for artist 'The Midnight'...
+Successfully retrieved 0 events for The Midnight
+No events found for The Midnight, continuing to next artist
+
+Processing artist: Khruangbin
+Fetching artist data for 'Khruangbin'...
+Successfully retrieved data for artist Khruangbin
+Artist 'Khruangbin' already exists in database
+Fetching events for artist 'Khruangbin'...
+Successfully retrieved 0 events for Khruangbin
+No events found for Khruangbin, continuing to next artist
+
+Processing artist: Japanese Breakfast
+Fetching artist data for 'Japanese Breakfast'...
+Successfully retrieved data for artist Japanese Breakfast
+Artist 'Japanese Breakfast' already exists in database
+Fetching events for artist 'Japanese Breakfast'...
+Successfully retrieved 0 events for Japanese Breakfast
+No events found for Japanese Breakfast, continuing to next artist
+
+Processing artist: Test Artist
+Fetching artist data for 'Test Artist'...
+No data found for artist Test Artist
+Failed to fetch data for Test Artist, skipping
+
+Processing artist: Demo AI Band
+Fetching artist data for 'Demo AI Band'...
+No data found for artist Demo AI Band
+Failed to fetch data for Demo AI Band, skipping
+
+Processing artist: The Black Keys
+Fetching artist data for 'The Black Keys'...
+Successfully retrieved data for artist The Black Keys
+Artist 'The Black Keys' already exists in database
+Fetching events for artist 'The Black Keys'...
+Successfully retrieved 0 events for The Black Keys
+No events found for The Black Keys, continuing to next artist
+
+Processing artist: Coldplay
+Fetching artist data for 'Coldplay'...
+Successfully retrieved data for artist Coldplay
+Artist 'Coldplay' already exists in database
+Fetching events for artist 'Coldplay'...
+Successfully retrieved 0 events for Coldplay
+No events found for Coldplay, continuing to next artist
+
+Processing artist: The Killers
+Fetching artist data for 'The Killers'...
+Successfully retrieved data for artist The Killers
+Artist 'The Killers' already exists in database
+Fetching events for artist 'The Killers'...
+Successfully retrieved 0 events for The Killers
+No events found for The Killers, continuing to next artist
+
+Processing artist: Cage the Elephant
+Fetching artist data for 'Cage the Elephant'...
+Successfully retrieved data for artist Cage the Elephant
+Artist 'Cage the Elephant' already exists in database
+Fetching events for artist 'Cage the Elephant'...
+Successfully retrieved 0 events for Cage the Elephant
+No events found for Cage the Elephant, continuing to next artist
+
+Processing artist: twenty one pilots
+Fetching artist data for 'twenty one pilots'...
+Successfully retrieved data for artist twenty one pilots
+Artist 'twenty one pilots' already exists in database
+Fetching events for artist 'twenty one pilots'...
+Successfully retrieved 0 events for twenty one pilots
+No events found for twenty one pilots, continuing to next artist
+
+Processing artist: Arctic Monkeys
+Fetching artist data for 'Arctic Monkeys'...
+Successfully retrieved data for artist Arctic Monkeys
+Artist 'Arctic Monkeys' already exists in database
+Fetching events for artist 'Arctic Monkeys'...
+Successfully retrieved 0 events for Arctic Monkeys
+No events found for Arctic Monkeys, continuing to next artist
+
+Processing artist: The Strokes
+Fetching artist data for 'The Strokes'...
+Successfully retrieved data for artist The Strokes
+Artist 'The Strokes' already exists in database
+Fetching events for artist 'The Strokes'...
+Successfully retrieved 0 events for The Strokes
+No events found for The Strokes, continuing to next artist
+
+Processing artist: Vampire Weekend
+Fetching artist data for 'Vampire Weekend'...
+Successfully retrieved data for artist Vampire Weekend
+Artist 'Vampire Weekend' already exists in database
+Fetching events for artist 'Vampire Weekend'...
+Successfully retrieved 0 events for Vampire Weekend
+No events found for Vampire Weekend, continuing to next artist
+
+Processing artist: Bon Iver
+Fetching artist data for 'Bon Iver'...
+Successfully retrieved data for artist Bon Iver
+Artist 'Bon Iver' already exists in database
+Fetching events for artist 'Bon Iver'...
+Successfully retrieved 0 events for Bon Iver
+No events found for Bon Iver, continuing to next artist
+
+Processing artist: Fleet Foxes
+Fetching artist data for 'Fleet Foxes'...
+Successfully retrieved data for artist Fleet Foxes
+Artist 'Fleet Foxes' already exists in database
+Fetching events for artist 'Fleet Foxes'...
+Successfully retrieved 0 events for Fleet Foxes
+No events found for Fleet Foxes, continuing to next artist
+
+Processing artist: The Lumineers
+Fetching artist data for 'The Lumineers'...
+Successfully retrieved data for artist The Lumineers
+Artist 'The Lumineers' already exists in database
+Fetching events for artist 'The Lumineers'...
+Successfully retrieved 0 events for The Lumineers
+No events found for The Lumineers, continuing to next artist
+
+Processing artist: The Head And The Heart
+Fetching artist data for 'The Head And The Heart'...
+Successfully retrieved data for artist The Head And The Heart
+Artist 'The Head And The Heart' already exists in database
+Fetching events for artist 'The Head And The Heart'...
+Successfully retrieved 0 events for The Head And The Heart
+No events found for The Head And The Heart, continuing to next artist
+
+Processing artist: Harry Styles
+Fetching artist data for 'Harry Styles'...
+Successfully retrieved data for artist Harry Styles
+Artist 'Harry Styles' already exists in database
+Fetching events for artist 'Harry Styles'...
+Successfully retrieved 0 events for Harry Styles
+No events found for Harry Styles, continuing to next artist
+
+Processing artist: Dua Lipa
+Fetching artist data for 'Dua Lipa'...
+Successfully retrieved data for artist Dua Lipa
+Artist 'Dua Lipa' already exists in database
+Fetching events for artist 'Dua Lipa'...
+Successfully retrieved 0 events for Dua Lipa
+No events found for Dua Lipa, continuing to next artist
+
+Processing artist: Flume
+Fetching artist data for 'Flume'...
+Successfully retrieved data for artist Flume
+Artist 'Flume' already exists in database
+Fetching events for artist 'Flume'...
+Successfully retrieved 0 events for Flume
+No events found for Flume, continuing to next artist
+
+Processing artist: Odesza
+Fetching artist data for 'Odesza'...
+Successfully retrieved data for artist Odesza
+Artist 'Odesza' already exists in database
+Fetching events for artist 'Odesza'...
+Successfully retrieved 0 events for Odesza
+No events found for Odesza, continuing to next artist
+
+Processing artist: Disclosure
+Fetching artist data for 'Disclosure'...
+Successfully retrieved data for artist Disclosure
+Artist 'Disclosure' already exists in database
+Fetching events for artist 'Disclosure'...
+Successfully retrieved 0 events for Disclosure
+No events found for Disclosure, continuing to next artist
+
+Processing artist: Kendrick Lamar
+Fetching artist data for 'Kendrick Lamar'...
+Successfully retrieved data for artist Kendrick Lamar
+Artist 'Kendrick Lamar' already exists in database
+Fetching events for artist 'Kendrick Lamar'...
+Successfully retrieved 0 events for Kendrick Lamar
+No events found for Kendrick Lamar, continuing to next artist
+
+Processing artist: Tyler, The Creator
+Fetching artist data for 'Tyler, The Creator'...
+Successfully retrieved data for artist Tyler, The Creator
+Artist 'Tyler, The Creator' already exists in database
+Fetching events for artist 'Tyler, The Creator'...
+Successfully retrieved 0 events for Tyler, The Creator
+No events found for Tyler, The Creator, continuing to next artist
+
+Processing artist: Run The Jewels
+Fetching artist data for 'Run The Jewels'...
+Successfully retrieved data for artist Run The Jewels
+Artist 'Run The Jewels' already exists in database
+Fetching events for artist 'Run The Jewels'...
+Successfully retrieved 0 events for Run The Jewels
+No events found for Run The Jewels, continuing to next artist
+
+Processing artist: Chris Stapleton
+Fetching artist data for 'Chris Stapleton'...
+Successfully retrieved data for artist Chris Stapleton
+Artist 'Chris Stapleton' already exists in database
+Fetching events for artist 'Chris Stapleton'...
+Successfully retrieved 0 events for Chris Stapleton
+No events found for Chris Stapleton, continuing to next artist
+
+Processing artist: Sturgill Simpson
+Fetching artist data for 'Sturgill Simpson'...
+Successfully retrieved data for artist Sturgill Simpson
+Artist 'Sturgill Simpson' already exists in database
+Fetching events for artist 'Sturgill Simpson'...
+Successfully retrieved 0 events for Sturgill Simpson
+No events found for Sturgill Simpson, continuing to next artist
+
+Processing artist: Jason Isbell
+Fetching artist data for 'Jason Isbell'...
+Successfully retrieved data for artist Jason Isbell
+Artist 'Jason Isbell' already exists in database
+Fetching events for artist 'Jason Isbell'...
+Successfully retrieved 0 events for Jason Isbell
+No events found for Jason Isbell, continuing to next artist
+
+Processing artist: Dead & Company
+Fetching artist data for 'Dead & Company'...
+Successfully retrieved data for artist Dead & Company
+Artist 'Dead & Company' already exists in database
+Fetching events for artist 'Dead & Company'...
+Successfully retrieved 0 events for Dead & Company
+No events found for Dead & Company, continuing to next artist
+
+Processing artist: Phish
+Fetching artist data for 'Phish'...
+Successfully retrieved data for artist Phish
+Artist 'Phish' already exists in database
+Fetching events for artist 'Phish'...
+Successfully retrieved 0 events for Phish
+No events found for Phish, continuing to next artist
+
+Processing artist: Pearl Jam
+Fetching artist data for 'Pearl Jam'...
+Successfully retrieved data for artist Pearl Jam
+Artist 'Pearl Jam' already exists in database
+Fetching events for artist 'Pearl Jam'...
+Successfully retrieved 0 events for Pearl Jam
+No events found for Pearl Jam, continuing to next artist
+
+Processing artist: Phoebe Bridgers
+Fetching artist data for 'Phoebe Bridgers'...
+Successfully retrieved data for artist Phoebe Bridgers
+Artist 'Phoebe Bridgers' already exists in database
+Fetching events for artist 'Phoebe Bridgers'...
+Successfully retrieved 0 events for Phoebe Bridgers
+No events found for Phoebe Bridgers, continuing to next artist
+
+Processing artist: Soccer Mommy
+Fetching artist data for 'Soccer Mommy'...
+Successfully retrieved data for artist Soccer Mommy
+Artist 'Soccer Mommy' already exists in database
+Fetching events for artist 'Soccer Mommy'...
+Successfully retrieved 0 events for Soccer Mommy
+No events found for Soccer Mommy, continuing to next artist
+
+Processing artist: Snail Mail
+Fetching artist data for 'Snail Mail'...
+Successfully retrieved data for artist Snail Mail
+Artist 'Snail Mail' already exists in database
+Fetching events for artist 'Snail Mail'...
+Successfully retrieved 0 events for Snail Mail
+No events found for Snail Mail, continuing to next artist
+
+== Seeding Complete ==
+Artists processed: 32/34
+Venues added: 0
+Events added: 0
+Failed artists: Test Artist, Demo AI Band
