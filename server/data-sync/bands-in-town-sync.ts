@@ -53,9 +53,16 @@ export async function syncArtistEventsFromBandsInTown(artistName: string) {
   }
 
   try {
+    // Get events from 2 years ago to 2 years in future
+    const startDate = new Date();
+    startDate.setFullYear(startDate.getFullYear() - 2);
+    const endDate = new Date();
+    endDate.setFullYear(endDate.getFullYear() + 2);
+    
     const response = await axios.get(`https://rest.bandsintown.com/artists/${encodeURIComponent(artistName)}/events`, {
       params: {
-        app_id: apiKey
+        app_id: apiKey,
+        date: `${startDate.toISOString().split('T')[0]},${endDate.toISOString().split('T')[0]}`
       },
       headers: {
         'Accept': 'application/json'
