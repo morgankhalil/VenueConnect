@@ -40,9 +40,9 @@ async function main() {
     
     // Get top 10 most used genres for artists
     const topArtistGenres = await db.execute(sql`
-      SELECT g.id, g.name, COUNT(ag.artist_id) as artist_count
+      SELECT g.id, g.name, COUNT(ag."artistId") as artist_count
       FROM genres g
-      JOIN artist_genres ag ON g.id = ag.genre_id
+      JOIN "artistGenres" ag ON g.id = ag."genreId"
       GROUP BY g.id, g.name
       ORDER BY artist_count DESC
       LIMIT 10
@@ -53,9 +53,9 @@ async function main() {
     
     // Get top 10 most used genres for venues
     const topVenueGenres = await db.execute(sql`
-      SELECT g.id, g.name, COUNT(vg.venue_id) as venue_count
+      SELECT g.id, g.name, COUNT(vg."venueId") as venue_count
       FROM genres g
-      JOIN venue_genres vg ON g.id = vg.genre_id
+      JOIN "venueGenres" vg ON g.id = vg."genreId"
       GROUP BY g.id, g.name
       ORDER BY venue_count DESC
       LIMIT 10
