@@ -105,12 +105,16 @@ export function TourDetailTabs({
         
         <TabsContent value="route" className="mt-6">
           <RoutePlanningTab 
+            tourId={tourId}
+            tourData={tourData}
             venues={venues}
             originalSequenceVenues={originalSequenceVenues}
             optimizedSequenceVenues={optimizedSequenceVenues}
             showAllVenues={showAllVenues}
             setShowAllVenues={setShowAllVenues}
             onVenueClick={onVenueClick}
+            onApplyOptimization={onApplyOptimization}
+            refetch={refetch}
           />
         </TabsContent>
         

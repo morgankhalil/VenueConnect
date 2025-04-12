@@ -12,7 +12,9 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import {
+  ChevronDown,
   Map as MapIcon,
   MapPin,
   Calendar,
@@ -26,29 +28,56 @@ import {
   Clock4,
   AlertCircle,
   XCircle,
+  BarChart,
+  Sparkles,
 } from 'lucide-react';
 import { formatDate, formatDistance, formatTravelTime } from '@/lib/utils';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import * as L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
+import { 
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible"
+import { OptimizationPanel } from '../optimization-panel';
+import { RouteComparisonMap } from '../route-comparison-map';
+
 interface RoutePlanningTabProps {
+  tourId: number;
+  tourData: any;
   venues: any[];
   originalSequenceVenues: any[];
   optimizedSequenceVenues: any[];
   showAllVenues: boolean;
   setShowAllVenues: React.Dispatch<React.SetStateAction<boolean>>;
   onVenueClick: (venue: any) => void;
+  onApplyOptimization: () => void;
+  refetch: () => void;
 }
 
 export function RoutePlanningTab({
+  tourId,
+  tourData,
   venues,
   originalSequenceVenues,
   optimizedSequenceVenues,
   showAllVenues,
   setShowAllVenues,
   onVenueClick,
+  onApplyOptimization,
+  refetch,
 }: RoutePlanningTabProps) {
+  const [isOptimizationOpen, setIsOptimizationOpen] = useState(false);
+  const [showOptimizedRoute, setShowOptimizedRoute] = useState(false);
+  
+  // If optimized sequence is available, enable the optimized route view toggle
+  useEffect(() => {
+    if (optimizedSequenceVenues.length > 0) {
+      setShowOptimizedRoute(true);
+    }
+  }, [optimizedSequenceVenues]);
   // Combined view of map and timeline
 
   // Get the confirmed and potential venues
@@ -411,9 +440,80 @@ export function RoutePlanningTab({
                 Plan and visualize your tour route
               </CardDescription>
             </div>
+            
+            <div className="flex items-center gap-3">
+              {optimizedSequenceVenues.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="show-optimized"
+                    checked={showOptimizedRoute}
+                    onCheckedChange={setShowOptimizedRoute}
+                  />
+                  <Label htmlFor="show-optimized" className="text-sm font-medium">
+                    Show optimized route
+                  </Label>
+                </div>
+              )}
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setIsOptimizationOpen(!isOptimizationOpen)}
+                className="flex items-center gap-1"
+              >
+                {isOptimizationOpen ? (
+                  <>Hide optimization</>
+                ) : (
+                  <>
+                    {tourData?.optimizationScore > 70 ? (
+                      <><CheckCircle2 className="h-4 w-4 text-green-600 mr-1" /> Optimized route</>
+                    ) : (
+                      <><BarChart className="h-4 w-4 mr-1" /> Optimize route</>
+                    )}
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
+          {/* Collapsible Optimization Panel */}
+          <Collapsible
+            open={isOptimizationOpen}
+            onOpenChange={setIsOptimizationOpen}
+            className="mb-6"
+          >
+            <CollapsibleContent className="space-y-4">
+              <OptimizationPanel 
+                tourId={tourId}
+                venues={venues}
+                tourData={tourData}
+                onApplyOptimization={onApplyOptimization}
+                refetch={refetch}
+              />
+            </CollapsibleContent>
+          </Collapsible>
+          
+          {/* Route comparison when optimized view is enabled */}
+          {showOptimizedRoute && optimizedSequenceVenues.length > 0 ? (
+            <div className="mb-6">
+              <div className="mb-3 flex justify-between items-center">
+                <h3 className="text-lg font-medium">Route Comparison</h3>
+                <Badge className="bg-purple-100 text-purple-700 flex items-center">
+                  <Sparkles className="h-3.5 w-3.5 mr-1" />
+                  Optimized view
+                </Badge>
+              </div>
+              
+              <RouteComparisonMap
+                originalVenues={originalSequenceVenues}
+                optimizedVenues={optimizedSequenceVenues}
+                showComparison={true}
+                onVenueClick={onVenueClick}
+              />
+            </div>
+          ) : null}
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="flex items-start gap-3">
               <div className="bg-primary/10 p-2 rounded-full">
