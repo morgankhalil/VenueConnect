@@ -1,0 +1,79 @@
+Database connection initialized
+Starting complete database clear...
+[SeedManager] Starting database clear
+[SeedManager] Clearing table: events
+[SeedManager] Clearing table: tourVenues
+Warning: sync_logs table not available
+Warning: sync_logs table not available
+[SeedManager] Clearing table: tours
+Warning: sync_logs table not available
+[SeedManager] Clearing table: venueNetwork
+Warning: sync_logs table not available
+Warning: sync_logs table not available
+[SeedManager] Clearing table: artists
+Warning: sync_logs table not available
+[SeedManager] Clearing table: users
+Warning: sync_logs table not available
+[SeedManager] Clearing table: venues
+Warning: sync_logs table not available
+[SeedManager] Database cleared successfully
+Database cleared successfully
+Database connection initialized
+
+Processing artist: La Luz
+Added artist: La Luz
+Added venue: Unknown Venue
+Added event on 2025-05-03
+Venue 'Unknown Venue' already exists
+Added event on 2025-05-02
+Venue 'Unknown Venue' already exists
+Added event on 2025-04-12
+Venue 'Unknown Venue' already exists
+Added event on 2025-04-16
+Venue 'Unknown Venue' already exists
+Added event on 2025-04-25
+Venue 'Unknown Venue' already exists
+Added event on 2025-04-17
+Venue 'Unknown Venue' already exists
+Added event on 2025-04-29
+Venue 'Unknown Venue' already exists
+Added event on 2025-04-14
+Venue 'Unknown Venue' already exists
+Added event on 2025-05-01
+Venue 'Unknown Venue' already exists
+Added event on 2025-04-19
+Venue 'Unknown Venue' already exists
+Added event on 2025-05-15
+Venue 'Unknown Venue' already exists
+Added event on 2025-04-23
+Venue 'Unknown Venue' already exists
+Added event on 2025-05-04
+Venue 'Unknown Venue' already exists
+Event already exists for 2025-04-19
+Venue 'Unknown Venue' already exists
+Added event on 2025-04-30
+Venue 'Unknown Venue' already exists
+Added event on 2025-07-19
+Venue 'Unknown Venue' already exists
+Added event on 2025-04-26
+Venue 'Unknown Venue' already exists
+Added event on 2025-08-14
+Venue 'Unknown Venue' already exists
+Added event on 2025-10-09
+Venue 'Unknown Venue' already exists
+Added event on 2025-04-15
+Venue 'Unknown Venue' already exists
+Added event on 2025-06-07
+Venue 'Unknown Venue' already exists
+Added event on 2025-04-27
+Venue 'Unknown Venue' already exists
+Added event on 2025-04-24
+Venue 'Unknown Venue' already exists
+Added event on 2025-04-18
+Venue 'Unknown Venue' already exists
+Added event on 2025-06-06
+
+Seeding completed!
+Added 1 artists
+Added 25 venues
+Added 25 events
