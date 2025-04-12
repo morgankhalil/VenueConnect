@@ -234,7 +234,7 @@ export const inquiries = pgTable("inquiries", {
 });
 
 // CollaborativeOpportunities table
-export const collaborativeOpportunities = pgTable("collaborative_opportunities", {
+export const collaborativeOpportunities = pgTable("collaborativeOpportunities", {
   id: serial("id").primaryKey(),
   artistId: integer("artistId").references(() => artists.id).notNull(),
   creatorVenueId: integer("creatorVenueId").references(() => venues.id).notNull(),
@@ -245,7 +245,7 @@ export const collaborativeOpportunities = pgTable("collaborative_opportunities",
 });
 
 // CollaborativeParticipants table
-export const collaborativeParticipants = pgTable("collaborative_participants", {
+export const collaborativeParticipants = pgTable("collaborativeParticipants", {
   id: serial("id").primaryKey(),
   opportunityId: integer("opportunityId").references(() => collaborativeOpportunities.id).notNull(),
   venueId: integer("venueId").references(() => venues.id).notNull(),
@@ -316,27 +316,27 @@ export const venueNetworkRelations = relations(venueNetwork, ({ one }) => ({
   }),
 }));
 
-export const messages = pgTable('messages', {
-  id: serial('id').primaryKey(),
-  senderId: integer('senderId').references(() => users.id),
-  receiverId: integer('receiverId').references(() => users.id),
-  content: text('content').notNull(),
-  timestamp: timestamp('timestamp').defaultNow(),
-  senderName: text('senderName').notNull(),
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  senderId: integer("senderId").references(() => users.id),
+  receiverId: integer("receiverId").references(() => users.id),
+  content: text("content").notNull(),
+  timestamp: timestamp("timestamp").defaultNow(),
+  senderName: text("senderName").notNull(),
 });
 
 // Define webhook configurations table
-export const webhookConfigurations = pgTable('webhook_configurations', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull(),
-  type: text('type').notNull(), // e.g., 'bandsintown_events', 'artist_updates', etc.
-  description: text('description'),
-  callbackUrl: text('callbackUrl').notNull(),
-  isEnabled: boolean('isEnabled').default(false),
-  secretKey: text('secretKey'),
-  configOptions: text('configOptions'),
-  lastExecuted: timestamp('lastExecuted'),
-  createdAt: timestamp('createdAt').defaultNow()
+export const webhookConfigurations = pgTable("webhookConfigurations", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // e.g., 'bandsintown_events', 'artist_updates', etc.
+  description: text("description"),
+  callbackUrl: text("callbackUrl").notNull(),
+  isEnabled: boolean("isEnabled").default(false),
+  secretKey: text("secretKey"),
+  configOptions: text("configOptions"),
+  lastExecuted: timestamp("lastExecuted"),
+  createdAt: timestamp("createdAt").defaultNow()
 });
 
 export const messagesRelations = relations(messages, ({ one }) => ({
@@ -440,7 +440,7 @@ export type WebhookConfiguration = typeof webhookConfigurations.$inferSelect;
 export type InsertWebhookConfiguration = z.infer<typeof insertWebhookConfigurationSchema>;
 
 // Tour Routes table for optimization paths
-export const tourRoutes = pgTable("tour_routes", {
+export const tourRoutes = pgTable("tourRoutes", {
   id: serial("id").primaryKey(),
   tourId: integer("tourId").references(() => tours.id).notNull(),
   startVenueId: integer("startVenueId").references(() => venues.id),
@@ -474,7 +474,7 @@ export const tours = pgTable("tours", {
 });
 
 // Create enum for tour venue status
-export const tourVenueStatusEnum = pgEnum("tour_venue_status", [
+export const tourVenueStatusEnum = pgEnum("tourVenueStatus", [
   "potential",    // Manually added to tour but no contact made
   "suggested",    // Suggested by optimization engine
   "contacted",    // Initial outreach made to venue
@@ -529,7 +529,7 @@ export const tourGapSuggestions = pgTable("tourGapSuggestions", {
   createdAt: timestamp("createdAt").defaultNow(),
 });
 
-export const artistTourPreferences = pgTable("artist_tour_preferences", {
+export const artistTourPreferences = pgTable("artistTourPreferences", {
   id: serial("id").primaryKey(),
   artistId: integer("artistId").references(() => artists.id).notNull(),
   preferredRegions: text("preferredRegions").array(),
@@ -544,7 +544,7 @@ export const artistTourPreferences = pgTable("artist_tour_preferences", {
   updatedAt: timestamp("updatedAt"),
 });
 
-export const venueTourPreferences = pgTable("venue_tour_preferences", {
+export const venueTourPreferences = pgTable("venueTourPreferences", {
   id: serial("id").primaryKey(),
   venueId: integer("venueId").references(() => venues.id).notNull(),
   preferredGenres: genreEnum("preferredGenres").array(),
