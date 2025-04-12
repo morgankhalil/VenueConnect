@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from '@/components/ui/tabs';
-import { VenuesTab } from '@/components/tour/tabs/venues-tab';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { BarChart2, Route, Settings, Warehouse } from 'lucide-react';
+import { TourOverviewTab } from '@/components/tour/tabs/tour-overview-tab';
+import { RoutePlanningTab } from '@/components/tour/tabs/route-planning-tab';
 import { OptimizationTab } from '@/components/tour/tabs/optimization-tab';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import { VenuesTab } from '@/components/tour/tabs/venues-tab';
 
 interface TourDetailTabsProps {
   tourId: number;
   venues: any[];
   tourData: any;
+  originalSequenceVenues: any[];
+  optimizedSequenceVenues: any[];
+  showAllVenues: boolean;
+  setShowAllVenues: React.Dispatch<React.SetStateAction<boolean>>;
   onVenueClick: (venue: any) => void;
   onApplyOptimization: () => void;
   refetch: () => void;
@@ -23,93 +24,85 @@ export function TourDetailTabs({
   tourId,
   venues,
   tourData,
+  originalSequenceVenues,
+  optimizedSequenceVenues,
+  showAllVenues,
+  setShowAllVenues,
   onVenueClick,
   onApplyOptimization,
   refetch
 }: TourDetailTabsProps) {
-  const [activeTab, setActiveTab] = useState('optimization');
-  
-  const hasVenues = venues && venues.length > 0;
-  const hasOptimizationScore = tourData && tourData.optimizationScore !== undefined;
-  
-  // Stats for the tour optimization
-  const optimizationStats = {
-    venueCount: venues?.length || 0,
-    confirmedCount: venues?.filter(v => v.status === 'confirmed').length || 0,
-    potentialCount: venues?.filter(v => v.status === 'potential').length || 0,
-    totalDistance: tourData && tourData.totalDistance || 0,
-    travelTimeMinutes: tourData && tourData.travelTimeMinutes || 0,
-  };
-  
-  const showOptimizationAlert = venues?.length > 0 && venues?.filter(v => v.status === 'confirmed').length < 2;
+  const [activeTab, setActiveTab] = useState('overview');
+
+  if (!tourData) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>
+          Error loading tour data. Please try again later.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-4">
-      <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
-        <TabsTrigger value="overview">Overview</TabsTrigger>
-        <TabsTrigger value="route">Route Planning</TabsTrigger>
-        <TabsTrigger value="optimization">Optimization</TabsTrigger>
-        <TabsTrigger value="venues" disabled={!hasVenues}>
-          Venues
-          {hasVenues && <span className="ml-1 text-xs">({venues.length})</span>}
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <TabsList className="grid grid-cols-4 mb-8">
+        <TabsTrigger value="overview" className="flex items-center gap-2">
+          <BarChart2 className="h-4 w-4" />
+          <span className="hidden sm:inline">Overview</span>
+        </TabsTrigger>
+        
+        <TabsTrigger value="route" className="flex items-center gap-2">
+          <Route className="h-4 w-4" />
+          <span className="hidden sm:inline">Route Planning</span>
+        </TabsTrigger>
+        
+        <TabsTrigger value="optimization" className="flex items-center gap-2">
+          <Settings className="h-4 w-4" />
+          <span className="hidden sm:inline">Optimization</span>
+        </TabsTrigger>
+        
+        <TabsTrigger value="venues" className="flex items-center gap-2">
+          <Warehouse className="h-4 w-4" />
+          <span className="hidden sm:inline">Venues</span>
         </TabsTrigger>
       </TabsList>
       
-      <TabsContent value="overview" className="mt-4">
-        <div className="text-center py-20">
-          <h2 className="text-2xl font-bold mb-4">Tour Overview</h2>
-          <p className="text-muted-foreground">
-            The Tour Overview tab will provide a summarized view of your tour details, metrics, and schedule.
-          </p>
-        </div>
-      </TabsContent>
-      
-      <TabsContent value="route" className="mt-4">
-        <div className="text-center py-20">
-          <h2 className="text-2xl font-bold mb-4">Route Planning</h2>
-          <p className="text-muted-foreground">
-            The Route Planning tab will provide interactive maps and timeline views for your tour route.
-          </p>
-        </div>
-      </TabsContent>
-      
-      <TabsContent value="optimization" className="mt-4">
-        {showOptimizationAlert && (
-          <Alert className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Not enough confirmed venues</AlertTitle>
-            <AlertDescription>
-              You need at least two confirmed venues to optimize your tour route effectively.
-              Please add more venues or change the status of existing venues to 'confirmed'.
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        <OptimizationTab 
-          tourId={tourId} 
+      <TabsContent value="overview" className="space-y-4">
+        <TourOverviewTab 
+          tourData={tourData} 
           venues={venues} 
+        />
+      </TabsContent>
+      
+      <TabsContent value="route" className="space-y-4">
+        <RoutePlanningTab 
+          venues={venues}
+          originalSequenceVenues={originalSequenceVenues}
+          optimizedSequenceVenues={optimizedSequenceVenues}
+          showAllVenues={showAllVenues}
+          setShowAllVenues={setShowAllVenues}
+          onVenueClick={onVenueClick}
+        />
+      </TabsContent>
+      
+      <TabsContent value="optimization" className="space-y-4">
+        <OptimizationTab 
+          tourId={tourId}
+          venues={venues}
           tourData={tourData}
           onApplyOptimization={onApplyOptimization}
           refetch={refetch}
         />
       </TabsContent>
       
-      <TabsContent value="venues" className="mt-4">
-        {hasVenues ? (
-          <VenuesTab 
-            venues={venues} 
-            tourId={tourId} 
-            onVenueClick={onVenueClick}
-            refetch={refetch}
-          />
-        ) : (
-          <div className="text-center py-20">
-            <h2 className="text-2xl font-bold mb-4">No Venues Added</h2>
-            <p className="text-muted-foreground">
-              You haven't added any venues to this tour yet. Start by adding venues to plan your tour.
-            </p>
-          </div>
-        )}
+      <TabsContent value="venues" className="space-y-4">
+        <VenuesTab 
+          venues={venues}
+          tourId={tourId}
+          onVenueClick={onVenueClick}
+          refetch={refetch}
+        />
       </TabsContent>
     </Tabs>
   );

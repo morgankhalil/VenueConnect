@@ -1,202 +1,270 @@
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { StatCard } from '@/components/tour/stat-card';
-import { 
-  Building, 
-  Calendar, 
-  Clock, 
-  DollarSign,
-  Route, 
-  CheckCircle2
-} from 'lucide-react';
-import { formatDate, formatDistance, formatTravelTime, formatCurrency } from '@/lib/utils';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { calculatePercentageImprovement } from '@/lib/utils';
-
-interface TourStatsProps {
-  totalVenues: number;
-  confirmedVenues: number;
-  potentialVenues: number;
-  estimatedDistance: number;
-  estimatedTravelTime: number;
-  budget: number;
-}
+import { Separator } from '@/components/ui/separator';
+import { 
+  CalendarDays, 
+  Clock, 
+  MapPin, 
+  Users, 
+  Building, 
+  Music, 
+  Calendar as CalendarIcon,
+  Truck, 
+  BarChart 
+} from 'lucide-react';
+import { formatDate, formatDistance, formatTravelTime } from '@/lib/utils';
 
 interface TourOverviewTabProps {
-  tour: any;
-  stats: TourStatsProps;
+  tourData: any;
+  venues: any[];
 }
 
-export function TourOverviewTab({ tour, stats }: TourOverviewTabProps) {
-  // Calculate improvement percentages if optimization was done
-  const distanceImprovement = tour.initialTotalDistance && tour.totalDistance
-    ? calculatePercentageImprovement(tour.initialTotalDistance, tour.totalDistance)
-    : undefined;
+export function TourOverviewTab({ tourData, venues }: TourOverviewTabProps) {
+  if (!tourData) return null;
+  
+  const confirmedVenues = venues.filter(venue => venue.status === 'confirmed');
+  const potentialVenues = venues.filter(venue => venue.status === 'potential');
+  const onHoldVenues = venues.filter(venue => venue.status === 'hold');
+  
+  const tourLength = tourData.startDate && tourData.endDate 
+    ? Math.ceil((new Date(tourData.endDate).getTime() - new Date(tourData.startDate).getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+    
+  // Calculate the total audience capacity
+  const totalCapacity = confirmedVenues.reduce((total, venue) => {
+    return total + (venue.capacity || 0);
+  }, 0);
+  
+  // Calculate average distance between venues
+  const averageDistance = tourData.totalDistance && confirmedVenues.length > 1 
+    ? tourData.totalDistance / (confirmedVenues.length - 1) 
+    : 0;
 
-  const timeImprovement = tour.initialTravelTimeMinutes && tour.travelTimeMinutes
-    ? calculatePercentageImprovement(tour.initialTravelTimeMinutes, tour.travelTimeMinutes)
-    : undefined;
-
+  // Determine primary region/market
+  const regionCounts: Record<string, number> = {};
+  confirmedVenues.forEach(venue => {
+    const region = venue.region || 'Unknown';
+    regionCounts[region] = (regionCounts[region] || 0) + 1;
+  });
+  
+  const primaryRegion = Object.entries(regionCounts).reduce(
+    (max, [region, count]) => count > (max.count || 0) ? { region, count } : max,
+    { region: 'N/A', count: 0 }
+  ).region;
+  
   return (
     <div className="space-y-6">
       {/* Tour Summary Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Tour Summary</CardTitle>
-          <CardDescription>Overview of your tour details and statistics</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <h4 className="text-sm font-medium flex items-center">
-                <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                Tour Dates
-              </h4>
-              <p className="text-lg font-medium">
-                {formatDate(tour.startDate)} - {formatDate(tour.endDate)}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {getDurationInDays(tour.startDate, tour.endDate)} days
-              </p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <CardTitle className="text-2xl">{tourData.name}</CardTitle>
+              <CardDescription>
+                {tourData.startDate && tourData.endDate ? (
+                  <span>
+                    {formatDate(tourData.startDate)} - {formatDate(tourData.endDate)}
+                    {tourLength && <span> ({tourLength} days)</span>}
+                  </span>
+                ) : (
+                  <span>Tour dates not finalized</span>
+                )}
+              </CardDescription>
             </div>
-            
-            <div className="space-y-1">
-              <h4 className="text-sm font-medium flex items-center">
-                <Building className="h-4 w-4 mr-2 text-muted-foreground" />
-                Venues
-              </h4>
-              <p className="text-lg font-medium">
-                {stats.totalVenues} Total
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {stats.confirmedVenues} Confirmed, {stats.potentialVenues} Potential
-              </p>
-            </div>
-
-            <div className="space-y-1">
-              <h4 className="text-sm font-medium flex items-center">
-                <Route className="h-4 w-4 mr-2 text-muted-foreground" />
-                Travel Distance
-              </h4>
-              <p className="text-lg font-medium">
-                {formatDistance(stats.estimatedDistance)}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {formatTravelTime(stats.estimatedTravelTime)} estimated travel time
-              </p>
-            </div>
-
-            <div className="space-y-1">
-              <h4 className="text-sm font-medium flex items-center">
-                <DollarSign className="h-4 w-4 mr-2 text-muted-foreground" />
-                Budget
-              </h4>
-              <p className="text-lg font-medium">
-                {formatCurrency(stats.budget)}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Tour budget estimated
-              </p>
+            <div className="flex gap-2">
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-100">
+                {confirmedVenues.length} confirmed
+              </Badge>
+              <Badge variant="outline" className="bg-amber-50 text-amber-700 hover:bg-amber-100">
+                {potentialVenues.length} potential
+              </Badge>
+              <Badge variant="outline" className="bg-purple-50 text-purple-700 hover:bg-purple-100">
+                {onHoldVenues.length} on hold
+              </Badge>
             </div>
           </div>
-          
-          {tour.optimizationScore && (
-            <div className="bg-primary/10 p-4 rounded-lg mt-2 flex items-center">
-              <CheckCircle2 className="h-5 w-5 text-primary mr-2" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex items-start gap-3">
+              <div className="bg-primary/10 p-2 rounded-full">
+                <Truck className="h-5 w-5 text-primary" />
+              </div>
               <div>
-                <p className="font-medium">Tour is optimized</p>
-                <p className="text-sm text-muted-foreground">
-                  This tour has been optimized with a score of {tour.optimizationScore}/100
-                </p>
+                <h3 className="font-medium">Total Distance</h3>
+                <p className="text-muted-foreground text-sm">{formatDistance(tourData.totalDistance)}</p>
               </div>
             </div>
-          )}
+            
+            <div className="flex items-start gap-3">
+              <div className="bg-primary/10 p-2 rounded-full">
+                <Clock className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-medium">Travel Time</h3>
+                <p className="text-muted-foreground text-sm">{formatTravelTime(tourData.travelTimeMinutes)}</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="bg-primary/10 p-2 rounded-full">
+                <Users className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-medium">Total Capacity</h3>
+                <p className="text-muted-foreground text-sm">{totalCapacity.toLocaleString()} attendees</p>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
       
-      {/* Tour Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard
-          title="Total Distance"
-          value={formatDistance(tour.totalDistance || 0)}
-          subtitle="Distance between all venues"
-          icon={<Route className="h-5 w-5 text-primary" />}
-          improvement={distanceImprovement}
-        />
-        <StatCard
-          title="Travel Time"
-          value={formatTravelTime(tour.travelTimeMinutes || 0)}
-          subtitle="Estimated driving time"
-          icon={<Clock className="h-5 w-5 text-primary" />}
-          improvement={timeImprovement}
-        />
-        <StatCard
-          title="Venues"
-          value={`${stats.totalVenues}`}
-          subtitle={`${stats.confirmedVenues} confirmed / ${stats.potentialVenues} potential`}
-          icon={<Building className="h-5 w-5 text-primary" />}
-        />
-      </div>
-      
-      {/* Artist Info & Notes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Artist Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Artist Information</CardTitle>
-          </CardHeader>
-          <CardContent>
+      {/* Tour Analysis */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Tour Analysis</CardTitle>
+          <CardDescription>
+            Metrics and insights for your tour
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Artist/Band Name</h4>
-                <p className="font-medium">{tour.artistName || 'Not specified'}</p>
+              <h3 className="font-medium text-lg">Schedule</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">
+                    {confirmedVenues.length} confirmed venues across {tourLength || '?'} days
+                  </span>
+                </div>
+                {tourData.startDate && tourData.endDate && (
+                  <div className="flex items-center gap-3">
+                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">
+                      Tour runs from {formatDate(tourData.startDate)} to {formatDate(tourData.endDate)}
+                    </span>
+                  </div>
+                )}
               </div>
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Genre</h4>
-                <div className="flex flex-wrap gap-2">
-                  {tour.genre ? (
-                    <Badge variant="outline">{tour.genre}</Badge>
-                  ) : (
-                    <span className="text-muted-foreground">Not specified</span>
-                  )}
+              
+              <h3 className="font-medium text-lg pt-2">Logistics</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Truck className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">
+                    Average distance between venues: {formatDistance(averageDistance)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">
+                    Primary region: {primaryRegion}
+                  </span>
                 </div>
               </div>
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Manager Contact</h4>
-                <p className="font-medium">{tour.managerContact || 'Not specified'}</p>
+            </div>
+            
+            <div className="space-y-4">
+              <h3 className="font-medium text-lg">Venues</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Building className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">
+                    Average venue capacity: {confirmedVenues.length > 0 
+                      ? Math.round(totalCapacity / confirmedVenues.length).toLocaleString() 
+                      : 'N/A'}
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <Music className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">
+                    Venue types: {getVenueTypesSummary(confirmedVenues)}
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <BarChart className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">
+                    Optimization score: {tourData.optimizationScore ? `${tourData.optimizationScore}/100` : 'Not optimized'}
+                  </span>
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        
-        {/* Tour Notes */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Tour Notes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {tour.notes ? (
-                <p>{tour.notes}</p>
-              ) : (
-                <p className="text-muted-foreground italic">No notes have been added to this tour.</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Next Steps */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Next Steps</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {potentialVenues.length > 0 && (
+              <div className="p-3 bg-blue-50 rounded-md">
+                <h3 className="font-medium">Confirm potential venues</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  You have {potentialVenues.length} potential {potentialVenues.length === 1 ? 'venue' : 'venues'} that need to be confirmed
+                </p>
+              </div>
+            )}
+            
+            {(!tourData.optimizationScore || tourData.optimizationScore < 70) && (
+              <div className="p-3 bg-amber-50 rounded-md">
+                <h3 className="font-medium">Optimize your tour route</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {!tourData.optimizationScore 
+                    ? 'Optimize your tour to minimize travel time and distance' 
+                    : 'Your tour optimization score is low, check the optimization tab for suggestions'}
+                </p>
+              </div>
+            )}
+            
+            {!tourData.endDate && (
+              <div className="p-3 bg-purple-50 rounded-md">
+                <h3 className="font-medium">Set tour end date</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Setting an end date will help with planning and optimization
+                </p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-end">
+          <Button variant="outline">Export Tour Summary</Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }
 
-// Helper function to calculate the duration in days
-function getDurationInDays(startDate?: string, endDate?: string): number {
-  if (!startDate || !endDate) return 0;
+// Helper function to get venue types summary
+function getVenueTypesSummary(venues: any[]): string {
+  const typeCount: Record<string, number> = {};
   
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  const diffTime = Math.abs(end.getTime() - start.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  venues.forEach(venue => {
+    if (venue.venueType) {
+      typeCount[venue.venueType] = (typeCount[venue.venueType] || 0) + 1;
+    }
+  });
   
-  return diffDays;
+  const types = Object.entries(typeCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2)
+    .map(([type, count]) => `${type} (${count})`)
+    .join(', ');
+    
+  return types || 'Various';
 }

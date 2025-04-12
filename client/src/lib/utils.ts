@@ -77,6 +77,15 @@ export function formatCurrency(value: number, currency: string = 'USD'): string 
 }
 
 /**
+ * Format a venue capacity to a readable format
+ * @param capacity Venue capacity (number of people)
+ * @returns Formatted string (e.g., "1,200")
+ */
+export function formatCapacity(capacity: number): string {
+  return capacity.toLocaleString();
+}
+
+/**
  * Calculate the percentage improvement between two values
  * @param oldValue Original value
  * @param newValue New value
