@@ -13,7 +13,7 @@ import tourRouteOptimizationRouter from './routes/tour-route-optimization-fixed'
 import tourOptimizationEnhancedRouter from './routes/tour-optimization-enhanced';
 import { aiOptimizationRouter } from './routes/ai-tour-optimizer';
 import { unifiedOptimizerRouter } from './routes/unified-tour-optimizer';
-import searchRoutes from './routes/search';
+import searchRoutes from './routes/search-new';
 import webhookRoutes from './webhooks/webhook-routes';
 import adminRoutes from './routes/admin';
 import { type Express } from 'express';
