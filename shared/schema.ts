@@ -96,9 +96,19 @@ export const users = pgTable("users", {
 
 // Genres enum
 export const genreEnum = pgEnum("genre", [
+  // Base genres from original list
   "rock", "indie", "hip_hop", "electronic", "pop", "folk", "metal", "jazz", "blues", 
   "world", "classical", "country", "punk", "experimental", "alternative", "rnb", "soul",
-  "reggae", "ambient", "techno", "house", "disco", "funk", "country", "other"
+  "reggae", "ambient", "techno", "house", "disco", "funk",
+  
+  // Extended indie/rock sub-genres
+  "indie_rock", "indie_pop", "indie_folk", "surf_rock", "psychedelic_rock", "lo_fi",
+  "dream_pop", "power_pop", "jangle_pop", "folk_rock", "garage_rock", "art_pop",
+  "bedroom_pop", "alternative_country", "emo", "soft_rock", "post_punk", "art_rock",
+  "slacker_rock", "shoegaze", "noise_rock", "math_rock", "post_rock", "krautrock",
+  
+  // Catchall
+  "other"
 ]);
 
 // Market category enum

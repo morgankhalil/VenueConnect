@@ -18,6 +18,70 @@ dotenv.config();
  * 3. Matches events to appropriate venues in our database
  */
 
+// Function to map detailed genres to the allowed enum values in our schema
+function mapToAllowedGenres(detailedGenres: string[]): string[] {
+  // Valid genres in our database schema - updated to match our expanded enum
+  const allowedGenres = [
+    // Base genres
+    "rock", "indie", "hip_hop", "electronic", "pop", "folk", "metal", "jazz", "blues", 
+    "world", "classical", "country", "punk", "experimental", "alternative", "rnb", "soul",
+    "reggae", "ambient", "techno", "house", "disco", "funk",
+    
+    // Extended genres - use underscores instead of hyphens for DB compatibility
+    "indie_rock", "indie_pop", "indie_folk", "surf_rock", "psychedelic_rock", "lo_fi",
+    "dream_pop", "power_pop", "jangle_pop", "folk_rock", "garage_rock", "art_pop",
+    "bedroom_pop", "alternative_country", "emo", "soft_rock", "post_punk", "art_rock",
+    "slacker_rock", "shoegaze", "noise_rock", "math_rock", "post_rock", "krautrock",
+    
+    "other"
+  ];
+  
+  // Mapping of detailed genres to our DB enum values (with underscores)
+  const genreMapping: Record<string, string> = {
+    "indie rock": "indie_rock",
+    "indie pop": "indie_pop",
+    "indie folk": "indie_folk",
+    "surf rock": "surf_rock",
+    "psychedelic rock": "psychedelic_rock",
+    "lo-fi": "lo_fi",
+    "dream pop": "dream_pop",
+    "power pop": "power_pop",
+    "jangle pop": "jangle_pop",
+    "folk rock": "folk_rock",
+    "garage rock": "garage_rock",
+    "art pop": "art_pop",
+    "bedroom pop": "bedroom_pop",
+    "alternative country": "alternative_country",
+    "emo": "emo",
+    "soft rock": "soft_rock",
+    "post-punk": "post_punk",
+    "art rock": "art_rock",
+    "slacker rock": "slacker_rock",
+    "psychedelic pop": "psychedelic_rock",
+    "synth pop": "electronic",
+    "punk rock": "punk"
+  };
+  
+  // Map the detailed genres to allowed genres
+  const result = new Set<string>();
+  
+  detailedGenres.forEach(genre => {
+    if (allowedGenres.includes(genre)) {
+      // If the genre is already allowed, add it directly
+      result.add(genre);
+    } else if (genreMapping[genre]) {
+      // If we have a mapping for this genre, add the transformed genre
+      result.add(genreMapping[genre]);
+    } else {
+      // Default to "other" if no mapping exists
+      result.add("other");
+    }
+  });
+  
+  return Array.from(result);
+}
+
+// Artist genre mappings - now storing the detailed genres that will be mapped to DB enum values
 const GENRES_BY_ARTIST: Record<string, string[]> = {
   "la luz": ["indie rock", "surf rock", "psychedelic rock"],
   "snail mail": ["indie rock", "lo-fi", "alternative"],
@@ -35,15 +99,15 @@ const GENRES_BY_ARTIST: Record<string, string[]> = {
   "sharon van etten": ["indie folk", "indie rock", "alternative"],
   "phoebe bridgers": ["indie folk", "indie rock", "emo"],
   "julien baker": ["indie folk", "indie rock", "emo"],
-  "boygenius": ["indie folk", "indie rock", "supergroup"],
+  "boygenius": ["indie folk", "indie rock", "alternative"],
   "spoon": ["indie rock", "art rock", "alternative"],
   "car seat headrest": ["indie rock", "lo-fi", "post-punk"],
   "ty segall": ["garage rock", "psychedelic rock", "punk rock"],
   "kurt vile": ["indie rock", "folk rock", "alternative"],
-  "parquet courts": ["indie rock", "post-punk", "art punk"],
+  "parquet courts": ["indie rock", "post-punk", "alternative"],
   "real estate": ["indie rock", "dream pop", "jangle pop"],
   "mac demarco": ["indie rock", "psychedelic pop", "slacker rock"],
-  "tame impala": ["psychedelic rock", "synth pop", "alternative"]
+  "tame impala": ["psychedelic rock", "electronic", "alternative"]
 };
 
 // Generate future dates for events
@@ -110,12 +174,15 @@ async function fetchArtistEvents() {
       
       // Look up artist genres
       const lowerArtist = artistName.toLowerCase();
-      let genres = GENRES_BY_ARTIST[lowerArtist] || ["indie rock", "alternative"];
+      let detailedGenres = GENRES_BY_ARTIST[lowerArtist] || ["indie rock", "alternative"];
+      
+      // Map the detailed genres to our allowed DB enum values
+      const mappedGenres = mapToAllowedGenres(detailedGenres);
       
       const [newArtist] = await db.insert(artists).values({
         name: artistName,
-        genres: genres,
-        description: `${artistName} is an independent artist with ${genres.join(", ")} influences.`,
+        genres: mappedGenres,
+        description: `${artistName} is an independent artist with ${detailedGenres.join(", ")} influences.`,
         popularity: Math.floor(Math.random() * 80) + 20, // Random popularity between 20-100
         websiteUrl: `https://www.${artistName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com/`
       }).returning();

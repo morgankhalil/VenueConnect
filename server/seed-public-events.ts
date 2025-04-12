@@ -18,109 +18,169 @@ dotenv.config();
  * Usage: npx tsx server/seed-public-events.ts
  */
 
+// Function to map detailed genres to the allowed enum values in our schema
+function mapToAllowedGenres(detailedGenres: string[]): string[] {
+  // Valid genres in our database schema - updated to match our expanded enum
+  const allowedGenres = [
+    // Base genres
+    "rock", "indie", "hip_hop", "electronic", "pop", "folk", "metal", "jazz", "blues", 
+    "world", "classical", "country", "punk", "experimental", "alternative", "rnb", "soul",
+    "reggae", "ambient", "techno", "house", "disco", "funk",
+    
+    // Extended genres - use underscores instead of hyphens for DB compatibility
+    "indie_rock", "indie_pop", "indie_folk", "surf_rock", "psychedelic_rock", "lo_fi",
+    "dream_pop", "power_pop", "jangle_pop", "folk_rock", "garage_rock", "art_pop",
+    "bedroom_pop", "alternative_country", "emo", "soft_rock", "post_punk", "art_rock",
+    "slacker_rock", "shoegaze", "noise_rock", "math_rock", "post_rock", "krautrock",
+    
+    "other"
+  ];
+  
+  // Mapping of detailed genres to our DB enum values (with underscores)
+  const genreMapping: Record<string, string> = {
+    "indie rock": "indie_rock",
+    "indie pop": "indie_pop",
+    "indie folk": "indie_folk",
+    "surf rock": "surf_rock",
+    "psychedelic rock": "psychedelic_rock",
+    "lo-fi": "lo_fi",
+    "dream pop": "dream_pop",
+    "power pop": "power_pop",
+    "jangle pop": "jangle_pop",
+    "folk rock": "folk_rock",
+    "garage rock": "garage_rock",
+    "art pop": "art_pop",
+    "bedroom pop": "bedroom_pop",
+    "alternative country": "alternative_country",
+    "emo": "emo",
+    "soft rock": "soft_rock",
+    "post-punk": "post_punk",
+    "art rock": "art_rock",
+    "slacker rock": "slacker_rock"
+  };
+  
+  // Map the detailed genres to allowed genres
+  const result = new Set<string>();
+  
+  detailedGenres.forEach(genre => {
+    if (allowedGenres.includes(genre)) {
+      // If the genre is already allowed, add it directly
+      result.add(genre);
+    } else if (genreMapping[genre]) {
+      // If we have a mapping for this genre, add the transformed genre
+      result.add(genreMapping[genre]);
+    } else {
+      // Default to "other" if no mapping exists
+      result.add("other");
+    }
+  });
+  
+  return Array.from(result);
+}
+
 // Sample artists with real data (these are real indie artists)
 const REAL_ARTISTS = [
   {
     name: "La Luz",
-    genres: ["indie rock", "surf rock", "psychedelic rock"],
+    detailedGenres: ["indie rock", "surf rock", "psychedelic rock"],
     description: "All-female surf rock band from Seattle, Washington, known for their dreamy harmonies and reverb-drenched guitar.",
     websiteUrl: "https://www.laluztheband.com/",
     imageUrl: "https://f4.bcbits.com/img/0024920636_10.jpg"
   },
   {
     name: "Snail Mail",
-    genres: ["indie rock", "lo-fi", "alternative"],
+    detailedGenres: ["indie rock", "lo-fi", "alternative"],
     description: "Project of guitarist and vocalist Lindsey Jordan, known for emotionally introspective lyrics and guitar-driven indie rock.",
     websiteUrl: "https://www.snailmail.band/",
     imageUrl: "https://media.pitchfork.com/photos/61757ce3143fece1b69ceda5/1:1/w_320,c_limit/Snail-Mail-Lindsey-Jordan.jpg"
   },
   {
     name: "Japanese Breakfast",
-    genres: ["indie pop", "experimental", "dream pop"],
+    detailedGenres: ["indie pop", "experimental", "dream pop"],
     description: "Musical project of Korean-American musician Michelle Zauner, blending experimental pop with shoegaze elements.",
     websiteUrl: "https://www.japanesebreakfast.com/",
     imageUrl: "https://media.pitchfork.com/photos/60b6511755c02a461a119c80/1:1/w_320,c_limit/Japanese-Breakfast-Jubilee.jpg"
   },
   {
     name: "The Beths",
-    genres: ["indie rock", "power pop", "alternative"],
+    detailedGenres: ["indie rock", "power pop", "alternative"],
     description: "New Zealand indie rock band known for their energetic performances and sharp, introspective lyrics.",
     websiteUrl: "https://www.thebeths.com/",
     imageUrl: "https://f4.bcbits.com/img/0021561511_10.jpg"
   },
   {
     name: "Alvvays",
-    genres: ["indie pop", "dream pop", "jangle pop"],
+    detailedGenres: ["indie pop", "dream pop", "jangle pop"],
     description: "Canadian indie pop band from Toronto, combining jangly guitar hooks with dreamy vocals and reverb.",
     websiteUrl: "https://alvvays.com/",
     imageUrl: "https://media.pitchfork.com/photos/62d717b6c552f87c1551be12/1:1/w_320,c_limit/Alvvays.jpg"
   },
   {
     name: "Lucy Dacus",
-    genres: ["indie rock", "folk rock", "alternative"],
+    detailedGenres: ["indie rock", "folk rock", "alternative"],
     description: "American singer-songwriter from Richmond, Virginia, known for narrative songwriting and warm vocal style.",
     websiteUrl: "https://www.lucydacus.com/",
     imageUrl: "https://media.pitchfork.com/photos/60d33caa73fa27d2e2b2a204/1:1/w_320,c_limit/Lucy-Dacus.jpg"
   },
   {
     name: "Courtney Barnett",
-    genres: ["indie rock", "garage rock", "folk rock"],
+    detailedGenres: ["indie rock", "garage rock", "folk rock"],
     description: "Australian singer, songwriter and musician known for her witty, rambling lyrics and deadpan singing style.",
     websiteUrl: "https://courtneybarnett.com.au/",
     imageUrl: "https://media.pitchfork.com/photos/618982d05c9c3b284ba48648/1:1/w_320,c_limit/Courtney-Barnett.jpg"
   },
   {
     name: "Big Thief",
-    genres: ["indie folk", "indie rock", "alternative"],
+    detailedGenres: ["indie folk", "indie rock", "alternative"],
     description: "American indie rock band with folk influences, known for emotional depth and the distinctive vocals of lead singer Adrianne Lenker.",
     websiteUrl: "https://bigthief.net/",
     imageUrl: "https://media.pitchfork.com/photos/61e8628151f5dd6b2707b20e/1:1/w_320,c_limit/Big-Thief.jpg"
   },
   {
     name: "HAIM",
-    genres: ["pop rock", "indie pop", "soft rock"],
+    detailedGenres: ["pop rock", "indie pop", "soft rock"],
     description: "American pop rock band composed of three sisters known for their sunny California sound and vocal harmonies.",
     websiteUrl: "https://www.haimtheband.com/",
     imageUrl: "https://cdn2.thelineofbestfit.com/images/made/images/remote/https_cdn2.thelineofbestfit.com/media/2014/haim_dannynewtwo_1290_1290.jpg"
   },
   {
     name: "Mitski",
-    genres: ["indie rock", "art pop", "experimental"],
+    detailedGenres: ["indie rock", "art pop", "experimental"],
     description: "Japanese-American singer-songwriter known for her distinctive voice and emotionally raw performances.",
     websiteUrl: "https://mitski.com/",
     imageUrl: "https://media.pitchfork.com/photos/618571a38b177af1aeb8663a/1:1/w_320,c_limit/Mitski.jpg"
   },
   {
     name: "Soccer Mommy",
-    genres: ["indie rock", "bedroom pop", "lo-fi"],
+    detailedGenres: ["indie rock", "bedroom pop", "lo-fi"],
     description: "Musical project of Sophie Allison, combining confessional lyrics with catchy melodies and lo-fi aesthetics.",
     websiteUrl: "https://soccermommyband.com/",
     imageUrl: "https://media.pitchfork.com/photos/5e5846f70e8131000824de25/1:1/w_320,c_limit/Soccer-Mommy.jpg"
   },
   {
     name: "Waxahatchee",
-    genres: ["indie folk", "indie rock", "alternative country"],
+    detailedGenres: ["indie folk", "indie rock", "alternative country"],
     description: "Musical project of Katie Crutchfield, blending folk, punk, and indie rock with introspective lyrics.",
     websiteUrl: "https://www.waxahatchee.com/",
     imageUrl: "https://media.pitchfork.com/photos/5e78547dd9c94800083fc1a4/1:1/w_320,c_limit/Waxahatchee.jpg"
   },
   {
     name: "Angel Olsen",
-    genres: ["indie folk", "art pop", "alternative country"],
+    detailedGenres: ["indie folk", "art pop", "alternative country"],
     description: "American singer-songwriter known for her haunting voice and music that spans folk, country, and experimental rock.",
     websiteUrl: "https://www.angelolsen.com/",
     imageUrl: "https://media.pitchfork.com/photos/5eaa4eb3dedfbe7b680f2cad/1:1/w_320,c_limit/Angel-Olsen.jpg"
   },
   {
     name: "Sharon Van Etten",
-    genres: ["indie folk", "indie rock", "alternative"],
+    detailedGenres: ["indie folk", "indie rock", "alternative"],
     description: "American singer-songwriter known for her powerful vocals and emotionally intense indie folk rock.",
     websiteUrl: "https://www.sharonvanetten.com/",
     imageUrl: "https://media.pitchfork.com/photos/633cd090a47e51365aff2f90/1:1/w_320,c_limit/Sharon-Van-Etten.jpg"
   },
   {
     name: "Phoebe Bridgers",
-    genres: ["indie folk", "indie rock", "emo"],
+    detailedGenres: ["indie folk", "indie rock", "emo"],
     description: "American singer-songwriter known for her ethereal voice and melancholic, emotionally vulnerable lyrics.",
     websiteUrl: "https://phoebefuckingbridgers.com/",
     imageUrl: "https://media.pitchfork.com/photos/61c3798d3d66c62ee3a20e9c/1:1/w_320,c_limit/Phoebe-Bridgers.jpg"
@@ -203,9 +263,12 @@ async function seedPublicEvents() {
         // Create the artist
         console.log(`Creating artist: ${artistData.name}`);
         
+        // Map detailed genres to allowed enum values
+        const mappedGenres = mapToAllowedGenres(artistData.detailedGenres);
+        
         const [newArtist] = await db.insert(artists).values({
           name: artistData.name,
-          genres: artistData.genres,
+          genres: mappedGenres,
           description: artistData.description,
           popularity: Math.floor(Math.random() * 80) + 20, // Random popularity between 20-100
           imageUrl: artistData.imageUrl,
