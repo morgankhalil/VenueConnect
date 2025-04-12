@@ -53,7 +53,11 @@ export function RoutePlanningTab({
   const potentialVenues = venues?.filter(v => v.tourVenue?.status === 'potential' || v.tourVenue?.status === 'hold') || [];
   
   // Render status badge
-  const renderStatusBadge = (status: string) => {
+  const renderStatusBadge = (status: string | undefined) => {
+    if (!status) {
+      return <Badge variant="outline">Unknown</Badge>;
+    }
+    
     switch (status) {
       case 'confirmed':
         return (
@@ -84,7 +88,7 @@ export function RoutePlanningTab({
           </Badge>
         );
       default:
-        return <Badge variant="outline">{status || 'Unknown'}</Badge>;
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
   
@@ -275,7 +279,7 @@ export function RoutePlanningTab({
               </div>
               <div>
                 <h3 className="font-medium">Total Venues</h3>
-                <p className="text-muted-foreground text-sm">{venues?.length || 0} venues ({confirmedVenues?.length || 0} confirmed)</p>
+                <p className="text-muted-foreground text-sm">{venues?.length || 0} venues ({venues?.filter(v => v.tourVenue?.status === 'confirmed')?.length || 0} confirmed)</p>
               </div>
             </div>
             
