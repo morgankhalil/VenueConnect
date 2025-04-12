@@ -39,6 +39,10 @@ async function main() {
     await safeRenameColumn('venues', 'primary_genre', 'primaryGenre');
     await safeRenameColumn('venues', 'capacity_standing', 'capacityStanding');
     await safeRenameColumn('venues', 'capacity_seated', 'capacitySeated');
+    await safeRenameColumn('venues', 'market_category', 'marketCategory');
+    await safeRenameColumn('venues', 'venue_type', 'venueType');
+    await safeRenameColumn('venues', 'capacity_category', 'capacityCategory');
+    await safeRenameColumn('venues', 'secondary_genres', 'secondaryGenres');
     
     // Events table
     console.log('Updating events table columns...');
@@ -54,205 +58,109 @@ async function main() {
     await safeRenameColumn('predictions', 'gap_before_event_id', 'gapBeforeEventId');
     await safeRenameColumn('predictions', 'gap_after_event_id', 'gapAfterEventId');
 
-    try {
-      // Rename columns in the inquiries table
-      console.log('Updating inquiries table columns...');
-      await db.execute(`
-        ALTER TABLE inquiries 
-        RENAME COLUMN IF EXISTS venue_id TO "venueId",
-        RENAME COLUMN IF EXISTS artist_id TO "artistId",
-        RENAME COLUMN IF EXISTS proposed_date TO "proposedDate";
-      `);
-      console.log('Inquiries table updated successfully.');
-    } catch (error) {
-      console.error('Error updating inquiries table:', error);
-    }
+    // Inquiries table
+    console.log('Updating inquiries table columns...');
+    await safeRenameColumn('inquiries', 'venue_id', 'venueId');
+    await safeRenameColumn('inquiries', 'artist_id', 'artistId');
+    await safeRenameColumn('inquiries', 'proposed_date', 'proposedDate');
 
-    try {
-      // Rename columns in the collaborative_opportunities table
-      console.log('Updating collaborative_opportunities table columns...');
-      await db.execute(`
-        ALTER TABLE collaborative_opportunities 
-        RENAME COLUMN IF EXISTS artist_id TO "artistId",
-        RENAME COLUMN IF EXISTS creator_venue_id TO "creatorVenueId",
-        RENAME COLUMN IF EXISTS date_range_start TO "dateRangeStart",
-        RENAME COLUMN IF EXISTS date_range_end TO "dateRangeEnd";
-      `);
-      console.log('Collaborative opportunities table updated successfully.');
-    } catch (error) {
-      console.error('Error updating collaborative_opportunities table:', error);
-    }
+    // Collaborative opportunities table
+    console.log('Updating collaborative_opportunities table columns...');
+    await safeRenameColumn('collaborative_opportunities', 'artist_id', 'artistId');
+    await safeRenameColumn('collaborative_opportunities', 'creator_venue_id', 'creatorVenueId');
+    await safeRenameColumn('collaborative_opportunities', 'date_range_start', 'dateRangeStart');
+    await safeRenameColumn('collaborative_opportunities', 'date_range_end', 'dateRangeEnd');
 
-    try {
-      // Rename columns in the collaborative_participants table
-      console.log('Updating collaborative_participants table columns...');
-      await db.execute(`
-        ALTER TABLE collaborative_participants 
-        RENAME COLUMN IF EXISTS opportunity_id TO "opportunityId",
-        RENAME COLUMN IF EXISTS venue_id TO "venueId",
-        RENAME COLUMN IF EXISTS proposed_date TO "proposedDate";
-      `);
-      console.log('Collaborative participants table updated successfully.');
-    } catch (error) {
-      console.error('Error updating collaborative_participants table:', error);
-    }
+    // Collaborative participants table
+    console.log('Updating collaborative_participants table columns...');
+    await safeRenameColumn('collaborative_participants', 'opportunity_id', 'opportunityId');
+    await safeRenameColumn('collaborative_participants', 'venue_id', 'venueId');
+    await safeRenameColumn('collaborative_participants', 'proposed_date', 'proposedDate');
 
-    try {
-      // Rename columns in the webhook_configurations table
-      console.log('Updating webhook_configurations table columns...');
-      await db.execute(`
-        ALTER TABLE webhook_configurations 
-        RENAME COLUMN IF EXISTS callback_url TO "callbackUrl",
-        RENAME COLUMN IF EXISTS secret_key TO "secretKey",
-        RENAME COLUMN IF EXISTS config_options TO "configOptions",
-        RENAME COLUMN IF EXISTS last_executed TO "lastExecuted";
-      `);
-      console.log('Webhook configurations table updated successfully.');
-    } catch (error) {
-      console.error('Error updating webhook_configurations table:', error);
-    }
+    // Webhook configurations table
+    console.log('Updating webhook_configurations table columns...');
+    await safeRenameColumn('webhook_configurations', 'callback_url', 'callbackUrl');
+    await safeRenameColumn('webhook_configurations', 'secret_key', 'secretKey');
+    await safeRenameColumn('webhook_configurations', 'config_options', 'configOptions');
+    await safeRenameColumn('webhook_configurations', 'last_executed', 'lastExecuted');
 
-    try {
-      // Rename columns in the tour_routes table
-      console.log('Updating tour_routes table columns...');
-      await db.execute(`
-        ALTER TABLE tour_routes 
-        RENAME COLUMN IF EXISTS tour_id TO "tourId",
-        RENAME COLUMN IF EXISTS start_venue_id TO "startVenueId",
-        RENAME COLUMN IF EXISTS end_venue_id TO "endVenueId",
-        RENAME COLUMN IF EXISTS distance_km TO "distanceKm",
-        RENAME COLUMN IF EXISTS estimated_travel_time_minutes TO "estimatedTravelTimeMinutes",
-        RENAME COLUMN IF EXISTS optimization_score TO "optimizationScore";
-      `);
-      console.log('Tour routes table updated successfully.');
-    } catch (error) {
-      console.error('Error updating tour_routes table:', error);
-    }
-
-    try {
-      // Rename columns in the tours table
-      console.log('Updating tours table columns...');
-      await db.execute(`
-        ALTER TABLE tours 
-        RENAME COLUMN IF EXISTS artist_id TO "artistId",
-        RENAME COLUMN IF EXISTS start_date TO "startDate",
-        RENAME COLUMN IF EXISTS end_date TO "endDate",
-        RENAME COLUMN IF EXISTS total_budget TO "totalBudget",
-        RENAME COLUMN IF EXISTS estimated_travel_distance TO "estimatedTravelDistance",
-        RENAME COLUMN IF EXISTS estimated_travel_time_minutes TO "estimatedTravelTimeMinutes",
-        RENAME COLUMN IF EXISTS initial_optimization_score TO "initialOptimizationScore",
-        RENAME COLUMN IF EXISTS initial_total_distance TO "initialTotalDistance",
-        RENAME COLUMN IF EXISTS initial_travel_time_minutes TO "initialTravelTimeMinutes",
-        RENAME COLUMN IF EXISTS optimization_score TO "optimizationScore";
-      `);
-      console.log('Tours table updated successfully.');
-    } catch (error) {
-      console.error('Error updating tours table:', error);
-    }
-
-    try {
-      // Rename columns in the tour_venues table
-      console.log('Updating tour_venues table columns...');
-      await db.execute(`
-        ALTER TABLE tour_venues 
-        RENAME COLUMN IF EXISTS tour_id TO "tourId",
-        RENAME COLUMN IF EXISTS venue_id TO "venueId",
-        RENAME COLUMN IF EXISTS travel_distance_from_previous TO "travelDistanceFromPrevious",
-        RENAME COLUMN IF EXISTS travel_time_from_previous TO "travelTimeFromPrevious",
-        RENAME COLUMN IF EXISTS status_updated_at TO "statusUpdatedAt";
-      `);
-      console.log('Tour venues table updated successfully.');
-    } catch (error) {
-      console.error('Error updating tour_venues table:', error);
-    }
-
-    try {
-      // Rename columns in the tour_gaps table
-      console.log('Updating tour_gaps table columns...');
-      await db.execute(`
-        ALTER TABLE tour_gaps 
-        RENAME COLUMN IF EXISTS tour_id TO "tourId",
-        RENAME COLUMN IF EXISTS start_date TO "startDate",
-        RENAME COLUMN IF EXISTS end_date TO "endDate",
-        RENAME COLUMN IF EXISTS previous_venue_id TO "previousVenueId",
-        RENAME COLUMN IF EXISTS next_venue_id TO "nextVenueId",
-        RENAME COLUMN IF EXISTS location_latitude TO "locationLatitude",
-        RENAME COLUMN IF EXISTS location_longitude TO "locationLongitude",
-        RENAME COLUMN IF EXISTS max_travel_distance TO "maxTravelDistance";
-      `);
-      console.log('Tour gaps table updated successfully.');
-    } catch (error) {
-      console.error('Error updating tour_gaps table:', error);
-    }
-
-    try {
-      // Rename columns in the tour_gap_suggestions table
-      console.log('Updating tour_gap_suggestions table columns...');
-      await db.execute(`
-        ALTER TABLE tour_gap_suggestions 
-        RENAME COLUMN IF EXISTS gap_id TO "gapId",
-        RENAME COLUMN IF EXISTS venue_id TO "venueId",
-        RENAME COLUMN IF EXISTS suggested_date TO "suggestedDate",
-        RENAME COLUMN IF EXISTS match_score TO "matchScore",
-        RENAME COLUMN IF EXISTS travel_distance_from_previous TO "travelDistanceFromPrevious",
-        RENAME COLUMN IF EXISTS travel_distance_to_next TO "travelDistanceToNext";
-      `);
-      console.log('Tour gap suggestions table updated successfully.');
-    } catch (error) {
-      console.error('Error updating tour_gap_suggestions table:', error);
-    }
-
-    try {
-      // Rename columns in the artist_tour_preferences table
-      console.log('Updating artist_tour_preferences table columns...');
-      await db.execute(`
-        ALTER TABLE artist_tour_preferences 
-        RENAME COLUMN IF EXISTS artist_id TO "artistId",
-        RENAME COLUMN IF EXISTS preferred_regions TO "preferredRegions",
-        RENAME COLUMN IF EXISTS preferred_venue_types TO "preferredVenueTypes",
-        RENAME COLUMN IF EXISTS preferred_venue_capacity TO "preferredVenueCapacity",
-        RENAME COLUMN IF EXISTS max_travel_distance_per_day TO "maxTravelDistancePerDay",
-        RENAME COLUMN IF EXISTS min_days_between_shows TO "minDaysBetweenShows",
-        RENAME COLUMN IF EXISTS max_days_between_shows TO "maxDaysBetweenShows",
-        RENAME COLUMN IF EXISTS avoid_dates TO "avoidDates",
-        RENAME COLUMN IF EXISTS required_day_off TO "requiredDayOff";
-      `);
-      console.log('Artist tour preferences table updated successfully.');
-    } catch (error) {
-      console.error('Error updating artist_tour_preferences table:', error);
-    }
-
-    try {
-      // Rename columns in the venue_tour_preferences table
-      console.log('Updating venue_tour_preferences table columns...');
-      await db.execute(`
-        ALTER TABLE venue_tour_preferences 
-        RENAME COLUMN IF EXISTS venue_id TO "venueId",
-        RENAME COLUMN IF EXISTS preferred_genres TO "preferredGenres",
-        RENAME COLUMN IF EXISTS available_dates TO "availableDates",
-        RENAME COLUMN IF EXISTS minimum_artist_popularity TO "minimumArtistPopularity",
-        RENAME COLUMN IF EXISTS preferred_notice_time_days TO "preferredNoticeTimeDays",
-        RENAME COLUMN IF EXISTS open_to_collaboration TO "openToCollaboration",
-        RENAME COLUMN IF EXISTS participation_radius TO "participationRadius";
-      `);
-      console.log('Venue tour preferences table updated successfully.');
-    } catch (error) {
-      console.error('Error updating venue_tour_preferences table:', error);
-    }
+    // Tour routes table
+    console.log('Updating tour_routes table columns...');
+    await safeRenameColumn('tour_routes', 'tour_id', 'tourId');
+    await safeRenameColumn('tour_routes', 'start_venue_id', 'startVenueId');
+    await safeRenameColumn('tour_routes', 'end_venue_id', 'endVenueId');
+    await safeRenameColumn('tour_routes', 'distance_km', 'distanceKm');
+    await safeRenameColumn('tour_routes', 'estimated_travel_time_minutes', 'estimatedTravelTimeMinutes');
+    await safeRenameColumn('tour_routes', 'optimization_score', 'optimizationScore');
     
-    try {
-      // Rename columns in the venue_network table
-      console.log('Updating venue_network table columns...');
-      await db.execute(`
-        ALTER TABLE venue_network 
-        RENAME COLUMN IF EXISTS venue_id TO "venueId",
-        RENAME COLUMN IF EXISTS connected_venue_id TO "connectedVenueId",
-        RENAME COLUMN IF EXISTS connection_strength TO "connectionStrength";
-      `);
-      console.log('Venue network table updated successfully.');
-    } catch (error) {
-      console.error('Error updating venue_network table:', error);
-    }
+    // Tours table
+    console.log('Updating tours table columns...');
+    await safeRenameColumn('tours', 'artist_id', 'artistId');
+    await safeRenameColumn('tours', 'start_date', 'startDate');
+    await safeRenameColumn('tours', 'end_date', 'endDate');
+    await safeRenameColumn('tours', 'total_budget', 'totalBudget');
+    await safeRenameColumn('tours', 'estimated_travel_distance', 'estimatedTravelDistance');
+    await safeRenameColumn('tours', 'estimated_travel_time_minutes', 'estimatedTravelTimeMinutes');
+    await safeRenameColumn('tours', 'initial_optimization_score', 'initialOptimizationScore');
+    await safeRenameColumn('tours', 'initial_total_distance', 'initialTotalDistance');
+    await safeRenameColumn('tours', 'initial_travel_time_minutes', 'initialTravelTimeMinutes');
+    await safeRenameColumn('tours', 'optimization_score', 'optimizationScore');
+    
+    // Tour venues table
+    console.log('Updating tour_venues table columns...');
+    await safeRenameColumn('tour_venues', 'tour_id', 'tourId');
+    await safeRenameColumn('tour_venues', 'venue_id', 'venueId');
+    await safeRenameColumn('tour_venues', 'travel_distance_from_previous', 'travelDistanceFromPrevious');
+    await safeRenameColumn('tour_venues', 'travel_time_from_previous', 'travelTimeFromPrevious');
+    await safeRenameColumn('tour_venues', 'status_updated_at', 'statusUpdatedAt');
+    
+    // Tour gaps table
+    console.log('Updating tour_gaps table columns...');
+    await safeRenameColumn('tour_gaps', 'tour_id', 'tourId');
+    await safeRenameColumn('tour_gaps', 'start_date', 'startDate');
+    await safeRenameColumn('tour_gaps', 'end_date', 'endDate');
+    await safeRenameColumn('tour_gaps', 'previous_venue_id', 'previousVenueId');
+    await safeRenameColumn('tour_gaps', 'next_venue_id', 'nextVenueId');
+    await safeRenameColumn('tour_gaps', 'location_latitude', 'locationLatitude');
+    await safeRenameColumn('tour_gaps', 'location_longitude', 'locationLongitude');
+    await safeRenameColumn('tour_gaps', 'max_travel_distance', 'maxTravelDistance');
+    
+    // Tour gap suggestions table
+    console.log('Updating tour_gap_suggestions table columns...');
+    await safeRenameColumn('tour_gap_suggestions', 'gap_id', 'gapId');
+    await safeRenameColumn('tour_gap_suggestions', 'venue_id', 'venueId');
+    await safeRenameColumn('tour_gap_suggestions', 'suggested_date', 'suggestedDate');
+    await safeRenameColumn('tour_gap_suggestions', 'match_score', 'matchScore');
+    await safeRenameColumn('tour_gap_suggestions', 'travel_distance_from_previous', 'travelDistanceFromPrevious');
+    await safeRenameColumn('tour_gap_suggestions', 'travel_distance_to_next', 'travelDistanceToNext');
+    
+    // Artist tour preferences table
+    console.log('Updating artist_tour_preferences table columns...');
+    await safeRenameColumn('artist_tour_preferences', 'artist_id', 'artistId');
+    await safeRenameColumn('artist_tour_preferences', 'preferred_regions', 'preferredRegions');
+    await safeRenameColumn('artist_tour_preferences', 'preferred_venue_types', 'preferredVenueTypes');
+    await safeRenameColumn('artist_tour_preferences', 'preferred_venue_capacity', 'preferredVenueCapacity');
+    await safeRenameColumn('artist_tour_preferences', 'max_travel_distance_per_day', 'maxTravelDistancePerDay');
+    await safeRenameColumn('artist_tour_preferences', 'min_days_between_shows', 'minDaysBetweenShows');
+    await safeRenameColumn('artist_tour_preferences', 'max_days_between_shows', 'maxDaysBetweenShows');
+    await safeRenameColumn('artist_tour_preferences', 'avoid_dates', 'avoidDates');
+    await safeRenameColumn('artist_tour_preferences', 'required_day_off', 'requiredDayOff');
+    
+    // Venue tour preferences table
+    console.log('Updating venue_tour_preferences table columns...');
+    await safeRenameColumn('venue_tour_preferences', 'venue_id', 'venueId');
+    await safeRenameColumn('venue_tour_preferences', 'preferred_genres', 'preferredGenres');
+    await safeRenameColumn('venue_tour_preferences', 'available_dates', 'availableDates');
+    await safeRenameColumn('venue_tour_preferences', 'minimum_artist_popularity', 'minimumArtistPopularity');
+    await safeRenameColumn('venue_tour_preferences', 'preferred_notice_time_days', 'preferredNoticeTimeDays');
+    await safeRenameColumn('venue_tour_preferences', 'open_to_collaboration', 'openToCollaboration');
+    await safeRenameColumn('venue_tour_preferences', 'participation_radius', 'participationRadius');
+    
+    // Venue network table
+    console.log('Updating venue_network table columns...');
+    await safeRenameColumn('venue_network', 'venue_id', 'venueId');
+    await safeRenameColumn('venue_network', 'connected_venue_id', 'connectedVenueId');
+    await safeRenameColumn('venue_network', 'connection_strength', 'connectionStrength');
 
     console.log('Column name standardization migration completed successfully!');
   } catch (error) {
