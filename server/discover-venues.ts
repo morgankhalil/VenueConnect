@@ -40,8 +40,8 @@ async function searchVenuesByParameters(params: any) {
   try {
     const response = await axios.get(`https://rest.bandsintown.com/venues/search`, {
       headers: {
-        'Accept': 'application/json',
-        'x-api-key': apiKey
+        'Accept': 'application/json'
+        // No x-api-key header - Bandsintown expects the API key in the app_id parameter only
       },
       params: searchParams
     });
@@ -85,8 +85,8 @@ async function getVenuesByArtist(artistName: string, dateRange?: string) {
       { 
         params: queryParams,
         headers: { 
-          'Accept': 'application/json',
-          'x-api-key': apiKey  // Use the API key in the headers
+          'Accept': 'application/json'
+          // No x-api-key header - Bandsintown expects the API key in the app_id parameter only
         }
       }
     );

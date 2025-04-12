@@ -27,9 +27,9 @@ async function getArtistEvents(params: ArtistSearchParams) {
   
   console.log(`Fetching events for artist '${params.name}'...`);
   
-  // Build query parameters - using API key as app_id as well
+  // Build query parameters - using API key as app_id
   const queryParams: Record<string, any> = {
-    app_id: apiKey  // Using the API key for the app_id parameter as well
+    app_id: apiKey  // Use the API key as the app_id parameter (this is the correct way for Bandsintown)
   };
   
   if (params.date_range) {
@@ -49,8 +49,8 @@ async function getArtistEvents(params: ArtistSearchParams) {
     const response = await axios.get(apiEndpoint, { 
       params: queryParams,
       headers: { 
-        'Accept': 'application/json',
-        'x-api-key': apiKey  // Use the API key in the headers
+        'Accept': 'application/json'
+        // No x-api-key header - Bandsintown expects the API key in the app_id parameter only
       }
     });
     
