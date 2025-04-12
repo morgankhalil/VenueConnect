@@ -163,31 +163,31 @@ export function RoutePlanningTab({
                   <div className="flex justify-between items-center">
                     <div className="font-medium flex items-center">
                       <span className="bg-muted w-6 h-6 rounded-full mr-2 flex items-center justify-center text-xs">{index + 1}</span>
-                      {venue.name}
+                      {venue.venue?.name}
                     </div>
-                    {renderStatusBadge(venue.status)}
+                    {renderStatusBadge(venue.tourVenue?.status)}
                   </div>
                 </CardHeader>
                 <CardContent className="py-2 px-4">
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div className="flex items-center">
                       <MapPin className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
-                      <span>{venue.city}{venue.region ? `, ${venue.region}` : ''}</span>
+                      <span>{venue.venue?.city}{venue.venue?.region ? `, ${venue.venue.region}` : ''}</span>
                     </div>
                     <div className="flex items-center">
                       <Calendar className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
-                      <span>{venue.date ? formatDate(venue.date) : 'Date TBD'}</span>
+                      <span>{venue.tourVenue?.date ? formatDate(venue.tourVenue.date) : 'Date TBD'}</span>
                     </div>
                     
-                    {index < sequence.length - 1 && venue.longitude && venue.latitude && sequence[index + 1].longitude && sequence[index + 1].latitude && (
+                    {index < sequence.length - 1 && venue.venue?.longitude && venue.venue?.latitude && sequence[index + 1].venue?.longitude && sequence[index + 1].venue?.latitude && (
                       <div className="flex items-center col-span-2 mt-1 pt-1 border-t">
                         <ArrowRight className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
                         <span className="text-muted-foreground">
                           {formatDistance(calculateDistance(
-                            venue.latitude, 
-                            venue.longitude, 
-                            sequence[index + 1].latitude, 
-                            sequence[index + 1].longitude
+                            venue.venue.latitude, 
+                            venue.venue.longitude, 
+                            sequence[index + 1].venue.latitude, 
+                            sequence[index + 1].venue.longitude
                           ))} to next venue
                         </span>
                       </div>
@@ -227,7 +227,7 @@ export function RoutePlanningTab({
               onClick={() => onVenueClick(venue)}
             >
               <span className="bg-muted w-5 h-5 rounded-full mr-2 flex items-center justify-center text-xs font-normal">{index + 1}</span>
-              <span className="truncate">{venue.name}</span>
+              <span className="truncate">{venue.venue?.name}</span>
             </Button>
           ))}
         </div>
@@ -286,7 +286,7 @@ export function RoutePlanningTab({
               <div>
                 <h3 className="font-medium">Route Coverage</h3>
                 <p className="text-muted-foreground text-sm">
-                  {venues?.filter(v => v.longitude && v.latitude)?.length || 0} venues with coordinates
+                  {venues?.filter(v => v.venue?.longitude && v.venue?.latitude)?.length || 0} venues with coordinates
                 </p>
               </div>
             </div>
@@ -350,9 +350,9 @@ export function RoutePlanningTab({
         <TabsContent value="current" className="mt-6">
           {venues && venues.length > 0 ? (
             <>
-              {viewMode === 'timeline' && <TimelineView sequence={showAllVenues ? venues : venues.filter(v => v.status !== 'cancelled')} />}
-              {viewMode === 'list' && <ListView sequence={showAllVenues ? venues : venues.filter(v => v.status !== 'cancelled')} />}
-              {viewMode === 'map' && <MapView sequence={showAllVenues ? venues : venues.filter(v => v.status !== 'cancelled')} />}
+              {viewMode === 'timeline' && <TimelineView sequence={showAllVenues ? venues : venues.filter(v => v.tourVenue?.status !== 'cancelled')} />}
+              {viewMode === 'list' && <ListView sequence={showAllVenues ? venues : venues.filter(v => v.tourVenue?.status !== 'cancelled')} />}
+              {viewMode === 'map' && <MapView sequence={showAllVenues ? venues : venues.filter(v => v.tourVenue?.status !== 'cancelled')} />}
             </>
           ) : (
             <Alert variant="default" className="bg-muted/50">
@@ -368,9 +368,9 @@ export function RoutePlanningTab({
         <TabsContent value="optimized" className="mt-6">
           {optimizedSequenceVenues?.length > 0 ? (
             <>
-              {viewMode === 'timeline' && <TimelineView sequence={showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues?.filter(v => v.status !== 'cancelled') || []} />}
-              {viewMode === 'list' && <ListView sequence={showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues?.filter(v => v.status !== 'cancelled') || []} />}
-              {viewMode === 'map' && <MapView sequence={showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues?.filter(v => v.status !== 'cancelled') || []} />}
+              {viewMode === 'timeline' && <TimelineView sequence={showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues?.filter(v => v.tourVenue?.status !== 'cancelled') || []} />}
+              {viewMode === 'list' && <ListView sequence={showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues?.filter(v => v.tourVenue?.status !== 'cancelled') || []} />}
+              {viewMode === 'map' && <MapView sequence={showAllVenues ? optimizedSequenceVenues : optimizedSequenceVenues?.filter(v => v.tourVenue?.status !== 'cancelled') || []} />}
             </>
           ) : (
             <Alert>
