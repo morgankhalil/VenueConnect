@@ -54,16 +54,16 @@ export function TourOverviewTab({ tourData, venues }: TourOverviewTabProps) {
   }
   
   // Calculate tour statistics
-  const confirmedVenues = venues.filter(v => v.status === 'confirmed');
-  const potentialVenues = venues.filter(v => v.status === 'potential' || v.status === 'hold');
-  const cancelledVenues = venues.filter(v => v.status === 'cancelled');
+  const confirmedVenues = venues.filter(v => v.tourVenue?.status === 'confirmed');
+  const potentialVenues = venues.filter(v => v.tourVenue?.status === 'potential' || v.tourVenue?.status === 'hold');
+  const cancelledVenues = venues.filter(v => v.tourVenue?.status === 'cancelled');
   
   // Total capacity (based on confirmed venues)
-  const totalCapacity = confirmedVenues.reduce((sum, venue) => sum + (venue.capacity || 0), 0);
+  const totalCapacity = confirmedVenues.reduce((sum, venue) => sum + (venue.venue?.capacity || 0), 0);
   
   // Average venue capacity
   const avgCapacity = confirmedVenues.length 
-    ? Math.round(confirmedVenues.reduce((sum, venue) => sum + (venue.capacity || 0), 0) / confirmedVenues.length) 
+    ? Math.round(confirmedVenues.reduce((sum, venue) => sum + (venue.venue?.capacity || 0), 0) / confirmedVenues.length) 
     : 0;
   
   // Total distance and travel time
@@ -79,12 +79,12 @@ export function TourOverviewTab({ tourData, venues }: TourOverviewTabProps) {
     : 0;
   
   // Regions covered
-  const regions = Array.from(new Set(venues.map(v => v.region).filter(Boolean)));
+  const regions = Array.from(new Set(venues.map(v => v.venue?.region).filter(Boolean)));
   
   // Market distribution
   const marketCategories = venues.reduce((acc: any, venue) => {
-    if (venue.marketCategory) {
-      acc[venue.marketCategory] = (acc[venue.marketCategory] || 0) + 1;
+    if (venue.venue?.marketCategory) {
+      acc[venue.venue.marketCategory] = (acc[venue.venue.marketCategory] || 0) + 1;
     }
     return acc;
   }, {});
@@ -234,8 +234,8 @@ export function TourOverviewTab({ tourData, venues }: TourOverviewTabProps) {
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { status: 'confirmed', count: confirmedVenues.length },
-                  { status: 'hold', count: venues.filter(v => v.status === 'hold').length },
-                  { status: 'potential', count: venues.filter(v => v.status === 'potential').length },
+                  { status: 'hold', count: venues.filter(v => v.tourVenue?.status === 'hold').length },
+                  { status: 'potential', count: venues.filter(v => v.tourVenue?.status === 'potential').length },
                   { status: 'cancelled', count: cancelledVenues.length }
                 ].map(item => (
                   <div key={item.status} className={`p-4 rounded-md ${getStatusColor(item.status)} bg-opacity-20`}>
@@ -264,11 +264,11 @@ export function TourOverviewTab({ tourData, venues }: TourOverviewTabProps) {
                       ></div>
                       <div 
                         className="h-full bg-amber-500 float-left" 
-                        style={{ width: `${(venues.filter(v => v.status === 'hold').length / venues.length) * 100}%` }}
+                        style={{ width: `${(venues.filter(v => v.tourVenue?.status === 'hold').length / venues.length) * 100}%` }}
                       ></div>
                       <div 
                         className="h-full bg-blue-500 float-left" 
-                        style={{ width: `${(venues.filter(v => v.status === 'potential').length / venues.length) * 100}%` }}
+                        style={{ width: `${(venues.filter(v => v.tourVenue?.status === 'potential').length / venues.length) * 100}%` }}
                       ></div>
                     </>
                   )}
@@ -379,10 +379,10 @@ export function TourOverviewTab({ tourData, venues }: TourOverviewTabProps) {
                 <div>
                   <h3 className="font-medium text-sm">First Confirmed Venue</h3>
                   <p className="text-muted-foreground">
-                    {confirmedVenues[0].date ? formatDate(confirmedVenues[0].date) : 'Date TBD'}
+                    {confirmedVenues[0].tourVenue?.date ? formatDate(confirmedVenues[0].tourVenue.date) : 'Date TBD'}
                   </p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {confirmedVenues[0].name}
+                    {confirmedVenues[0].venue?.name}
                   </p>
                 </div>
               </div>

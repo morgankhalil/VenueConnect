@@ -49,8 +49,8 @@ export function RoutePlanningTab({
   const [viewMode, setViewMode] = useState<'timeline' | 'list' | 'map'>('timeline');
 
   // Get the confirmed and potential venues
-  const confirmedVenues = venues?.filter(v => v.status === 'confirmed') || [];
-  const potentialVenues = venues?.filter(v => v.status === 'potential' || v.status === 'hold') || [];
+  const confirmedVenues = venues?.filter(v => v.tourVenue?.status === 'confirmed') || [];
+  const potentialVenues = venues?.filter(v => v.tourVenue?.status === 'potential' || v.tourVenue?.status === 'hold') || [];
   
   // Render status badge
   const renderStatusBadge = (status: string) => {
@@ -97,11 +97,11 @@ export function RoutePlanningTab({
             {sequence.map((venue, index) => (
               <div key={venue.id} className="mb-8 relative">
                 {/* Timeline marker */}
-                <div className={`absolute -left-[19px] p-1.5 rounded-full ${venue.status === 'confirmed' ? 'bg-green-500' : venue.status === 'hold' ? 'bg-amber-500' : venue.status === 'potential' ? 'bg-blue-500' : 'bg-muted'}`}></div>
+                <div className={`absolute -left-[19px] p-1.5 rounded-full ${venue.tourVenue?.status === 'confirmed' ? 'bg-green-500' : venue.tourVenue?.status === 'hold' ? 'bg-amber-500' : venue.tourVenue?.status === 'potential' ? 'bg-blue-500' : 'bg-muted'}`}></div>
                 
                 {/* Date indicator */}
                 <div className="text-sm font-medium text-muted-foreground mb-2">
-                  {venue.date ? formatDate(venue.date) : 'Date TBD'}
+                  {venue.tourVenue?.date ? formatDate(venue.tourVenue.date) : 'Date TBD'}
                 </div>
                 
                 {/* Venue card */}
@@ -109,29 +109,29 @@ export function RoutePlanningTab({
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-medium text-base">{venue.name}</h3>
-                        <p className="text-sm text-muted-foreground">{venue.city}{venue.region ? `, ${venue.region}` : ''}</p>
+                        <h3 className="font-medium text-base">{venue.venue?.name}</h3>
+                        <p className="text-sm text-muted-foreground">{venue.venue?.city}{venue.venue?.region ? `, ${venue.venue.region}` : ''}</p>
                       </div>
                       <div>
-                        {renderStatusBadge(venue.status)}
+                        {renderStatusBadge(venue.tourVenue?.status)}
                       </div>
                     </div>
                     
-                    {index < sequence.length - 1 && sequence[index + 1].date && venue.date && (
+                    {index < sequence.length - 1 && sequence[index + 1].tourVenue?.date && venue.tourVenue?.date && (
                       <div className="mt-3 pt-3 border-t text-sm flex items-center justify-between text-muted-foreground">
                         <div className="flex items-center">
                           <Calendar className="h-3.5 w-3.5 mr-1" />
-                          <span>{Math.ceil((new Date(sequence[index + 1].date).getTime() - new Date(venue.date).getTime()) / (1000 * 60 * 60 * 24))} days</span>
+                          <span>{Math.ceil((new Date(sequence[index + 1].tourVenue.date).getTime() - new Date(venue.tourVenue.date).getTime()) / (1000 * 60 * 60 * 24))} days</span>
                         </div>
                         
-                        {venue.longitude && venue.latitude && sequence[index + 1].longitude && sequence[index + 1].latitude && (
+                        {venue.venue?.longitude && venue.venue?.latitude && sequence[index + 1].venue?.longitude && sequence[index + 1].venue?.latitude && (
                           <div className="flex items-center">
                             <Route className="h-3.5 w-3.5 mr-1" />
                             <span>{formatDistance(calculateDistance(
-                              venue.latitude, 
-                              venue.longitude, 
-                              sequence[index + 1].latitude, 
-                              sequence[index + 1].longitude
+                              venue.venue.latitude, 
+                              venue.venue.longitude, 
+                              sequence[index + 1].venue.latitude, 
+                              sequence[index + 1].venue.longitude
                             ))}</span>
                           </div>
                         )}
