@@ -1,0 +1,160 @@
+Database connection initialized
+Database Schema Analysis
+=======================
+
+===== Analyzing Table: artists =====
+Column Structure:
+  - id (integer, not null)
+  - name (text, not null)
+  - genres (ARRAY, nullable)
+  - popularity (integer, nullable)
+  - spotifyId (text, nullable)
+  - bandsintownId (text, nullable)
+  - songkickId (text, nullable)
+  - imageUrl (text, nullable)
+  - description (text, nullable)
+  - websiteUrl (text, nullable)
+  - socialMediaLinks (jsonb, nullable)
+  - createdAt (timestamp without time zone, nullable)
+
+Row Count: 19
+
+Sample Record:
+{
+  id: 178,
+  name: 'The Midnight Echo',
+  genres: '{rock,indie}',
+  popularity: 78,
+  spotifyId: null,
+  bandsintownId: null,
+  songkickId: null,
+  imageUrl: null,
+  description: null,
+  websiteUrl: 'https://themidnightecho.com',
+  socialMediaLinks: null,
+  createdAt: '2025-04-12 21:37:43.716544'
+}
+
+===== Analyzing Table: venues =====
+Column Structure:
+  - id (integer, not null)
+  - name (text, not null)
+  - city (text, not null)
+  - country (text, nullable)
+  - capacity (integer, nullable)
+  - latitude (real, nullable)
+  - longitude (real, nullable)
+  - contactPhone (text, nullable)
+  - description (text, nullable)
+  - imageUrl (text, nullable)
+  - ownerId (integer, nullable)
+  - createdAt (timestamp without time zone, nullable)
+  - bandsintownId (text, nullable)
+  - region (text, nullable)
+  - marketCategory (USER-DEFINED, nullable)
+  - venueType (USER-DEFINED, nullable)
+  - capacityCategory (USER-DEFINED, nullable)
+  - primaryGenre (USER-DEFINED, nullable)
+  - secondaryGenres (ARRAY, nullable)
+  - bookingContactName (text, nullable)
+  - bookingEmail (text, nullable)
+  - typicalBookingLeadTimeDays (integer, nullable)
+  - paymentStructure (text, nullable)
+  - soundSystem (text, nullable)
+  - localAccommodation (boolean, nullable)
+  - localPromotion (boolean, nullable)
+  - ageRestriction (text, nullable)
+  - websiteUrl (text, nullable)
+  - socialMediaLinks (jsonb, nullable)
+  - songkickId (text, nullable)
+  - updatedAt (timestamp without time zone, nullable)
+
+Row Count: 35
+
+Sample Record:
+{
+  id: 282,
+  name: 'The Middle East',
+  city: 'Cambridge',
+  country: 'US',
+  capacity: 575,
+  latitude: 42.36577,
+  longitude: -71.100494,
+  contactPhone: '617-864-3278',
+  description: 'Multi-room venue with upstairs and downstairs performance spaces',
+  imageUrl: null,
+  ownerId: null,
+  createdAt: '2025-04-12 21:36:15.695',
+  bandsintownId: null,
+  region: 'MA',
+  marketCategory: 'secondary',
+  venueType: 'club',
+  capacityCategory: 'medium',
+  primaryGenre: 'indie',
+  secondaryGenres: '{rock,hip_hop}',
+  bookingContactName: 'Booking Manager',
+  bookingEmail: 'booking@mideastclub.com',
+  typicalBookingLeadTimeDays: 60,
+  paymentStructure: 'guarantee + door split',
+  soundSystem: 'Full PA with engineer',
+  localAccommodation: false,
+  localPromotion: true,
+  ageRestriction: '18+',
+  websiteUrl: 'https://www.mideastoffers.com/',
+  socialMediaLinks: null,
+  songkickId: null,
+  updatedAt: '2025-04-12 21:36:15.695'
+}
+
+===== Analyzing Table: events =====
+Column Structure:
+  - id (integer, not null)
+  - artistId (integer, not null)
+  - venueId (integer, not null)
+  - date (date, not null)
+  - startTime (text, nullable)
+  - ticketUrl (text, nullable)
+  - status (text, nullable)
+  - sourceId (text, nullable)
+  - sourceName (text, nullable)
+  - createdAt (timestamp without time zone, nullable)
+
+Row Count: 36
+
+Sample Record:
+{
+  id: 141,
+  artistId: 178,
+  venueId: 284,
+  date: '2025-05-06',
+  startTime: '20:00',
+  ticketUrl: null,
+  status: 'confirmed',
+  sourceId: null,
+  sourceName: 'direct_entry',
+  createdAt: '2025-04-12 22:58:07.784537'
+}
+
+===== Analyzing Table: genres =====
+Column Structure:
+  - id (integer, not null)
+  - name (text, not null)
+  - slug (text, not null)
+  - description (text, nullable)
+  - parentId (integer, nullable)
+  - createdAt (timestamp without time zone, nullable)
+
+Row Count: 48
+
+Sample Record:
+{
+  id: 1,
+  name: 'rock',
+  slug: 'rock',
+  description: null,
+  parentId: null,
+  createdAt: '2025-04-12 21:53:49.655939'
+}
+
+===== Analyzing Table: artist_genres =====
+Column Structure:
