@@ -3,30 +3,36 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import {
   Calendar,
-  Clock,
   MapPin,
-  Building,
-  Music,
-  Users,
-  CheckCircle2,
-  Clock4,
-  AlertCircle,
-  XCircle,
+  Clock,
   BarChart,
+  Users,
+  Music,
+  Building,
   Truck,
+  DollarSign,
   CalendarRange,
-  CalendarDays
+  CheckCircle2,
+  AlertCircle,
+  Clock4,
+  XCircle,
+  AlertTriangle,
 } from 'lucide-react';
-import { formatDate, formatDistance, formatTravelTime, formatCapacity } from '@/lib/utils';
+import { 
+  formatDate, 
+  formatDistance, 
+  formatTravelTime, 
+  formatCapacity, 
+  formatCurrency 
+} from '@/lib/utils';
 
 interface TourOverviewTabProps {
   tourData: any;
@@ -34,151 +40,239 @@ interface TourOverviewTabProps {
 }
 
 export function TourOverviewTab({ tourData, venues }: TourOverviewTabProps) {
-  // Filter venues by status for summary stats
-  const confirmedVenues = venues.filter(venue => venue.status === 'confirmed');
-  const holdVenues = venues.filter(venue => venue.status === 'hold');
-  const potentialVenues = venues.filter(venue => venue.status === 'potential');
-  const cancelledVenues = venues.filter(venue => venue.status === 'cancelled');
+  if (!tourData) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center text-muted-foreground">
+            <AlertTriangle className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
+            <p>Tour data not available</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   
-  // Calculate average venue capacity
-  const venuesWithCapacity = venues.filter(venue => venue.capacity);
-  const averageCapacity = venuesWithCapacity.length > 0
-    ? Math.round(venuesWithCapacity.reduce((acc, venue) => acc + venue.capacity, 0) / venuesWithCapacity.length)
+  // Calculate tour statistics
+  const confirmedVenues = venues.filter(v => v.status === 'confirmed');
+  const potentialVenues = venues.filter(v => v.status === 'potential' || v.status === 'hold');
+  const cancelledVenues = venues.filter(v => v.status === 'cancelled');
+  
+  // Total capacity (based on confirmed venues)
+  const totalCapacity = confirmedVenues.reduce((sum, venue) => sum + (venue.capacity || 0), 0);
+  
+  // Average venue capacity
+  const avgCapacity = confirmedVenues.length 
+    ? Math.round(confirmedVenues.reduce((sum, venue) => sum + (venue.capacity || 0), 0) / confirmedVenues.length) 
     : 0;
-
-  // Get summary of venue types
-  const venueTypes = getVenueTypesSummary(venues);
   
-  // Format dates
-  const startDate = tourData?.startDate ? formatDate(tourData.startDate) : 'Not set';
-  const endDate = tourData?.endDate ? formatDate(tourData.endDate) : 'Not set';
+  // Total distance and travel time
+  const totalDistance = tourData.totalDistance || 0;
+  const travelTime = tourData.travelTimeMinutes || 0;
   
-  // Calculate tour duration in days
-  const durationDays = tourData?.startDate && tourData?.endDate
-    ? Math.round((new Date(tourData.endDate).getTime() - new Date(tourData.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1
+  // Revenue potential (very simple calculation)
+  const estimatedRevenue = totalCapacity * 25; // $25 average ticket price
+  
+  // Tour duration in days
+  const tourDuration = tourData.startDate && tourData.endDate
+    ? Math.ceil((new Date(tourData.endDate).getTime() - new Date(tourData.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1
     : 0;
+  
+  // Regions covered
+  const regions = Array.from(new Set(venues.map(v => v.region).filter(Boolean)));
+  
+  // Market distribution
+  const marketCategories = venues.reduce((acc: any, venue) => {
+    if (venue.marketCategory) {
+      acc[venue.marketCategory] = (acc[venue.marketCategory] || 0) + 1;
+    }
+    return acc;
+  }, {});
+  
+  // Status card colors  
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'confirmed': return 'bg-green-100 text-green-700';
+      case 'hold': return 'bg-amber-100 text-amber-700';
+      case 'potential': return 'bg-blue-100 text-blue-700';
+      case 'cancelled': return 'bg-red-100 text-red-700';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
+  
+  // Status icon
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'confirmed': return <CheckCircle2 className="h-3.5 w-3.5 mr-1" />;
+      case 'hold': return <Clock4 className="h-3.5 w-3.5 mr-1" />;
+      case 'potential': return <AlertCircle className="h-3.5 w-3.5 mr-1" />;
+      case 'cancelled': return <XCircle className="h-3.5 w-3.5 mr-1" />;
+      default: return null;
+    }
+  };
   
   return (
     <div className="space-y-6">
-      {/* Tour Summary Card */}
+      {/* Main Tour Info Card */}
       <Card>
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <CardTitle className="text-2xl">{tourData?.name || 'Tour'}</CardTitle>
-              <CardDescription>
-                {startDate} to {endDate}
-                {durationDays > 0 && ` · ${durationDays} days`}
+              <CardTitle className="text-2xl">{tourData.name}</CardTitle>
+              <CardDescription className="mt-1">
+                {tourData.startDate && tourData.endDate 
+                  ? `${formatDate(tourData.startDate)} - ${formatDate(tourData.endDate)}`
+                  : 'Dates not finalized'}
               </CardDescription>
             </div>
             
             <div className="flex flex-col md:flex-row items-center gap-3">
-              <Badge className={`px-3 py-1 ${tourData?.optimizationScore > 70 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+              <Badge className={`px-3 py-1 ${tourData.optimizationScore > 70 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
                 <BarChart className="h-3.5 w-3.5 mr-1" />
-                Optimization Score: {tourData?.optimizationScore || 'N/A'}
+                Optimization Score: {tourData.optimizationScore || 'Not optimized'}
               </Badge>
+              
+              {tourDuration > 0 && (
+                <Badge variant="outline">
+                  <CalendarRange className="h-3.5 w-3.5 mr-1" />
+                  {tourDuration} days
+                </Badge>
+              )}
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {/* Venues Summary */}
             <div className="flex items-start gap-3">
               <div className="bg-primary/10 p-2 rounded-full">
-                <CalendarRange className="h-5 w-5 text-primary" />
+                <Building className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-medium">Tour Duration</h3>
-                <p className="text-muted-foreground text-sm">
-                  {durationDays > 0 ? `${durationDays} days` : 'Not finalized'}
+                <h3 className="font-medium">Venues</h3>
+                <p className="text-muted-foreground">{venues.length} total</p>
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  {confirmedVenues.length > 0 && (
+                    <Badge className="bg-green-100 text-green-700">
+                      <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                      {confirmedVenues.length} confirmed
+                    </Badge>
+                  )}
+                  {potentialVenues.length > 0 && (
+                    <Badge className="bg-blue-100 text-blue-700">
+                      <AlertCircle className="h-3.5 w-3.5 mr-1" />
+                      {potentialVenues.length} pending
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {/* Capacity Summary */}
+            <div className="flex items-start gap-3">
+              <div className="bg-primary/10 p-2 rounded-full">
+                <Users className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-medium">Capacity</h3>
+                <p className="text-muted-foreground">
+                  {formatCapacity(totalCapacity)} total
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {formatCapacity(avgCapacity)} avg. per venue
                 </p>
               </div>
             </div>
             
+            {/* Route Summary */}
             <div className="flex items-start gap-3">
               <div className="bg-primary/10 p-2 rounded-full">
                 <Truck className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-medium">Total Distance</h3>
-                <p className="text-muted-foreground text-sm">{formatDistance(tourData?.totalDistance || 0)}</p>
+                <h3 className="font-medium">Distance</h3>
+                <p className="text-muted-foreground">
+                  {formatDistance(totalDistance)}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Travel time: {formatTravelTime(travelTime)}
+                </p>
               </div>
             </div>
             
+            {/* Revenue Potential */}
             <div className="flex items-start gap-3">
               <div className="bg-primary/10 p-2 rounded-full">
-                <Clock className="h-5 w-5 text-primary" />
+                <DollarSign className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-medium">Travel Time</h3>
-                <p className="text-muted-foreground text-sm">{formatTravelTime(tourData?.travelTimeMinutes || 0)}</p>
+                <h3 className="font-medium">Revenue Potential</h3>
+                <p className="text-muted-foreground">
+                  {formatCurrency(estimatedRevenue)}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Based on confirmed venues
+                </p>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
       
-      {/* Venue Breakdown */}
+      {/* Status Overview Card */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Venue Status</CardTitle>
-            <CardDescription>Status breakdown of your tour venues</CardDescription>
+            <CardTitle>Venue Status Overview</CardTitle>
+            <CardDescription>
+              Summary of venue booking statuses
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  <span className="font-medium">Confirmed</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-green-50 text-green-700">
-                    {confirmedVenues.length}
-                  </Badge>
-                </div>
+              {/* Status Breakdown */}
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { status: 'confirmed', count: confirmedVenues.length },
+                  { status: 'hold', count: venues.filter(v => v.status === 'hold').length },
+                  { status: 'potential', count: venues.filter(v => v.status === 'potential').length },
+                  { status: 'cancelled', count: cancelledVenues.length }
+                ].map(item => (
+                  <div key={item.status} className={`p-4 rounded-md ${getStatusColor(item.status)} bg-opacity-20`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        {getStatusIcon(item.status)}
+                        <span className="capitalize">{item.status}</span>
+                      </div>
+                      <Badge className={getStatusColor(item.status)}>
+                        {item.count}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
               </div>
               
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Clock4 className="h-4 w-4 text-amber-600" />
-                  <span className="font-medium">On Hold</span>
+              {/* Progress Bar */}
+              <div className="space-y-2 mt-2">
+                <div className="text-sm text-muted-foreground">Booking Progress</div>
+                <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                  {venues.length > 0 && (
+                    <>
+                      <div 
+                        className="h-full bg-green-500 float-left" 
+                        style={{ width: `${(confirmedVenues.length / venues.length) * 100}%` }}
+                      ></div>
+                      <div 
+                        className="h-full bg-amber-500 float-left" 
+                        style={{ width: `${(venues.filter(v => v.status === 'hold').length / venues.length) * 100}%` }}
+                      ></div>
+                      <div 
+                        className="h-full bg-blue-500 float-left" 
+                        style={{ width: `${(venues.filter(v => v.status === 'potential').length / venues.length) * 100}%` }}
+                      ></div>
+                    </>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-amber-50 text-amber-700">
-                    {holdVenues.length}
-                  </Badge>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-blue-600" />
-                  <span className="font-medium">Potential</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                    {potentialVenues.length}
-                  </Badge>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <XCircle className="h-4 w-4 text-red-600" />
-                  <span className="font-medium">Cancelled</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-red-50 text-red-700">
-                    {cancelledVenues.length}
-                  </Badge>
-                </div>
-              </div>
-              
-              <Separator />
-              
-              <div className="flex items-center justify-between font-medium">
-                <span>Total Venues</span>
-                <span>{venues.length}</span>
               </div>
             </div>
           </CardContent>
@@ -186,246 +280,130 @@ export function TourOverviewTab({ tourData, venues }: TourOverviewTabProps) {
         
         <Card>
           <CardHeader>
-            <CardTitle>Tour Statistics</CardTitle>
-            <CardDescription>Key metrics for your tour</CardDescription>
+            <CardTitle>Market & Region Details</CardTitle>
+            <CardDescription>
+              Market categories and geographic coverage
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Average Capacity</span>
+              {/* Market Category Breakdown */}
+              <div>
+                <h3 className="text-sm font-medium mb-2">Market Categories</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {Object.entries(marketCategories).length > 0 ? (
+                    Object.entries(marketCategories).map(([category, count]: [string, any]) => (
+                      <Badge 
+                        key={category}
+                        variant="outline" 
+                        className="justify-between px-3 py-1.5"
+                      >
+                        <span className="capitalize">{category}</span>
+                        <span className="bg-muted ml-2 px-1.5 py-0.5 rounded-full text-xs">
+                          {count}
+                        </span>
+                      </Badge>
+                    ))
+                  ) : (
+                    <div className="col-span-3 text-sm text-muted-foreground">
+                      No market data available
+                    </div>
+                  )}
                 </div>
-                <span>{formatCapacity(averageCapacity)}</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Building className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Venue Types</span>
-                </div>
-                <span>{venueTypes}</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Regions</span>
-                </div>
-                <span>{countUniqueRegions(venues)}</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Dates with Shows</span>
-                </div>
-                <span>{countDatesWithShows(venues)}</span>
               </div>
               
               <Separator />
               
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Average Days Between Shows</span>
+              {/* Regions Covered */}
+              <div>
+                <h3 className="text-sm font-medium mb-2">Regions Covered</h3>
+                <div className="flex flex-wrap gap-2">
+                  {regions.length > 0 ? (
+                    regions.map(region => (
+                      <Badge key={region} variant="outline" className="px-3 py-1">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        {region}
+                      </Badge>
+                    ))
+                  ) : (
+                    <div className="text-sm text-muted-foreground">
+                      No region data available
+                    </div>
+                  )}
                 </div>
-                <span>{calculateAverageDaysBetweenShows(venues)}</span>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
       
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Start City</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{getStartCity(venues)}</div>
-            <p className="text-sm text-muted-foreground">{getStartDate(venues)}</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">End City</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{getEndCity(venues)}</div>
-            <p className="text-sm text-muted-foreground">{getEndDate(venues)}</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Largest Venue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{getLargestVenue(venues)}</div>
-            <p className="text-sm text-muted-foreground">
-              {getLargestVenueCapacity(venues) ? formatCapacity(getLargestVenueCapacity(venues)) : 'Unknown'} capacity
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Important Dates */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Important Dates</CardTitle>
+          <CardDescription>
+            Key dates and deadlines for your tour
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="flex items-start gap-3 p-3 border rounded-md">
+              <div className="bg-primary/10 p-2 rounded-full">
+                <Calendar className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-medium text-sm">Tour Start</h3>
+                <p className="text-muted-foreground">
+                  {tourData.startDate ? formatDate(tourData.startDate) : 'Not set'}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3 p-3 border rounded-md">
+              <div className="bg-primary/10 p-2 rounded-full">
+                <Calendar className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-medium text-sm">Tour End</h3>
+                <p className="text-muted-foreground">
+                  {tourData.endDate ? formatDate(tourData.endDate) : 'Not set'}
+                </p>
+              </div>
+            </div>
+            
+            {confirmedVenues.length > 0 && (
+              <div className="flex items-start gap-3 p-3 border rounded-md">
+                <div className="bg-primary/10 p-2 rounded-full">
+                  <Building className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-sm">First Confirmed Venue</h3>
+                  <p className="text-muted-foreground">
+                    {confirmedVenues[0].date ? formatDate(confirmedVenues[0].date) : 'Date TBD'}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {confirmedVenues[0].name}
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            {tourData.createdAt && (
+              <div className="flex items-start gap-3 p-3 border rounded-md">
+                <div className="bg-primary/10 p-2 rounded-full">
+                  <Clock className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-sm">Tour Created</h3>
+                  <p className="text-muted-foreground">
+                    {formatDate(tourData.createdAt)}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
-}
-
-// Helper function to get a summary of venue types in the tour
-function getVenueTypesSummary(venues: any[]): string {
-  const venueTypesMap: Record<string, number> = {};
-  
-  venues.forEach(venue => {
-    if (venue.venueType) {
-      venueTypesMap[venue.venueType] = (venueTypesMap[venue.venueType] || 0) + 1;
-    }
-  });
-  
-  const venueTypes = Object.keys(venueTypesMap);
-  
-  if (venueTypes.length === 0) return 'Various';
-  if (venueTypes.length === 1) return venueTypes[0];
-  
-  // Return top 2 most common types
-  const sortedTypes = venueTypes.sort((a, b) => venueTypesMap[b] - venueTypesMap[a]);
-  
-  if (sortedTypes.length === 2) {
-    return `${sortedTypes[0]} & ${sortedTypes[1]}`;
-  }
-  
-  return `${sortedTypes[0]}, ${sortedTypes[1]} & others`;
-}
-
-// Helper function to count unique regions in the tour
-function countUniqueRegions(venues: any[]): number {
-  const uniqueRegions = new Set<string>();
-  
-  venues.forEach(venue => {
-    if (venue.region) {
-      uniqueRegions.add(venue.region);
-    }
-  });
-  
-  return uniqueRegions.size;
-}
-
-// Helper function to count number of days with shows
-function countDatesWithShows(venues: any[]): number {
-  const uniqueDates = new Set<string>();
-  
-  venues.forEach(venue => {
-    if (venue.date) {
-      uniqueDates.add(new Date(venue.date).toISOString().split('T')[0]);
-    }
-  });
-  
-  return uniqueDates.size;
-}
-
-// Helper function to calculate average days between shows
-function calculateAverageDaysBetweenShows(venues: any[]): string {
-  const venuesWithDates = venues
-    .filter(venue => venue.date)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  
-  if (venuesWithDates.length < 2) return 'N/A';
-  
-  let totalDaysBetween = 0;
-  let countIntervals = 0;
-  
-  for (let i = 1; i < venuesWithDates.length; i++) {
-    const currentDate = new Date(venuesWithDates[i].date);
-    const previousDate = new Date(venuesWithDates[i - 1].date);
-    
-    const diffTime = Math.abs(currentDate.getTime() - previousDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays > 0) {
-      totalDaysBetween += diffDays;
-      countIntervals++;
-    }
-  }
-  
-  if (countIntervals === 0) return '0 days';
-  
-  const average = totalDaysBetween / countIntervals;
-  return `${average.toFixed(1)} days`;
-}
-
-// Helper function to get the start city of the tour
-function getStartCity(venues: any[]): string {
-  const venuesWithDates = venues
-    .filter(venue => venue.date)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  
-  if (venuesWithDates.length === 0) {
-    return venues.length > 0 ? venues[0].city : 'Not set';
-  }
-  
-  return venuesWithDates[0].city;
-}
-
-// Helper function to get the start date of the tour
-function getStartDate(venues: any[]): string {
-  const venuesWithDates = venues
-    .filter(venue => venue.date)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  
-  if (venuesWithDates.length === 0) return 'Date not set';
-  
-  return formatDate(venuesWithDates[0].date);
-}
-
-// Helper function to get the end city of the tour
-function getEndCity(venues: any[]): string {
-  const venuesWithDates = venues
-    .filter(venue => venue.date)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  
-  if (venuesWithDates.length === 0) {
-    return venues.length > 0 ? venues[venues.length - 1].city : 'Not set';
-  }
-  
-  return venuesWithDates[venuesWithDates.length - 1].city;
-}
-
-// Helper function to get the end date of the tour
-function getEndDate(venues: any[]): string {
-  const venuesWithDates = venues
-    .filter(venue => venue.date)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  
-  if (venuesWithDates.length === 0) return 'Date not set';
-  
-  return formatDate(venuesWithDates[venuesWithDates.length - 1].date);
-}
-
-// Helper function to get the name of the largest venue in the tour
-function getLargestVenue(venues: any[]): string {
-  const venuesWithCapacity = venues.filter(venue => venue.capacity);
-  
-  if (venuesWithCapacity.length === 0) return 'Unknown';
-  
-  const largestVenue = venuesWithCapacity.reduce((largest, current) => {
-    return current.capacity > largest.capacity ? current : largest;
-  }, venuesWithCapacity[0]);
-  
-  return largestVenue.name;
-}
-
-// Helper function to get the capacity of the largest venue
-function getLargestVenueCapacity(venues: any[]): number {
-  const venuesWithCapacity = venues.filter(venue => venue.capacity);
-  
-  if (venuesWithCapacity.length === 0) return 0;
-  
-  const largestVenue = venuesWithCapacity.reduce((largest, current) => {
-    return current.capacity > largest.capacity ? current : largest;
-  }, venuesWithCapacity[0]);
-  
-  return largestVenue.capacity;
 }
