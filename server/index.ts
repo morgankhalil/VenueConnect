@@ -19,9 +19,10 @@ app.get('/api/health', (_, res) => {
   res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
-// Set up session middleware
+// Set up session middleware with fallback secret for development
+const sessionSecret = process.env.SESSION_SECRET || 'venue-discovery-default-secret';
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: sessionSecret,
   resave: false,
   saveUninitialized: false,
   cookie: { 
