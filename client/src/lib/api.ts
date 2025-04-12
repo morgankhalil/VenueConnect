@@ -110,7 +110,7 @@ export async function getTourById(tourId: number) {
 export async function updateTour(tourId: number, data: any) {
   return apiRequest({
     url: `/api/tours/${tourId}`,
-    method: 'PATCH', 
+    method: 'PATCH' as const, 
     data
   });
 }
@@ -118,7 +118,7 @@ export async function updateTour(tourId: number, data: any) {
 export async function optimizeTourRoute(tourId: number, options = {}) {
   return apiRequest({
     url: `/api/tours/${tourId}/optimize`,
-    method: 'POST',
+    method: 'POST' as const,
     data: options
   });
 }
@@ -126,7 +126,7 @@ export async function optimizeTourRoute(tourId: number, options = {}) {
 export async function applyTourOptimization(tourId: number, optimizationResult: any) {
   return apiRequest({
     url: `/api/tours/${tourId}/apply-optimization`,
-    method: 'POST',
+    method: 'POST' as const,
     data: optimizationResult
   });
 }
@@ -135,35 +135,35 @@ export async function applyTourOptimization(tourId: number, optimizationResult: 
 export async function getVenueNetworkGraph(filters?: any) {
   return apiRequest({
     url: `/api/venue-network/graph${filters ? `?${new URLSearchParams(filters)}` : ''}`,
-    method: 'GET'
+    method: 'GET' as const
   });
 }
 
 export async function getAllVenuesForNetworkMap(filters?: any) {
   return apiRequest({
     url: `/api/venue-network/all-venues${filters ? `?${new URLSearchParams(filters)}` : ''}`,
-    method: 'GET'
+    method: 'GET' as const
   });
 }
 
 export async function getCollaborativeOpportunitiesByVenue(venueId: number) {
   return apiRequest({
     url: `/api/venue-network/opportunities/${venueId}`,
-    method: 'GET'
+    method: 'GET' as const
   });
 }
 
 export async function searchVenues(query: string) {
   return apiRequest({
     url: `/api/venues/search?query=${encodeURIComponent(query)}`,
-    method: 'GET'
+    method: 'GET' as const
   });
 }
 
 export async function createVenueConnection(data: { sourceVenueId: number; targetVenueId: number; connectionType: string }) {
   return apiRequest({
     url: `/api/venue-network/connections`,
-    method: 'POST',
+    method: 'POST' as const,
     data
   });
 }
@@ -198,7 +198,7 @@ export async function getUnifiedOptimization(
   const { method = 'auto', ...otherOptions } = options;
   return apiRequest({
     url: `/api/unified-optimizer/optimize/${tourId}`,
-    method: 'POST',
+    method: 'POST' as const,
     data: { method, ...otherOptions }
   });
 }
@@ -212,7 +212,7 @@ export async function applyUnifiedOptimization(
 ) {
   return apiRequest({
     url: `/api/unified-optimizer/apply/${tourId}`,
-    method: 'POST',
+    method: 'POST' as const,
     data: { 
       optimizedSequence, 
       suggestedDates,
@@ -225,14 +225,14 @@ export async function applyUnifiedOptimization(
 export async function getMessages() {
   return apiRequest({
     url: '/api/messages',
-    method: 'GET'
+    method: 'GET' as const
   });
 }
 
 export async function sendMessage(message: { recipientId: number; content: string }) {
   return apiRequest({
     url: '/api/messages',
-    method: 'POST',
+    method: 'POST' as const,
     data: message
   });
 }
@@ -241,14 +241,14 @@ export async function sendMessage(message: { recipientId: number; content: strin
 export async function checkBandsintownApiKeyStatus() {
   return apiRequest({
     url: '/api/admin/bandsintown/status',
-    method: 'GET'
+    method: 'GET' as const
   });
 }
 
 export async function setBandsintownApiKey(apiKey: string) {
   return apiRequest({
     url: '/api/admin/bandsintown/key',
-    method: 'POST',
+    method: 'POST' as const,
     data: { apiKey }
   });
 }
@@ -256,14 +256,14 @@ export async function setBandsintownApiKey(apiKey: string) {
 export async function getSyncStatus() {
   return apiRequest({
     url: '/api/admin/sync/status',
-    method: 'GET'
+    method: 'GET' as const
   });
 }
 
 export async function triggerSync(type: string) {
   return apiRequest({
     url: '/api/admin/sync',
-    method: 'POST',
+    method: 'POST' as const,
     data: { type }
   });
 }
@@ -272,35 +272,35 @@ export async function triggerSync(type: string) {
 export async function getEvents(filters?: any) {
   return apiRequest({
     url: `/api/events${filters ? `?${new URLSearchParams(filters)}` : ''}`,
-    method: 'GET'
+    method: 'GET' as const
   });
 }
 
 export async function getEvent(eventId: number) {
   return apiRequest({
     url: `/api/events/${eventId}`,
-    method: 'GET'
+    method: 'GET' as const
   });
 }
 
 export async function getEventsByVenue(venueId: number) {
   return apiRequest({
     url: `/api/venues/${venueId}/events`,
-    method: 'GET'
+    method: 'GET' as const
   });
 }
 
 export async function getVenue(venueId: number) {
   return apiRequest({
     url: `/api/venues/${venueId}`,
-    method: 'GET'
+    method: 'GET' as const
   });
 }
 
 export async function createEvent(event: any) {
   return apiRequest({
     url: '/api/events',
-    method: 'POST',
+    method: 'POST' as const,
     data: event
   });
 }
@@ -308,7 +308,7 @@ export async function createEvent(event: any) {
 export async function updateEvent(eventId: number, data: any) {
   return apiRequest({
     url: `/api/events/${eventId}`,
-    method: 'PATCH',
+    method: 'PATCH' as const,
     data
   });
 }
@@ -317,14 +317,14 @@ export async function updateEvent(eventId: number, data: any) {
 export async function getTours(filters?: any) {
   return apiRequest({
     url: `/api/tours${filters ? `?${new URLSearchParams(filters)}` : ''}`,
-    method: 'GET'
+    method: 'GET' as const
   });
 }
 
 export async function createTour(tour: any) {
   return apiRequest({
     url: '/api/tours',
-    method: 'POST',
+    method: 'POST' as const,
     data: tour
   });
 }
@@ -332,21 +332,21 @@ export async function createTour(tour: any) {
 export async function deleteTour(tourId: number) {
   return apiRequest({
     url: `/api/tours/${tourId}`,
-    method: 'DELETE'
+    method: 'DELETE' as const
   });
 }
 
 export async function getTourVenues(tourId: number) {
   return apiRequest({
     url: `/api/tours/${tourId}/venues`,
-    method: 'GET'
+    method: 'GET' as const
   });
 }
 
 export async function addVenueToTour(tourId: number, data: any) {
   return apiRequest({
     url: `/api/tours/${tourId}/venues`,
-    method: 'POST',
+    method: 'POST' as const,
     data
   });
 }
@@ -354,7 +354,7 @@ export async function addVenueToTour(tourId: number, data: any) {
 export async function updateTourVenue(tourId: number, venueId: number, data: any) {
   return apiRequest({
     url: `/api/tours/${tourId}/venues/${venueId}`,
-    method: 'PATCH',
+    method: 'PATCH' as const,
     data
   });
 }
@@ -362,7 +362,7 @@ export async function updateTourVenue(tourId: number, venueId: number, data: any
 export async function removeTourVenue(tourId: number, venueId: number) {
   return apiRequest({
     url: `/api/tours/${tourId}/venues/${venueId}`,
-    method: 'DELETE'
+    method: 'DELETE' as const
   });
 }
 
@@ -371,20 +371,20 @@ export async function getArtists(params?: { limit?: number; offset?: number }) {
   const queryParams = params ? `?${new URLSearchParams(params as any)}` : '';
   return apiRequest({
     url: `/api/artists${queryParams}`,
-    method: 'GET'
+    method: 'GET' as const
   });
 }
 
 export async function searchArtists(query: string) {
   return apiRequest({
     url: `/api/artists/search?query=${encodeURIComponent(query)}`,
-    method: 'GET'
+    method: 'GET' as const
   });
 }
 
 export async function getArtistById(artistId: number) {
   return apiRequest({
     url: `/api/artists/${artistId}`,
-    method: 'GET'
+    method: 'GET' as const
   });
 }
