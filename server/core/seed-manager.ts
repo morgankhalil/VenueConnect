@@ -403,10 +403,25 @@ export class SeedManager {
     }
   }
 
-  async run(venueData: VenueData[]) {
+  async run(venueData: VenueData[] = []) {
     try {
       this.logger.log('Starting seed process...');
       await this.clearDatabase();
+      
+      if (!Array.isArray(venueData) || venueData.length === 0) {
+        this.logger.log('No venue data provided, using default venues');
+        venueData = [
+          {
+            name: 'The Bowery Ballroom',
+            city: 'New York',
+            state: 'NY',
+            capacity: 575,
+            latitude: 40.7204,
+            longitude: -73.9934,
+            bandsintownId: 'bowery-ballroom'
+          }
+        ];
+      }
 
       const stats = {
         seededVenues: [],

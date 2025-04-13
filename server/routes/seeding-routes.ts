@@ -16,7 +16,27 @@ seedingRouter.post('/seed/:operation', async (req, res) => {
         break;
       
       case 'sample':
-        await seedManager.run();
+        const sampleVenues = [
+          {
+            name: 'The Bowery Ballroom',
+            city: 'New York',
+            state: 'NY',
+            capacity: 575,
+            latitude: 40.7204,
+            longitude: -73.9934,
+            bandsintownId: 'bowery-ballroom'
+          },
+          {
+            name: 'Brooklyn Steel',
+            city: 'Brooklyn',
+            state: 'NY',
+            capacity: 1800,
+            latitude: 40.7177,
+            longitude: -73.9368,
+            bandsintownId: 'brooklyn-steel'
+          }
+        ];
+        await seedManager.run(sampleVenues);
         break;
         
       case 'concerts':
