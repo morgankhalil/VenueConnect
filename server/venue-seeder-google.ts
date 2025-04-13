@@ -194,17 +194,29 @@ async function saveVenue(venueData: any, placeDetails: any) {
       return existingVenue[0];
     }
     
-    // Prepare venue data
+    // Prepare venue data with defaults to avoid NULLs
     const venueToSave: any = {
       name: venueData.name,
       city: venueData.city,
       region: venueData.region,
-      country: venueData.country,
+      country: venueData.country || 'US',
       address: venueData.address,
       latitude: venueData.latitude,
       longitude: venueData.longitude,
       venueType: venueData.venueType,
-      googlePlaceId: venueData.googlePlaceId
+      googlePlaceId: venueData.googlePlaceId,
+      capacityCategory: 'medium',
+      capacityStanding: 300,
+      capacitySeated: 200,
+      marketCategory: 'secondary',
+      primaryGenre: 'rock',
+      secondaryGenres: ['indie', 'alternative'],
+      bookingLeadTimeDays: 60,
+      paymentStructure: 'percentage',
+      localAccommodation: false,
+      localPromotion: true,
+      ageRestriction: '21+',
+      soundSystem: 'house'
     };
     
     // Add place details if available
