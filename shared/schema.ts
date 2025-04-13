@@ -188,6 +188,7 @@ export const venues = pgTable("venues", {
   // External IDs for future synchronization
   bandsintownId: text("bandsintownId").unique(),
   songkickId: text("songkickId").unique(),
+  googlePlaceId: text("googlePlaceId").unique(),
 
   // Ownership and tracking
   ownerId: integer("ownerId").references(() => users.id),

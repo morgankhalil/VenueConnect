@@ -77,6 +77,17 @@ async function searchVenuesInCity(city: any, venueType: string) {
     
     logger.info(`Found ${response.data.results.length} venues in ${city.name}`);
     
+    // Map Google venue types to our supported venue types
+    function mapGoogleTypeToVenueType(googleType: string): string {
+      const typeMap: Record<string, string> = {
+        'music_venue': 'club',
+        'nightclub': 'club',
+        'bar': 'bar',
+        'performing_arts_theater': 'theater'
+      };
+      return typeMap[googleType] || 'club'; // Default to 'club' if not found
+    }
+    
     // Map results to venue objects
     const venueResults = response.data.results.map((place: any) => ({
       placeId: place.place_id,
@@ -86,7 +97,7 @@ async function searchVenuesInCity(city: any, venueType: string) {
       country: city.country,
       latitude: place.geometry.location.lat,
       longitude: place.geometry.location.lng,
-      venueType: venueType.replace('_', ' '),
+      venueType: mapGoogleTypeToVenueType(venueType),
       address: place.vicinity,
       rating: place.rating || null,
       googlePlaceId: place.place_id
@@ -111,7 +122,7 @@ async function searchVenuesInCity(city: any, venueType: string) {
           country: city.country,
           latitude: place.geometry.location.lat,
           longitude: place.geometry.location.lng,
-          venueType: venueType.replace('_', ' '),
+          venueType: mapGoogleTypeToVenueType(venueType),
           address: place.vicinity,
           rating: place.rating || null,
           googlePlaceId: place.place_id
