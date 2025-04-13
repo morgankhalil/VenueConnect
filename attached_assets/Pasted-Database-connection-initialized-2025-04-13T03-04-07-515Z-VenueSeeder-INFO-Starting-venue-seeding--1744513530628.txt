@@ -1,0 +1,129 @@
+Database connection initialized
+2025-04-13T03:04:07.515Z [VenueSeeder] INFO: Starting venue seeding process
+2025-04-13T03:04:07.515Z [VenueSeeder] INFO: Processing 5 cities
+2025-04-13T03:04:07.515Z [VenueSeeder] INFO: Seeding venues for New York, NY
+2025-04-13T03:04:08.516Z [VenueSeeder] INFO: Searching for 'music_venue' venues in New York, NY
+2025-04-13T03:04:09.056Z [VenueSeeder] INFO: Found 20 venues in New York
+2025-04-13T03:04:09.056Z [VenueSeeder] INFO: Added 5 unique music_venue venues in New York
+2025-04-13T03:04:10.057Z [VenueSeeder] INFO: Searching for 'nightclub' venues in New York, NY
+2025-04-13T03:04:10.109Z [VenueSeeder] INFO: Found 20 venues in New York
+2025-04-13T03:04:10.110Z [VenueSeeder] INFO: Added 0 unique nightclub venues in New York
+2025-04-13T03:04:11.111Z [VenueSeeder] INFO: Searching for 'bar' venues in New York, NY
+2025-04-13T03:04:11.598Z [VenueSeeder] INFO: Found 20 venues in New York
+2025-04-13T03:04:11.598Z [VenueSeeder] INFO: Added 3 unique bar venues in New York
+2025-04-13T03:04:12.599Z [VenueSeeder] INFO: Searching for 'performing_arts_theater' venues in New York, NY
+2025-04-13T03:04:12.654Z [VenueSeeder] INFO: Found 20 venues in New York
+2025-04-13T03:04:12.655Z [VenueSeeder] INFO: Added 0 unique performing_arts_theater venues in New York
+2025-04-13T03:04:12.655Z [VenueSeeder] INFO: Limiting from 8 to 5 venues for New York
+2025-04-13T03:04:12.655Z [VenueSeeder] INFO: Processing 5 venue results
+2025-04-13T03:04:13.655Z [VenueSeeder] INFO: Getting details for place ID: ChIJSc_3GIVYwokRh6OzVnCnh6g
+2025-04-13T03:04:14.648Z [VenueSeeder] INFO: Saved venue: Prohibition (ID: 380)
+2025-04-13T03:04:15.648Z [VenueSeeder] INFO: Getting details for place ID: ChIJg9KWRqRZwokRdBRkRYL_i3g
+2025-04-13T03:04:15.819Z [VenueSeeder] INFO: Saved venue: The Cutting Room (ID: 381)
+2025-04-13T03:04:16.820Z [VenueSeeder] INFO: Getting details for place ID: ChIJGfjeLdFbwokREeE6PHj_rlI
+2025-04-13T03:04:17.009Z [VenueSeeder] INFO: Saved venue: Brooklyn Music Kitchen (ID: 382)
+2025-04-13T03:04:18.010Z [VenueSeeder] INFO: Getting details for place ID: ChIJ1SnD495bwokRu9j5Mq3Q7FA
+2025-04-13T03:04:18.185Z [VenueSeeder] INFO: Saved venue: Baby's All Right (ID: 383)
+2025-04-13T03:04:19.185Z [VenueSeeder] INFO: Getting details for place ID: ChIJkUHgeJFZwokRQXNa_wrBAqA
+2025-04-13T03:04:19.346Z [VenueSeeder] INFO: Saved venue: Groove (ID: 384)
+2025-04-13T03:04:21.347Z [VenueSeeder] INFO: Seeding venues for Los Angeles, CA
+2025-04-13T03:04:22.348Z [VenueSeeder] INFO: Searching for 'music_venue' venues in Los Angeles, CA
+2025-04-13T03:04:22.840Z [VenueSeeder] INFO: Found 20 venues in Los Angeles
+2025-04-13T03:04:22.841Z [VenueSeeder] INFO: Added 5 unique music_venue venues in Los Angeles
+2025-04-13T03:04:23.841Z [VenueSeeder] INFO: Searching for 'nightclub' venues in Los Angeles, CA
+2025-04-13T03:04:23.897Z [VenueSeeder] INFO: Found 20 venues in Los Angeles
+2025-04-13T03:04:23.898Z [VenueSeeder] INFO: Added 0 unique nightclub venues in Los Angeles
+2025-04-13T03:04:24.899Z [VenueSeeder] INFO: Searching for 'bar' venues in Los Angeles, CA
+2025-04-13T03:04:25.393Z [VenueSeeder] INFO: Found 20 venues in Los Angeles
+2025-04-13T03:04:25.393Z [VenueSeeder] INFO: Added 4 unique bar venues in Los Angeles
+2025-04-13T03:04:26.394Z [VenueSeeder] INFO: Searching for 'performing_arts_theater' venues in Los Angeles, CA
+2025-04-13T03:04:26.426Z [VenueSeeder] INFO: Found 20 venues in Los Angeles
+2025-04-13T03:04:26.426Z [VenueSeeder] INFO: Added 0 unique performing_arts_theater venues in Los Angeles
+2025-04-13T03:04:26.426Z [VenueSeeder] INFO: Limiting from 9 to 5 venues for Los Angeles
+2025-04-13T03:04:26.426Z [VenueSeeder] INFO: Processing 5 venue results
+2025-04-13T03:04:27.427Z [VenueSeeder] INFO: Getting details for place ID: ChIJ41biDRXFwoARI0B0GGSFNd4
+2025-04-13T03:04:27.717Z [VenueSeeder] INFO: Saved venue: The Paramount (ID: 385)
+2025-04-13T03:04:28.718Z [VenueSeeder] INFO: Getting details for place ID: ChIJHQiTPNXAwoAR7pWfJgk-j4s
+2025-04-13T03:04:28.872Z [VenueSeeder] INFO: Saved venue: Zebulon (ID: 386)
+2025-04-13T03:04:29.873Z [VenueSeeder] INFO: Getting details for place ID: ChIJewhavEnGwoAR9ZSMQTUaxzI
+2025-04-13T03:04:30.027Z [VenueSeeder] INFO: Saved venue: The Lexington Bar (ID: 387)
+2025-04-13T03:04:31.028Z [VenueSeeder] INFO: Getting details for place ID: ChIJTwsCo0rGwoARKKzn_4khivA
+2025-04-13T03:04:31.175Z [VenueSeeder] INFO: Saved venue: Rhythm Room L.A. (ID: 388)
+2025-04-13T03:04:32.176Z [VenueSeeder] INFO: Getting details for place ID: ChIJd_-k3P24woARecKGBiLBJ6o
+2025-04-13T03:04:32.330Z [VenueSeeder] INFO: Saved venue: Pips On Labrea (ID: 389)
+2025-04-13T03:04:34.330Z [VenueSeeder] INFO: Seeding venues for Chicago, IL
+2025-04-13T03:04:35.331Z [VenueSeeder] INFO: Searching for 'music_venue' venues in Chicago, IL
+2025-04-13T03:04:35.804Z [VenueSeeder] INFO: Found 20 venues in Chicago
+2025-04-13T03:04:35.804Z [VenueSeeder] INFO: Added 5 unique music_venue venues in Chicago
+2025-04-13T03:04:36.805Z [VenueSeeder] INFO: Searching for 'nightclub' venues in Chicago, IL
+2025-04-13T03:04:36.834Z [VenueSeeder] INFO: Found 20 venues in Chicago
+2025-04-13T03:04:36.834Z [VenueSeeder] INFO: Added 0 unique nightclub venues in Chicago
+2025-04-13T03:04:37.835Z [VenueSeeder] INFO: Searching for 'bar' venues in Chicago, IL
+2025-04-13T03:04:38.305Z [VenueSeeder] INFO: Found 20 venues in Chicago
+2025-04-13T03:04:38.305Z [VenueSeeder] INFO: Added 0 unique bar venues in Chicago
+2025-04-13T03:04:39.305Z [VenueSeeder] INFO: Searching for 'performing_arts_theater' venues in Chicago, IL
+2025-04-13T03:04:39.335Z [VenueSeeder] INFO: Found 20 venues in Chicago
+2025-04-13T03:04:39.336Z [VenueSeeder] INFO: Added 0 unique performing_arts_theater venues in Chicago
+2025-04-13T03:04:39.336Z [VenueSeeder] INFO: Processing 5 venue results
+2025-04-13T03:04:40.337Z [VenueSeeder] INFO: Getting details for place ID: ChIJezvnsLMsDogRLDrqWcT7SRI
+2025-04-13T03:04:40.583Z [VenueSeeder] INFO: Saved venue: Blue Chicago (ID: 390)
+2025-04-13T03:04:41.584Z [VenueSeeder] INFO: Getting details for place ID: ChIJf6m9-bEsDogRcgm9nf2Dtho
+2025-04-13T03:04:41.736Z [VenueSeeder] INFO: Saved venue: Howl at the Moon Chicago (ID: 391)
+2025-04-13T03:04:42.736Z [VenueSeeder] INFO: Getting details for place ID: ChIJdwtKFmPSD4gRXU9en6OWBQU
+2025-04-13T03:04:42.891Z [VenueSeeder] INFO: Saved venue: Hungry Brain (ID: 392)
+2025-04-13T03:04:43.893Z [VenueSeeder] INFO: Getting details for place ID: ChIJkbYWAfTND4gRzzRfFxeIbBQ
+2025-04-13T03:04:44.037Z [VenueSeeder] INFO: Saved venue: Montrose Saloon (ID: 393)
+2025-04-13T03:04:45.037Z [VenueSeeder] INFO: Getting details for place ID: ChIJuxzb0bEsDogRY0_Z--o0pLU
+2025-04-13T03:04:45.178Z [VenueSeeder] INFO: Saved venue: Foundation Room Chicago (ID: 394)
+2025-04-13T03:04:47.178Z [VenueSeeder] INFO: Seeding venues for Austin, TX
+2025-04-13T03:04:48.178Z [VenueSeeder] INFO: Searching for 'music_venue' venues in Austin, TX
+2025-04-13T03:04:48.624Z [VenueSeeder] INFO: Found 20 venues in Austin
+2025-04-13T03:04:48.625Z [VenueSeeder] INFO: Added 5 unique music_venue venues in Austin
+2025-04-13T03:04:49.626Z [VenueSeeder] INFO: Searching for 'nightclub' venues in Austin, TX
+2025-04-13T03:04:49.660Z [VenueSeeder] INFO: Found 20 venues in Austin
+2025-04-13T03:04:49.660Z [VenueSeeder] INFO: Added 0 unique nightclub venues in Austin
+2025-04-13T03:04:50.661Z [VenueSeeder] INFO: Searching for 'bar' venues in Austin, TX
+2025-04-13T03:04:51.111Z [VenueSeeder] INFO: Found 20 venues in Austin
+2025-04-13T03:04:51.111Z [VenueSeeder] INFO: Added 2 unique bar venues in Austin
+2025-04-13T03:04:52.112Z [VenueSeeder] INFO: Searching for 'performing_arts_theater' venues in Austin, TX
+2025-04-13T03:04:52.145Z [VenueSeeder] INFO: Found 20 venues in Austin
+2025-04-13T03:04:52.145Z [VenueSeeder] INFO: Added 0 unique performing_arts_theater venues in Austin
+2025-04-13T03:04:52.146Z [VenueSeeder] INFO: Limiting from 7 to 5 venues for Austin
+2025-04-13T03:04:52.146Z [VenueSeeder] INFO: Processing 5 venue results
+2025-04-13T03:04:53.147Z [VenueSeeder] INFO: Getting details for place ID: ChIJa59yaAi1RIYRyTOii08uLtQ
+2025-04-13T03:04:53.382Z [VenueSeeder] INFO: Saved venue: Elephant Room (ID: 395)
+2025-04-13T03:04:54.382Z [VenueSeeder] INFO: Getting details for place ID: ChIJJUbJuv20RIYRpFyFb-IiSZo
+2025-04-13T03:04:54.532Z [VenueSeeder] INFO: Saved venue: The Continental Club (ID: 396)
+2025-04-13T03:04:55.533Z [VenueSeeder] INFO: Getting details for place ID: ChIJfVYJf3i1RIYRw6r-EOKSl9o
+2025-04-13T03:04:55.692Z [VenueSeeder] INFO: Saved venue: The Hole in the Wall (ID: 397)
+2025-04-13T03:04:56.692Z [VenueSeeder] INFO: Getting details for place ID: ChIJZZ3WGwm1RIYRH7c0XjpoXZQ
+2025-04-13T03:04:56.829Z [VenueSeeder] INFO: Saved venue: Antone's Nightclub (ID: 398)
+2025-04-13T03:04:57.829Z [VenueSeeder] INFO: Getting details for place ID: ChIJgQvl4wi1RIYRc2XFfKL_VaU
+2025-04-13T03:04:57.973Z [VenueSeeder] INFO: Saved venue: Cedar Street Courtyard (ID: 399)
+2025-04-13T03:04:59.974Z [VenueSeeder] INFO: Seeding venues for Nashville, TN
+2025-04-13T03:05:00.974Z [VenueSeeder] INFO: Searching for 'music_venue' venues in Nashville, TN
+2025-04-13T03:05:01.384Z [VenueSeeder] INFO: Found 20 venues in Nashville
+2025-04-13T03:05:01.384Z [VenueSeeder] INFO: Added 5 unique music_venue venues in Nashville
+2025-04-13T03:05:02.385Z [VenueSeeder] INFO: Searching for 'nightclub' venues in Nashville, TN
+2025-04-13T03:05:02.408Z [VenueSeeder] INFO: Found 20 venues in Nashville
+2025-04-13T03:05:02.408Z [VenueSeeder] INFO: Added 0 unique nightclub venues in Nashville
+2025-04-13T03:05:03.409Z [VenueSeeder] INFO: Searching for 'bar' venues in Nashville, TN
+2025-04-13T03:05:03.829Z [VenueSeeder] INFO: Found 20 venues in Nashville
+2025-04-13T03:05:03.830Z [VenueSeeder] INFO: Added 1 unique bar venues in Nashville
+2025-04-13T03:05:04.831Z [VenueSeeder] INFO: Searching for 'performing_arts_theater' venues in Nashville, TN
+2025-04-13T03:05:04.861Z [VenueSeeder] INFO: Found 20 venues in Nashville
+2025-04-13T03:05:04.861Z [VenueSeeder] INFO: Added 0 unique performing_arts_theater venues in Nashville
+2025-04-13T03:05:04.861Z [VenueSeeder] INFO: Limiting from 6 to 5 venues for Nashville
+2025-04-13T03:05:04.861Z [VenueSeeder] INFO: Processing 5 venue results
+2025-04-13T03:05:05.862Z [VenueSeeder] INFO: Getting details for place ID: ChIJf30gRllmZIgRF7GYbqvbKmw
+2025-04-13T03:05:06.113Z [VenueSeeder] INFO: Saved venue: The Stage on Broadway (ID: 400)
+2025-04-13T03:05:07.115Z [VenueSeeder] INFO: Getting details for place ID: ChIJZ33nV-VnZIgRv7CxLUTEu2k
+2025-04-13T03:05:07.272Z [VenueSeeder] INFO: Saved venue: Miranda Lambert's Casa Rosa (ID: 401)
+2025-04-13T03:05:08.273Z [VenueSeeder] INFO: Getting details for place ID: ChIJXVXaX1lmZIgRiEXXhnNlqIY
+2025-04-13T03:05:08.417Z [VenueSeeder] INFO: Saved venue: Tin Roof (ID: 402)
+2025-04-13T03:05:09.417Z [VenueSeeder] INFO: Getting details for place ID: ChIJ36iSAYtmZIgRgj1NDXtDrqs
+2025-04-13T03:05:09.557Z [VenueSeeder] INFO: Saved venue: The Station Inn (ID: 403)
+2025-04-13T03:05:10.557Z [VenueSeeder] INFO: Getting details for place ID: ChIJicAHErBmZIgRuVvdONKjiWQ
+2025-04-13T03:05:10.696Z [VenueSeeder] INFO: Saved venue: The Local Nashville (ID: 404)
+2025-04-13T03:05:12.696Z [VenueSeeder] INFO: Venue seeding complete. Found 25 venues, saved 25 venues
+Seeding results: { totalCities: 5, totalFound: 25, totalSaved: 25 }
