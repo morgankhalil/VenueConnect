@@ -50,18 +50,28 @@ interface IndieEvent {
 // Configuration
 const BASE_URL = 'https://www.indieonthemove.com';
 const REQUEST_DELAY = 2000; // 2 seconds between requests to avoid rate limiting
-const USER_AGENT = 'VenueDiscoveryPlatform/1.0 (+https://example.com) - Respectful data collection for venue database';
+const USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36';
 
 // Cache for storing data to minimize repeat requests
 let venueCache: Record<string, IndieVenue[]> = {};
 let eventCache: IndieEvent[] = [];
 
-// Axios instance with appropriate headers
+// Axios instance with appropriate headers that mimic a real browser
 const axiosInstance = axios.create({
   headers: {
     'User-Agent': USER_AGENT,
-    'Accept': 'text/html',
-    'Accept-Language': 'en-US,en;q=0.9'
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
+    'Sec-Ch-Ua': '"Chromium";v="123", "Google Chrome";v="123"',
+    'Sec-Ch-Ua-Mobile': '?0',
+    'Sec-Ch-Ua-Platform': '"macOS"',
+    'Sec-Fetch-Dest': 'document',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-User': '?1',
+    'Upgrade-Insecure-Requests': '1'
   },
   timeout: 30000 // 30 second timeout
 });
