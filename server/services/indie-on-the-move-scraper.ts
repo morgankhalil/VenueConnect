@@ -78,8 +78,27 @@ const sleep = async (ms: number = REQUEST_DELAY) => {
  */
 export async function getAvailableStates(): Promise<string[]> {
   try {
-    const response = await axiosInstance.get(`${BASE_URL}/venues`);
+    const url = `${BASE_URL}/venues`;
+    console.log(`Getting available states from ${url}`);
+    
+    let response;
+    try {
+      response = await axiosInstance.get(url);
+    } catch (error: any) {
+      if (error.response && error.response.status === 404) {
+        console.error(`No venues page found at ${url} (404 error)`);
+        return ['NY', 'CA', 'TX', 'IL', 'MA']; // Default states on error
+      }
+      throw error; // Re-throw unexpected errors
+    }
+    
     const $ = cheerio.load(response.data);
+    
+    // Check if we got a 404 page by looking for common 404 indicators
+    if ($('h4:contains("404 Error")').length > 0 || $('title:contains("404")').length > 0) {
+      console.error(`Detected 404 page for venues listing`);
+      return ['NY', 'CA', 'TX', 'IL', 'MA']; // Default states on 404
+    }
     
     const states: string[] = [];
     // Find state links in the venues page
@@ -91,10 +110,17 @@ export async function getAvailableStates(): Promise<string[]> {
       }
     });
     
+    // If no states found, return default list
+    if (states.length === 0) {
+      console.warn('No states found in HTML, using default list');
+      return ['NY', 'CA', 'TX', 'IL', 'MA'];
+    }
+    
+    console.log(`Found ${states.length} states: ${[...new Set(states)].join(', ')}`);
     return [...new Set(states)]; // Remove duplicates
   } catch (error) {
     console.error('Error fetching available states:', error);
-    return [];
+    return ['NY', 'CA', 'TX', 'IL', 'MA']; // Default states on error
   }
 }
 
@@ -111,8 +137,28 @@ export async function scrapeIndieVenuesByState(state: string): Promise<IndieVenu
     const url = `${BASE_URL}/venues/${state.toUpperCase()}`;
     console.log(`Scraping venues from ${url}`);
     
-    const response = await axiosInstance.get(url);
+    let response;
+    try {
+      response = await axiosInstance.get(url);
+    } catch (error: any) {
+      if (error.response && error.response.status === 404) {
+        console.error(`No venues found for state ${state} (404 error)`);
+        // Store empty array in cache to avoid repeated requests
+        venueCache[state] = [];
+        return [];
+      }
+      throw error; // Re-throw unexpected errors
+    }
+    
     const $ = cheerio.load(response.data);
+    
+    // Check if we got a 404 page by looking for common 404 indicators
+    if ($('h4:contains("404 Error")').length > 0 || $('title:contains("404")').length > 0) {
+      console.error(`Detected 404 page for state ${state}`);
+      // Store empty array in cache to avoid repeated requests
+      venueCache[state] = [];
+      return [];
+    }
     
     const venues: IndieVenue[] = [];
     
@@ -162,11 +208,31 @@ export async function scrapeVenueDetails(venueUrl: string): Promise<Partial<Indi
   try {
     console.log(`Scraping venue details from ${venueUrl}`);
     
-    const response = await axiosInstance.get(venueUrl);
+    let response;
+    try {
+      response = await axiosInstance.get(venueUrl);
+    } catch (error: any) {
+      if (error.response && error.response.status === 404) {
+        console.error(`No venue details found at ${venueUrl} (404 error)`);
+        return {};
+      }
+      throw error; // Re-throw unexpected errors
+    }
+    
     const $ = cheerio.load(response.data);
+    
+    // Check if we got a 404 page by looking for common 404 indicators
+    if ($('h4:contains("404 Error")').length > 0 || $('title:contains("404")').length > 0) {
+      console.error(`Detected 404 page for venue details at ${venueUrl}`);
+      return {};
+    }
     
     // Extract venue name
     const name = $('h1, .venue-name').first().text().trim();
+    if (!name) {
+      console.warn(`No venue name found at ${venueUrl}, this might not be a valid venue page`);
+      return {};
+    }
     
     // Extract venue details
     const details: Partial<IndieVenue> = { name };
@@ -226,6 +292,17 @@ export async function scrapeVenueDetails(venueUrl: string): Promise<Partial<Indi
       details.description = description;
     }
     
+    // Log what we found
+    console.log(`Found details for venue ${name}:`, {
+      hasAddress: !!details.address,
+      hasCapacity: !!details.capacity,
+      hasEmail: !!details.bookingEmail,
+      hasWebsite: !!details.websiteUrl,
+      hasDescription: !!details.description,
+      hasVenueType: !!details.venueType,
+      hasPhone: !!details.phoneNumber
+    });
+    
     // Add a small delay to avoid rate limiting
     await sleep();
     
@@ -249,8 +326,24 @@ export async function scrapeUpcomingShows(): Promise<IndieEvent[]> {
     const url = `${BASE_URL}/shows`;
     console.log(`Scraping upcoming shows from ${url}`);
     
-    const response = await axiosInstance.get(url);
+    let response;
+    try {
+      response = await axiosInstance.get(url);
+    } catch (error: any) {
+      if (error.response && error.response.status === 404) {
+        console.error(`No shows page found (404 error)`);
+        return [];
+      }
+      throw error; // Re-throw unexpected errors
+    }
+    
     const $ = cheerio.load(response.data);
+    
+    // Check if we got a 404 page by looking for common 404 indicators
+    if ($('h4:contains("404 Error")').length > 0 || $('title:contains("404")').length > 0) {
+      console.error(`Detected 404 page for shows`);
+      return [];
+    }
     
     const events: IndieEvent[] = [];
     
