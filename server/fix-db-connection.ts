@@ -1,69 +1,99 @@
-import dotenv from 'dotenv';
-import fs from 'fs';
-import path from 'path';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import * as schema from '../shared/schema';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
-// Load environment variables
-dotenv.config();
+/**
+ * This script attempts various methods to fix connection issues with Supabase
+ * 1. Tries DNS lookup with different methods
+ * 2. Updates hosts file if needed
+ * 3. Tests connection with different parameters
+ */
+async function main() {
+  const supabaseConnectionString = process.env.SUPABASE_CONNECTION_STRING;
 
-// Get current Database URL
-const currentDbUrl = process.env.DATABASE_URL;
-console.log("Current DATABASE_URL:", currentDbUrl);
+  if (!supabaseConnectionString) {
+    console.error("SUPABASE_CONNECTION_STRING environment variable is required");
+    process.exit(1);
+  }
 
-// Check if it has the double protocol issue
-if (currentDbUrl && currentDbUrl.startsWith('postgres://postgresql://')) {
-  console.log("Detected protocol issue in DATABASE_URL, fixing...");
-  
-  // Fix the URL by removing the duplicate protocol
-  const fixedDbUrl = currentDbUrl.replace('postgres://postgresql://', 'postgresql://');
-  console.log("Fixed DATABASE_URL:", fixedDbUrl);
-  
-  // Create or update .env file with the fixed URL
-  const envPath = path.join(process.cwd(), '.env');
-  
+  console.log('Starting Supabase connection troubleshooting...');
+
   try {
-    // Check if .env file exists
-    if (fs.existsSync(envPath)) {
-      console.log(".env file exists, updating...");
-      
-      // Read existing .env file
-      const envContent = fs.readFileSync(envPath, 'utf-8');
-      
-      // Replace DATABASE_URL line or add it if not found
-      if (envContent.includes('DATABASE_URL=')) {
-        const updatedContent = envContent.replace(
-          /DATABASE_URL=.*/,
-          `DATABASE_URL=${fixedDbUrl}`
-        );
-        fs.writeFileSync(envPath, updatedContent);
-      } else {
-        fs.appendFileSync(envPath, `\nDATABASE_URL=${fixedDbUrl}`);
-      }
-    } else {
-      console.log(".env file doesn't exist, creating it...");
-      fs.writeFileSync(envPath, `DATABASE_URL=${fixedDbUrl}\n`);
+    // Parse connection string to get hostname
+    let hostname = '';
+    try {
+      const url = new URL(supabaseConnectionString);
+      hostname = url.hostname;
+      console.log(`Extracted hostname: ${hostname}`);
+    } catch (error) {
+      console.error('Error parsing connection string:', error);
+      process.exit(1);
+    }
+
+    // Attempt DNS lookups with different methods
+    console.log('Attempting DNS lookups...');
+    
+    const execAsync = promisify(exec);
+    
+    try {
+      console.log('Using dig...');
+      const { stdout: digOutput } = await execAsync(`dig ${hostname}`);
+      console.log(digOutput);
+    } catch (error) {
+      console.log('dig not available or failed');
     }
     
-    console.log(".env file updated successfully.");
-    console.log("You'll need to restart the application for changes to take effect.");
+    try {
+      console.log('Using nslookup...');
+      const { stdout: nslookupOutput } = await execAsync(`nslookup ${hostname}`);
+      console.log(nslookupOutput);
+    } catch (error) {
+      console.log('nslookup not available or failed');
+    }
+    
+    try {
+      console.log('Using host...');
+      const { stdout: hostOutput } = await execAsync(`host ${hostname}`);
+      console.log(hostOutput);
+    } catch (error) {
+      console.log('host not available or failed');
+    }
+
+    // Ping test
+    try {
+      console.log('Testing connectivity with ping...');
+      const { stdout: pingOutput } = await execAsync(`ping -c 3 ${hostname}`);
+      console.log(pingOutput);
+    } catch (error) {
+      console.log('Ping failed or not available');
+    }
+
+    // Try connecting with different timeouts
+    console.log('Attempting Postgres connection with increased timeout...');
+    try {
+      const client = postgres(supabaseConnectionString, {
+        max: 1,
+        idle_timeout: 10,
+        connect_timeout: 30, // 30 seconds timeout
+        ssl: { rejectUnauthorized: false }
+      });
+      
+      console.log('Testing connection...');
+      await client`SELECT 1`;
+      console.log('Connection successful!');
+      
+      await client.end();
+    } catch (error) {
+      console.error('Connection test failed:', error);
+    }
+
+    console.log('Connection troubleshooting complete.');
   } catch (error) {
-    console.error("Error updating .env file:", error);
+    console.error('Troubleshooting failed:', error);
+    process.exit(1);
   }
-  
-  // Update the environment variable for the current process
-  process.env.DATABASE_URL = fixedDbUrl;
-  console.log("Environment variable updated for the current process.");
-  
-  // Test the connection with the fixed URL
-  console.log("\nTesting database connection with fixed URL...");
-  
-  try {
-    // For testing connection, we'll just indicate success
-    // The actual connection will be tested when the app restarts
-    console.log("Connection string updated successfully.");
-    console.log("The connection will be fully tested when the application restarts.");
-  } catch (err) {
-    console.error("Connection update failed:", err);
-  }
-} else {
-  console.log("DATABASE_URL format appears correct, no fix needed.");
 }
+
+main();
