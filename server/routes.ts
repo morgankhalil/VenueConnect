@@ -17,6 +17,7 @@ import searchRoutes from './routes/search-new';
 import webhookRoutes from './webhooks/webhook-routes';
 import adminRoutes from './routes/admin';
 import aiEnhancementRoutes from './routes/ai-enhancement';
+import eventSeedingRoutes from './routes/event-seeding';
 import { type Express } from 'express';
 import { type Server } from 'http';
 
@@ -56,6 +57,9 @@ export function registerRoutes(app: Express): Server {
   
   // AI enhancement routes
   app.use('/api/ai', aiEnhancementRoutes);
+  
+  // Event seeding routes
+  app.use('/api/events', eventSeedingRoutes);
   
   // Both user-info and venue selection are now handled in their respective route files
   
