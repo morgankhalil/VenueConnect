@@ -18,6 +18,7 @@ import webhookRoutes from './webhooks/webhook-routes';
 import adminRoutes from './routes/admin';
 import aiEnhancementRoutes from './routes/ai-enhancement';
 import eventSeedingRoutes from './routes/event-seeding';
+import venueImportRoutes from './routes/venue-import';
 import { type Express } from 'express';
 import { type Server } from 'http';
 
@@ -60,6 +61,9 @@ export function registerRoutes(app: Express): Server {
   
   // Event seeding routes
   app.use('/api/events', eventSeedingRoutes);
+  
+  // Venue import routes
+  app.use('/api/venue-import', venueImportRoutes);
   
   // Both user-info and venue selection are now handled in their respective route files
   
