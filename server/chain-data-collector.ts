@@ -794,8 +794,10 @@ async function main() {
   }
 }
 
-// Run the script if called directly
-if (require.main === module) {
+// Run the script if it's the main module
+// In ESM, we need to use a different approach than require.main
+const isMainModule = import.meta.url.endsWith(process.argv[1].replace(/^file:\/\//, ''));
+if (isMainModule) {
   main()
     .then(() => {
       logger.info('Script completed');

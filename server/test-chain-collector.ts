@@ -100,12 +100,15 @@ async function main() {
   }
 }
 
-// Run the script
-main()
-  .then(() => {
-    process.exit(0);
-  })
-  .catch(error => {
-    console.error('Unhandled error:', error);
-    process.exit(1);
-  });
+// Run the script if it's the main module
+const isMainModule = import.meta.url.endsWith(process.argv[1].replace(/^file:\/\//, ''));
+if (isMainModule) {
+  main()
+    .then(() => {
+      process.exit(0);
+    })
+    .catch(error => {
+      console.error('Unhandled error:', error);
+      process.exit(1);
+    });
+}
