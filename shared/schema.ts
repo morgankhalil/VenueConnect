@@ -227,7 +227,7 @@ export const events = pgTable("events", {
 });
 
 // VenueNetwork table
-export const venueNetwork = pgTable("venue_network", {
+export const venueNetwork = pgTable("venueNetwork", {
   id: serial("id").primaryKey(),
   venueId: integer("venueId").references(() => venues.id).notNull(),
   connectedVenueId: integer("connectedVenueId").references(() => venues.id).notNull(),
