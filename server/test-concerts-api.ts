@@ -60,6 +60,42 @@ async function getArtistEvents(artistName: string) {
 }
 
 /**
+ * Fetch events for a specific artist from Bandsintown with date parameter
+ */
+async function getArtistEventsWithDate(artistName: string) {
+  try {
+    console.log(`Testing artist events endpoint with date for: ${artistName}`);
+
+    // URL encode the artist name
+    const encodedArtistName = encodeURIComponent(artistName);
+
+    // Get today's date in ISO format
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Construct the API URL with date parameter
+    const url = `${BANDSINTOWN_API_BASE_URL}/artists/${encodedArtistName}/events?app_id=${BANDSINTOWN_API_KEY}&date=upcoming`;
+    
+    console.log(`Request URL: ${url}`);
+    
+    // Make the API request
+    const response = await axios.get(url);
+    
+    // Log the response status and data
+    console.log(`Response status: ${response.status}`);
+    console.log(`Response data:`, JSON.stringify(response.data, null, 2));
+    
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching artist events with date: ${error}`);
+    if (axios.isAxiosError(error)) {
+      console.error(`Status: ${error.response?.status}`);
+      console.error(`Response data:`, error.response?.data);
+    }
+    return null;
+  }
+}
+
+/**
  * Fetch events for a specific artist from Bandsintown (v3.0 API)
  */
 async function getArtistEventsV3(artistName: string) {
@@ -287,6 +323,16 @@ async function main() {
       const artistName = args[1] || 'The Midnight';
       console.log(`Testing artist events endpoint for: ${artistName}`);
       await getArtistEvents(artistName);
+    } else if (command === 'v3') {
+      // Test with v3.0 API
+      const artistName = args[1] || 'The Midnight';
+      console.log(`Testing v3.0 artist events endpoint for: ${artistName}`);
+      await getArtistEventsV3(artistName);
+    } else if (command === 'date') {
+      // Test with date parameter
+      const artistName = args[1] || 'The Midnight';
+      console.log(`Testing artist events with date parameter for: ${artistName}`);
+      await getArtistEventsWithDate(artistName);
     } else if (command === 'search') {
       // Test search endpoint
       const artistName = args[1] || 'The Midnight';
@@ -299,6 +345,8 @@ async function main() {
       console.error(`Unknown command: ${command}`);
       console.log(`Usage:`);
       console.log(` - test [artist_name]: Test artist events endpoint`);
+      console.log(` - v3 [artist_name]: Test v3.0 artist events endpoint`);
+      console.log(` - date [artist_name]: Test with date parameter`);
       console.log(` - search [artist_name]: Test search endpoint`);
       console.log(` - sync [limit]: Sync events for artists in database`);
     }
@@ -322,6 +370,8 @@ if (import.meta.url.endsWith(process.argv[1].replace(/^file:\/\//, ''))) {
 
 export {
   getArtistEvents,
+  getArtistEventsV3,
+  getArtistEventsWithDate,
   testSearchEndpoint,
   syncArtistEvents
 };
