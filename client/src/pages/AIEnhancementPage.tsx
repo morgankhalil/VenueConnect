@@ -23,6 +23,7 @@ export default function AIEnhancementPage() {
   const artistsQuery = useQuery({
     queryKey: ['/api/artists'],
     refetchOnWindowFocus: false,
+    select: (data: any) => data.artists || [],
   });
 
   return (
