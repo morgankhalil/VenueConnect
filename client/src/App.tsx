@@ -27,6 +27,8 @@ import NewTour from "@/pages/tour-new";
 import EditTour from "@/pages/tour-edit";
 import OptimizeTour from "@/pages/tour-optimize";
 import TourWizard from "@/pages/tour-wizard";
+// AI enhancement page
+import AIEnhancementPage from "./pages/AIEnhancementPage";
 
 function Router() {
   return (
@@ -79,25 +81,6 @@ function App() {
               <MapTest />
             </MainLayout>
           ) : (
-            <MainLayout>
-              <Router />
-            </MainLayout>
-          )}
-          <Toaster />
-        </AuthProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
-  );
-  
-  return (
-    <ThemeProvider defaultTheme="system">
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          {isAuthPage ? (
-            // Render auth pages without the MainLayout
-            <Router />
-          ) : (
-            // Render app pages with the MainLayout
             <MainLayout>
               <Router />
             </MainLayout>
