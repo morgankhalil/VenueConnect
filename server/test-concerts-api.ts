@@ -1,194 +1,327 @@
 /**
- * Test script for Bandsintown API integration
- * This script tests fetching artist events from Bandsintown
+ * Test script for Bandsintown Concerts API
+ * 
+ * This script tests the Bandsintown API's artist events endpoint:
+ * GET /artists/{artistname}/events
  */
 
 import axios from 'axios';
+import dotenv from 'dotenv';
+import { setTimeout } from 'timers/promises';
 import { db } from './db';
-import { artists, genres, artistGenres } from '../shared/schema';
-import { eq, sql, or } from 'drizzle-orm';
+import { artists, events } from '../shared/schema';
+import { eq, and, not, isNull } from 'drizzle-orm';
 
-// The Bandsintown app_id - this is a public identifier required by Bandsintown API
-const APP_ID = 'venueconnect';
+// Load environment variables
+dotenv.config();
 
-// Test fetching artist events from Bandsintown
-async function testArtistEvents(artistName: string) {
-  try {
-    console.log(`Testing artist events for: ${artistName}`);
-    const encodedName = encodeURIComponent(artistName);
-    const url = `https://rest.bandsintown.com/artists/${encodedName}/events?app_id=${APP_ID}`;
-    
-    console.log(`Requesting URL: ${url}`);
-    const response = await axios.get(url);
-    
-    console.log(`Response status: ${response.status}`);
-    console.log(`Events count: ${response.data.length}`);
-    
-    // Log a sample of the first event if available
-    if (response.data.length > 0) {
-      const firstEvent = response.data[0];
-      console.log('\nSample event data:');
-      console.log(JSON.stringify(firstEvent, null, 2));
-    }
-    
-    return response.data;
-  } catch (error: any) {
-    console.error(`Error fetching artist events: ${error.message}`);
-    if (error.response) {
-      console.error(`Response status: ${error.response.status}`);
-      console.error(`Response data: ${JSON.stringify(error.response.data)}`);
-    }
-    return [];
-  }
+// Check for API key
+const BANDSINTOWN_API_KEY = process.env.BANDSINTOWN_API_KEY;
+if (!BANDSINTOWN_API_KEY) {
+  console.error('Error: BANDSINTOWN_API_KEY environment variable is not set');
+  process.exit(1);
 }
 
-// Test artist information from Bandsintown
-async function testArtistInfo(artistName: string) {
+// Base URL for Bandsintown API
+const BANDSINTOWN_API_BASE_URL = 'https://rest.bandsintown.com';
+const BANDSINTOWN_API_V3_URL = 'https://rest.bandsintown.com/v3.0';
+
+/**
+ * Fetch events for a specific artist from Bandsintown (standard endpoint)
+ */
+async function getArtistEvents(artistName: string) {
   try {
-    console.log(`Testing artist info for: ${artistName}`);
-    const encodedName = encodeURIComponent(artistName);
-    const url = `https://rest.bandsintown.com/artists/${encodedName}?app_id=${APP_ID}`;
+    console.log(`Testing artist events endpoint for: ${artistName}`);
+
+    // URL encode the artist name
+    const encodedArtistName = encodeURIComponent(artistName);
+
+    // Construct the API URL
+    const url = `${BANDSINTOWN_API_BASE_URL}/artists/${encodedArtistName}/events?app_id=${BANDSINTOWN_API_KEY}`;
     
-    console.log(`Requesting URL: ${url}`);
+    console.log(`Request URL: ${url}`);
+    
+    // Make the API request
     const response = await axios.get(url);
     
+    // Log the response status and data
     console.log(`Response status: ${response.status}`);
-    console.log('\nArtist data:');
-    console.log(JSON.stringify(response.data, null, 2));
+    console.log(`Response data:`, JSON.stringify(response.data, null, 2));
     
     return response.data;
-  } catch (error: any) {
-    console.error(`Error fetching artist info: ${error.message}`);
-    if (error.response) {
-      console.error(`Response status: ${error.response.status}`);
-      console.error(`Response data: ${JSON.stringify(error.response.data)}`);
+  } catch (error) {
+    console.error(`Error fetching artist events: ${error}`);
+    if (axios.isAxiosError(error)) {
+      console.error(`Status: ${error.response?.status}`);
+      console.error(`Response data:`, error.response?.data);
     }
     return null;
   }
 }
 
-// Test search endpoint for an artist's events
+/**
+ * Fetch events for a specific artist from Bandsintown (v3.0 API)
+ */
+async function getArtistEventsV3(artistName: string) {
+  try {
+    console.log(`Testing v3.0 artist events endpoint for: ${artistName}`);
+
+    // URL encode the artist name
+    const encodedArtistName = encodeURIComponent(artistName);
+
+    // Construct the API URL
+    const url = `${BANDSINTOWN_API_V3_URL}/artists/${encodedArtistName}/events?app_id=${BANDSINTOWN_API_KEY}`;
+    
+    console.log(`Request URL: ${url}`);
+    
+    // Make the API request
+    const response = await axios.get(url);
+    
+    // Log the response status and data
+    console.log(`Response status: ${response.status}`);
+    console.log(`Response data:`, JSON.stringify(response.data, null, 2));
+    
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching artist events (v3): ${error}`);
+    if (axios.isAxiosError(error)) {
+      console.error(`Status: ${error.response?.status}`);
+      console.error(`Response data:`, error.response?.data);
+    }
+    return null;
+  }
+}
+
+/**
+ * Test search endpoint for artist events
+ */
 async function testSearchEndpoint(artistName: string) {
   try {
-    console.log(`Testing search endpoint for ${artistName} events`);
+    console.log(`\nTesting search endpoint for ${artistName} events`);
     
-    // First get the artist ID from our database
-    const artistResult = await db
-      .select()
-      .from(artists)
-      .where(eq(artists.name, artistName));
+    // Construct the API URL for search
+    const url = `${BANDSINTOWN_API_BASE_URL}/artists/${encodeURIComponent(artistName)}/events?app_id=${BANDSINTOWN_API_KEY}`;
     
-    if (artistResult.length === 0) {
-      console.log(`Artist ${artistName} not found in database`);
-      return;
+    // Make the API request
+    const response = await axios.get(url);
+    
+    // Log the response status and data
+    console.log(`Response status: ${response.status}`);
+    console.log(`Response data: events = ${response.data.length}`);
+    
+    if (response.data.length > 0) {
+      console.log('\nSample event details:');
+      const event = response.data[0];
+      console.log(`Venue: ${event.venue.name} in ${event.venue.city}, ${event.venue.country}`);
+      console.log(`Date: ${event.datetime}`);
+      console.log(`Lineup: ${event.lineup.join(', ')}`);
     }
     
-    const artistId = artistResult[0].id;
-    console.log(`Found artist ID: ${artistId}`);
-    
-    // Test our search endpoint
-    const url = `http://localhost:5000/api/search/events?artistId=${artistId}`;
-    console.log(`Requesting URL: ${url}`);
-    
-    const response = await axios.get(url);
-    console.log(`Response status: ${response.status}`);
-    console.log(`Response data: ${JSON.stringify(response.data)}`);
-    
     return response.data;
-  } catch (error: any) {
-    console.error(`Error testing search endpoint: ${error.message}`);
-    if (error.response) {
-      console.error(`Response status: ${error.response.status}`);
-      console.error(`Response data: ${JSON.stringify(error.response.data)}`);
+  } catch (error) {
+    console.error(`Test failed: ${error}`);
+    if (axios.isAxiosError(error)) {
+      console.error(`Status: ${error.response?.status}`);
+      console.error(`Error data:`, error.response?.data);
     }
     return null;
   }
 }
 
-// Get artist genres
-async function getArtistGenres(artistName: string) {
+/**
+ * Create or update events in the database from Bandsintown API data
+ */
+async function processEvents(artistName: string, apiEvents: any[]) {
   try {
-    console.log(`\nGetting genres for artist: ${artistName}`);
+    console.log(`\nProcessing ${apiEvents.length} events for ${artistName}`);
     
-    // Get artist ID
+    // First get artist ID from database
     const artistResult = await db
       .select()
       .from(artists)
       .where(eq(artists.name, artistName));
     
     if (artistResult.length === 0) {
-      console.log(`Artist ${artistName} not found in database`);
-      return [];
+      console.error(`Artist not found in database: ${artistName}`);
+      return { processed: 0, created: 0 };
     }
     
-    const artistId = artistResult[0].id;
+    const artist = artistResult[0];
+    console.log(`Found artist in database: ${artist.name} (ID: ${artist.id})`);
     
-    // Get genres for this artist
-    const artistGenresResult = await db
-      .select({
-        genreId: artistGenres.genreId
-      })
-      .from(artistGenres)
-      .where(eq(artistGenres.artistId, artistId));
+    let created = 0;
     
-    if (artistGenresResult.length === 0) {
-      console.log(`No genres found for artist ${artistName}`);
-      return [];
+    // Process each event
+    for (const apiEvent of apiEvents) {
+      try {
+        // Extract event data
+        const venueData = apiEvent.venue;
+        const eventDate = new Date(apiEvent.datetime);
+        
+        // Format date as YYYY-MM-DD
+        const formattedDate = eventDate.toISOString().split('T')[0];
+        
+        // Format time as HH:MM
+        const hours = eventDate.getUTCHours().toString().padStart(2, '0');
+        const minutes = eventDate.getUTCMinutes().toString().padStart(2, '0');
+        const formattedTime = `${hours}:${minutes}`;
+        
+        // Check if event already exists
+        const existingEvent = await db
+          .select()
+          .from(events)
+          .where(
+            and(
+              eq(events.artistId, artist.id),
+              eq(events.date, formattedDate),
+              eq(events.venueName, venueData.name)
+            )
+          );
+        
+        if (existingEvent.length > 0) {
+          console.log(`Event already exists for ${artist.name} at ${venueData.name} on ${formattedDate}`);
+          continue;
+        }
+        
+        // Create new event
+        const [newEvent] = await db
+          .insert(events)
+          .values({
+            artistId: artist.id,
+            venueName: venueData.name,
+            venueCity: venueData.city,
+            venueCountry: venueData.country,
+            venueRegion: venueData.region || '',
+            date: formattedDate,
+            startTime: formattedTime,
+            status: 'confirmed',
+            sourceName: 'bandsintown',
+            sourceId: apiEvent.id.toString()
+          })
+          .returning();
+        
+        console.log(`Created event: ${artist.name} at ${venueData.name} on ${formattedDate}`);
+        created++;
+      } catch (error) {
+        console.error(`Error processing event: ${error}`);
+      }
     }
     
-    // Get genre details
-    const genreIds = artistGenresResult.map(ag => ag.genreId);
-    
-    // Use multiple OR conditions for each genreId
-    let query = db.select().from(genres);
-    
-    if (genreIds.length > 0) {
-      const conditions = genreIds.map(id => eq(genres.id, id));
-      query = query.where(or(...conditions));
-    }
-    
-    const genreDetails = await query;
-    
-    console.log(`Found ${genreDetails.length} genres for ${artistName}:`);
-    genreDetails.forEach(g => console.log(`- ${g.name} (ID: ${g.id})`));
-    
-    return genreDetails;
+    return { processed: apiEvents.length, created };
   } catch (error) {
-    console.error(`Error getting artist genres: ${error}`);
-    return [];
+    console.error(`Error processing events: ${error}`);
+    return { processed: 0, created: 0 };
   }
 }
 
-// Main function
-async function main() {
-  // Check if artistName was provided
-  const artistName = process.argv[2] || 'La Luz';
-  
-  console.log(`Running tests for artist: ${artistName}`);
-  
-  // Get artist genres first
-  await getArtistGenres(artistName);
-  
-  // Test artist information
-  console.log('\n--- Testing Artist Info ---');
-  await testArtistInfo(artistName);
-  
-  // Test artist events
-  console.log('\n--- Testing Artist Events ---');
-  await testArtistEvents(artistName);
-  
-  // Test search endpoint
-  console.log('\n--- Testing Search Endpoint ---');
-  await testSearchEndpoint(artistName);
+/**
+ * Sync events for artists in the database
+ */
+async function syncArtistEvents(limit: number = 5) {
+  try {
+    console.log(`Starting event sync from Bandsintown`);
+    
+    // Get artists to sync
+    const artistsToSync = await db
+      .select()
+      .from(artists)
+      .where(
+        and(
+          not(isNull(artists.name))
+        )
+      )
+      .limit(limit);
+    
+    console.log(`Found ${artistsToSync.length} artists to sync events for`);
+    
+    // Track results
+    let totalProcessed = 0;
+    let totalCreated = 0;
+    
+    // Sync each artist
+    for (const artist of artistsToSync) {
+      try {
+        console.log(`\nSyncing events for artist: ${artist.name}`);
+        
+        // Get events from Bandsintown
+        const events = await getArtistEvents(artist.name);
+        
+        if (!events || events.length === 0) {
+          console.log(`No events found for ${artist.name}`);
+          continue;
+        }
+        
+        console.log(`Found ${events.length} events for ${artist.name}`);
+        
+        // Process the events
+        const result = await processEvents(artist.name, events);
+        totalProcessed += result.processed;
+        totalCreated += result.created;
+        
+        // Add delay between artists
+        await setTimeout(1000);
+      } catch (error) {
+        console.error(`Error syncing artist ${artist.name}: ${error}`);
+      }
+    }
+    
+    console.log(`\nSync completed. Processed ${totalProcessed} events, created ${totalCreated} new events.`);
+    return { totalProcessed, totalCreated };
+  } catch (error) {
+    console.error(`Error syncing artist events: ${error}`);
+    return { totalProcessed: 0, totalCreated: 0 };
+  }
 }
 
-// Run the main function
-main()
-  .then(() => {
-    console.log('\nAll tests completed');
-    process.exit(0);
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    process.exit(1);
-  });
+/**
+ * Main function
+ */
+async function main() {
+  try {
+    // Check command line arguments
+    const args = process.argv.slice(2);
+    const command = args[0] || 'test';
+    
+    if (command === 'test') {
+      // Test with a specific artist name
+      const artistName = args[1] || 'The Midnight';
+      console.log(`Testing artist events endpoint for: ${artistName}`);
+      await getArtistEvents(artistName);
+    } else if (command === 'search') {
+      // Test search endpoint
+      const artistName = args[1] || 'The Midnight';
+      await testSearchEndpoint(artistName);
+    } else if (command === 'sync') {
+      // Sync events for artists in database
+      const limit = args[1] ? parseInt(args[1]) : 5;
+      await syncArtistEvents(limit);
+    } else {
+      console.error(`Unknown command: ${command}`);
+      console.log(`Usage:`);
+      console.log(` - test [artist_name]: Test artist events endpoint`);
+      console.log(` - search [artist_name]: Test search endpoint`);
+      console.log(` - sync [limit]: Sync events for artists in database`);
+    }
+  } catch (error) {
+    console.error(`Error in main function: ${error}`);
+  }
+  // No need to disconnect as db doesn't have this method
+}
+
+// Run the script if it's the main module
+if (import.meta.url.endsWith(process.argv[1].replace(/^file:\/\//, ''))) {
+  main()
+    .then(() => {
+      process.exit(0);
+    })
+    .catch(error => {
+      console.error('Unhandled error:', error);
+      process.exit(1);
+    });
+}
+
+export {
+  getArtistEvents,
+  testSearchEndpoint,
+  syncArtistEvents
+};
