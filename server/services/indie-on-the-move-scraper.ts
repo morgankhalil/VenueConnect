@@ -15,7 +15,11 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { eq, and, sql, or, like } from 'drizzle-orm';
 import { db } from '../db';
-import { venues, artists, events, type VenueInsert, type ArtistInsert } from '../../shared/schema';
+import { venues, artists, events } from '../../shared/schema';
+
+// Define types based on the schema
+type VenueInsert = typeof venues.$inferInsert;
+type ArtistInsert = typeof artists.$inferInsert;
 import { setTimeout } from 'timers/promises';
 
 // Types for the data we'll extract

@@ -5,6 +5,7 @@ import { eq, and, inArray, sql, count } from 'drizzle-orm';
 import axios from 'axios';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
+import { seedFromIndieOnTheMove } from '../services/indie-on-the-move-scraper';
 
 dotenv.config();
 
@@ -517,5 +518,30 @@ Only include verifiable information. If you don't have enough information about 
     console.error(`Error enhancing artist data for ${artistName}:`, error);
   }
 }
+
+// Route to seed data from Indie on the Move
+router.post('/seed-from-indie', async (req, res) => {
+  try {
+    const states = req.body.states || ['MA', 'NY', 'CA', 'TX', 'IL']; // Default states if none provided
+    
+    // Start the seeding process
+    console.log(`Starting to seed from Indie on the Move for states: ${states.join(', ')}`);
+    
+    // Call the function to seed venues and events from Indie on the Move
+    const results = await seedFromIndieOnTheMove(states);
+    
+    return res.json({
+      success: true,
+      message: `Successfully seeded from Indie on the Move: ${results.totalVenues} venues, ${results.totalEvents} events, and ${results.totalArtists} artists added.`,
+      ...results
+    });
+  } catch (error) {
+    console.error('Error seeding from Indie on the Move:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: `Error: ${error instanceof Error ? error.message : String(error)}` 
+    });
+  }
+});
 
 export default router;
