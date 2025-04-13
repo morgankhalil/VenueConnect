@@ -16,6 +16,7 @@ import { unifiedOptimizerRouter } from './routes/unified-tour-optimizer';
 import searchRoutes from './routes/search-new';
 import webhookRoutes from './webhooks/webhook-routes';
 import adminRoutes from './routes/admin';
+import aiEnhancementRoutes from './routes/ai-enhancement';
 import { type Express } from 'express';
 import { type Server } from 'http';
 
@@ -52,6 +53,9 @@ export function registerRoutes(app: Express): Server {
   // Webhook and admin routes
   app.use('/api/webhooks', webhookRoutes);
   app.use('/api/admin', adminRoutes);
+  
+  // AI enhancement routes
+  app.use('/api/ai', aiEnhancementRoutes);
   
   // Both user-info and venue selection are now handled in their respective route files
   

@@ -1,7 +1,11 @@
 import { OpenAI } from 'openai';
-import { venues, artists, Venue, Artist } from '../../shared/schema';
+import { venues, artists } from '../../shared/schema';
 import { db } from '../db';
 import { eq } from 'drizzle-orm';
+
+// Define types for Venue and Artist based on the schema
+type Venue = typeof venues.$inferSelect;
+type Artist = typeof artists.$inferSelect;
 
 /**
  * AI Data Enhancement Service
