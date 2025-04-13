@@ -7,6 +7,8 @@ import { eq } from "drizzle-orm";
 import { users, venues } from "../shared/schema";
 import path from "path";
 import { Server } from "http";
+import adminRouter from './routes/admin';
+import seedingRouter from './routes/seeding-routes'; // Added import for seeding routes
 
 // Session type is defined in auth-middleware.ts
 
@@ -76,7 +78,7 @@ app.use((req, res, next) => {
     const errorId = crypto.randomUUID();
 
     console.error(`Error ${errorId}:`, err);
-    
+
     res.status(status).json({ 
       message,
       errorId,
@@ -105,3 +107,7 @@ app.use((req, res, next) => {
     log(`serving on port ${port}`);
   });
 })();
+
+// Added routes for seeding
+app.use('/api/admin', adminRouter);
+app.use('/api/admin', seedingRouter);
