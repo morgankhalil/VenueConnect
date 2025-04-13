@@ -1,80 +1,51 @@
 /**
- * Logging utility for server-side processes
- * Provides consistent logging format with timestamps and module context
+ * Logging utilities for the application
+ * Provides standardized logging with timestamps and categories
  */
-
-type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
 /**
- * Synchronous logger class for server-side processes
- * Provides consistent logging format with timestamps and context
+ * Logger for synchronization and data collection processes
  */
 export class SyncLogger {
-  private context: string;
-  
-  /**
-   * Create a new logger with the specified context
-   * @param context The context/module name to associate with logs
-   */
-  constructor(context: string) {
-    this.context = context;
+  private component: string;
+
+  constructor(component: string) {
+    this.component = component;
   }
-  
+
   /**
-   * Log a message with the specified log level
-   * @param message The message to log
-   * @param level The log level (info, warn, error, debug)
-   */
-  log(message: string, level: LogLevel = 'info'): void {
-    const timestamp = new Date().toISOString();
-    const formattedMessage = `${timestamp} [${this.context}] ${level.toUpperCase()}: ${message}`;
-    
-    switch (level) {
-      case 'error':
-        console.error(formattedMessage);
-        break;
-      case 'warn':
-        console.warn(formattedMessage);
-        break;
-      case 'debug':
-        console.debug(formattedMessage);
-        break;
-      case 'info':
-      default:
-        console.log(formattedMessage);
-        break;
-    }
-  }
-  
-  /**
-   * Log an info level message
-   * @param message The message to log
+   * Log an informational message
    */
   info(message: string): void {
-    this.log(message, 'info');
+    this.log('INFO', message);
   }
-  
+
   /**
-   * Log a warning level message
-   * @param message The message to log
+   * Log a warning message
    */
   warn(message: string): void {
-    this.log(message, 'warn');
+    this.log('WARN', message);
   }
-  
+
   /**
-   * Log an error level message
-   * @param message The message to log
+   * Log an error message
    */
   error(message: string): void {
-    this.log(message, 'error');
+    this.log('ERROR', message);
   }
-  
+
   /**
-   * Log a debug level message
-   * @param message The message to log
+   * Log a debug message
    */
   debug(message: string): void {
-    this.log(message, 'debug');
+    this.log('DEBUG', message);
+  }
+
+  /**
+   * Format and output log message
+   */
+  private log(level: string, message: string): void {
+    const timestamp = new Date().toISOString();
+    console.log(`${timestamp} [${this.component}] ${level}: ${message}`);
   }
 }
