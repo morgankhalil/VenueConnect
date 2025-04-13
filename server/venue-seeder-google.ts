@@ -203,7 +203,7 @@ async function saveVenue(venueData: any, placeDetails: any) {
       address: venueData.address,
       latitude: venueData.latitude,
       longitude: venueData.longitude,
-      venueType: venueData.venueType,
+      venueType: venueData.venueType || 'club', // Default to 'club' if not specified
       googlePlaceId: venueData.googlePlaceId,
       capacityCategory: 'medium',
       capacityStanding: 300,
