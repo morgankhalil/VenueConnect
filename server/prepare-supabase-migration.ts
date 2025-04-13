@@ -1,161 +1,121 @@
-import { writeFileSync, mkdirSync, existsSync } from 'fs';
-import { join } from 'path';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import * as schema from '../shared/schema';
-import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 
-// Load environment variables
-dotenv.config();
+/**
+ * Prepares for migration to Supabase by extracting schema and data
+ * This script:
+ * 1. Extracts the current database schema 
+ * 2. Creates SQL for Supabase setup
+ * 3. Will eventually handle data migration as well
+ */
+async function main() {
+  const localConnectionString = process.env.DATABASE_URL;
+  const supabaseConnectionString = process.env.SUPABASE_CONNECTION_STRING;
 
-const execAsync = promisify(exec);
-
-// Function to create directory if it doesn't exist
-function ensureDirectoryExists(dirPath: string) {
-  if (!existsSync(dirPath)) {
-    mkdirSync(dirPath, { recursive: true });
+  if (!localConnectionString) {
+    console.error("Local DATABASE_URL environment variable is required");
+    process.exit(1);
   }
-}
 
-// Function to generate schema SQL
-function generateSchemaSql() {
-  // Convert schema to SQL
-  let sql = '-- Supabase Migration Schema\n';
-  sql += '-- Generated on ' + new Date().toISOString() + '\n\n';
-  
-  // Add enums
-  sql += '-- Create Enums\n';
-  const enums = [
-    { name: 'user_role', values: ['admin', 'venue_manager', 'artist_manager', 'booking_agent', 'staff', 'user'] },
-    { name: 'genre', values: [
-      'rock', 'indie', 'hip_hop', 'electronic', 'pop', 'folk', 'metal', 'jazz', 'blues', 
-      'world', 'classical', 'country', 'punk', 'experimental', 'alternative', 'rnb', 'soul',
-      'reggae', 'ambient', 'techno', 'house', 'disco', 'funk', 'other'
-    ]},
-    { name: 'marketCategory', values: ['primary', 'secondary', 'tertiary'] },
-    { name: 'venueType', values: [
-      'club', 'bar', 'theater', 'coffeehouse', 'diy_space', 'art_gallery', 
-      'college_venue', 'community_center', 'record_store'
-    ]},
-    { name: 'capacityCategory', values: ['tiny', 'small', 'medium', 'large'] },
-  ];
-  
-  enums.forEach(enumDef => {
-    sql += `CREATE TYPE ${enumDef.name} AS ENUM (${enumDef.values.map(v => `'${v}'`).join(', ')});\n`;
-  });
-  sql += '\n';
-  
-  // Helper function to extract table creation SQL from schema
-  const tableNames = Object.keys(schema)
-    .filter(key => 
-      typeof schema[key as keyof typeof schema] === 'object' && 
-      'name' in (schema[key as keyof typeof schema] as any)
-    );
-  
-  // Add simple table creation statements (this is a simplified version)
-  sql += '-- Create Tables (simplified version, will need to be completed manually)\n';
-  tableNames.forEach(tableName => {
-    if (tableName.endsWith('Relations')) return;
-    
-    const table = schema[tableName as keyof typeof schema] as any;
-    if (!table || !table.name) return;
-    
-    sql += `-- Table: ${table.name}\n`;
-    sql += `CREATE TABLE IF NOT EXISTS ${table.name} (\n`;
-    
-    // Get columns from schema (simplified)
-    sql += '  -- Add columns based on the schema definition\n';
-    sql += '  -- This is a placeholder and needs to be completed manually\n';
-    sql += ');\n\n';
-  });
-  
-  return sql;
-}
+  if (!supabaseConnectionString) {
+    console.log("SUPABASE_CONNECTION_STRING not found. Only schema extraction will be performed.");
+    console.log("Add SUPABASE_CONNECTION_STRING to your environment to enable data migration.");
+  }
 
-// Generate migration scripts
-async function generateMigrationScripts() {
+  console.log('Preparing for Supabase migration...');
+
   try {
-    console.log("Preparing Supabase migration materials...");
+    // Connect to the local database
+    const client = postgres(localConnectionString, { 
+      max: 1,
+      prepare: false,
+    });
     
-    // Create migrations directory
-    const migrationDir = join(process.cwd(), 'supabase-migration');
-    ensureDirectoryExists(migrationDir);
-    
+    // Initialize Drizzle with the client
+    const db = drizzle(client, { schema });
+
+    // Get all table names from schema
+    const tables = [];
+    if (schema.venues) tables.push('venues');
+    if (schema.events) tables.push('events');
+    if (schema.tours) tables.push('tours');
+    if (schema.tourVenues) tables.push('tourVenues');
+    if (schema.artists) tables.push('artists');
+    if (schema.genres) tables.push('genres');
+
+    console.log(`Found ${tables.length} tables in schema: ${tables.join(', ')}`);
+
     // Generate schema SQL
-    console.log("Generating schema SQL...");
-    const schemaSql = generateSchemaSql();
-    writeFileSync(join(migrationDir, 'schema.sql'), schemaSql);
-    
-    // Generate migration instructions
-    const instructions = `
-# Supabase Migration Instructions
+    let schemaSQL = '';
+    for (const tableName of tables) {
+      try {
+        const tableDefinition = await client`
+          SELECT column_name, data_type, character_maximum_length, 
+                 column_default, is_nullable
+          FROM information_schema.columns 
+          WHERE table_name = ${tableName}
+          ORDER BY ordinal_position;
+        `;
 
-This directory contains scripts and instructions for migrating your application to Supabase.
+        if (tableDefinition.length > 0) {
+          schemaSQL += `-- Table: ${tableName}\n`;
+          schemaSQL += `CREATE TABLE IF NOT EXISTS "${tableName}" (\n`;
+          
+          const columns = tableDefinition.map(column => {
+            let colDef = `  "${column.column_name}" ${column.data_type}`;
+            
+            if (column.character_maximum_length) {
+              colDef += `(${column.character_maximum_length})`;
+            }
+            
+            if (column.column_default) {
+              colDef += ` DEFAULT ${column.column_default}`;
+            }
+            
+            if (column.is_nullable === 'NO') {
+              colDef += ' NOT NULL';
+            }
+            
+            return colDef;
+          });
+          
+          // Add primary key for id column if it exists
+          const hasIdColumn = tableDefinition.some(col => col.column_name === 'id');
+          if (hasIdColumn) {
+            columns.push(`  PRIMARY KEY ("id")`);
+          }
+          
+          schemaSQL += columns.join(',\n');
+          schemaSQL += '\n);\n\n';
+        }
+      } catch (error) {
+        console.error(`Error getting schema for table ${tableName}:`, error);
+      }
+    }
 
-## Prerequisites
+    // Save the schema to a file
+    const schemaPath = path.join(process.cwd(), 'supabase-migration', 'schema.sql');
+    fs.writeFileSync(schemaPath, schemaSQL);
+    console.log(`Schema SQL saved to ${schemaPath}`);
 
-1. A Supabase project with a PostgreSQL database
-2. The Supabase connection string in the following format:
-   \`postgresql://postgres:password@db.projectid.supabase.co:5432/postgres\`
+    // Close the client
+    await client.end();
+    console.log('Local database connection closed');
 
-## Migration Steps
+    // Data migration would be implemented here when SUPABASE_CONNECTION_STRING is available
+    if (supabaseConnectionString) {
+      console.log('Supabase connection string found. Data migration functionality will be implemented in the future.');
+      // TODO: Implement data migration 
+    }
 
-1. Set the SUPABASE_CONNECTION_STRING environment variable:
-   \`\`\`
-   export SUPABASE_CONNECTION_STRING=postgresql://postgres:password@db.projectid.supabase.co:5432/postgres
-   \`\`\`
-
-2. Run the schema migration:
-   \`\`\`
-   psql "$SUPABASE_CONNECTION_STRING" -f schema.sql
-   \`\`\`
-
-3. Run the data migration script from the application:
-   \`\`\`
-   npx tsx ../server/migrate-data-to-supabase.ts
-   \`\`\`
-
-4. Update the application's .env file or environment variables to use SUPABASE_CONNECTION_STRING
-
-## Verification
-
-After migration, verify that:
-1. All tables exist in Supabase
-2. Data has been correctly migrated
-3. The application can connect to Supabase
-`;
-    
-    writeFileSync(join(migrationDir, 'README.md'), instructions);
-    
-    // Generate a shell script for migration
-    const migrationScript = `#!/bin/bash
-# Supabase Migration Script
-
-if [ -z "$SUPABASE_CONNECTION_STRING" ]; then
-  echo "Error: SUPABASE_CONNECTION_STRING environment variable is not set"
-  echo "Please set it to your Supabase connection string"
-  exit 1
-fi
-
-# Run schema migration
-echo "Running schema migration..."
-psql "$SUPABASE_CONNECTION_STRING" -f schema.sql
-
-# Run data migration
-echo "Running data migration..."
-npx tsx ../server/migrate-data-to-supabase.ts
-
-echo "Migration completed!"
-`;
-    
-    writeFileSync(join(migrationDir, 'migrate.sh'), migrationScript);
-    console.log("Migration scripts generated successfully!");
-    console.log(`Files created in: ${migrationDir}`);
-    
+    console.log('Supabase migration preparation complete!');
   } catch (error) {
-    console.error("Error generating migration scripts:", error);
+    console.error('Migration preparation failed:', error);
+    process.exit(1);
   }
 }
 
-// Execute the function
-generateMigrationScripts();
+main();
