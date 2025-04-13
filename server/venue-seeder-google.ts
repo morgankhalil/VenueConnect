@@ -172,12 +172,22 @@ async function getVenueDetails(placeId: string) {
  */
 async function saveVenue(venueData: any, placeDetails: any) {
   try {
-    // Check if venue already exists by Google Place ID
-    const existingVenue = await db
-      .select()
-      .from(venues)
-      .where(venues.googlePlaceId ? eq(venues.googlePlaceId, venueData.googlePlaceId) : 
-             eq(venues.name, venueData.name));
+    // Check if venue already exists by Google Place ID or name
+    let existingVenue;
+    if (venueData.googlePlaceId) {
+      existingVenue = await db
+        .select()
+        .from(venues)
+        .where(eq(venues.googlePlaceId, venueData.googlePlaceId));
+    }
+    
+    // If no match by Google Place ID, try by name
+    if (!existingVenue || existingVenue.length === 0) {
+      existingVenue = await db
+        .select()
+        .from(venues)
+        .where(eq(venues.name, venueData.name));
+    }
     
     if (existingVenue.length > 0) {
       logger.info(`Venue already exists: ${venueData.name}`);
