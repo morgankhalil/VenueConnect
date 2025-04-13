@@ -1,0 +1,84 @@
+> rest-express@1.0.0 dev
+> tsx server/index.ts
+
+Database connection initialized
+2:58:41 AM [express] serving on port 5000
+[ConcertsApiSeeder] Processing artist: The Black Keys
+[ConcertsApiSeeder] Requesting events for artist: The Black Keys
+[ConcertsApiSeeder] No data returned for The Black Keys
+[ConcertsApiSeeder] No events found for The Black Keys
+2:59:16 AM [express] POST /api/admin/seed/concerts 200 in 498ms :: {"success":true}
+[SeedManager] Starting seed process...
+[SeedManager] Starting database clear
+[SeedManager] Clearing table: events
+[SeedManager] Clearing table: tourVenues
+[SeedManager] Clearing table: tours
+[SeedManager] Clearing table: venueNetwork
+[SeedManager] Clearing table: artists
+[SeedManager] Clearing table: users
+[SeedManager] Clearing table: venues
+[SeedManager] Database cleared successfully
+[SeedManager] Seeding process failed:
+Seeding error: TypeError: venueData is not iterable
+    at SeedManager.run (/home/runner/workspace/server/core/seed-manager.ts:425:27)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes/seeding-routes.ts:19:9)
+2:59:38 AM [express] POST /api/admin/seed/sample 500 in 330ms :: {"error":"Seeding operation failed"}
+[SeedManager] Starting seed process...
+[SeedManager] Starting database clear
+[SeedManager] Clearing table: events
+[SeedManager] Clearing table: tourVenues
+[SeedManager] Clearing table: tours
+[SeedManager] Clearing table: venueNetwork
+[SeedManager] Clearing table: artists
+[SeedManager] Clearing table: users
+[SeedManager] Clearing table: venues
+[SeedManager] Database cleared successfully
+[SeedManager] Seeding process failed:
+Seeding error: TypeError: venueData is not iterable
+    at SeedManager.run (/home/runner/workspace/server/core/seed-manager.ts:425:27)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes/seeding-routes.ts:19:9)
+2:59:39 AM [express] POST /api/admin/seed/sample 500 in 174ms :: {"error":"Seeding operation failed"}
+[SeedManager] Starting database clear
+[SeedManager] Clearing table: events
+[SeedManager] Clearing table: tourVenues
+[SeedManager] Clearing table: tours
+[SeedManager] Clearing table: venueNetwork
+[SeedManager] Clearing table: artists
+[SeedManager] Clearing table: users
+[SeedManager] Clearing table: venues
+[SeedManager] Database cleared successfully
+2:59:49 AM [express] POST /api/admin/seed/clear 200 in 255ms :: {"success":true}
+[SeedManager] Starting seed process...
+[SeedManager] Starting database clear
+[SeedManager] Clearing table: events
+[SeedManager] Clearing table: tourVenues
+[SeedManager] Clearing table: tours
+[SeedManager] Clearing table: venueNetwork
+[SeedManager] Clearing table: artists
+[SeedManager] Clearing table: users
+[SeedManager] Clearing table: venues
+[SeedManager] Database cleared successfully
+[SeedManager] Seeding process failed:
+Seeding error: TypeError: venueData is not iterable
+    at SeedManager.run (/home/runner/workspace/server/core/seed-manager.ts:425:27)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes/seeding-routes.ts:19:9)
+2:59:52 AM [express] POST /api/admin/seed/sample 500 in 224ms :: {"error":"Seeding operation failed"}
+[SeedManager] Starting seed process...
+[SeedManager] Starting database clear
+[SeedManager] Clearing table: events
+[SeedManager] Clearing table: tourVenues
+[SeedManager] Clearing table: tours
+[SeedManager] Clearing table: venueNetwork
+[SeedManager] Clearing table: artists
+[SeedManager] Clearing table: users
+[SeedManager] Clearing table: venues
+[SeedManager] Database cleared successfully
+[SeedManager] Seeding process failed:
+Seeding error: TypeError: venueData is not iterable
+    at SeedManager.run (/home/runner/workspace/server/core/seed-manager.ts:425:27)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes/seeding-routes.ts:19:9)
+2:59:53 AM [express] POST /api/admin/seed/sample 500 in 196ms :: {"error":"Seeding operation failed"}
