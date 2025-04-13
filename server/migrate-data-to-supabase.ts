@@ -1,104 +1,89 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
+import { neon, neonConfig } from '@neondatabase/serverless';
 import postgres from 'postgres';
+import * as schema from '../shared/schema';
 import dotenv from 'dotenv';
-import * as schema from "../shared/schema";
 
 // Load environment variables
 dotenv.config();
 
-// Source database connection (current database)
-const sourceConnectionString = process.env.DATABASE_URL;
-// Target database connection (Supabase)
-const targetConnectionString = process.env.SUPABASE_CONNECTION_STRING;
+// Enable connection pooling
+neonConfig.fetchConnectionCache = true;
 
-if (!sourceConnectionString || !targetConnectionString) {
-  console.error("Error: Both DATABASE_URL and SUPABASE_CONNECTION_STRING environment variables are required");
+// Check that environment variables are set
+if (!process.env.DATABASE_URL) {
+  console.error("Error: DATABASE_URL environment variable is required for the source database");
   process.exit(1);
 }
 
-// Configure source database client
-const sourceClient = postgres(sourceConnectionString);
+if (!process.env.SUPABASE_CONNECTION_STRING) {
+  console.error("Error: SUPABASE_CONNECTION_STRING environment variable is required for the target database");
+  process.exit(1);
+}
+
+// Source database connection
+const sourceClient = postgres(process.env.DATABASE_URL);
 const sourceDb = drizzle(sourceClient, { schema });
 
-// Configure target database client (Supabase)
-const targetClient = postgres(targetConnectionString, {
-  ssl: 'require',
-});
-const targetDb = drizzle(targetClient, { schema });
+// Target database connection using Neon serverless client
+const targetSql = neon(process.env.SUPABASE_CONNECTION_STRING);
+const targetDb = drizzle(targetSql, { schema });
 
-// Helper function to run migration for a table
-async function migrateTable(tableName: string, tableSchema: any) {
-  console.log(`Migrating ${tableName}...`);
+// Main migration function
+async function migrateDataToSupabase() {
+  console.log("Starting data migration to Supabase...");
+  
   try {
-    // Fetch all data from source table
-    const data = await sourceDb.select().from(tableSchema);
-    console.log(`  - Found ${data.length} records`);
+    // Get table names from schema
+    const tableNames = Object.keys(schema)
+      .filter(key => 
+        typeof schema[key as keyof typeof schema] === 'object' && 
+        'name' in (schema[key as keyof typeof schema] as any) &&
+        !key.endsWith('Relations')
+      );
     
-    if (data.length === 0) {
-      console.log(`  - No data to migrate for ${tableName}`);
-      return;
+    // Migrate each table
+    for (const tableName of tableNames) {
+      const table = schema[tableName as keyof typeof schema] as any;
+      if (!table || !table.name) continue;
+      
+      console.log(`Migrating table: ${table.name}`);
+      
+      try {
+        // Get data from source
+        const sourceData = await sourceDb.select().from(table);
+        console.log(`  Found ${sourceData.length} records`);
+        
+        if (sourceData.length === 0) {
+          console.log(`  No data to migrate for ${table.name}`);
+          continue;
+        }
+        
+        // Insert data into target
+        // Process in batches to avoid memory issues with large datasets
+        const batchSize = 100;
+        for (let i = 0; i < sourceData.length; i += batchSize) {
+          const batch = sourceData.slice(i, i + batchSize);
+          await targetDb.insert(table).values(batch).onConflictDoNothing();
+          console.log(`  Migrated batch ${i / batchSize + 1} of ${Math.ceil(sourceData.length / batchSize)}`);
+        }
+        
+        console.log(`  Completed migration for ${table.name}`);
+      } catch (error) {
+        console.error(`  Error migrating table ${table.name}:`, error);
+      }
     }
     
-    // Insert data into target table
-    await targetDb.insert(tableSchema).values(data).onConflictDoNothing();
-    console.log(`  - Successfully migrated ${data.length} records`);
+    console.log("Data migration completed successfully!");
   } catch (error) {
-    console.error(`  - Error migrating ${tableName}:`, error);
-  }
-}
-
-async function main() {
-  try {
-    console.log("Starting data migration to Supabase...");
-    
-    // Migrate users table first (as other tables depend on it)
-    await migrateTable("users", schema.users);
-    
-    // Migrate genres table before artists and venues
-    await migrateTable("genres", schema.genres);
-    
-    // Migrate artists
-    await migrateTable("artists", schema.artists);
-    
-    // Migrate venues
-    await migrateTable("venues", schema.venues);
-    
-    // Migrate junction tables
-    await migrateTable("artistGenres", schema.artistGenres);
-    await migrateTable("venueGenres", schema.venueGenres);
-    
-    // Migrate events
-    await migrateTable("events", schema.events);
-    
-    // Migrate venueNetwork
-    await migrateTable("venueNetwork", schema.venueNetwork);
-    
-    // Migrate predictions
-    await migrateTable("predictions", schema.predictions);
-    
-    // Migrate inquiries
-    await migrateTable("inquiries", schema.inquiries);
-    
-    // Migrate collaborativeOpportunities
-    await migrateTable("collaborativeOpportunities", schema.collaborativeOpportunities);
-    
-    // Migrate collaborativeParticipants
-    await migrateTable("collaborativeParticipants", schema.collaborativeParticipants);
-    
-    // Migrate messages
-    await migrateTable("messages", schema.messages);
-    
-    // Migrate webhookConfigurations
-    await migrateTable("webhookConfigurations", schema.webhookConfigurations);
-    
-    console.log("Data migration to Supabase completed successfully!");
-  } catch (error) {
-    console.error("Migration failed:", error);
+    console.error("Error during migration:", error);
+    process.exit(1);
   } finally {
-    // Close database connections
+    // Close connections
     await sourceClient.end();
-    await targetClient.end();
+    console.log("Database connections closed");
   }
 }
 
-main();
+// Execute the migration
+migrateDataToSupabase();
