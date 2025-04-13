@@ -29,6 +29,8 @@ import OptimizeTour from "@/pages/tour-optimize";
 import TourWizard from "@/pages/tour-wizard";
 // AI enhancement page
 import AIEnhancementPage from "./pages/AIEnhancementPage";
+import DataSeedingPage from "@/pages/admin/data-seeding"; // Import the DataSeedingPage component
+
 
 function Router() {
   return (
@@ -45,9 +47,10 @@ function Router() {
       <Route path="/event/:id" component={EventDetails} />
       <Route path="/map-test" component={MapTest} />
       <Route path="/admin/settings" component={AdminSettings} />
+      <Route path="/admin/data-seeding" component={DataSeedingPage} />
       <Route path="/auth/login" component={Login} />
       <Route path="/auth/register" component={Register} />
-      
+
       {/* Tour management routes */}
       <Route path="/tours" component={Tours} />
       <Route path="/tours/new" component={NewTour} />
@@ -56,10 +59,10 @@ function Router() {
       <Route path="/tours/:id/wizard" component={TourWizard} />
       <Route path="/tours/:id" component={TourDetail} />
       <Route path="/documentation" component={Documentation} />
-      
+
       {/* AI Enhancement routes */}
       <Route path="/ai-enhancement" component={AIEnhancementPage} />
-      
+
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
@@ -68,11 +71,11 @@ function Router() {
 
 function App() {
   const [location] = useLocation();
-  
+
   // Handle auth pages and main app layout
   const isAuthPage = location.startsWith('/auth/');
   const isMapTestPage = location === '/map-test';
-  
+
   return (
     <ThemeProvider defaultTheme="system">
       <QueryClientProvider client={queryClient}>
