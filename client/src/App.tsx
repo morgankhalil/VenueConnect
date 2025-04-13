@@ -57,6 +57,9 @@ function Router() {
       <Route path="/tours/:id" component={TourDetail} />
       <Route path="/documentation" component={Documentation} />
       
+      {/* AI Enhancement routes */}
+      <Route path="/ai-enhancement" component={AIEnhancementPage} />
+      
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>

@@ -14,7 +14,8 @@ import {
   Mic2,
   Truck,
   ChevronDown,
-  Building
+  Building,
+  BrainCircuit
 } from "lucide-react";
 import { VenueSelector } from "@/components/venue-selector";
 import { useQuery } from "@tanstack/react-query";
@@ -46,6 +47,7 @@ export function Sidebar({
     { name: "Venue Network", href: "/venue-network", icon: Network },
     { name: "Calendar", href: "/calendar", icon: Calendar },
     { name: "Discover", href: "/discover", icon: Compass },
+    { name: "AI Enhancement", href: "/ai-enhancement", icon: BrainCircuit },
   ];
 
   return (
